@@ -54,25 +54,25 @@ const EligibilityPage: React.FC<EligibilityPageProps> = ({ navigate, user }) => 
             <tr>
               <th className="p-4 w-1/3 md:w-1/4 font-semibold align-top text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Eligibility Type</th>
               <td className="p-4">
-                <ul className="list-disc list-inside text-white space-y-1">
-                  {fund.eligibleEmploymentTypes.map(type => <li key={type}>{type}</li>)}
-                </ul>
+                <div className="text-white space-y-1">
+                  {fund.eligibleEmploymentTypes.map(type => <div key={type}>{type}</div>)}
+                </div>
               </td>
             </tr>
             <tr>
               <th className="p-4 w-1/3 md:w-1/4 font-semibold align-top text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Disasters</th>
               <td className="p-4 text-white">
-                 <ul className="list-disc list-inside text-white space-y-1">
-                  {fund.eligibleDisasters.map(event => <li key={event}>{event}</li>)}
-                </ul>
+                 <div className="text-white space-y-1">
+                  {fund.eligibleDisasters.map(event => <div key={event}>{event}</div>)}
+                </div>
               </td>
             </tr>
             <tr>
               <th className="p-4 w-1/3 md:w-1/4 font-semibold align-top text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Hardships</th>
               <td className="p-4 text-white">
-                <ul className="list-disc list-inside text-white space-y-1">
-                  {fund.eligibleHardships.map(event => <li key={event}>{event}</li>)}
-                </ul>
+                <div className="text-white space-y-1">
+                  {fund.eligibleHardships.map(event => <div key={event}>{event}</div>)}
+                </div>
               </td>
             </tr>
           </tbody>
