@@ -59,18 +59,20 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     const newErrors: Record<string, string> = {};
     if (!expenseForm.type) newErrors.type = 'Please select an expense type.';
     if (!expenseForm.amount || expenseForm.amount <= 0) newErrors.amount = 'Amount must be greater than zero.';
-    if (!expenseForm.file) newErrors.file = 'A receipt or document is required.';
+    if (!expenseForm.fileName) newErrors.file = 'A receipt or document is required.';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleFormChange = (field: keyof ExpenseFormState, value: any) => {
-    setExpenseForm(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
+  // FIX: Refactored handleFormChange to accept a partial state object for better type safety.
+  const handleFormChange = (updates: Partial<ExpenseFormState>) => {
+    setExpenseForm(prev => ({ ...prev, ...updates }));
+    const fields = Object.keys(updates);
+    if (fields.some(field => errors[field])) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        delete newErrors[field];
+        fields.forEach(field => delete newErrors[field]);
         return newErrors;
       });
     }
@@ -79,13 +81,25 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      handleFormChange('file', file);
-      handleFormChange('fileName', file.name);
+      handleFormChange({ file, fileName: file.name });
     }
   };
   
   const handleSaveExpense = () => {
     if (!validateForm()) return;
+
+    // Check for duplicate file name before saving
+    const isDuplicateFile = formData.expenses.some(
+      exp => exp.fileName === expenseForm.fileName && exp.id !== editingId
+    );
+
+    if (isDuplicateFile) {
+      setErrors(prev => ({
+        ...prev,
+        file: `The file "${expenseForm.fileName}" has already been uploaded. Please choose a different file.`
+      }));
+      return;
+    }
     
     const newExpense: Expense = {
       id: editingId || `exp-${Date.now()}`,
@@ -104,6 +118,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     updateFormData({ expenses: updatedExpenses });
     setExpenseForm(initialFormState);
     setEditingId(null);
+    setErrors({}); // Clear errors on success
   };
   
   const handleEdit = (expense: Expense) => {
@@ -111,7 +126,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     setExpenseForm({
       type: expense.type,
       amount: expense.amount,
-      file: null, // User must re-upload file on edit
+      file: null, // User can optionally re-upload file on edit
       fileName: expense.fileName,
     });
     setErrors({});
@@ -145,8 +160,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                 id="expenseType"
                 required
                 value={expenseForm.type}
-                // FIX: Cast the value to the specific literal type to match Expense['type'].
-                onUpdate={value => handleFormChange('type', value as Expense['type'])}
+                onUpdate={value => handleFormChange({ type: value as Expense['type'] })}
                 options={editingId ? expenseTypes : availableExpenseTypes}
                 variant="underline"
                 error={errors.type}
@@ -156,7 +170,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                 id="amount"
                 type="number"
                 value={expenseForm.amount}
-                onChange={(e) => handleFormChange('amount', parseFloat(e.target.value) || '')}
+                onChange={(e) => handleFormChange({ amount: parseFloat(e.target.value) || '' })}
                 placeholder="0.00"
                 min="0.01"
                 step="0.01"
@@ -169,7 +183,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                  </label>
                  <div className="flex items-center gap-2">
                     <label className="bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer">
-                        <span>Upload File</span>
+                        <span>Upload</span>
                         <input id="receiptUpload" type="file" className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png,application/pdf" />
                     </label>
                     <span className="text-gray-300 text-sm truncate" title={expenseForm.fileName}>{expenseForm.fileName || 'No file chosen'}</span>
