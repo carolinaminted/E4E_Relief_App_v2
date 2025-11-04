@@ -1,5 +1,7 @@
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+
+
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
@@ -142,6 +144,7 @@ function App() {
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [autofillTrigger, setAutofillTrigger] = useState(0);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
 
   const userApplications = useMemo(() => {
@@ -460,7 +463,7 @@ function App() {
   };
 
   return (
-    <div className="bg-[#003a70] text-white min-h-screen font-sans flex flex-col">
+    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
       {currentUser && (
         <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-3 items-center shadow-md sticky top-0 z-30 border-b border-[#002a50]">
           <div className="justify-self-start">
@@ -483,11 +486,11 @@ function App() {
         </header>
       )}
 
-      <main className={`flex-1 flex flex-col ${!currentUser ? 'items-center' : ''}`}>
+      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center' : ''}`}>
         {renderPage()}
       </main>
 
-      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />}
+      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
     </div>
   );
 }

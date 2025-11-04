@@ -130,8 +130,9 @@ ${applicationList}
     model: model,
     config: {
       systemInstruction: dynamicContext,
+      // FIX: The 'tools' property must be inside the 'config' object.
+      tools: [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }],
     },
-    tools: [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }],
   });
 }
 

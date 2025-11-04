@@ -13,9 +13,10 @@ interface ChatbotWidgetProps {
   onChatbotAction: (functionName: string, args: any) => void;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  scrollContainerRef: React.RefObject<HTMLElement>;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen }) => {
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation." }
   ]);
@@ -41,17 +42,23 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
       return;
     }
 
-    lastScrollY.current = window.scrollY;
+    const scrollableElement = scrollContainerRef.current;
+    if (!scrollableElement) {
+        return;
+    }
+
+
+    lastScrollY.current = scrollableElement.scrollTop;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = scrollableElement.scrollTop;
       
       // A small threshold to prevent flickering on minor scroll adjustments
       if (Math.abs(currentScrollY - lastScrollY.current) < 20) {
         return;
       }
 
-      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
         // Scrolling down and we're not near the top of the page
         setIsButtonVisible(false);
       } else {
@@ -61,12 +68,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
       lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    scrollableElement.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      scrollableElement.removeEventListener('scroll', handleScroll);
     };
-  }, [isOpen]);
+  }, [isOpen, scrollContainerRef]);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (!userInput.trim() || isLoading) return;
@@ -113,17 +120,20 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
             setMessages(prev => [...prev, { role: MessageRole.MODEL, content: '' }]);
           }
 
-        const toolResponses = [];
+        const functionResponses = [];
         for(const call of functionCalls) {
             onChatbotAction(call.name, call.args);
-            toolResponses.push({ 
-                id: call.id, 
-                name: call.name, 
-                response: { result: 'ok' } 
+            // FIX: Correct the structure of the function response object.
+            functionResponses.push({ 
+                functionResponse: {
+                    name: call.name, 
+                    response: { result: 'ok' } 
+                }
             });
         }
 
-        const toolResponseStream = await chatSessionRef.current.sendMessageStream({ toolResponses });
+        // FIX: The property name for sending tool responses back is 'functionResponses', not 'toolResponses'.
+        const toolResponseStream = await chatSessionRef.current.sendMessageStream({ functionResponses });
 
         for await (const chunk of toolResponseStream) {
             if (chunk.text) {
