@@ -25,7 +25,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
   };
 
   return (
-    <div className="p-8">
+    <div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Email Address</label>
@@ -52,7 +52,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
           />
         </div>
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-10">
+        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-8">
           Sign In
         </button>
         <p className="text-sm text-center text-white">

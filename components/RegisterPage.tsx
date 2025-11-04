@@ -53,8 +53,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, 
   };
 
   return (
-    <div className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div>
+        <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-4">
             <div className="flex-1">
                 <label htmlFor="firstName" className="block text-sm font-medium text-white mb-2">First Name</label>
@@ -120,7 +120,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, 
             <p id="fund-code-help" className="text-xs text-gray-400 mt-1">Enter the code provided by your employer or program.</p>
         </div>
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-10">
+        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-6">
             Sign Up
         </button>
         <p className="text-sm text-center text-white">

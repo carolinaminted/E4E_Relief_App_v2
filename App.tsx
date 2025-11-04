@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
@@ -398,16 +398,16 @@ function App() {
     if (!currentUser) {
       return (
         <>
-          <div className="w-full flex justify-center items-center h-[35vh]">
+          <div className="w-full flex justify-center items-center py-12">
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className={`mx-auto h-48 w-auto ${page === 'register' ? 'cursor-pointer' : ''}`}
+              className={`mx-auto h-32 w-auto ${page === 'register' ? 'cursor-pointer' : ''}`}
               onClick={page === 'register' ? () => setAutofillTrigger(c => c + 1) : undefined}
             />
           </div>
           
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md px-4 pb-8">
             {page === 'register' ? (
               <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
             ) : (

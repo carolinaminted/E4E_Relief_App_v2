@@ -76,7 +76,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(true);
-  const [openSection, setOpenSection] = useState<ProfileSection | null>('contact');
+  const [openSection, setOpenSection] = useState<ProfileSection | null>(null);
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
@@ -249,10 +249,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             firstErrorSection = 'contact';
         } else if (newErrors.primaryAddress) {
             firstErrorSection = 'primaryAddress';
-        } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
-            firstErrorSection = 'additionalDetails';
         } else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) {
             firstErrorSection = 'mailingAddress';
+        } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
+            firstErrorSection = 'additionalDetails';
         } else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) {
             firstErrorSection = 'consent';
         }
@@ -431,6 +431,51 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </fieldset>
         
+        {/* 1d Mailing Address */}
+        <fieldset className="border-b border-[#005ca0] pb-4">
+            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
+                <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Mailing Address</h2>
+                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
+                </div>
+                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
+            </button>
+            <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="space-y-4 pt-4">
+                    <FormRadioGroup 
+                        legend="Mailing Address Same as Primary?" 
+                        name="isMailingAddressSame" 
+                        options={['Yes', 'No']} 
+                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? 'Yes' : 'No')} 
+                        onChange={value => handleFormChange('isMailingAddressSame', value === 'Yes')} 
+                        required
+                        error={errors.isMailingAddressSame}
+                    />
+                    {!formData.isMailingAddressSame && (
+                        <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
+                            <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
+                        </div>
+                    )}
+                </div>
+                {openSection === 'mailingAddress' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('mailingAddress')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="mailing-section"
+                            aria-expanded="true"
+                        >
+                            Collapse
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+            </div>
+        </fieldset>
+
         {/* 1c Additional Details */}
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
@@ -472,51 +517,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             onClick={() => toggleSection('additionalDetails')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
                             aria-controls="details-section"
-                            aria-expanded="true"
-                        >
-                            Collapse
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
-            </div>
-        </fieldset>
-
-        {/* 1d Mailing Address */}
-        <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Mailing Address</h2>
-                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
-                </div>
-                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
-            </button>
-            <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-4 pt-4">
-                    <FormRadioGroup 
-                        legend="Mailing Address Same as Primary?" 
-                        name="isMailingAddressSame" 
-                        options={['Yes', 'No']} 
-                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? 'Yes' : 'No')} 
-                        onChange={value => handleFormChange('isMailingAddressSame', value === 'Yes')} 
-                        required
-                        error={errors.isMailingAddressSame}
-                    />
-                    {!formData.isMailingAddressSame && (
-                        <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
-                            <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
-                        </div>
-                    )}
-                </div>
-                {openSection === 'mailingAddress' && (
-                    <div className="flex justify-end pt-4">
-                        <button
-                            type="button"
-                            onClick={() => toggleSection('mailingAddress')}
-                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="mailing-section"
                             aria-expanded="true"
                         >
                             Collapse
