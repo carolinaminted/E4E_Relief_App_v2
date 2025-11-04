@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PolicyModal from './PolicyModal';
 
 type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'eligibility' | 'fundPortal';
 
@@ -67,6 +68,7 @@ const TokenUsageIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-
 // --- Component ---
 
 const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName, userRole }) => {
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const tiles = [
     { key: 'eligibility', title: 'Eligibility', icon: <EligibilityIcon />, onClick: () => navigate('eligibility') },
     { key: 'profile', title: 'Profile', icon: <ProfileIcon />, onClick: () => navigate('profile') },
@@ -128,10 +130,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
         </div>
       </div>
       <footer className="mt-8">
-        <p className="text-sm italic text-[#898c8d]">
+        <button
+          onClick={() => setIsPolicyModalOpen(true)}
+          className="text-sm italic text-[#898c8d] hover:text-white transition-colors duration-200"
+        >
           Powered by E4E Relief Copyright 2025
-        </p>
+        </button>
       </footer>
+      {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
     </div>
   );
 };
