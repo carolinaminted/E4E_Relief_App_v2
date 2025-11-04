@@ -8,32 +8,58 @@ interface FAQPageProps {
 
 const faqs = [
   {
-    question: "What is the maximum grant amount I can receive?",
-    answer: "The maximum grant amount is $10,000 within any 12-month period, with a lifetime maximum of $50,000 per employee. All awards are subject to your remaining balance for each limit."
+    question: "How long will it take to process my application?",
+    answer: "Once we have received all required supporting documentation a grant specialist will review your application and make a decision regarding your request within 3-5 business days. If approved, a grant distribution will be made based on your payment preference selected in your applicant profile."
   },
   {
-    question: "What types of events are covered?",
-    answer: "We provide relief for qualified disasters such as floods, tornadoes, wildfires, and hurricanes that have occurred within the last 90 days. If your disaster is not listed, you can select 'My disaster is not listed' and provide specific details for review."
+    question: "How can I check on the status of my application?",
+    answer: "You can easily check the status of your application on this portal. Once you've submitted an application, simply return to this portal, login, and check for a gray status bar at the top of your homepage. You can click the details link to get more information."
   },
   {
-    question: "How quickly are applications processed?",
-    answer: "Our automated system provides an instant decision upon submission for most applications that meet all the predefined criteria. If your application requires manual review (e.g., due to missing details for an evacuation), it may take a few additional business days."
+    question: "If my request is approved, how long should it take to receive my payment?",
+    answer: (
+      <>
+        Grant award payment timing depends on selected payment type, geographical location, and banking information. Below are general timelines:
+        <ul className="list-disc list-inside mt-2 space-y-1">
+          <li>U.S. applicants who select a digital payment method can expect to have funds deposited within 1-3 business days.</li>
+          <li>U.S. applicants who select a mailed check typically receive funds within 7 business days. There is no tracking number and checks are mailed via USPS.</li>
+          <li>International payment timing varies by country. Please reference your award letter when the grant is processed for additional details.</li>
+        </ul>
+      </>
+    )
+  },
+    {
+    question: "How much will I receive?",
+    answer: "Grant awards are based on need and will vary according to the grant parameters for your company's relief program."
   },
   {
-    question: "Who is eligible to apply?",
-    answer: "Full-time, part-time, and contract employees are eligible to apply, provided their employment started before the date of the disaster event. You must also have sufficient 12-month and lifetime grant balances remaining."
+    question: "Do I have to repay the grant or pay taxes if I receive assistance?",
+    answer: (
+      <>
+        Grants provided through the Relief Fund are not loans and do not have to be repaid.
+        <ul className="list-disc list-inside mt-2 space-y-1">
+          <li>For U.S. grant recipients, a grant generally will not result in taxable income (i.e., will not show up on your W2).</li>
+          <li>For recipients outside the U.S., please check with your local tax advisor for more information.</li>
+        </ul>
+      </>
+    )
   },
   {
-    question: "What if I was evacuated?",
-    answer: "If you were evacuated from your primary residence, you must provide details such as the evacuation start date and the number of nights you were displaced to be considered for additional assistance related to temporary housing and other related expenses."
+    question: "If not selected for a grant, will I receive a notification with the reason why?",
+    answer: "Yes, you will be informed via email that the program is unable to provide the assistance with details on why you may not have been selected for a grant."
   },
   {
-    question: "Do I need to repay the grant?",
-    answer: "No, grants from E4E Relief are not loans and do not need to be repaid. They are intended to help you with immediate, essential needs following a qualified disaster."
+    question: "Who reviews and makes the decision on the applications?",
+    answer: "Your Relief Fund is administered by E4E Relief. E4E Relief is a third party that has been designated to manage the grant processing, decision-making, and administrative aspects of your Relief Program. This ensures confidentiality and impartial decision-making. They also have expertise on this subject matter to make sound decisions on qualifying events."
+  },
+  {
+    question: "Who is E4E Relief?",
+    answer: "E4E Relief is a 501(c)(3) public charity. E4E Relief's tax ID number is 87-3137387. With more than two decades of experience serving clients, E4E Relief is the nation's leading provider of employee disaster and hardship funds."
   }
 ];
 
-const FAQItem: React.FC<{ faq: { question: string, answer: string }, isOpen: boolean, onClick: () => void }> = ({ faq, isOpen, onClick }) => {
+
+const FAQItem: React.FC<{ faq: { question: string, answer: React.ReactNode }, isOpen: boolean, onClick: () => void }> = ({ faq, isOpen, onClick }) => {
     return (
         <div className="border-b border-[#005ca0]">
             <button
@@ -48,7 +74,7 @@ const FAQItem: React.FC<{ faq: { question: string, answer: string }, isOpen: boo
             </button>
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="p-4 text-white bg-[#003a70]/30">
-                    <p>{faq.answer}</p>
+                    <div>{faq.answer}</div>
                 </div>
             </div>
         </div>
