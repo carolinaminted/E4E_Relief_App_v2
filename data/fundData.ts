@@ -5,6 +5,11 @@ export interface Fund {
   code: string;
   name: string;
   cvType: CVType;
+  limits: {
+    twelveMonthMax: number;
+    lifetimeMax: number;
+    singleRequestMax: number;
+  };
   eligibleCountries: string[];
   hireEligibility: {
     employmentStartOnOrBeforeEvent: boolean;
@@ -24,6 +29,7 @@ export interface Fund {
     scopes: string[];
   };
   eventsEnabled: string[];
+  aiParams?: Record<string, any>;
 }
 
 // Store the fund data
@@ -32,6 +38,7 @@ const funds: Fund[] = [
       "code": "E4E",
       "name": "E4E Relief",
       "cvType": "Domain",
+      "limits": { "twelveMonthMax": 10000, "lifetimeMax": 50000, "singleRequestMax": 10000 },
       "eligibleCountries": ["US", "CA", "MX"],
       "hireEligibility": {
         "employmentStartOnOrBeforeEvent": true,
@@ -50,6 +57,7 @@ const funds: Fund[] = [
       "code": "JHH",
       "name": "JHH Relief",
       "cvType": "Roster",
+      "limits": { "twelveMonthMax": 5000, "lifetimeMax": 25000, "singleRequestMax": 2500 },
       "eligibleCountries": ["US"],
       "hireEligibility": {
         "employmentStartOnOrBeforeEvent": true,
@@ -73,6 +81,7 @@ const funds: Fund[] = [
       "code": "SQRT",
       "name": "Squirtle Relief",
       "cvType": "SSO",
+      "limits": { "twelveMonthMax": 15000, "lifetimeMax": 75000, "singleRequestMax": 7500 },
       "eligibleCountries": ["US", "GB", "AU", "JP"],
       "hireEligibility": {
         "employmentStartOnOrBeforeEvent": true,

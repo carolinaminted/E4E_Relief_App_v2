@@ -140,9 +140,10 @@ export function evaluateApplicationEligibility(
     eventData: EventData;
     currentTwelveMonthRemaining: number;
     currentLifetimeRemaining: number;
+    singleRequestMax: number;
   }
 ): EligibilityDecision {
-  const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate } = appData;
+  const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax } = appData;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -193,10 +194,10 @@ export function evaluateApplicationEligibility(
      decision = 'Denied';
      reasons.push(`Requested amount must be greater than zero.`);
      policy_hits.push({ rule_id: 'R4/R5', passed: false, detail: `Requested amount of $${requestedAmount.toFixed(2)} is not greater than zero.` });
-  } else if (requestedAmount > 10000) {
+  } else if (requestedAmount > singleRequestMax) {
     decision = 'Denied';
-    reasons.push(`Requested amount of $${requestedAmount.toFixed(2)} exceeds the maximum of $10,000.`);
-    policy_hits.push({ rule_id: 'R5', passed: false, detail: `Requested amount $${requestedAmount.toFixed(2)} exceeds absolute cap of $10,000.` });
+    reasons.push(`Requested amount of $${requestedAmount.toFixed(2)} exceeds the maximum of $${singleRequestMax.toFixed(2)}.`);
+    policy_hits.push({ rule_id: 'R5', passed: false, detail: `Requested amount $${requestedAmount.toFixed(2)} exceeds absolute cap of $${singleRequestMax.toFixed(2)}.` });
   } else if (requestedAmount > currentTwelveMonthRemaining) {
     decision = 'Denied';
     reasons.push(`Requested amount of $${requestedAmount.toFixed(2)} exceeds the remaining 12-month limit of $${currentTwelveMonthRemaining.toFixed(2)}.`);

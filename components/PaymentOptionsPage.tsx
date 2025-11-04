@@ -6,47 +6,18 @@ interface PaymentOptionsPageProps {
   navigate: (page: Page) => void;
 }
 
-const paymentOptions = [
+const internationalPartners = [
   {
-    name: "Zelle",
-    logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreigegnmtzs75tl276msqltkxfpsxnralxel37vqqui46xes6b2imei",
-    description: "Quick and direct bank transfers for US-based recipients. A fast, safe and easy way to receive your grant directly in your U.S. bank account.",
-    link: "https://www.zellepay.com/",
-    cta: "Learn More about Zelle"
-  },
-  {
-    name: "CAF America",
-    logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreibkvdz3awat2ixtzfddb6yvqcljbni4oxuuifmw7nad6hgsvzlc7i",
-    description: "Secure and compliant grant disbursement for international recipients, ensuring due diligence and adherence to all cross-border regulations.",
-    link: "https://e4erelief.recipientselect.com",
-    cta: "Visit Recipient Select"
+    name: "Convera",
+    logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreigqwixd5fz6zxnvo77eoz2mi3bv7x2qyuswprcyhldseqmxuqns5q",
+    link: "https://www.e4erelief.org/convera-international-grant-payment-guide",
   },
   {
     name: "Tipalti",
     logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreid4qymmxk4frxlehtn6rkygpiwtbesfzokvmzxind7ttuemog2cx4",
-    description: "A comprehensive global payment automation platform that handles various payment methods, currencies, and regulatory requirements worldwide.",
-    link: "https://tipalti.com/",
-    cta: "Explore Tipalti"
+    link: "https://www.e4erelief.org/tipalti-international-grant-payment-guide",
   }
 ];
-
-const PaymentOptionCard: React.FC<typeof paymentOptions[0]> = ({ name, logo, description, link, cta }) => (
-    <div className="bg-[#004b8d] rounded-lg shadow-lg p-6 flex flex-col items-center text-center border border-[#005ca0]/50 transition-all duration-300 hover:border-[#ff8400]/50 hover:scale-105">
-        <div className="h-20 flex items-center justify-center mb-4">
-            <img src={logo} alt={`${name} logo`} className="max-h-16 max-w-[200px]" />
-        </div>
-        <p className="text-white flex-grow mb-6 text-sm">{description}</p>
-        <a 
-            href={link} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200"
-        >
-            {cta}
-        </a>
-    </div>
-);
-
 
 const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => {
   useEffect(() => {
@@ -55,7 +26,7 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
   
   return (
     <div className="flex-1 flex flex-col p-8">
-      <div className="max-w-5xl mx-auto w-full">
+      <div className="max-w-7xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-6">
             <button onClick={() => navigate('support')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Support Center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -66,10 +37,67 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
               Payment Options
             </h1>
         </div>
-        <p className="text-center text-white mb-12 max-w-2xl mx-auto">We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.</p>
+        <p className="text-center text-white mb-12 max-w-3xl mx-auto">We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.</p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {paymentOptions.map(option => <PaymentOptionCard key={option.name} {...option} />)}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* US Applicants Section */}
+            <div className="bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 flex flex-col text-center h-full">
+                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
+                    US Applicants
+                </h2>
+                <p className="text-white mb-6 max-w-md mx-auto flex-grow">
+                    For applicants within the United States, please review our payment guide to understand the available options and requirements for receiving your grant.
+                </p>
+                <a 
+                    href="https://www.bankofamerica.com/recipient-select/"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    title="Visit Bank of America Recipient Select"
+                    className="inline-block transition-transform duration-300 transform hover:scale-105 mx-auto"
+                >
+                    <img 
+                        src="https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreibkvdz3awat2ixtzfddb6yvqcljbni4oxuuifmw7nad6hgsvzlc7i" 
+                        alt="Bank of America Recipient Select logo" 
+                        className="h-16 w-auto" 
+                    />
+                </a>
+            </div>
+            
+            {/* International Applicants Section */}
+            <div className="bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 h-full flex flex-col">
+                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
+                    International Applicants
+                </h2>
+                
+                <div className="flex-grow">
+                    <h3 className="text-xl font-semibold text-white mt-6 mb-2 text-center">International Grant Award Payment Support</h3>
+                    <p className="text-gray-300 text-center">
+                        Once a grant is awarded, there are a few important registration steps you must complete before financial assistance is received. To receive this financial assistance, you must successfully complete your account registration with our payment partners. 
+                        <a href="https://www.e4erelief.org/international-grant-award-guide" target="_blank" rel="noopener noreferrer" className="text-[#ff8400] hover:underline font-semibold"> Click here </a>
+                        to review the international grant award guide.
+                    </p>
+
+                    <h3 className="text-xl font-semibold text-white mt-8 mb-4 text-center">Payment Partner Information:</h3>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mt-6">
+                        {internationalPartners.map(partner => (
+                        <a 
+                            key={partner.name}
+                            href={partner.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            title={`View the ${partner.name} guide`}
+                            className="bg-[#003a70]/50 p-4 rounded-lg hover:bg-[#005ca0]/50 transition-all duration-300 border-2 border-transparent hover:border-[#ff8400]/50 transform hover:scale-105"
+                        >
+                            <img 
+                                src={partner.logo} 
+                                alt={`${partner.name} logo`} 
+                                className={`w-auto ${partner.name === 'Tipalti' ? 'h-14' : 'h-10'}`} 
+                            />
+                        </a>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
     </div>

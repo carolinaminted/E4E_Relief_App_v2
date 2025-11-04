@@ -40,6 +40,7 @@ export interface UserProfile {
   commConsent: boolean;
   infoCorrect: boolean;
   fundCode: string;
+  fundName?: string;
   classVerificationStatus: ClassVerificationStatus;
   eligibilityStatus: EligibilityStatus;
 }

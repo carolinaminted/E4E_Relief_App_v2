@@ -22,18 +22,20 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, 
       const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
       const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}@fakemail.example`;
       const password = 'e4e';
+      const funds = ['E4E', 'JHH', 'SQRT'];
+      const fundCode = funds[Math.floor(Math.random() * funds.length)];
 
-      return { firstName, lastName, email, password };
+      return { firstName, lastName, email, password, fundCode };
   };
 
   useEffect(() => {
     if (autofillTrigger > 0) {
-      const { firstName, lastName, email, password } = generateFakeUserData();
+      const { firstName, lastName, email, password, fundCode } = generateFakeUserData();
       setFirstName(firstName);
       setLastName(lastName);
       setEmail(email);
       setPassword(password);
-      setFundCode('E4E');
+      setFundCode(fundCode);
     }
   }, [autofillTrigger]);
 
