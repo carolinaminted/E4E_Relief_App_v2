@@ -38,7 +38,8 @@ const DomainVerificationView: React.FC<{ user: UserProfile, onVerified: () => vo
             const userDomain = user.email.split('@')[1];
             if (fund.domainConfig.allowedDomains.map(d => d.toLowerCase()).includes(userDomain.toLowerCase())) {
                 setIsVerified(true);
-                setTimeout(onVerified, 1500);
+                // Parent component will now handle showing success and next step
+                onVerified();
             } else {
                 setError(`Your email domain (${userDomain}) is not eligible for this fund.`);
             }
@@ -59,7 +60,7 @@ const DomainVerificationView: React.FC<{ user: UserProfile, onVerified: () => vo
             <p className="text-gray-300 mb-6">We are checking if your email <span className="font-bold text-white">{user.email}</span> belongs to an approved domain for fund code <span className="font-bold text-white">{user.fundCode}</span>.</p>
             {isLoading && <div className="h-8"><LoadingSpinner /></div>}
             {error && <p className="text-red-400 bg-red-900/50 p-3 rounded-md">{error}</p>}
-            {isVerified && <p className="text-green-400 bg-green-900/50 p-3 rounded-md">Success! Your domain is verified.</p>}
+            {isVerified && <p className="text-green-400 bg-green-900/50 p-3 rounded-md">Checking domain...</p>}
         </div>
     );
 };
@@ -151,6 +152,7 @@ const SSOVerificationView: React.FC<{ onVerified: () => void }> = ({ onVerified 
 const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onVerificationSuccess, navigate }) => {
     const [cvType, setCvType] = useState<CVType | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isVerified, setIsVerified] = useState(false);
 
     useEffect(() => {
         const fund = getFundByCode(user.fundCode);
@@ -160,18 +162,41 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
         setIsLoading(false);
     }, [user.fundCode]);
 
+    const handleLocalVerificationSuccess = () => {
+        setIsVerified(true);
+    };
+
+    const handleNavigateHome = () => {
+        onVerificationSuccess();
+    };
+
     const renderContent = () => {
         if (isLoading) {
             return <div className="text-center h-40 flex items-center justify-center"><LoadingSpinner /></div>;
         }
 
+        if (isVerified) {
+            return (
+                <div className="text-center">
+                    <svg className="w-16 h-16 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 className="text-xl font-semibold mb-4 text-white">Verification Complete!</h3>
+                    <p className="text-gray-300 mb-6">You are now eligible to apply for relief.</p>
+                    <button onClick={handleNavigateHome} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200">
+                        Next
+                    </button>
+                </div>
+            );
+        }
+
         switch (cvType) {
             case 'Domain':
-                return <DomainVerificationView user={user} onVerified={onVerificationSuccess} />;
+                return <DomainVerificationView user={user} onVerified={handleLocalVerificationSuccess} />;
             case 'Roster':
-                return <RosterVerificationView user={user} onVerified={onVerificationSuccess} />;
+                return <RosterVerificationView user={user} onVerified={handleLocalVerificationSuccess} />;
             case 'SSO':
-                return <SSOVerificationView onVerified={onVerificationSuccess} />;
+                return <SSOVerificationView onVerified={handleLocalVerificationSuccess} />;
             default:
                 return (
                     <div className="text-center">
