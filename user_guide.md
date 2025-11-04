@@ -108,10 +108,14 @@ The application is a guided, multi-step form. Your progress is saved as you move
 -   **My Applications**: View a list of all your past submissions with their status (Submitted, Awarded, Declined). Click any application to see a detailed summary in a modal window.
 -   **Grant Limits**: See your remaining 12-month and lifetime grant balances.
 -   **Update Information**: All your personal details are organized in collapsible sections. You can update your contact info, addresses, employment details, and consent preferences here.
+-   **See Eligiblity Status**: Active = Eligible to apply & Inactive = Additional verification required.
+-   **See Fund Code**: Unique code provided by the employer
 
 
 <img width="450" height="775" alt="Profile Page" src="https://github.com/user-attachments/assets/5dcbc6b5-455c-4860-8750-e84797a314b4" />
 <img width="450" height="775" alt="Profile Page - Inactive" src="https://github.com/user-attachments/assets/2820dc0e-f7ef-4359-9477-59f565a6a737" />
+<img width="426" height="245" alt="image" src="https://github.com/user-attachments/assets/2e361f5f-600b-46a9-ac0e-436fd7cea88e" />
+
 
 ---
 
@@ -123,6 +127,12 @@ The Relief Assistant is a powerful AI chatbot available via the floating widget.
 -   **Understand Your History**: The assistant is aware of your past applications and can provide status updates or explain decision reasons.
 -   **Update Your Profile**: Ask the assistant to update your information. For example: *"My new phone number is 555-867-5309."*
 -   **Start an Application**: Describe your situation to the assistant. For example: *"I was affected by the recent flood and need $1500 for repairs."* The assistant will use this information to create a draft, which will pre-fill the form when you navigate to the **Apply** page.
+
+
+<img width="450" height="400" alt="Apply for Relief - Page 1 - Lets Get Started - Zoomed" src="https://github.com/user-attachments/assets/266529d9-9a10-4dc6-9cb0-0477d8f54fff" />
+<img width="450" height="300" alt="Profile Page - Primary Address - AI Box" src="https://github.com/user-attachments/assets/5d6bf92d-669b-492f-9d23-4d15aa69b249" />
+<img width="450" height="775" alt="image" src="https://github.com/user-attachments/assets/f964c765-4f92-447a-9c8a-a4621faf6cc9" />
+
 
 ### AI Decisioning & Instant Grants
 When you submit an application, it goes through a two-stage automated decisioning process for an instant result.
