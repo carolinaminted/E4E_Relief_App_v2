@@ -36,7 +36,7 @@ const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 id="policy-modal-title" className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+        <h2 id="policy-modal-title" className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
           Legal Information
         </h2>
         <div className="space-y-4">
