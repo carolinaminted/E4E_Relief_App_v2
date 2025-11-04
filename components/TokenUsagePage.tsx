@@ -125,6 +125,32 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         <div className="space-y-4">
             <TokenUsageFiltersComponent filters={filters} setFilters={setFilters} filterOptions={filterOptions} />
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
+                    <button type="button" onClick={() => toggleSection('lastHour')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.lastHour}>
+                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last Hour)</h3>
+                        <ChevronIcon isOpen={openSections.lastHour} />
+                    </button>
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lastHour ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
+                        <div className="pt-4">
+                            <LastHourUsageChart usage={lastHourUsage} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
+                    <button type="button" onClick={() => toggleSection('last15')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.last15}>
+                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last 15 Minutes)</h3>
+                        <ChevronIcon isOpen={openSections.last15} />
+                    </button>
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.last15 ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
+                        <div className="pt-4">
+                            <Last15MinutesUsageChart usage={last15MinutesUsage} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
                 <button type="button" onClick={() => toggleSection('topSession')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.topSession}>
                     <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Highest-Token Session</h3>
@@ -133,30 +159,6 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.topSession ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
                     <div className="pt-4">
                         <TopSessionChart topSession={topSessionData} />
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
-                <button type="button" onClick={() => toggleSection('lastHour')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.lastHour}>
-                    <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last Hour)</h3>
-                    <ChevronIcon isOpen={openSections.lastHour} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lastHour ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
-                    <div className="pt-4">
-                        <LastHourUsageChart usage={lastHourUsage} />
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
-                <button type="button" onClick={() => toggleSection('last15')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.last15}>
-                    <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last 15 Minutes)</h3>
-                    <ChevronIcon isOpen={openSections.last15} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.last15 ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
-                    <div className="pt-4">
-                        <Last15MinutesUsageChart usage={last15MinutesUsage} />
                     </div>
                 </div>
             </div>

@@ -62,7 +62,8 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   
   const availableExpenseTypes = useMemo(() => {
     const usedTypes = new Set(formData.expenses.map(exp => exp.type));
-    return expenseTypes.filter(type => !usedTypes.has(type));
+    // FIX: Cast `type` to Expense['type'] because `expenseTypes` is string[] while `usedTypes` is Set<Expense['type']>.
+    return expenseTypes.filter(type => !usedTypes.has(type as Expense['type']));
   }, [formData.expenses]);
 
   const validateForm = (): boolean => {
