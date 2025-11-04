@@ -18,7 +18,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
   );
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-full">
+    <div className="flex-1 flex flex-col items-center justify-start pt-16 md:pt-24 pb-16 px-8 text-center">
       <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-12">
         Welcome to E4E Relief
       </h1>
