@@ -1,6 +1,7 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
 import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision } from '../types';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
+import { allEventTypes, employmentTypes } from '../data/appData';
 
 const API_KEY = process.env.API_KEY;
 
@@ -39,6 +40,7 @@ const updateUserProfileTool: FunctionDeclaration = {
       mobileNumber: { type: Type.STRING, description: 'The user\'s mobile phone number.' },
       primaryAddress: { ...addressSchema, description: "The user's primary residential address." },
       employmentStartDate: { type: Type.STRING, description: 'The date the user started their employment, in YYYY-MM-DD format.' },
+      eligibilityType: { type: Type.STRING, description: 'The user\'s employment type.', enum: employmentTypes },
       householdIncome: { type: Type.NUMBER, description: 'The user\'s estimated annual household income as a number.' },
       householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
       homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
@@ -52,7 +54,7 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
   parameters: {
     type: Type.OBJECT,
     properties: {
-      event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: ['Flood', 'Tornado', 'Tropical Storm/Hurricane', 'Wildfire', 'My disaster is not listed'] },
+      event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: allEventTypes },
       otherEvent: { type: Type.STRING, description: "The user-specified disaster if 'My disaster is not listed' is the event type." },
       eventDate: { type: Type.STRING, description: "The date the disaster occurred, in YYYY-MM-DD format." },
       evacuated: { type: Type.STRING, description: "Whether the user evacuated or plans to.", enum: ['Yes', 'No'] },
@@ -128,8 +130,9 @@ ${applicationList}
     model: model,
     config: {
       systemInstruction: dynamicContext,
+      // FIX: The 'tools' property must be inside the 'config' object.
+      tools: [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }],
     },
-    tools: [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }],
   });
 }
 
@@ -440,18 +443,19 @@ const applicationDetailsJsonSchema = {
                 lastName: { type: Type.STRING, description: 'The user\'s last name.' },
                 primaryAddress: { ...addressSchema, description: "The user's primary residential address." },
                 employmentStartDate: { type: Type.STRING, description: 'The date the user started their employment, in YYYY-MM-DD format.' },
-                eligibilityType: { type: Type.STRING, description: 'The user\'s employment type.', enum: ['Full-time', 'Part-time', 'Contractor'] },
+                eligibilityType: { type: Type.STRING, description: 'The user\'s employment type.', enum: employmentTypes },
                 householdIncome: { type: Type.NUMBER, description: 'The user\'s estimated annual household income as a number.' },
                 householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
                 homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
                 mobileNumber: { type: Type.STRING, description: "The user's mobile phone number." },
                 preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication." },
+                fundCode: { type: Type.STRING, description: "The applicant's fund code." },
             }
         },
         eventData: {
             type: Type.OBJECT,
             properties: {
-                event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: ['Flood', 'Tornado', 'Tropical Storm/Hurricane', 'Wildfire', 'My disaster is not listed'] },
+                event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: allEventTypes },
                 otherEvent: { type: Type.STRING, description: "The user-specified disaster if 'My disaster is not listed' is the event type." },
                 eventDate: { type: Type.STRING, description: "The date the disaster occurred, in YYYY-MM-DD format." },
                 evacuated: { type: Type.STRING, description: "Whether the user evacuated or plans to.", enum: ['Yes', 'No'] },
@@ -465,12 +469,17 @@ const applicationDetailsJsonSchema = {
 };
 
 export async function parseApplicationDetailsWithGemini(
-  description: string
+  description: string,
+  isProxy: boolean = false
 ): Promise<Partial<ApplicationFormData>> {
   if (!description) return {};
 
+  const instruction = isProxy
+    ? `You are parsing a description submitted by a proxy on behalf of an applicant. Your task is to extract the **applicant's** details from the text. The applicant is the person who experienced the hardship.`
+    : `Parse the user's description of their situation into a structured JSON object for a relief application.`;
+
   const prompt = `
-    Parse the user's description of their situation into a structured JSON object for a relief application.
+    ${instruction}
     Extract any mentioned details that match the schema, including personal info, address, event details (like evacuation status or power loss), and other profile information.
     
     Rules for address parsing:

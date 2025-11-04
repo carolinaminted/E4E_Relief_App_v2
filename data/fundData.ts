@@ -1,4 +1,7 @@
 // Define types
+import { employmentTypes, disasterEvents, hardshipEvents } from './appData';
+import { countries } from './countries';
+
 export type CVType = 'Domain' | 'Roster' | 'SSO';
 
 export interface Fund {
@@ -28,7 +31,9 @@ export interface Fund {
     clientId: string;
     scopes: string[];
   };
-  eventsEnabled: string[];
+  eligibleEmploymentTypes: string[];
+  eligibleDisasters: string[];
+  eligibleHardships: string[];
   aiParams?: Record<string, any>;
 }
 
@@ -47,10 +52,25 @@ const funds: Fund[] = [
       "domainConfig": {
         "allowedDomains": ["e4erelief.org", "partnerco.com", "example.com", "fakemail.example"]
       },
-      "eventsEnabled": [
-        "Natural Disaster",
+      "eligibleEmploymentTypes": [
+        "Active Full Time",
+        "Active Part Time",
+        "Full Time Short Term Disability",
+        "Part Time Short Term Disability",
+      ],
+      "eligibleDisasters": [
+        "Earthquake",
+        "Flood",
         "House Fire",
-        "Evacuation"
+        "Tornado",
+        "Tropical Storm/Hurricane",
+        "Wildfire",
+        "Winter Storm",
+      ],
+      "eligibleHardships": [
+        "Home Damage (leaks or broken pipes)",
+        "Household Loss of Income",
+        "Housing Crisis",
       ]
     },
     {
@@ -71,10 +91,22 @@ const funds: Fund[] = [
           { "employeeId": "12345", "birthDay": 15, "birthMonth": 5 }
         ]
       },
-      "eventsEnabled": [
-        "Medical Emergency",
-        "Funeral/Travel",
-        "Displacement"
+      "eligibleEmploymentTypes": [
+        "Active Full Time",
+        "Active Part Time",
+        "Full-Time on FMLA (U.S. only)",
+        "Part-Time on FMLA (U.S. only)",
+      ],
+      "eligibleDisasters": [
+        "Commercial Carrier Accident",
+        "House Fire",
+        "Winter Storm",
+      ],
+      "eligibleHardships": [
+        "Death",
+        "Household Loss of Income",
+        "Workplace Disruption",
+        "Mental Health and Well-Being",
       ]
     },
     {
@@ -93,11 +125,36 @@ const funds: Fund[] = [
         "clientId": "your-client-id",
         "scopes": ["openid", "profile", "email"]
       },
-      "eventsEnabled": [
-        "Utility Interruption",
+       "eligibleEmploymentTypes": [
+        "Active Full Time",
+        "Active Part Time",
+      ],
+      "eligibleDisasters": [
         "Flood",
-        "Wildfire"
+        "Typhoon",
+        "Volcanic Eruption"
+      ],
+      "eligibleHardships": [
+        "Crime",
+        "Housing Crisis",
       ]
+    },
+    {
+      "code": "ADMIN",
+      "name": "Admin Relief Fund",
+      "cvType": "Domain", // Simple verification for admin
+      "limits": { "twelveMonthMax": 999999, "lifetimeMax": 9999999, "singleRequestMax": 999999 },
+      "eligibleCountries": countries, // All countries
+      "hireEligibility": {
+        "employmentStartOnOrBeforeEvent": true,
+        "minTenureDays": 0 // No tenure requirement
+      },
+      "domainConfig": {
+        "allowedDomains": ["example.com"] // Admin's email domain
+      },
+      "eligibleEmploymentTypes": employmentTypes, // All employment types
+      "eligibleDisasters": disasterEvents, // All disasters
+      "eligibleHardships": hardshipEvents // All hardships
     }
 ];
 

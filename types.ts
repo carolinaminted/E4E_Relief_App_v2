@@ -30,7 +30,7 @@ export interface UserProfile {
   primaryAddress: Address;
   mailingAddress?: Address;
   employmentStartDate: string;
-  eligibilityType: 'Full-time' | 'Part-time' | 'Contractor' | '';
+  eligibilityType: string;
   householdIncome: number | '';
   householdSize: number | '';
   homeowner: 'Yes' | 'No' | '';
@@ -43,6 +43,7 @@ export interface UserProfile {
   fundName?: string;
   classVerificationStatus: ClassVerificationStatus;
   eligibilityStatus: EligibilityStatus;
+  role: 'User' | 'Admin';
 }
 
 export interface Expense {
@@ -53,7 +54,7 @@ export interface Expense {
 }
 
 export interface EventData {
-  event: 'Flood' | 'Tornado' | 'Tropical Storm/Hurricane' | 'Wildfire' | 'My disaster is not listed' | '';
+  event: string;
   otherEvent?: string;
   eventDate: string;
   evacuated: 'Yes' | 'No' | '';
@@ -89,6 +90,7 @@ export interface Application extends EventData {
   lifetimeGrantRemaining: number;
   shareStory: boolean;
   receiveAdditionalInfo: boolean;
+  submittedBy?: string;
 }
 
 export interface EligibilityDecision {

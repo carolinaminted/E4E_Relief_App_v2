@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
@@ -21,9 +21,15 @@ import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
+import EligibilityPage from './components/EligibilityPage';
+import FundPortalPage from './components/FundPortalPage';
+import DashboardPage from './components/DashboardPage';
+import TicketingPage from './components/TicketingPage';
+import ProgramDetailsPage from './components/ProgramDetailsPage';
+import ProxyApplyPage from './components/ProxyPage';
 
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification';
+type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
@@ -45,7 +51,7 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     },
     // 1c
     employmentStartDate: '2020-05-15',
-    eligibilityType: 'Full-time',
+    eligibilityType: 'Active Full Time',
     householdIncome: 75000,
     householdSize: 4,
     homeowner: 'Yes',
@@ -62,12 +68,48 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     fundName: 'E4E Relief',
     classVerificationStatus: 'passed',
     eligibilityStatus: 'Active',
+    role: 'User',
+  },
+  'admin@example.com': {
+    identityId: 'admin@example.com',
+    firstName: 'Admin',
+    lastName: 'User',
+    email: 'admin@example.com',
+    mobileNumber: '555-987-6543',
+    primaryAddress: {
+      country: 'United States',
+      street1: '456 Admin Ave',
+      city: 'Corpville',
+      state: 'NY',
+      zip: '54321',
+    },
+    employmentStartDate: '2018-01-01',
+    eligibilityType: 'Active Full Time',
+    householdIncome: 120000,
+    householdSize: 2,
+    homeowner: 'Yes',
+    preferredLanguage: 'English',
+    isMailingAddressSame: true,
+    ackPolicies: true,
+    commConsent: true,
+    infoCorrect: true,
+    passwordHash: 'admin123',
+    fundCode: 'ADMIN',
+    fundName: 'Admin Relief Fund',
+    classVerificationStatus: 'passed',
+    eligibilityStatus: 'Active',
+    role: 'Admin',
   },
 };
 
 const initialEligibility: Record<string, IdentityEligibility> = {
     'user@example.com': {
         identityId: 'user@example.com',
+        status: 'Active',
+        updatedAt: new Date().toISOString(),
+    },
+    'admin@example.com': {
+        identityId: 'admin@example.com',
         status: 'Active',
         updatedAt: new Date().toISOString(),
     }
@@ -94,9 +136,32 @@ const initialApplications: Record<string, Application[]> = {
       lifetimeGrantRemaining: 47500,
       shareStory: true,
       receiveAdditionalInfo: false,
+      submittedBy: 'user@example.com',
     },
   ],
 };
+
+const initialProxyApplications: Application[] = [
+    {
+      id: 'PROXY-001',
+      profileSnapshot: initialUsers['user@example.com'],
+      event: 'Wildfire',
+      eventDate: '2024-06-15',
+      requestedAmount: 1500,
+      expenses: [],
+      evacuated: 'Yes',
+      powerLoss: 'No',
+      submittedDate: '2024-06-18',
+      status: 'Submitted',
+      reasons: ["Application is under review."],
+      decisionedDate: '2024-06-18',
+      twelveMonthGrantRemaining: 7500,
+      lifetimeGrantRemaining: 47500,
+      shareStory: false,
+      receiveAdditionalInfo: true,
+      submittedBy: 'admin@example.com',
+    }
+];
 
 const createNewUserProfile = (
     firstName: string,
@@ -125,6 +190,7 @@ const createNewUserProfile = (
         fundName: fund?.name || 'Relief Fund',
         classVerificationStatus: 'pending',
         eligibilityStatus: 'Inactive',
+        role: 'User',
     };
 };
 
@@ -136,11 +202,14 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState(initialUsers);
   const [applications, setApplications] = useState(initialApplications);
+  const [proxyApplications, setProxyApplications] = useState(initialProxyApplications);
   const [eligibilityByIdentity, setEligibilityByIdentity] = useState(initialEligibility);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [autofillTrigger, setAutofillTrigger] = useState(0);
+  const [adminAutofillTrigger, setAdminAutofillTrigger] = useState(0);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
 
   const userApplications = useMemo(() => {
@@ -363,6 +432,7 @@ function App() {
       lifetimeGrantRemaining: finalDecision.remaining_lifetime,
       shareStory: appFormData.agreementData.shareStory ?? false,
       receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
+      submittedBy: currentUser.email,
     };
 
     setApplications(prev => ({
@@ -380,6 +450,124 @@ function App() {
 
   }, [currentUser, handleProfileUpdate, applications]);
   
+  const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
+    if (!currentUser || currentUser.role !== 'Admin') {
+        console.error("Only admins can submit proxy applications.");
+        return;
+    };
+
+    const applicantEmail = appFormData.profileData.email?.toLowerCase();
+    if (!applicantEmail) {
+        alert("Applicant email is required to submit a proxy application.");
+        return;
+    }
+
+    const tempId = `PROXY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+    const applicantInDb = users[applicantEmail];
+    const usersPastApplications = applicantInDb ? (applications[applicantEmail] || []) : [];
+
+    if (!applicantInDb) {
+        const newPasswordHash = 'password123'; // Default password
+        // FIX: The appFormData.profileData (UserProfile) does not contain a passwordHash.
+        // Create a new user object by spreading the profile data and adding the hash.
+        const newProfile: UserProfile & { passwordHash: string } = {
+            ...appFormData.profileData,
+            passwordHash: newPasswordHash,
+            role: 'User'
+        };
+        setUsers(prev => ({ ...prev, [applicantEmail]: newProfile }));
+        setApplications(prev => ({ ...prev, [applicantEmail]: [] }));
+        setEligibilityByIdentity(prev => ({
+            ...prev,
+            [newProfile.identityId]: {
+                identityId: newProfile.identityId,
+                status: 'Active',
+                updatedAt: new Date().toISOString(),
+            }
+        }));
+    }
+
+    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications[usersPastApplications.length - 1] : null;
+    
+    const applicantFundCode = appFormData.profileData.fundCode;
+    const fund = getFundByCode(applicantFundCode);
+    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
+    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
+    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
+
+    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
+    const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
+    
+    const preliminaryDecision = evaluateApplicationEligibility({
+        id: tempId,
+        employmentStartDate: appFormData.profileData.employmentStartDate,
+        eventData: appFormData.eventData,
+        currentTwelveMonthRemaining,
+        currentLifetimeRemaining,
+        singleRequestMax,
+    });
+    
+    const finalDecision = await getAIAssistedDecision(
+      { eventData: appFormData.eventData, currentTwelveMonthRemaining, currentLifetimeRemaining },
+      preliminaryDecision
+    );
+
+    const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
+        if (decision === 'Approved') return 'Awarded';
+        if (decision === 'Denied') return 'Declined';
+        return 'Submitted';
+    };
+
+    const newApplication: Application = {
+      id: tempId,
+      profileSnapshot: appFormData.profileData,
+      ...appFormData.eventData,
+      evacuated: appFormData.eventData.evacuated || '',
+      evacuatingFromPrimary: appFormData.eventData.evacuatingFromPrimary || undefined,
+      stayedWithFamilyOrFriend: appFormData.eventData.stayedWithFamilyOrFriend || undefined,
+      powerLoss: appFormData.eventData.powerLoss || '',
+      evacuationNights: appFormData.eventData.evacuationNights || undefined,
+      powerLossDays: appFormData.eventData.powerLossDays || undefined,
+      submittedDate: new Date().toLocaleDateString('en-CA'),
+      status: getStatusFromDecision(finalDecision.decision),
+      reasons: finalDecision.reasons,
+      decisionedDate: finalDecision.decisionedDate,
+      twelveMonthGrantRemaining: finalDecision.remaining_12mo,
+      lifetimeGrantRemaining: finalDecision.remaining_lifetime,
+      shareStory: appFormData.agreementData.shareStory ?? false,
+      receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
+      submittedBy: currentUser.email,
+    };
+    
+    setProxyApplications(prev => [...prev, newApplication]);
+    
+    setApplications(prev => ({
+      ...prev,
+      [applicantEmail]: [...(prev[applicantEmail] || []), newApplication],
+    }));
+    
+    // FIX: The appFormData.profileData (UserProfile) does not contain a passwordHash.
+    // To compare if the profile was updated, we must remove the passwordHash from the existing
+    // user record in the database (`applicantInDb`) before comparing it with the form data.
+    if (applicantInDb) {
+        const { passwordHash, ...dbProfileData } = applicantInDb;
+        if (JSON.stringify(appFormData.profileData) !== JSON.stringify(dbProfileData)) {
+            setUsers(prev => ({
+                ...prev,
+                [applicantEmail]: {
+                    ...prev[applicantEmail],
+                    ...appFormData.profileData
+                }
+            }));
+        }
+    }
+    
+    setApplicationDraft(null);
+    setLastSubmittedApp(newApplication);
+    setPage('submissionSuccess');
+  }, [currentUser, applications, users]);
+
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     console.log(`Executing tool: ${functionName}`, args);
     setApplicationDraft(prevDraft => {
@@ -414,8 +602,14 @@ function App() {
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className={`mx-auto h-32 w-auto ${page === 'register' ? 'cursor-pointer' : ''}`}
-              onClick={page === 'register' ? () => setAutofillTrigger(c => c + 1) : undefined}
+              className="mx-auto h-32 w-auto cursor-pointer"
+              onClick={() => {
+                if (page === 'register') {
+                  setAutofillTrigger(c => c + 1);
+                } else {
+                  setAdminAutofillTrigger(c => c + 1);
+                }
+              }}
             />
           </div>
           
@@ -423,7 +617,7 @@ function App() {
             {page === 'register' ? (
               <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
             ) : (
-              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} />
+              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} adminAutofillTrigger={adminAutofillTrigger} />
             )}
           </div>
         </>
@@ -442,7 +636,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -450,14 +644,30 @@ function App() {
         return <PaymentOptionsPage navigate={navigate} />;
       case 'donate':
         return <DonatePage navigate={navigate} />;
+      case 'eligibility':
+        return <EligibilityPage navigate={navigate} user={currentUser} />;
+      case 'fundPortal':
+        return <FundPortalPage navigate={navigate} user={currentUser} />;
+      case 'dashboard':
+        return <DashboardPage navigate={navigate} />;
+      case 'ticketing':
+        return <TicketingPage navigate={navigate} />;
+      case 'programDetails':
+        return <ProgramDetailsPage navigate={navigate} user={currentUser} />;
+      case 'proxy':
+        return <ProxyApplyPage 
+                    navigate={navigate}
+                    onSubmit={handleProxyApplicationSubmit}
+                    proxyApplications={proxyApplications}
+                />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;
+        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
     }
   };
 
   return (
-    <div className="bg-[#003a70] text-white min-h-screen font-sans flex flex-col">
+    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
       {currentUser && (
         <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-3 items-center shadow-md sticky top-0 z-30 border-b border-[#002a50]">
           <div className="justify-self-start">
@@ -480,11 +690,11 @@ function App() {
         </header>
       )}
 
-      <main className={`flex-1 flex flex-col ${!currentUser ? 'items-center' : ''}`}>
+      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center' : ''}`}>
         {renderPage()}
       </main>
 
-      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />}
+      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
     </div>
   );
 }

@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => boolean;
   switchToRegister: () => void;
+  adminAutofillTrigger: number;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, adminAutofillTrigger }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (adminAutofillTrigger > 0) {
+      setEmail('admin@example.com');
+      setPassword('admin123');
+    }
+  }, [adminAutofillTrigger]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
