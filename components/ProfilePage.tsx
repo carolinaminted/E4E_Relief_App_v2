@@ -285,9 +285,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
           </svg>
         </button>
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-          Profile
-        </h1>
+        <div className="text-center">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+              Profile
+            </h1>
+            <p className="text-sm text-white mt-1">Fund Code: {userProfile.fundCode}</p>
+        </div>
         <div className="absolute right-0">
           <EligibilityIndicator 
             status={userProfile.eligibilityStatus}
