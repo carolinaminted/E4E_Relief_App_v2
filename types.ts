@@ -9,7 +9,18 @@ export interface Address {
   zip: string;
 }
 
+export type ClassVerificationStatus = 'unknown' | 'pending' | 'passed' | 'failed';
+
+export type EligibilityStatus = 'Active' | 'Inactive';
+
+export interface IdentityEligibility {
+  identityId: string;
+  status: EligibilityStatus;
+  updatedAt: string;
+}
+
 export interface UserProfile {
+  identityId: string;
   firstName: string;
   lastName:string;
   middleName?: string;
@@ -28,6 +39,9 @@ export interface UserProfile {
   ackPolicies: boolean;
   commConsent: boolean;
   infoCorrect: boolean;
+  fundCode: string;
+  classVerificationStatus: ClassVerificationStatus;
+  eligibilityStatus: EligibilityStatus;
 }
 
 export interface Expense {

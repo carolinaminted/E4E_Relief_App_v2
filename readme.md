@@ -96,6 +96,24 @@ The app integrates with **AI-powered systems** that help applicants understand e
 
 ---
 
+## Developer Notes
+
+### Class Verification Feature
+
+This feature introduces a mandatory verification step for new users before they can access the application submission functionality. It is always enabled in this version.
+
+**Feature Flag (Conceptual):**
+- **Location:** `src/config/flags.ts` (hypothetical, as there's no flags file yet)
+- **Flag:** `classVerificationEnabled: true`
+- **Behavior:** When `true`, new users are directed to the Class Verification flow. When `false`, this flow is bypassed, and new users can access the application forms immediately after registration.
+
+**Risks & Considerations:**
+- **API Dependency:** The Roster and SSO verification methods rely on external or backend APIs. API downtime will prevent users from completing verification through those paths. The Domain verification is client-side but relies on configuration fetched from an API.
+- **User Lockout:** If a user cannot complete any of the verification methods (e.g., they are a new employee not yet in the roster, they use a personal email), they will be locked out from applying for relief. A clear support path must be available.
+- **Secure Storage:** The `fundCode` and `classVerificationStatus` are persisted in the user's session. On a shared device, this could expose the fund code if not cleared properly on logout. The current implementation clears this state on logout.
+
+---
+
 ## Summary
 The **E4E Relief Mobile App** transforms the traditional relief process into a **personalized, AI-assisted experience**.  
 By automating repetitive tasks, interpreting disaster context, and enforcing eligibility with transparency, E4E achieves faster decisions, higher applicant satisfaction, and scalable relief distribution across programs and geographies.

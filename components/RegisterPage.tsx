@@ -1,24 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface RegisterPageProps {
-  onRegister: (firstName: string, lastName: string, email: string, password: string) => boolean;
+  onRegister: (firstName: string, lastName: string, email: string, password: string, fundCode: string) => boolean;
   switchToLogin: () => void;
+  autofillTrigger: number;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, autofillTrigger }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fundCode, setFundCode] = useState('');
   const [error, setError] = useState('');
+
+  const generateFakeUserData = () => {
+      const firstNames = ["Liam", "Olivia", "Noah", "Emma", "Oliver", "Charlotte", "Elijah", "Amelia", "James", "Ava", "Benjamin", "Sophia", "Lucas", "Isabella", "Henry", "Mia", "Alexander", "Evelyn"];
+      const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas"];
+
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}@fakemail.example`;
+      const password = 'e4e';
+
+      return { firstName, lastName, email, password };
+  };
+
+  useEffect(() => {
+    if (autofillTrigger > 0) {
+      const { firstName, lastName, email, password } = generateFakeUserData();
+      setFirstName(firstName);
+      setLastName(lastName);
+      setEmail(email);
+      setPassword(password);
+      setFundCode('E4E');
+    }
+  }, [autofillTrigger]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !fundCode) {
       setError('All fields are required.');
       return;
     }
-    const success = onRegister(firstName, lastName, email, password);
+    const success = onRegister(firstName, lastName, email, password, fundCode);
     if (!success) {
       setError('This email is already registered. Please try logging in.');
     } else {
@@ -78,6 +104,20 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
             required
             autoComplete="new-password"
             />
+        </div>
+        <div>
+            <label htmlFor="fundCode" className="block text-sm font-medium text-white mb-2">Fund Code</label>
+            <input
+                type="text"
+                id="fundCode"
+                value={fundCode}
+                onChange={(e) => setFundCode(e.target.value)}
+                className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+                required
+                autoComplete="off"
+                aria-describedby="fund-code-help"
+            />
+            <p id="fund-code-help" className="text-xs text-gray-400 mt-1">Enter the code provided by your employer or program.</p>
         </div>
         {error && <p className="text-red-400 text-sm">{error}</p>}
         <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-10">

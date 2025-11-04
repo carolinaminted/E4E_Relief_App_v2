@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import type { UserProfile, Application, EventData, EligibilityDecision } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
 import type { ApplicationFormData } from './types';
@@ -17,13 +17,17 @@ import ChatbotWidget from './components/ChatbotWidget';
 import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
+import DonatePage from './components/DonatePage';
+import ClassVerificationPage from './components/ClassVerificationPage';
 
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions';
+type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification';
 
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
   'user@example.com': {
+    // Identity
+    identityId: 'user@example.com',
     // 1a
     firstName: 'John',
     lastName: 'Doe',
@@ -52,7 +56,18 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     infoCorrect: true,
     // Auth
     passwordHash: 'password123', // In a real app, this would be a hash
+    fundCode: 'E4E',
+    classVerificationStatus: 'passed',
+    eligibilityStatus: 'Active',
   },
+};
+
+const initialEligibility: Record<string, IdentityEligibility> = {
+    'user@example.com': {
+        identityId: 'user@example.com',
+        status: 'Active',
+        updatedAt: new Date().toISOString(),
+    }
 };
 
 const initialApplications: Record<string, Application[]> = {
@@ -83,8 +98,10 @@ const initialApplications: Record<string, Application[]> = {
 const createNewUserProfile = (
     firstName: string,
     lastName: string,
-    email: string
+    email: string,
+    fundCode: string,
 ): UserProfile => ({
+    identityId: email,
     firstName,
     lastName,
     email,
@@ -99,6 +116,9 @@ const createNewUserProfile = (
     ackPolicies: false,
     commConsent: false,
     infoCorrect: false,
+    fundCode,
+    classVerificationStatus: 'pending',
+    eligibilityStatus: 'Inactive',
 });
 
 
@@ -109,8 +129,11 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState(initialUsers);
   const [applications, setApplications] = useState(initialApplications);
+  const [eligibilityByIdentity, setEligibilityByIdentity] = useState(initialEligibility);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
+  const [autofillTrigger, setAutofillTrigger] = useState(0);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
 
   const userApplications = useMemo(() => {
@@ -119,33 +142,61 @@ function App() {
     }
     return [];
   }, [currentUser, applications]);
+  
+  const isApplyEnabled = useMemo(() => {
+    if (!currentUser) return false;
+    return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Active';
+  }, [currentUser]);
 
   const handleLogin = useCallback((email: string, password: string): boolean => {
     const user = users[email];
     if (user && user.passwordHash === password) {
       const { passwordHash, ...profile } = user;
-      setCurrentUser(profile);
-      initTokenTracker(profile);
-      setPage('home');
+      
+      const eligibility = eligibilityByIdentity[profile.identityId];
+      const hydratedProfile = {
+        ...profile,
+        eligibilityStatus: eligibility ? eligibility.status : 'Inactive',
+      };
+      
+      setCurrentUser(hydratedProfile);
+      initTokenTracker(hydratedProfile);
+      
+      if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Active') {
+        setPage('classVerification');
+      } else {
+        setPage('home');
+      }
       return true;
     }
     return false;
-  }, [users]);
+  }, [users, eligibilityByIdentity]);
   
-  const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string): boolean => {
+  const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string, fundCode: string): boolean => {
     if (users[email]) {
       return false; // User already exists
     }
-    const newUserProfile = createNewUserProfile(firstName, lastName, email);
+    const newUserProfile = createNewUserProfile(firstName, lastName, email, fundCode);
     const newUser = {
       ...newUserProfile,
       passwordHash: password,
     };
     setUsers(prev => ({ ...prev, [email]: newUser }));
     setApplications(prev => ({ ...prev, [email]: [] }));
+    
+    // Set initial eligibility
+    setEligibilityByIdentity(prev => ({
+        ...prev,
+        [newUserProfile.identityId]: {
+            identityId: newUserProfile.identityId,
+            status: 'Inactive',
+            updatedAt: new Date().toISOString(),
+        }
+    }));
+
     setCurrentUser(newUserProfile);
     initTokenTracker(newUserProfile);
-    setPage('home');
+    setPage('classVerification');
     return true;
   }, [users]);
 
@@ -156,8 +207,67 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: Page) => {
-    setPage(targetPage);
-  }, []);
+    if (targetPage === 'apply' && !isApplyEnabled) {
+        console.log("Gating 'apply' page. User not verified or not eligible.");
+        setPage('classVerification');
+    } else {
+        setPage(targetPage);
+    }
+  }, [isApplyEnabled]);
+
+  const handleSetEligibility = useCallback((identityId: string, status: EligibilityStatus) => {
+    const previousStatus = eligibilityByIdentity[identityId]?.status || 'unknown';
+    console.log(`[Telemetry] eligibility_status_changed: { identityId: ${identityId}, from: ${previousStatus}, to: ${status} }`);
+
+    setEligibilityByIdentity(prev => ({
+        ...prev,
+        [identityId]: {
+            identityId,
+            status,
+            updatedAt: new Date().toISOString(),
+        }
+    }));
+    
+    setCurrentUser(prevUser => {
+        if (prevUser && prevUser.identityId === identityId) {
+            return { ...prevUser, eligibilityStatus: status };
+        }
+        return prevUser;
+    });
+
+  }, [eligibilityByIdentity]);
+  
+  const handleVerificationSuccess = useCallback(() => {
+    if (!currentUser) return;
+    
+    console.log("[Telemetry] cv_redirect: { method: 'any', destination: 'Home' }");
+
+    const updatedProfile: UserProfile = {
+        ...currentUser,
+        classVerificationStatus: 'passed',
+        eligibilityStatus: 'Active',
+    };
+    
+    handleSetEligibility(currentUser.identityId, 'Active');
+    
+    setCurrentUser(updatedProfile);
+    setUsers(prev => {
+        const currentUserData = prev[currentUser.email];
+        if (currentUserData) {
+            return {
+                ...prev,
+                [currentUser.email]: {
+                    ...currentUserData,
+                    ...updatedProfile,
+                }
+            };
+        }
+        return prev;
+    });
+    
+    setPage('home');
+    
+  }, [currentUser, handleSetEligibility]);
   
   const handleProfileUpdate = useCallback((updatedProfile: UserProfile) => {
     if (!currentUser) return;
@@ -292,13 +402,14 @@ function App() {
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className="mx-auto h-48 w-auto"
+              className={`mx-auto h-48 w-auto ${page === 'register' ? 'cursor-pointer' : ''}`}
+              onClick={page === 'register' ? () => setAutofillTrigger(c => c + 1) : undefined}
             />
           </div>
           
           <div className="w-full max-w-md">
             {page === 'register' ? (
-              <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} />
+              <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
             ) : (
               <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} />
             )}
@@ -308,24 +419,28 @@ function App() {
     }
     
     switch (page) {
+      case 'classVerification':
+        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} />;
       case 'apply':
         return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} />;
       case 'profile':
         return <ProfilePage navigate={navigate} applications={userApplications} userProfile={currentUser} onProfileUpdate={handleProfileUpdate} />;
       case 'support':
-        return <SupportPage navigate={navigate} />;
+        return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
       case 'paymentOptions':
         return <PaymentOptionsPage navigate={navigate} />;
+      case 'donate':
+        return <DonatePage navigate={navigate} />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} />;
+        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} />;
     }
   };
 
@@ -353,7 +468,7 @@ function App() {
         {renderPage()}
       </main>
 
-      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} />}
+      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />}
     </div>
   );
 }

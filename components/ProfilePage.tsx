@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Application, UserProfile, Address } from '../types';
+import type { Application, UserProfile, Address, EligibilityStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -9,7 +9,7 @@ import RequiredIndicator from './RequiredIndicator';
 import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 
 interface ProfilePageProps {
-  navigate: (page: 'home' | 'apply') => void;
+  navigate: (page: 'home' | 'apply' | 'classVerification') => void;
   applications: Application[];
   userProfile: UserProfile;
   onProfileUpdate: (updatedProfile: UserProfile) => void;
@@ -21,7 +21,7 @@ const statusStyles: Record<Application['status'], string> = {
     Declined: 'text-red-400',
 };
 
-// --- UI Icons ---
+// --- UI Components ---
 const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -35,19 +35,48 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
+const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () => void }> = ({ status, onClick }) => {
+    const isActive = status === 'Active';
+
+    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
+    const activeClasses = "bg-green-800/50 text-green-300";
+    const inactiveClasses = "bg-red-800/50 text-red-300 cursor-pointer hover:bg-red-800/80";
+
+    const handleClick = () => {
+        if (!isActive) {
+             console.log("[Telemetry] eligibility_cta_clicked");
+             onClick();
+        }
+    };
+    
+    return (
+        <button
+            onClick={handleClick}
+            disabled={isActive}
+            role={isActive ? 'status' : 'button'}
+            aria-label={isActive ? "Eligibility Status: Active" : "Eligibility Inactive. Tap to verify."}
+            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+        >
+            {!isActive && (
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+            )}
+            <span>{isActive ? 'Active' : 'Inactive'}</span>
+        </button>
+    );
+};
+
+
+type ProfileSection = 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate }) => {
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(true);
-  const [openSections, setOpenSections] = useState({
-    contact: false,
-    primaryAddress: false,
-    additionalDetails: false,
-    mailingAddress: false,
-    consent: false,
-  });
+  const [openSection, setOpenSection] = useState<ProfileSection | null>('contact');
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
@@ -101,8 +130,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     };
   }, [formData]);
 
-  const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  const toggleSection = (section: ProfileSection) => {
+    setOpenSection(prev => (prev === section ? null : section));
   };
 
 
@@ -166,7 +195,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   const validate = () => {
     const newErrors: Record<string, any> = {};
-    const sectionsToOpen: Partial<Record<keyof typeof openSections, boolean>> = {};
 
     // Contact Info
     if (!formData.firstName) newErrors.firstName = 'First name is required.';
@@ -216,12 +244,22 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-        if(newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) sectionsToOpen.contact = true;
-        if(newErrors.primaryAddress) sectionsToOpen.primaryAddress = true;
-        if(newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) sectionsToOpen.additionalDetails = true;
-        if(newErrors.mailingAddress || newErrors.isMailingAddressSame) sectionsToOpen.mailingAddress = true;
-        if(newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) sectionsToOpen.consent = true;
-        setOpenSections(prev => ({ ...prev, ...sectionsToOpen }));
+        let firstErrorSection: ProfileSection | null = null;
+        if (newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) {
+            firstErrorSection = 'contact';
+        } else if (newErrors.primaryAddress) {
+            firstErrorSection = 'primaryAddress';
+        } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
+            firstErrorSection = 'additionalDetails';
+        } else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) {
+            firstErrorSection = 'mailingAddress';
+        } else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) {
+            firstErrorSection = 'consent';
+        }
+        
+        if (firstErrorSection) {
+            setOpenSection(firstErrorSection);
+        }
     }
 
     return Object.keys(newErrors).length === 0;
@@ -250,6 +288,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
           Profile
         </h1>
+        <div className="absolute right-0">
+          <EligibilityIndicator 
+            status={userProfile.eligibilityStatus}
+            onClick={() => navigate('classVerification')} 
+          />
+        </div>
       </div>
       
       {/* Applications Section */}
@@ -291,7 +335,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <div className="flex justify-center pt-4">
                             <button 
                                 onClick={() => navigate('apply')} 
-                                className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200"
+                                className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                disabled={userProfile.eligibilityStatus !== 'Active'}
+                                title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
                             >
                                 Apply Now
                             </button>
@@ -300,8 +346,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 ) : (
                     <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
                         <p className="text-gray-300">You have not submitted any applications yet.</p>
-                        <button onClick={() => navigate('apply')} className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md">
-                        Apply Now
+                        <button 
+                            onClick={() => navigate('apply')} 
+                            className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
+                            disabled={userProfile.eligibilityStatus !== 'Active'}
+                            title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                        >
+                            Apply Now
                         </button>
                     </div>
                 )}
@@ -313,14 +364,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
       <form onSubmit={handleSave} className="space-y-4">
         {/* 1a Contact Information */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.contact} aria-controls="contact-section">
+            <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'contact'} aria-controls="contact-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Contact Information</h2>
-                    {sectionHasErrors.contact && !openSections.contact && <NotificationIcon />}
+                    {sectionHasErrors.contact && openSection !== 'contact' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.contact} />
+                <ChevronIcon isOpen={openSection === 'contact'} />
             </button>
-            <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSections.contact ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSection === 'contact' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                     <FormInput label="First Name" id="firstName" required value={formData.firstName} onChange={e => handleFormChange('firstName', e.target.value)} error={errors.firstName} />
                     <FormInput label="Middle Name(s)" id="middleName" value={formData.middleName || ''} onChange={e => handleFormChange('middleName', e.target.value)} />
@@ -329,7 +380,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                     <FormInput label="Email" id="email" required value={formData.email} disabled />
                     <FormInput label="Mobile Number" id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormChange('mobileNumber', e.target.value)} error={errors.mobileNumber} placeholder="(555) 555-5555" />
                 </div>
-                {openSections.contact && (
+                {openSection === 'contact' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -350,18 +401,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
         {/* 1b Primary Address */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.primaryAddress} aria-controls="address-section">
+            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Primary Address</h2>
-                    {sectionHasErrors.primaryAddress && !openSections.primaryAddress && <NotificationIcon />}
+                    {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.primaryAddress} />
+                <ChevronIcon isOpen={openSection === 'primaryAddress'} />
             </button>
-            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSections.primaryAddress ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'primaryAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-6 pt-4">
                     <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
                 </div>
-                {openSections.primaryAddress && (
+                {openSection === 'primaryAddress' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -382,14 +433,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         
         {/* 1c Additional Details */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.additionalDetails} aria-controls="details-section">
+            <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Additional Details</h2>
-                    {sectionHasErrors.additionalDetails && !openSections.additionalDetails && <NotificationIcon />}
+                    {sectionHasErrors.additionalDetails && openSection !== 'additionalDetails' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.additionalDetails} />
+                <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
-            <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSections.additionalDetails ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                     <FormInput type="date" label="Employment Start Date" id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormChange('employmentStartDate', e.target.value)} error={errors.employmentStartDate} />
                     <SearchableSelector
@@ -414,7 +465,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         variant="underline"
                     />
                 </div>
-                {openSections.additionalDetails && (
+                {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -435,14 +486,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
         {/* 1d Mailing Address */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.mailingAddress} aria-controls="mailing-section">
+            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Mailing Address</h2>
-                    {sectionHasErrors.mailingAddress && !openSections.mailingAddress && <NotificationIcon />}
+                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.mailingAddress} />
+                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
             </button>
-            <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSections.mailingAddress ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-4 pt-4">
                     <FormRadioGroup 
                         legend="Mailing Address Same as Primary?" 
@@ -459,7 +510,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         </div>
                     )}
                 </div>
-                {openSections.mailingAddress && (
+                {openSection === 'mailingAddress' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -480,14 +531,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
         {/* 1e Consent and Acknowledgement */}
         <fieldset className="pb-4">
-            <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.consent} aria-controls="consent-section">
+            <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'consent'} aria-controls="consent-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Consent & Acknowledgement</h2>
-                    {sectionHasErrors.consent && !openSections.consent && <NotificationIcon />}
+                    {sectionHasErrors.consent && openSection !== 'consent' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.consent} />
+                <ChevronIcon isOpen={openSection === 'consent'} />
             </button>
-            <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSections.consent ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSection === 'consent' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-3 pt-4">
                      {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
                     <div className="flex items-start">
@@ -505,7 +556,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">All information I have provided is accurate. <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
                 </div>
-                {openSections.consent && (
+                {openSection === 'consent' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
