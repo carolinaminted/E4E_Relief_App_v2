@@ -40,8 +40,8 @@ const EligibilityPage: React.FC<EligibilityPageProps> = ({ navigate, user }) => 
             You can check your current eligibility status on your <button onClick={() => navigate('profile')} className="font-semibold text-[#ff8400] hover:underline">Profile page</button>.
         </p>
         <div className="text-center inline-block space-y-1 bg-[#003a70]/50 p-4 rounded-md border border-[#005ca0]">
-            <p><strong className="text-green-300">'Active'</strong> status means you can apply.</p>
-            <p><strong className="text-red-300">'Inactive'</strong> status requires additional verification steps.</p>
+            <p><strong className="text-green-300">'Active'</strong> means you are eligible to apply.</p>
+            <p><strong className="text-red-300">'Inactive'</strong> requires additional verification.</p>
         </div>
       </div>
 

@@ -84,49 +84,54 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-12 md:pt-16 pb-16 px-4 sm:px-8 text-center">
-      <IconDefs />
-      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-        Welcome to {fundName || 'E4E Relief'}
-      </h1>
+    <div className="flex-1 flex flex-col items-center justify-between pt-12 md:pt-16 pb-8 px-4 sm:px-8 text-center">
+      <div> {/* Content wrapper */}
+        <IconDefs />
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+          Welcome to {fundName || 'E4E Relief'}
+        </h1>
 
-      <div className="w-full max-w-4xl mt-12 space-y-8">
-        {/* Apply Banner */}
-        <div
-            onClick={!isApplyEnabled ? undefined : () => navigate('apply')}
-            title={!isApplyEnabled ? "Class Verification required to access applications." : ""}
-            aria-disabled={!isApplyEnabled}
-            className={`bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col sm:flex-row items-center text-center sm:text-left ${
-                isApplyEnabled ? 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105' : 'opacity-60 cursor-not-allowed'
-            }`}
-        >
-            <ApplyIcon className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0" />
-            <div className="mt-4 sm:mt-0 sm:ml-6">
-                <h2 className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] ${!isApplyEnabled ? 'opacity-70' : ''}`}>
-                    Apply for Relief
-                </h2>
-                <p className="text-white text-sm mt-1">
-                    Submit a new application for financial assistance.
-                </p>
-            </div>
-        </div>
+        <div className="w-full max-w-4xl mt-12 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+          {/* Apply Banner */}
+          <div
+              onClick={!isApplyEnabled ? undefined : () => navigate('apply')}
+              title={!isApplyEnabled ? "Class Verification required to access applications." : ""}
+              aria-disabled={!isApplyEnabled}
+              className={`col-span-2 sm:col-span-3 bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col sm:flex-row items-center text-center sm:text-left ${
+                  isApplyEnabled ? 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105' : 'opacity-60 cursor-not-allowed'
+              }`}
+          >
+              <ApplyIcon className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0" />
+              <div className="mt-4 sm:mt-0 sm:ml-6">
+                  <h2 className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] ${!isApplyEnabled ? 'opacity-70' : ''}`}>
+                      Apply for Relief
+                  </h2>
+                  <p className="text-white text-sm mt-1">
+                      Submit a new application for financial assistance.
+                  </p>
+              </div>
+          </div>
 
-        {/* Other Tiles */}
-        <div className={`grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6`}>
-            {tiles.map((tile) => (
-                <div 
-                    key={tile.key}
-                    onClick={tile.onClick}
-                    className="bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105"
-                >
-                    {tile.icon}
-                    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {tile.title}
-                    </h2>
-                </div>
-            ))}
+          {/* Other Tiles */}
+          {tiles.map((tile) => (
+              <div 
+                  key={tile.key}
+                  onClick={tile.onClick}
+                  className="bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105"
+              >
+                  {tile.icon}
+                  <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                      {tile.title}
+                  </h2>
+              </div>
+          ))}
         </div>
       </div>
+      <footer className="mt-8">
+        <p className="text-sm italic text-[#898c8d]">
+          Powered by E4E Relief Copyright 2025
+        </p>
+      </footer>
     </div>
   );
 };
