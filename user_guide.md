@@ -9,8 +9,8 @@ This guide will walk you through all the features of the E4E Relief application,
 -   When registering, you will need a **Fund Code** provided by your employer or program.
 
 
-<img width="387" height="671" alt="E4E App v2 - Sign In Page" src="https://github.com/user-attachments/assets/05ddedce-5405-4f85-be1d-b922418ebc02" />
-<img width="433" height="760" alt="E4E App v2 - Sign Up Page" src="https://github.com/user-attachments/assets/c8a954b0-e377-40e5-9402-02b11b155394" />
+<img width="450" height="775" alt="E4E App v2 - Sign In Page" src="https://github.com/user-attachments/assets/05ddedce-5405-4f85-be1d-b922418ebc02" />
+<img width="450" height="775" alt="E4E App v2 - Sign Up Page" src="https://github.com/user-attachments/assets/c8a954b0-e377-40e5-9402-02b11b155394" />
 
 
 ### Secret Shortcuts (For Demo & Testing)
@@ -28,9 +28,9 @@ After your first sign-in, you must complete a one-time verification to confirm y
 
 Once verified, you will have full access to the application. If your eligibility status is `Inactive`, you may need to complete this step to apply for relief.
 
-<img width="387" height="675" alt="E4E App v2 - Class Verification - SSO" src="https://github.com/user-attachments/assets/e945d58f-c951-4340-8a9b-048405a11797" />
-<img width="382" height="677" alt="E4E App v2 - Class Verification - Roster" src="https://github.com/user-attachments/assets/71cb83be-124f-4eaa-b147-b1e2e55d2164" />
-<img width="432" height="753" alt="E4E App v2 - Class Verification Success" src="https://github.com/user-attachments/assets/af3a2dee-3fc1-440e-b238-d448d28798a2" />
+<img width="450" height="775" alt="E4E App v2 - Class Verification - SSO" src="https://github.com/user-attachments/assets/e945d58f-c951-4340-8a9b-048405a11797" />
+<img width="450" height="775" alt="E4E App v2 - Class Verification - Roster" src="https://github.com/user-attachments/assets/71cb83be-124f-4eaa-b147-b1e2e55d2164" />
+<img width="450" height="775" alt="E4E App v2 - Class Verification Success" src="https://github.com/user-attachments/assets/af3a2dee-3fc1-440e-b238-d448d28798a2" />
 
 
 ---
@@ -45,8 +45,8 @@ The home screen provides quick access to all major sections of the app.
 -   **Dashboards** (Admin only): Access the Fund Portal for administrative features.
 
 
-<img width="425" height="755" alt="E4E App v2 - Home - Applicant" src="https://github.com/user-attachments/assets/23d435f3-477a-45fa-a076-f156d0ee3bca" />
-<img width="427" height="753" alt="image" src="https://github.com/user-attachments/assets/3e9d7cb6-7d86-4bae-b37f-631f7fd9c2e0" />
+<img width="450" height="775" alt="E4E App v2 - Home - Applicant" src="https://github.com/user-attachments/assets/23d435f3-477a-45fa-a076-f156d0ee3bca" />
+<img width="450" height="775" alt="image" src="https://github.com/user-attachments/assets/3e9d7cb6-7d86-4bae-b37f-631f7fd9c2e0" />
 
 ---
 
@@ -57,30 +57,30 @@ The application is a guided, multi-step form. Your progress is saved as you move
 -   **AI Application Starter**: You can start by describing your situation in your own words. The AI will parse the text and pre-fill as many fields as possible throughout the application, including your contact info, address, event details, and requested amount.
 -   **Manual Entry**: You can fill out the form manually. The application is organized into collapsible sections for contact details, primary address, mailing address, and other personal information. The AI-powered **Address Helper** can parse a pasted address to fill in the fields for you.
 
-<img width="435" height="758" alt="Apply for Relief - Page 1" src="https://github.com/user-attachments/assets/5928b358-f371-407f-91e1-7f16f8120141" />
-<img width="437" height="762" alt="Apply for Relief - Page 1 - Lets Get Started" src="https://github.com/user-attachments/assets/a05390c6-f332-42b4-8f1b-e99de7135491" />
-<img width="432" height="768" alt="Apply for Relief - Page 1 - Contact Information" src="https://github.com/user-attachments/assets/f6260da0-dfab-4b89-bf84-c1ae1a9a9677" />
-<img width="431" height="770" alt="Apply for Relief - Page 1 - Primary Address" src="https://github.com/user-attachments/assets/80460c73-0580-4fcb-afed-85cfd5852950" />
-<img width="426" height="767" alt="Apply for Relief - Page 1 - Mailing Address" src="https://github.com/user-attachments/assets/5892c21e-4394-49bd-916b-131357ceeba7" />
-<img width="426" height="753" alt="Apply for Relief - Page 1 - Additional Details" src="https://github.com/user-attachments/assets/67d8d8f7-05ee-4941-b180-9a469f69ce39" />
-<img width="436" height="761" alt="Apply for Relief - Page 1 - Consent   Acknowledgement" src="https://github.com/user-attachments/assets/2a80e086-507e-4b6b-9ec5-a67e109f2f78" />
+<img width="450" height="775" alt="Apply for Relief - Page 1" src="https://github.com/user-attachments/assets/5928b358-f371-407f-91e1-7f16f8120141" />
+<img width="450" height="775" alt="Apply for Relief - Page 1 - Lets Get Started" src="https://github.com/user-attachments/assets/a05390c6-f332-42b4-8f1b-e99de7135491" />
+<img width="450" height="775" alt="Apply for Relief - Page 1 - Contact Information" src="https://github.com/user-attachments/assets/f6260da0-dfab-4b89-bf84-c1ae1a9a9677" />
+<img width="450" height="775" alt="Apply for Relief - Page 1 - Primary Address" src="https://github.com/user-attachments/assets/80460c73-0580-4fcb-afed-85cfd5852950" />
+<img width="450" height="775" alt="Apply for Relief - Page 1 - Mailing Address" src="https://github.com/user-attachments/assets/5892c21e-4394-49bd-916b-131357ceeba7" />
+<img width="450" height="775" alt="Apply for Relief - Page 1 - Additional Details" src="https://github.com/user-attachments/assets/67d8d8f7-05ee-4941-b180-9a469f69ce39" />
+<img width="450" height="775" alt="Apply for Relief - Page 1 - Consent   Acknowledgement" src="https://github.com/user-attachments/assets/2a80e086-507e-4b6b-9ec5-a67e109f2f78" />
 
 
 ### Step 2: Event Details
 -   Select the type of disaster or hardship event.
 -   Provide the date of the event, details about power loss or evacuation, and the amount you are requesting.
 
-<img width="436" height="753" alt="Apply for Relief - Page 2 - Event Details" src="https://github.com/user-attachments/assets/98821cdd-8450-4592-a090-15e224a36275" />
-<img width="432" height="755" alt="Apply for Relief - Page 2 - Event Details 2" src="https://github.com/user-attachments/assets/1b592599-fc1a-4082-9047-3b8c229f6b04" />
+<img width="450" height="775" alt="Apply for Relief - Page 2 - Event Details" src="https://github.com/user-attachments/assets/98821cdd-8450-4592-a090-15e224a36275" />
+<img width="450" height="775" alt="Apply for Relief - Page 2 - Event Details 2" src="https://github.com/user-attachments/assets/1b592599-fc1a-4082-9047-3b8c229f6b04" />
 
 
 ### Step 3: Expenses
 -   Itemize your expenses based on predefined categories (e.g., Food Spoilage, Meals).
 -   You can add, edit, or delete expenses. Receipts are optional but can be uploaded.
 
-<img width="437" height="773" alt="Apply for Relief - Page 3 - Expenses" src="https://github.com/user-attachments/assets/a0ee2b88-dd11-445a-acd7-d0267820e18a" />
-<img width="428" height="771" alt="Apply for Relief - Page 3 - Expenses 2" src="https://github.com/user-attachments/assets/8280498f-c6a1-4750-972d-083cfc0482c7" />
-<img width="437" height="777" alt="Apply for Relief - Page 3 - Expenses Full" src="https://github.com/user-attachments/assets/99eec198-724c-4b39-acdd-9acd63def4eb" />
+<img width="450" height="775" alt="Apply for Relief - Page 3 - Expenses" src="https://github.com/user-attachments/assets/a0ee2b88-dd11-445a-acd7-d0267820e18a" />
+<img width="450" height="775" alt="Apply for Relief - Page 3 - Expenses 2" src="https://github.com/user-attachments/assets/8280498f-c6a1-4750-972d-083cfc0482c7" />
+<img width="450" height="775" alt="Apply for Relief - Page 3 - Expenses Full" src="https://github.com/user-attachments/assets/99eec198-724c-4b39-acdd-9acd63def4eb" />
 
 
 ### Step 4: Agreements & Submission
@@ -88,9 +88,9 @@ The application is a guided, multi-step form. Your progress is saved as you move
 -   Indicate your preferences for sharing your story and receiving additional information.
 -   Once you submit, your application is sent for an instant decision.
 
-<img width="427" height="756" alt="Apply for Relief - Page 4 - Terms   Conditions" src="https://github.com/user-attachments/assets/9c36a148-a2aa-4992-945f-dfd09753aecb" />
-<img width="432" height="760" alt="Apply for Relief - Page 4 - Terms   Conditions 2" src="https://github.com/user-attachments/assets/c3b011e8-660f-492d-8844-8bb9e52a75e4" />
-<img width="432" height="772" alt="Apply for Relief - Page 4 - Terms   Conditions 3" src="https://github.com/user-attachments/assets/a257ef8f-8786-4814-a7f7-3632c4a84b66" />
+<img width="450" height="775" alt="Apply for Relief - Page 4 - Terms   Conditions" src="https://github.com/user-attachments/assets/9c36a148-a2aa-4992-945f-dfd09753aecb" />
+<img width="450" height="775" alt="Apply for Relief - Page 4 - Terms   Conditions 2" src="https://github.com/user-attachments/assets/c3b011e8-660f-492d-8844-8bb9e52a75e4" />
+<img width="450" height="775" alt="Apply for Relief - Page 4 - Terms   Conditions 3" src="https://github.com/user-attachments/assets/a257ef8f-8786-4814-a7f7-3632c4a84b66" />
 
 
 ### Submission Success
@@ -98,7 +98,7 @@ The application is a guided, multi-step form. Your progress is saved as you move
 -   Your application will now appear in the "My Applications" section of your Profile page.
 
   
-<img width="432" height="763" alt="Application Submitted Successfully" src="https://github.com/user-attachments/assets/52c0fceb-bc23-4c49-bb9a-d94043dd7216" />
+<img width="450" height="775" alt="Application Submitted Successfully" src="https://github.com/user-attachments/assets/52c0fceb-bc23-4c49-bb9a-d94043dd7216" />
 
 ---
 
@@ -110,8 +110,8 @@ The application is a guided, multi-step form. Your progress is saved as you move
 -   **Update Information**: All your personal details are organized in collapsible sections. You can update your contact info, addresses, employment details, and consent preferences here.
 
 
-<img width="432" height="762" alt="Profile Page" src="https://github.com/user-attachments/assets/5dcbc6b5-455c-4860-8750-e84797a314b4" />
-<img width="387" height="686" alt="Profile Page - Inactive" src="https://github.com/user-attachments/assets/2820dc0e-f7ef-4359-9477-59f565a6a737" />
+<img width="450" height="775" alt="Profile Page" src="https://github.com/user-attachments/assets/5dcbc6b5-455c-4860-8750-e84797a314b4" />
+<img width="450" height="775" alt="Profile Page - Inactive" src="https://github.com/user-attachments/assets/2820dc0e-f7ef-4359-9477-59f565a6a737" />
 
 ---
 
@@ -143,16 +143,16 @@ If you are logged in as an admin, you have access to the Fund Portal, a central 
 -   **Token Usage**: An analytics dashboard to monitor the usage and cost of the Gemini AI models across different features (AI Assistant, Decisioning, etc.).
 
 
-<img width="428" height="767" alt="Fund Portal" src="https://github.com/user-attachments/assets/3eec42d7-4114-411d-9851-96e32fbd3054" />
-<img width="435" height="777" alt="Dashboard Page" src="https://github.com/user-attachments/assets/b5bd6c6a-0921-43fa-9ced-84cb47a7baee" />
-<img width="430" height="767" alt="Ticketing" src="https://github.com/user-attachments/assets/d4abf595-9273-4bfb-9ad6-518efdca57ce" />
-<img width="382" height="691" alt="Program Details" src="https://github.com/user-attachments/assets/e8eb2b2b-44bd-4a18-ace5-492e4c409552" />
+<img width="450" height="775" alt="Fund Portal" src="https://github.com/user-attachments/assets/3eec42d7-4114-411d-9851-96e32fbd3054" />
+<img width="450" height="775" alt="Dashboard Page" src="https://github.com/user-attachments/assets/b5bd6c6a-0921-43fa-9ced-84cb47a7baee" />
+<img width="450" height="775" alt="Ticketing" src="https://github.com/user-attachments/assets/d4abf595-9273-4bfb-9ad6-518efdca57ce" />
+<img width="450" height="775" alt="Program Details" src="https://github.com/user-attachments/assets/e8eb2b2b-44bd-4a18-ace5-492e4c409552" />
 
-<img width="432" height="771" alt="Proxy Application" src="https://github.com/user-attachments/assets/a54c5f6e-f04e-4ae4-b044-a969526f78ee" />
-<img width="433" height="765" alt="Proxy Application 2" src="https://github.com/user-attachments/assets/e758eb5b-3e17-42ef-8abe-302c3b09fcef" />
-<img width="425" height="768" alt="Token Usage" src="https://github.com/user-attachments/assets/c029714b-9207-4dc5-b47b-7da5cbf61e92" />
-<img width="428" height="770" alt="Token Usage 2" src="https://github.com/user-attachments/assets/d8d6c707-63f4-4c15-85ef-bff96dd8bd60" />
-<img width="431" height="772" alt="Token Usage 3" src="https://github.com/user-attachments/assets/c4dcc90a-8c66-4498-9e62-c3d6c6d17a05" />
+<img width="450" height="775" alt="Proxy Application" src="https://github.com/user-attachments/assets/a54c5f6e-f04e-4ae4-b044-a969526f78ee" />
+<img width="450" height="775" alt="Proxy Application 2" src="https://github.com/user-attachments/assets/e758eb5b-3e17-42ef-8abe-302c3b09fcef" />
+<img width="450" height="775" alt="Token Usage" src="https://github.com/user-attachments/assets/c029714b-9207-4dc5-b47b-7da5cbf61e92" />
+<img width="450" height="775" alt="Token Usage 2" src="https://github.com/user-attachments/assets/d8d6c707-63f4-4c15-85ef-bff96dd8bd60" />
+<img width="450" height="775" alt="Token Usage 3" src="https://github.com/user-attachments/assets/c4dcc90a-8c66-4498-9e62-c3d6c6d17a05" />
 
 <img width="1245" height="816" alt="Dashboard Page - Tablet" src="https://github.com/user-attachments/assets/4dece278-6b9c-4325-b17a-552076f5b2a7" />
 <img width="1606" height="840" alt="Token Usage - Tablet" src="https://github.com/user-attachments/assets/725b958f-4f3e-4faf-8892-4248c4996f87" />
