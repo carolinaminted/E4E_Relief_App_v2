@@ -473,7 +473,7 @@ function App() {
             {page === 'register' ? (
               <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
             ) : (
-              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('login')} adminAutofillTrigger={adminAutofillTrigger} />
+              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} adminAutofillTrigger={adminAutofillTrigger} />
             )}
           </div>
         </>
