@@ -5,6 +5,8 @@ import { evaluateApplicationEligibility, getAIAssistedDecision } from './service
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
 import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
+import { getFundByCode } from './data/fundData';
+import ClassVerificationPage from './components/ClassVerificationPage';
 
 // Page Components
 import LoginPage from './components/LoginPage';
@@ -19,7 +21,6 @@ import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
-import ClassVerificationPage from './components/ClassVerificationPage';
 
 
 type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification';
@@ -58,6 +59,7 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     // Auth
     passwordHash: 'password123', // In a real app, this would be a hash
     fundCode: 'E4E',
+    fundName: 'E4E Relief',
     classVerificationStatus: 'passed',
     eligibilityStatus: 'Active',
   },
@@ -101,26 +103,30 @@ const createNewUserProfile = (
     lastName: string,
     email: string,
     fundCode: string,
-): UserProfile => ({
-    identityId: email,
-    firstName,
-    lastName,
-    email,
-    mobileNumber: '',
-    primaryAddress: { country: '', street1: '', city: '', state: '', zip: '' },
-    employmentStartDate: '',
-    eligibilityType: '',
-    householdIncome: '',
-    householdSize: '',
-    homeowner: '',
-    isMailingAddressSame: null,
-    ackPolicies: false,
-    commConsent: false,
-    infoCorrect: false,
-    fundCode,
-    classVerificationStatus: 'pending',
-    eligibilityStatus: 'Inactive',
-});
+): UserProfile => {
+    const fund = getFundByCode(fundCode);
+    return {
+        identityId: email,
+        firstName,
+        lastName,
+        email,
+        mobileNumber: '',
+        primaryAddress: { country: '', street1: '', city: '', state: '', zip: '' },
+        employmentStartDate: '',
+        eligibilityType: '',
+        householdIncome: '',
+        householdSize: '',
+        homeowner: '',
+        isMailingAddressSame: null,
+        ackPolicies: false,
+        commConsent: false,
+        infoCorrect: false,
+        fundCode,
+        fundName: fund?.name || 'Relief Fund',
+        classVerificationStatus: 'pending',
+        eligibilityStatus: 'Inactive',
+    };
+};
 
 
 // --- END MOCK DATABASE ---
@@ -153,10 +159,12 @@ function App() {
     const user = users[email];
     if (user && user.passwordHash === password) {
       const { passwordHash, ...profile } = user;
+      const fund = getFundByCode(profile.fundCode);
       
       const eligibility = eligibilityByIdentity[profile.identityId];
       const hydratedProfile = {
         ...profile,
+        fundName: fund?.name || 'Relief Fund',
         eligibilityStatus: eligibility ? eligibility.status : 'Inactive',
       };
       
@@ -298,8 +306,10 @@ function App() {
     const usersPastApplications = applications[currentUser.email] || [];
     const lastApplication = usersPastApplications.length > 0 ? usersPastApplications[usersPastApplications.length - 1] : null;
     
-    const initialTwelveMonthMax = 10000;
-    const initialLifetimeMax = 50000;
+    const fund = getFundByCode(currentUser.fundCode);
+    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
+    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
+    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
 
     const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
@@ -311,6 +321,7 @@ function App() {
         eventData: appFormData.eventData,
         currentTwelveMonthRemaining: currentTwelveMonthRemaining,
         currentLifetimeRemaining: currentLifetimeRemaining,
+        singleRequestMax: singleRequestMax,
     });
     
     console.log("Preliminary Rules Engine Decision:", preliminaryDecision);
@@ -431,7 +442,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -441,7 +452,7 @@ function App() {
         return <DonatePage navigate={navigate} />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} />;
+        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;
     }
   };
 

@@ -2,12 +2,19 @@
 
 ## Getting started
 - Open the app in your browser.
-- Choose **Register** to create an account or **Sign in** if you already have one.
-- After signing in, the **Home** screen shows tiles for the main actions.
+- Choose **Register** to create an account or **Sign in** if you already have one. You will need a **Fund Code** from your employer to register.
+- After signing in, you may be asked to complete a one-time verification step before you can apply for relief.
 
 <img width="334" height="602" alt="image" src="https://github.com/user-attachments/assets/61007eb0-e080-421d-865e-32cd926a243f" />
 <img width="334" height="604" alt="image" src="https://github.com/user-attachments/assets/639aab15-e872-4842-9a89-0528af5150a6" />
 
+## Class Verification
+To ensure grants are distributed to eligible employees, you must complete a one-time verification after your first sign-in. The method depends on your employer's program:
+- **Domain Verification**: Your account is automatically verified if your email address uses a company-approved domain.
+- **Roster Verification**: You will be asked to enter details like your Employee ID and date of birth to match against company records.
+- **SSO Verification**: You will be prompted to log in with your company's Single Sign-On (SSO) to link your account.
+
+Once verified, you will have full access to the application.
 
 ## Home
 - **Apply for Relief**: start a new application.
