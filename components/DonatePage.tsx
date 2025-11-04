@@ -37,7 +37,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [openSection, setOpenSection] = useState<DonateSection | null>('donor');
+  const [openSection, setOpenSection] = useState<DonateSection | null>(null);
 
   const sectionHasErrors = useMemo(() => {
     const donorHasBlanks = !formData.firstName || !formData.lastName || !formData.email || !/\S+@\S+\.\S+/.test(formData.email);
@@ -158,7 +158,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto w-full">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-6">
             <button onClick={() => navigate('support')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Support Center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -170,90 +170,96 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
             </h1>
         </div>
         
-        <form onSubmit={handleSubmit} noValidate className="bg-[#004b8d]/50 p-8 rounded-lg border border-[#005ca0] space-y-4">
-            
-            {/* Static Amount Section */}
-            <div className="border-b border-[#005ca0] pb-4">
-                 <div className="flex items-center gap-3 py-2">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
-                </div>
-                <div className="mt-4">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        {predefinedAmounts.map(preAmount => (
-                            <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`p-3 rounded-md font-bold text-base transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
-                                ${preAmount}
-                            </button>
-                        ))}
-                        <input 
-                            type="number" 
-                            placeholder="Custom" 
-                            value={typeof amount === 'number' ? '' : amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            onFocus={() => handleAmountSelect('custom')}
-                            className={`p-3 rounded-md font-bold text-base text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
-                        />
+        <form onSubmit={handleSubmit} noValidate className="bg-[#004b8d]/50 p-6 md:p-8 rounded-lg border border-[#005ca0] grid grid-cols-1 lg:grid-cols-2 lg:gap-x-12">
+            {/* Left Column */}
+            <div className="lg:border-r lg:border-[#005ca0] lg:pr-8">
+                {/* Static Amount Section */}
+                <div className="border-b border-[#005ca0] lg:border-b-0 pb-4">
+                    <div className="flex items-center gap-3 py-2">
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
                     </div>
-                    {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}
+                    <p className="text-gray-300 text-sm mt-2 mb-4 hidden lg:block">Your generous contribution helps us provide critical financial assistance to employees affected by unforeseen disasters.</p>
+                    <div className="mt-4">
+                        <div className="grid grid-cols-3 gap-2">
+                            {predefinedAmounts.map(preAmount => (
+                                <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`py-2 px-3 rounded-md font-semibold text-sm transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
+                                    ${preAmount}
+                                </button>
+                            ))}
+                            <input 
+                                type="number" 
+                                placeholder="Custom" 
+                                value={typeof amount === 'number' ? '' : amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                onFocus={() => handleAmountSelect('custom')}
+                                className={`py-2 px-3 rounded-md font-semibold text-sm text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 col-span-2 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
+                            />
+                        </div>
+                        {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}
+                    </div>
                 </div>
             </div>
 
-            {/* Donor Information Section */}
-            <fieldset className="border-b border-[#005ca0] pb-4">
-                 <button type="button" onClick={() => toggleSection('donor')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'donor'}>
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Donor Information</h2>
-                        {sectionHasErrors.donor && openSection !== 'donor' && <NotificationIcon />}
-                    </div>
-                    <ChevronIcon isOpen={openSection === 'donor'} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out ${openSection === 'donor' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                        <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
-                        <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
-                        <div className="md:col-span-2">
-                           <FormInput label="Email Address" id="email" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
+            {/* Right Column */}
+            <div className="space-y-4 pt-4 lg:pt-0">
+                {/* Donor Information Section */}
+                <fieldset className="border-b border-[#005ca0] pb-4">
+                    <button type="button" onClick={() => toggleSection('donor')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'donor'}>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Donor Information</h2>
+                            {sectionHasErrors.donor && openSection !== 'donor' && <NotificationIcon />}
+                        </div>
+                        <ChevronIcon isOpen={openSection === 'donor'} />
+                    </button>
+                    <div className={`transition-all duration-500 ease-in-out ${openSection === 'donor' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                            <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
+                            <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
+                            <div className="md:col-span-2">
+                            <FormInput label="Email Address" id="email" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
+                            </div>
                         </div>
                     </div>
-                </div>
-            </fieldset>
+                </fieldset>
 
-            {/* Payment Information Section */}
-            <fieldset className="pb-4">
-                 <button type="button" onClick={() => toggleSection('payment')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'payment'}>
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Payment Information</h2>
-                        {sectionHasErrors.payment && openSection !== 'payment' && <NotificationIcon />}
-                    </div>
-                    <ChevronIcon isOpen={openSection === 'payment'} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out ${openSection === 'payment' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                    <div className="space-y-6 pt-4">
-                        <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
-                        <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
-                        <div className="flex gap-6">
-                            <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
-                            <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
+                {/* Payment Information Section */}
+                <fieldset className="pb-4">
+                    <button type="button" onClick={() => toggleSection('payment')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'payment'}>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Payment Information</h2>
+                            {sectionHasErrors.payment && openSection !== 'payment' && <NotificationIcon />}
+                        </div>
+                        <ChevronIcon isOpen={openSection === 'payment'} />
+                    </button>
+                    <div className={`transition-all duration-500 ease-in-out ${openSection === 'payment' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                        <div className="space-y-6 pt-4">
+                            <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
+                            <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
+                            <div className="flex gap-6">
+                                <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
+                                <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
+                            </div>
                         </div>
                     </div>
-                </div>
-            </fieldset>
+                </fieldset>
 
-            <div className="flex justify-center pt-6">
-                 <button 
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full max-w-xs bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-90 text-white font-bold py-3 px-6 rounded-md transition-all duration-200 flex justify-center items-center h-12 disabled:opacity-50 disabled:cursor-wait"
-                >
-                    {isProcessing ? (
-                        <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                        </div>
-                    ) : (
-                        `Donate $${Number(amount) > 0 ? Number(amount).toFixed(2) : '0.00'}`
-                    )}
-                </button>
+                <div className="flex justify-center pt-6">
+                    <button 
+                        type="submit"
+                        disabled={isProcessing}
+                        className="w-full max-w-xs bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-90 text-white font-bold py-3 px-6 rounded-md transition-all duration-200 flex justify-center items-center h-12 disabled:opacity-50 disabled:cursor-wait"
+                    >
+                        {isProcessing ? (
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            </div>
+                        ) : (
+                            `Donate $${Number(amount) > 0 ? Number(amount).toFixed(2) : '0.00'}`
+                        )}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
