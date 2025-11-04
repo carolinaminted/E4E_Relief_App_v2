@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { EventData, Expense } from '../types';
 import { expenseTypes } from '../data/appData';
 import SearchableSelector from './SearchableSelector';
@@ -44,7 +45,16 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(initialFormState);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [pageError, setPageError] = useState('');
+  const [showErrorOverlay, setShowErrorOverlay] = useState(false);
+  
+  const modalRoot = document.getElementById('modal-root');
+
+  useEffect(() => {
+    if (showErrorOverlay) {
+        const timer = setTimeout(() => setShowErrorOverlay(false), 3000);
+        return () => clearTimeout(timer);
+    }
+  }, [showErrorOverlay]);
 
   const totalExpenses = useMemo(() => {
     return formData.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
@@ -71,7 +81,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     if (fields.some(field => errors[field])) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        fields.forEach(field => delete newErrors[field]);
+        fields.forEach(field => delete newErrors[field as keyof typeof newErrors]);
         return newErrors;
       });
     }
@@ -85,7 +95,6 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   };
   
   const handleSaveExpense = () => {
-    if (pageError) setPageError('');
     if (!validateForm()) return;
 
     if (expenseForm.fileName) {
@@ -145,10 +154,9 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   
   const handleNext = () => {
     if (formData.expenses.length < expenseTypes.length) {
-      setPageError(`Please add an entry for all ${expenseTypes.length} expense types to continue.`);
+      setShowErrorOverlay(true);
       return;
     }
-    setPageError('');
     nextStep();
   };
 
@@ -157,7 +165,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Expenses</h2>
-        <p className="text-gray-300 mt-1">Add your expenses for each category below. A receipt is required for each entry.</p>
+        <p className="text-gray-300 mt-1">Add your expenses for each category below. A receipt is not required for any expense.</p>
       </div>
 
       {/* Expense Entry Form */}
@@ -170,7 +178,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                   id="expenseType"
                   required
                   value={expenseForm.type}
-                  // FIX: Cast the expense type value to the correct string literal union type.
+                  // FIX: Cast the expense type value to the correct string literal union type to resolve the type error.
                   onUpdate={value => handleFormChange({ type: value as Expense['type'] })}
                   options={editingId ? expenseTypes : availableExpenseTypes}
                   variant="underline"
@@ -263,12 +271,23 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
           Back
         </button>
         <div className="flex flex-col items-end">
-          {pageError && <p className="text-red-400 text-sm mb-2 text-right" role="alert">{pageError}</p>}
-          <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+          <button onClick={handleNext} disabled={formData.expenses.length < expenseTypes.length} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-not-allowed">
             Next
           </button>
         </div>
       </div>
+      {showErrorOverlay && modalRoot && createPortal(
+        <div 
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] animate-[fadeIn_0.3s_ease-out]"
+            role="alert"
+            aria-live="assertive"
+        >
+            <div className="bg-[#003a70] border border-red-500/50 rounded-lg p-8 shadow-2xl text-center max-w-sm mx-4">
+                <p className="text-white text-lg">Add details for all available expenses before advancing</p>
+            </div>
+        </div>,
+        modalRoot
+      )}
     </div>
   );
 };
