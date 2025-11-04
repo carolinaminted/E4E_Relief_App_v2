@@ -50,16 +50,11 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
         </div>
 
         {/* Secondary Tiles */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-12 md:max-w-2xl md:mx-auto">
             <SubActionCard 
                 title="FAQs" 
                 description="Find answers to common questions." 
                 onClick={() => navigate('faq')} 
-            />
-            <SubActionCard 
-                title="View Token Usage" 
-                description="Review AI model token consumption." 
-                onClick={() => navigate('tokenUsage')} 
             />
             <SubActionCard 
                 title="Payment Options" 
