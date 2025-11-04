@@ -17,9 +17,10 @@ import ChatbotWidget from './components/ChatbotWidget';
 import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
+import DonatePage from './components/DonatePage';
 
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions';
+type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate';
 
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
@@ -323,6 +324,8 @@ function App() {
         return <FAQPage navigate={navigate} />;
       case 'paymentOptions':
         return <PaymentOptionsPage navigate={navigate} />;
+      case 'donate':
+        return <DonatePage navigate={navigate} />;
       case 'home':
       default:
         return <HomePage navigate={navigate} />;

@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'faq' | 'paymentOptions';
+type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate';
 
 interface SupportPageProps {
   navigate: (page: Page) => void;
@@ -50,7 +50,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
         </div>
 
         {/* Secondary Tiles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-12 md:max-w-2xl md:mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mt-12 max-w-4xl mx-auto">
             <SubActionCard 
                 title="FAQs" 
                 description="Find answers to common questions." 
@@ -60,6 +60,11 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
                 title="Payment Options" 
                 description="Learn how grants are disbursed." 
                 onClick={() => navigate('paymentOptions')} 
+            />
+            <SubActionCard 
+                title="Donate Now" 
+                description="Support our cause and help others in need." 
+                onClick={() => navigate('donate')} 
             />
         </div>
         
