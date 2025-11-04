@@ -7,6 +7,15 @@ interface DonatePageProps {
 
 const predefinedAmounts = [25, 50, 100, 250];
 
+// --- UI Icons ---
+const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+);
+
+type DonateSection = 'amount' | 'details';
+
 const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [amount, setAmount] = useState<number | string>(50);
   const [formData, setFormData] = useState({
@@ -21,6 +30,11 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [openSection, setOpenSection] = useState<DonateSection | null>('amount');
+
+  const toggleSection = (section: DonateSection) => {
+    setOpenSection(prev => (prev === section ? null : section));
+  };
 
   const handleAmountSelect = (selectedAmount: number | 'custom') => {
     if (selectedAmount === 'custom') {
@@ -73,6 +87,14 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
     }
     if (formData.cvc.length < 3) newErrors.cvc = 'CVC must be 3 or 4 digits.';
     setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+        if (newErrors.amount) {
+            setOpenSection('amount');
+        } else {
+            setOpenSection('details');
+        }
+    }
     return Object.keys(newErrors).length === 0;
   };
   
@@ -124,48 +146,63 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
             </h1>
         </div>
         
-        <form onSubmit={handleSubmit} noValidate className="bg-[#004b8d]/50 p-8 rounded-lg border border-[#005ca0] space-y-8">
+        <form onSubmit={handleSubmit} noValidate className="bg-[#004b8d]/50 p-8 rounded-lg border border-[#005ca0] space-y-4">
+            
             {/* Amount Section */}
-            <fieldset>
-                <legend className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">Choose an Amount</legend>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {predefinedAmounts.map(preAmount => (
-                        <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`p-4 rounded-md font-bold text-lg transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
-                            ${preAmount}
-                        </button>
-                    ))}
-                    <input 
-                        type="number" 
-                        placeholder="Custom" 
-                        value={typeof amount === 'number' ? '' : amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        onFocus={() => handleAmountSelect('custom')}
-                        className={`p-4 rounded-md font-bold text-lg text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
-                    />
+            <fieldset className="border-b border-[#005ca0] pb-4">
+                 <button type="button" onClick={() => toggleSection('amount')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'amount'}>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
+                    <ChevronIcon isOpen={openSection === 'amount'} />
+                </button>
+                <div className={`transition-all duration-500 ease-in-out ${openSection === 'amount' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {predefinedAmounts.map(preAmount => (
+                            <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`p-4 rounded-md font-bold text-lg transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
+                                ${preAmount}
+                            </button>
+                        ))}
+                        <input 
+                            type="number" 
+                            placeholder="Custom" 
+                            value={typeof amount === 'number' ? '' : amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            onFocus={() => handleAmountSelect('custom')}
+                            className={`p-4 rounded-md font-bold text-lg text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
+                        />
+                    </div>
+                    {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}
                 </div>
-                {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}
             </fieldset>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Donor Information */}
-                <fieldset className="space-y-6">
-                    <legend className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">Your Information</legend>
-                    <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
-                    <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
-                    <FormInput label="Email Address" id="email" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
-                </fieldset>
+            {/* Details Section */}
+             <fieldset className="pb-4">
+                 <button type="button" onClick={() => toggleSection('details')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'details'}>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Donor & Payment Information</h2>
+                    <ChevronIcon isOpen={openSection === 'details'} />
+                </button>
+                <div className={`transition-all duration-500 ease-in-out ${openSection === 'details' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                        {/* Donor Information */}
+                        <fieldset className="space-y-6">
+                            <legend className="text-lg font-semibold text-white/90 mb-2">Your Information</legend>
+                            <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
+                            <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
+                            <FormInput label="Email Address" id="email" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
+                        </fieldset>
 
-                {/* Payment Details */}
-                <fieldset className="space-y-6">
-                    <legend className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">Payment Details</legend>
-                    <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
-                    <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
-                    <div className="flex gap-6">
-                        <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
-                        <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
+                        {/* Payment Details */}
+                        <fieldset className="space-y-6">
+                            <legend className="text-lg font-semibold text-white/90 mb-2">Payment Details</legend>
+                            <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
+                            <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
+                            <div className="flex gap-6">
+                                <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
+                                <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
+                            </div>
+                        </fieldset>
                     </div>
-                </fieldset>
-            </div>
+                </div>
+            </fieldset>
 
             <div className="flex justify-center pt-6">
                  <button 
