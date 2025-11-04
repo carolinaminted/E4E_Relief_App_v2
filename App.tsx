@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -447,16 +448,20 @@ function App() {
   return (
     <div className="bg-[#003a70] text-white min-h-screen font-sans flex flex-col">
       {currentUser && (
-        <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 flex justify-between items-center shadow-md sticky top-0 z-30 border-b border-[#002a50]">
-          <button onClick={() => navigate('home')} className="flex items-center transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
-            <img
-              src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
-              alt="E4E Relief Logo"
-              className="h-10 w-auto"
-            />
-          </button>
-          <div className="flex items-center gap-4">
+        <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-3 items-center shadow-md sticky top-0 z-30 border-b border-[#002a50]">
+          <div className="justify-self-start">
+            <button onClick={() => navigate('home')} className="flex items-center transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
+              <img
+                src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
+                alt="E4E Relief Logo"
+                className="h-10 w-auto"
+              />
+            </button>
+          </div>
+          <div className="justify-self-center text-center">
             <span className="text-gray-200">Welcome, {currentUser.firstName}</span>
+          </div>
+          <div className="justify-self-end">
             <button onClick={handleLogout} className="bg-[#ff8400]/80 hover:bg-[#ff8400] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200">
               Logout
             </button>
