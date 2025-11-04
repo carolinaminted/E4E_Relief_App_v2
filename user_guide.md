@@ -111,7 +111,7 @@ The application is a guided, multi-step form. Your progress is saved as you move
 
 
 <img width="432" height="762" alt="Profile Page" src="https://github.com/user-attachments/assets/5dcbc6b5-455c-4860-8750-e84797a314b4" />
-
+<img width="387" height="686" alt="Profile Page - Inactive" src="https://github.com/user-attachments/assets/2820dc0e-f7ef-4359-9477-59f565a6a737" />
 
 ---
 
