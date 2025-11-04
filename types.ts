@@ -9,6 +9,8 @@ export interface Address {
   zip: string;
 }
 
+export type ClassVerificationStatus = 'unknown' | 'pending' | 'passed' | 'failed';
+
 export interface UserProfile {
   firstName: string;
   lastName:string;
@@ -28,6 +30,8 @@ export interface UserProfile {
   ackPolicies: boolean;
   commConsent: boolean;
   infoCorrect: boolean;
+  fundCode: string;
+  classVerificationStatus: ClassVerificationStatus;
 }
 
 export interface Expense {

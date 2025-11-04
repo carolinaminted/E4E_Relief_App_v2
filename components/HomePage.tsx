@@ -4,15 +4,18 @@ type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
+  isVerified: boolean;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
-  const ActionCard: React.FC<{ title: string; description: string; onClick: () => void; className?: string }> = ({ title, description, onClick, className = '' }) => (
+const HomePage: React.FC<HomePageProps> = ({ navigate, isVerified }) => {
+  const ActionCard: React.FC<{ title: string; description: string; onClick: () => void; className?: string, disabled?: boolean }> = ({ title, description, onClick, className = '', disabled = false }) => (
     <div 
-      className={`bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer hover:scale-105 transform ${className}`}
-      onClick={onClick}
+      className={`bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform ${disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105'} ${className}`}
+      onClick={!disabled ? onClick : undefined}
+      title={disabled ? "Class Verification required to access applications." : ""}
+      aria-disabled={disabled}
     >
-      <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-2">{title}</h2>
+      <h2 className={`text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-2 ${disabled ? 'opacity-70' : ''}`}>{title}</h2>
       <p className="text-white">{description}</p>
     </div>
   );
@@ -23,7 +26,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
         Welcome to E4E Relief
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
-        <ActionCard title="Apply for Relief" description="Submit a new application for financial assistance." onClick={() => navigate('apply')} className="md:col-span-2" />
+        <ActionCard title="Apply for Relief" description="Submit a new application for financial assistance." onClick={() => navigate('apply')} className="md:col-span-2" disabled={!isVerified} />
         <ActionCard title="My Profile" description="View your application history and manage your contact information." onClick={() => navigate('profile')} />
         <ActionCard title="Get Support" description="Find contact information and answers to frequently asked questions." onClick={() => navigate('support')} />
         <ActionCard title="Donate Now" description="Support our cause and help others in need." onClick={() => navigate('donate')} />

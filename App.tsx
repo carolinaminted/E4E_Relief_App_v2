@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import type { UserProfile, Application, EventData, EligibilityDecision } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
 import type { ApplicationFormData } from './types';
@@ -18,9 +18,10 @@ import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
+import ClassVerificationPage from './components/ClassVerificationPage';
 
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate';
+type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification';
 
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
@@ -53,6 +54,8 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     infoCorrect: true,
     // Auth
     passwordHash: 'password123', // In a real app, this would be a hash
+    fundCode: 'E4E',
+    classVerificationStatus: 'passed',
   },
 };
 
@@ -84,7 +87,8 @@ const initialApplications: Record<string, Application[]> = {
 const createNewUserProfile = (
     firstName: string,
     lastName: string,
-    email: string
+    email: string,
+    fundCode: string,
 ): UserProfile => ({
     firstName,
     lastName,
@@ -100,6 +104,8 @@ const createNewUserProfile = (
     ackPolicies: false,
     commConsent: false,
     infoCorrect: false,
+    fundCode,
+    classVerificationStatus: 'pending',
 });
 
 
@@ -129,17 +135,21 @@ function App() {
       const { passwordHash, ...profile } = user;
       setCurrentUser(profile);
       initTokenTracker(profile);
-      setPage('home');
+      if (profile.classVerificationStatus !== 'passed') {
+        setPage('classVerification');
+      } else {
+        setPage('home');
+      }
       return true;
     }
     return false;
   }, [users]);
   
-  const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string): boolean => {
+  const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string, fundCode: string): boolean => {
     if (users[email]) {
       return false; // User already exists
     }
-    const newUserProfile = createNewUserProfile(firstName, lastName, email);
+    const newUserProfile = createNewUserProfile(firstName, lastName, email, fundCode);
     const newUser = {
       ...newUserProfile,
       passwordHash: password,
@@ -148,7 +158,7 @@ function App() {
     setApplications(prev => ({ ...prev, [email]: [] }));
     setCurrentUser(newUserProfile);
     initTokenTracker(newUserProfile);
-    setPage('home');
+    setPage('classVerification');
     return true;
   }, [users]);
 
@@ -159,8 +169,40 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: Page) => {
-    setPage(targetPage);
-  }, []);
+    if (targetPage === 'apply' && currentUser?.classVerificationStatus !== 'passed') {
+        setPage('classVerification');
+    } else {
+        setPage(targetPage);
+    }
+  }, [currentUser]);
+
+  const handleVerificationSuccess = useCallback(() => {
+    if (!currentUser) return;
+    
+    const updatedProfile: UserProfile = {
+        ...currentUser,
+        classVerificationStatus: 'passed',
+    };
+    
+    setCurrentUser(updatedProfile);
+    setUsers(prev => {
+        const currentUserData = prev[currentUser.email];
+        if (currentUserData) {
+            return {
+                ...prev,
+                [currentUser.email]: {
+                    ...currentUserData,
+                    ...updatedProfile,
+                }
+            };
+        }
+        return prev;
+    });
+    
+    // After success, navigate them to the apply page
+    setPage('apply');
+    
+  }, [currentUser]);
   
   const handleProfileUpdate = useCallback((updatedProfile: UserProfile) => {
     if (!currentUser) return;
@@ -312,6 +354,8 @@ function App() {
     }
     
     switch (page) {
+      case 'classVerification':
+        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} />;
       case 'apply':
         return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} />;
       case 'profile':
@@ -321,7 +365,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isVerified={currentUser.classVerificationStatus === 'passed'} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -331,7 +375,7 @@ function App() {
         return <DonatePage navigate={navigate} />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} />;
+        return <HomePage navigate={navigate} isVerified={currentUser.classVerificationStatus === 'passed'} />;
     }
   };
 
