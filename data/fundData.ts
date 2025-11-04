@@ -1,4 +1,7 @@
 // Define types
+import { employmentTypes, disasterEvents, hardshipEvents } from './appData';
+import { countries } from './countries';
+
 export type CVType = 'Domain' | 'Roster' | 'SSO';
 
 export interface Fund {
@@ -135,6 +138,23 @@ const funds: Fund[] = [
         "Crime",
         "Housing Crisis",
       ]
+    },
+    {
+      "code": "ADMIN",
+      "name": "Admin Relief Fund",
+      "cvType": "Domain", // Simple verification for admin
+      "limits": { "twelveMonthMax": 999999, "lifetimeMax": 9999999, "singleRequestMax": 999999 },
+      "eligibleCountries": countries, // All countries
+      "hireEligibility": {
+        "employmentStartOnOrBeforeEvent": true,
+        "minTenureDays": 0 // No tenure requirement
+      },
+      "domainConfig": {
+        "allowedDomains": ["example.com"] // Admin's email domain
+      },
+      "eligibleEmploymentTypes": employmentTypes, // All employment types
+      "eligibleDisasters": disasterEvents, // All disasters
+      "eligibleHardships": hardshipEvents // All hardships
     }
 ];
 

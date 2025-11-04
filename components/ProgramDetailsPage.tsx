@@ -49,11 +49,11 @@ const ProgramDetailsPage: React.FC<ProgramDetailsPageProps> = ({ navigate, user 
           <tbody>
             <DetailRow label="Verification Type">{fund.cvType}</DetailRow>
             <DetailRow label="Grant Limits">
-                <ul className="list-disc list-inside space-y-1">
-                    <li>Single Request Max: ${fund.limits.singleRequestMax.toLocaleString()}</li>
-                    <li>12-Month Max: ${fund.limits.twelveMonthMax.toLocaleString()}</li>
-                    <li>Lifetime Max: ${fund.limits.lifetimeMax.toLocaleString()}</li>
-                </ul>
+                <div className="space-y-1">
+                    <div>Single Request Max: ${fund.limits.singleRequestMax.toLocaleString()}</div>
+                    <div>12-Month Max: ${fund.limits.twelveMonthMax.toLocaleString()}</div>
+                    <div>Lifetime Max: ${fund.limits.lifetimeMax.toLocaleString()}</div>
+                </div>
             </DetailRow>
             <DetailRow label="Eligible Disasters">
                 <div className="flex flex-wrap gap-2">
