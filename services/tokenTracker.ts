@@ -188,6 +188,46 @@ export function getUsageLastHour(filters: TokenUsageFilters): LastHourUsageDataP
     return fullHourData;
 }
 
+export function getUsageLast15Minutes(filters: TokenUsageFilters): LastHourUsageDataPoint[] {
+    const now = new Date();
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+
+    const filteredEvents = sessionTokenEvents.filter(event => {
+        const eventDate = new Date(event.timestamp);
+        return eventDate >= fifteenMinutesAgo &&
+            (filters.account === 'all' || event.account === filters.account) &&
+            (filters.user === 'all' || event.userId === filters.user) &&
+            (filters.feature === 'all' || event.feature === filters.feature) &&
+            (filters.model === 'all' || event.model === filters.model) &&
+            (filters.environment === 'all' || event.environment === filters.environment)
+    });
+
+    // Create a map of usage per minute
+    const usageByMinute: Map<string, number> = new Map();
+    for (const event of filteredEvents) {
+        const eventDate = new Date(event.timestamp);
+        eventDate.setSeconds(0, 0); // Normalize to the start of the minute
+        const minuteKey = eventDate.toISOString();
+        const totalTokens = event.inputTokens + event.cachedInputTokens + event.outputTokens;
+        usageByMinute.set(minuteKey, (usageByMinute.get(minuteKey) || 0) + totalTokens);
+    }
+    
+    // Create a full 16-point array for every minute in the last 15 minutes for the chart
+    const full15MinutesData: LastHourUsageDataPoint[] = [];
+    for (let i = 0; i <= 15; i++) {
+        const minuteTimestamp = new Date(fifteenMinutesAgo.getTime() + i * 60 * 1000);
+        minuteTimestamp.setSeconds(0, 0);
+        const minuteKey = minuteTimestamp.toISOString();
+        
+        full15MinutesData.push({
+            timestamp: minuteKey,
+            totalTokens: usageByMinute.get(minuteKey) || 0
+        });
+    }
+
+    return full15MinutesData;
+}
+
 
 export function getFilterOptions() {
     if (!currentUser) return { features: [], models: [], environments: [], users: [], accounts: [] };

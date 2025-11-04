@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { UserProfile, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, TokenUsageFilters } from '../types';
-import { getTokenUsageTableData, getTopSessionData, getUsageLastHour, getFilterOptions } from '../services/tokenTracker';
+import { getTokenUsageTableData, getTopSessionData, getUsageLastHour, getUsageLast15Minutes, getFilterOptions } from '../services/tokenTracker';
 
 import { TokenUsageFilters as TokenUsageFiltersComponent } from './TokenUsageFilters';
-import { TopSessionChart, LastHourUsageChart } from './TokenUsageCharts';
+import { TopSessionChart, LastHourUsageChart, Last15MinutesUsageChart } from './TokenUsageCharts';
 import TokenUsageTable from './TokenUsageTable';
 import LoadingOverlay from './LoadingOverlay';
 
@@ -24,6 +24,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   const [tableData, setTableData] = useState<TokenUsageTableRow[]>([]);
   const [topSessionData, setTopSessionData] = useState<TopSessionData | null>(null);
   const [lastHourUsage, setLastHourUsage] = useState<LastHourUsageDataPoint[]>([]);
+  const [last15MinutesUsage, setLast15MinutesUsage] = useState<LastHourUsageDataPoint[]>([]);
   
   const [filterOptions, setFilterOptions] = useState(getFilterOptions());
 
@@ -40,6 +41,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     filters: false, // Start with filters closed
     topSession: true,
     lastHour: true,
+    last15: true,
     lifetime: true,
   });
 
@@ -51,6 +53,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     setTableData(getTokenUsageTableData(filters));
     setTopSessionData(getTopSessionData(filters));
     setLastHourUsage(getUsageLastHour(filters));
+    setLast15MinutesUsage(getUsageLast15Minutes(filters));
     setFilterOptions(getFilterOptions());
   }, [filters]);
 
@@ -142,6 +145,18 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lastHour ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
                     <div className="pt-4">
                         <LastHourUsageChart usage={lastHourUsage} />
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
+                <button type="button" onClick={() => toggleSection('last15')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.last15}>
+                    <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last 15 Minutes)</h3>
+                    <ChevronIcon isOpen={openSections.last15} />
+                </button>
+                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.last15 ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
+                    <div className="pt-4">
+                        <Last15MinutesUsageChart usage={last15MinutesUsage} />
                     </div>
                 </div>
             </div>

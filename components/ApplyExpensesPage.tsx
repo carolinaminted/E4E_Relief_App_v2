@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import type { EventData, Expense } from '../types';
 import { expenseTypes } from '../data/appData';
 import SearchableSelector from './SearchableSelector';
-import RequiredIndicator from './RequiredIndicator';
 import { FormInput } from './FormControls';
 
 interface ApplyExpensesPageProps {
@@ -45,6 +44,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(initialFormState);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pageError, setPageError] = useState('');
 
   const totalExpenses = useMemo(() => {
     return formData.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
@@ -59,7 +59,6 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     const newErrors: Record<string, string> = {};
     if (!expenseForm.type) newErrors.type = 'Please select an expense type.';
     if (!expenseForm.amount || expenseForm.amount <= 0) newErrors.amount = 'Amount must be greater than zero.';
-    if (!expenseForm.fileName) newErrors.file = 'A receipt or document is required.';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -86,19 +85,20 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   };
   
   const handleSaveExpense = () => {
+    if (pageError) setPageError('');
     if (!validateForm()) return;
 
-    // Check for duplicate file name before saving
-    const isDuplicateFile = formData.expenses.some(
-      exp => exp.fileName === expenseForm.fileName && exp.id !== editingId
-    );
-
-    if (isDuplicateFile) {
-      setErrors(prev => ({
-        ...prev,
-        file: `The file "${expenseForm.fileName}" has already been uploaded. Please choose a different file.`
-      }));
-      return;
+    if (expenseForm.fileName) {
+        const isDuplicateFile = formData.expenses.some(
+          exp => exp.fileName === expenseForm.fileName && exp.id !== editingId
+        );
+        if (isDuplicateFile) {
+            setErrors(prev => ({
+                ...prev,
+                file: `The file "${expenseForm.fileName}" has already been uploaded. Please choose a different file.`
+            }));
+            return;
+        }
     }
     
     const newExpense: Expense = {
@@ -142,6 +142,15 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     setExpenseForm(initialFormState);
     setErrors({});
   };
+  
+  const handleNext = () => {
+    if (formData.expenses.length < expenseTypes.length) {
+      setPageError(`Please add an entry for all ${expenseTypes.length} expense types to continue.`);
+      return;
+    }
+    setPageError('');
+    nextStep();
+  };
 
 
   return (
@@ -152,54 +161,61 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
       </div>
 
       {/* Expense Entry Form */}
-      <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] space-y-4">
-        <h3 className="font-semibold text-lg text-white">{editingId ? 'Edit Expense' : 'Add New Expense'}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            <SearchableSelector
-                label="Expense Type"
-                id="expenseType"
-                required
-                value={expenseForm.type}
-                onUpdate={value => handleFormChange({ type: value as Expense['type'] })}
-                options={editingId ? expenseTypes : availableExpenseTypes}
-                variant="underline"
-                error={errors.type}
-            />
-             <FormInput
-                label="Amount (USD)"
-                id="amount"
-                type="number"
-                value={expenseForm.amount}
-                onChange={(e) => handleFormChange({ amount: parseFloat(e.target.value) || '' })}
-                placeholder="0.00"
-                min="0.01"
-                step="0.01"
-                required
-                error={errors.amount}
-            />
-            <div>
-                 <label htmlFor="receiptUpload" className="flex items-center text-sm font-medium text-white mb-1">
-                    Receipt <RequiredIndicator required isMet={!!expenseForm.fileName} />
-                 </label>
-                 <div className="flex items-center gap-2">
-                    <label className="bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer">
-                        <span>Upload</span>
-                        <input id="receiptUpload" type="file" className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png,application/pdf" />
-                    </label>
-                    <span className="text-gray-300 text-sm truncate" title={expenseForm.fileName}>{expenseForm.fileName || 'No file chosen'}</span>
-                 </div>
-                 {errors.file && <p className="text-red-400 text-xs mt-1">{errors.file}</p>}
-            </div>
+      {availableExpenseTypes.length > 0 ? (
+        <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] space-y-4">
+          <h3 className="font-semibold text-lg text-white">{editingId ? 'Edit Expense' : 'Add New Expense'}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+              <SearchableSelector
+                  label="Expense Type"
+                  id="expenseType"
+                  required
+                  value={expenseForm.type}
+                  // FIX: Cast the expense type value to the correct string literal union type.
+                  onUpdate={value => handleFormChange({ type: value as Expense['type'] })}
+                  options={editingId ? expenseTypes : availableExpenseTypes}
+                  variant="underline"
+                  error={errors.type}
+              />
+               <FormInput
+                  label="Amount (USD)"
+                  id="amount"
+                  type="number"
+                  value={expenseForm.amount}
+                  onChange={(e) => handleFormChange({ amount: parseFloat(e.target.value) || '' })}
+                  placeholder="0.00"
+                  min="0.01"
+                  step="0.01"
+                  required
+                  error={errors.amount}
+              />
+              <div>
+                   <label htmlFor="receiptUpload" className="flex items-center text-sm font-medium text-white mb-1">
+                      Receipt
+                   </label>
+                   <div className="flex items-center gap-2">
+                      <label className="bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer">
+                          <span>Upload</span>
+                          <input id="receiptUpload" type="file" className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png,application/pdf" />
+                      </label>
+                      <span className="text-gray-300 text-sm truncate" title={expenseForm.fileName}>{expenseForm.fileName || 'No file chosen'}</span>
+                   </div>
+                   {errors.file && <p className="text-red-400 text-xs mt-1">{errors.file}</p>}
+              </div>
+          </div>
+          <div className="flex justify-end gap-4 pt-4">
+              {editingId && (
+                  <button type="button" onClick={handleCancelEdit} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 text-sm">Cancel</button>
+              )}
+              <button type="button" onClick={handleSaveExpense} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 text-sm">
+                  {editingId ? 'Update Expense' : 'Add Expense'}
+              </button>
+          </div>
         </div>
-        <div className="flex justify-end gap-4 pt-4">
-            {editingId && (
-                <button type="button" onClick={handleCancelEdit} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 text-sm">Cancel</button>
-            )}
-            <button type="button" onClick={handleSaveExpense} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 text-sm">
-                {editingId ? 'Update Expense' : 'Add Expense'}
-            </button>
+      ) : (
+        <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-center">
+          <p className="text-white font-semibold">All available expense types have been added.</p>
         </div>
-      </div>
+      )}
       
       {/* Summary Grid */}
       <div className="overflow-x-auto">
@@ -242,13 +258,16 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
         </table>
       </div>
 
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between items-start pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           Back
         </button>
-        <button onClick={nextStep} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Next
-        </button>
+        <div className="flex flex-col items-end">
+          {pageError && <p className="text-red-400 text-sm mb-2 text-right" role="alert">{pageError}</p>}
+          <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
