@@ -6,47 +6,20 @@ interface PaymentOptionsPageProps {
   navigate: (page: Page) => void;
 }
 
-const paymentOptions = [
+const internationalPartners = [
   {
-    name: "Zelle",
-    logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreigegnmtzs75tl276msqltkxfpsxnralxel37vqqui46xes6b2imei",
-    description: "Quick and direct bank transfers for US-based recipients. A fast, safe and easy way to receive your grant directly in your U.S. bank account.",
-    link: "https://employeerelieffund.org/zelle-enrollment-guide/",
-    cta: "Learn More about Zelle"
-  },
-  {
-    name: "CAF America",
-    logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreibkvdz3awat2ixtzfddb6yvqcljbni4oxuuifmw7nad6hgsvzlc7i",
-    description: "Secure and compliant grant disbursement for international recipients, ensuring due diligence and adherence to all cross-border regulations.",
-    link: "https://e4erelief.recipientselect.com",
-    cta: "Visit Recipient Select"
+    name: "Convera",
+    logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreigqwixd5fz6zxnvo77eoz2mi3bv7x2qyuswprcyhldseqmxuqns5q",
+    description: "- Convera (formerly Western Union) Guide",
+    link: "https://www.e4erelief.org/convera-international-grant-payment-guide",
   },
   {
     name: "Tipalti",
     logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreid4qymmxk4frxlehtn6rkygpiwtbesfzokvmzxind7ttuemog2cx4",
-    description: "A comprehensive global payment automation platform that handles various payment methods, currencies, and regulatory requirements worldwide.",
-    link: "https://tipalti.com/",
-    cta: "Explore Tipalti"
+    description: "- Tipalti Guide",
+    link: "https://www.e4erelief.org/tipalti-international-grant-payment-guide",
   }
 ];
-
-const PaymentOptionCard: React.FC<typeof paymentOptions[0]> = ({ name, logo, description, link, cta }) => (
-    <div className="bg-[#004b8d] rounded-lg shadow-lg p-6 flex flex-col items-center text-center border border-[#005ca0]/50 transition-all duration-300 hover:border-[#ff8400]/50 hover:scale-105">
-        <div className="h-20 flex items-center justify-center mb-4">
-            <img src={logo} alt={`${name} logo`} className="max-h-16 max-w-[200px]" />
-        </div>
-        <p className="text-white flex-grow mb-6 text-sm">{description}</p>
-        <a 
-            href={link} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200"
-        >
-            {cta}
-        </a>
-    </div>
-);
-
 
 const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => {
   useEffect(() => {
@@ -68,10 +41,6 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
         </div>
         <p className="text-center text-white mb-12 max-w-2xl mx-auto">We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.</p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {paymentOptions.map(option => <PaymentOptionCard key={option.name} {...option} />)}
-        </div>
-
         <div className="mt-12 bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 text-center">
           <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
             US Applicants
@@ -88,22 +57,34 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
             View US Payment Guide
           </a>
         </div>
-
-        <div className="mt-12 bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 text-center">
-          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
+        
+        <div className="mt-12 bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 text-left">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
             International Applicants
           </h2>
-          <p className="text-white mb-6 max-w-2xl mx-auto">
-            To ensure a smooth and timely grant distribution, please review our international payment checklist before selecting a provider.
+          
+          <h3 className="text-xl font-semibold text-white mt-6 mb-2">International Grant Award Payment Support</h3>
+          <p className="text-gray-300">
+            Once a grant is awarded, there are a few important registration steps you must complete before financial assistance is received. To receive this financial assistance, you must successfully complete your account registration with our payment partners. 
+            <a href="https://employeerelieffund.org/international-grant-distribution-checklist/" target="_blank" rel="noopener noreferrer" className="text-[#ff8400] hover:underline font-semibold"> Click here </a>
+            to review the international grant award guide.
           </p>
-          <a 
-            href="https://employeerelieffund.org/international-grant-distribution-checklist/"
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-block bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-8 rounded-md transition-colors duration-200"
-          >
-            View Checklist
-          </a>
+
+          <h3 className="text-xl font-semibold text-white mt-8 mb-4">Payment Partner Information:</h3>
+          <div className="space-y-4">
+            {internationalPartners.map(partner => (
+              <a 
+                key={partner.name}
+                href={partner.link} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-4 bg-[#003a70]/50 p-4 rounded-lg hover:bg-[#005ca0]/50 transition-colors duration-200 border border-transparent hover:border-[#ff8400]/50"
+              >
+                <img src={partner.logo} alt={`${partner.name} logo`} className="h-8 w-auto flex-shrink-0" />
+                <span className="text-white font-medium">{partner.description}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
