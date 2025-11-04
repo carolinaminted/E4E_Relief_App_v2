@@ -11,7 +11,7 @@ const paymentOptions = [
     name: "Zelle",
     logo: "https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreigegnmtzs75tl276msqltkxfpsxnralxel37vqqui46xes6b2imei",
     description: "Quick and direct bank transfers for US-based recipients. A fast, safe and easy way to receive your grant directly in your U.S. bank account.",
-    link: "https://www.zellepay.com/",
+    link: "https://employeerelieffund.org/zelle-enrollment-guide/",
     cta: "Learn More about Zelle"
   },
   {
@@ -70,6 +70,40 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {paymentOptions.map(option => <PaymentOptionCard key={option.name} {...option} />)}
+        </div>
+
+        <div className="mt-12 bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 text-center">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
+            US Applicants
+          </h2>
+          <p className="text-white mb-6 max-w-2xl mx-auto">
+            For applicants within the United States, please review our payment guide to understand the available options and requirements for receiving your grant.
+          </p>
+          <a 
+            href="https://www.e4erelief.org/rs-grant-payment-guide?hs_preview=tPjgviPn-128427360771"
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-block bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-8 rounded-md transition-colors duration-200"
+          >
+            View US Payment Guide
+          </a>
+        </div>
+
+        <div className="mt-12 bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 text-center">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
+            International Applicants
+          </h2>
+          <p className="text-white mb-6 max-w-2xl mx-auto">
+            To ensure a smooth and timely grant distribution, please review our international payment checklist before selecting a provider.
+          </p>
+          <a 
+            href="https://employeerelieffund.org/international-grant-distribution-checklist/"
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-block bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-8 rounded-md transition-colors duration-200"
+          >
+            View Checklist
+          </a>
         </div>
       </div>
     </div>
