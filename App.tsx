@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -188,6 +182,7 @@ function App() {
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [autofillTrigger, setAutofillTrigger] = useState(0);
+  const [adminAutofillTrigger, setAdminAutofillTrigger] = useState(0);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -463,8 +458,14 @@ function App() {
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className={`mx-auto h-32 w-auto ${page === 'register' ? 'cursor-pointer' : ''}`}
-              onClick={page === 'register' ? () => setAutofillTrigger(c => c + 1) : undefined}
+              className="mx-auto h-32 w-auto cursor-pointer"
+              onClick={() => {
+                if (page === 'register') {
+                  setAutofillTrigger(c => c + 1);
+                } else {
+                  setAdminAutofillTrigger(c => c + 1);
+                }
+              }}
             />
           </div>
           
@@ -472,7 +473,7 @@ function App() {
             {page === 'register' ? (
               <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
             ) : (
-              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} />
+              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('login')} adminAutofillTrigger={adminAutofillTrigger} />
             )}
           </div>
         </>
