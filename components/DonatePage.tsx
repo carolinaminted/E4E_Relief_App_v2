@@ -21,7 +21,7 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-type DonateSection = 'amount' | 'donor' | 'payment';
+type DonateSection = 'donor' | 'payment';
 
 const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [amount, setAmount] = useState<number | string>(50);
@@ -37,19 +37,17 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [openSection, setOpenSection] = useState<DonateSection | null>('amount');
+  const [openSection, setOpenSection] = useState<DonateSection | null>('donor');
 
   const sectionHasErrors = useMemo(() => {
-    const amountHasBlanks = !amount || Number(amount) <= 0;
     const donorHasBlanks = !formData.firstName || !formData.lastName || !formData.email || !/\S+@\S+\.\S+/.test(formData.email);
     const paymentHasBlanks = !formData.cardholderName || formData.cardNumber.replace(/\s/g, '').length < 15 || !/^(0[1-9]|1[0-2]) \/ \d{2}$/.test(formData.expiryDate) || formData.cvc.length < 3;
 
     return {
-        amount: amountHasBlanks,
         donor: donorHasBlanks,
         payment: paymentHasBlanks,
     };
-  }, [amount, formData]);
+  }, [formData]);
 
   const toggleSection = (section: DonateSection) => {
     setOpenSection(prev => (prev === section ? null : section));
@@ -60,6 +58,13 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
       setAmount('');
     } else {
       setAmount(selectedAmount);
+    }
+     if (errors.amount) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.amount;
+        return newErrors;
+      });
     }
   };
 
@@ -108,12 +113,10 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
-        if (newErrors.amount) {
-            setOpenSection('amount');
-        } else if (newErrors.firstName || newErrors.lastName || newErrors.email) {
-            setOpenSection('donor');
-        } else {
-            setOpenSection('payment');
+        if (newErrors.firstName || newErrors.lastName || newErrors.email) {
+            if(openSection !== 'donor') setOpenSection('donor');
+        } else if (newErrors.cardholderName || newErrors.cardNumber || newErrors.expiryDate || newErrors.cvc) {
+             if(openSection !== 'payment') setOpenSection('payment');
         }
     }
     return Object.keys(newErrors).length === 0;
@@ -169,19 +172,15 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
         
         <form onSubmit={handleSubmit} noValidate className="bg-[#004b8d]/50 p-8 rounded-lg border border-[#005ca0] space-y-4">
             
-            {/* Amount Section */}
-            <fieldset className="border-b border-[#005ca0] pb-4">
-                 <button type="button" onClick={() => toggleSection('amount')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'amount'}>
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
-                        {sectionHasErrors.amount && openSection !== 'amount' && <NotificationIcon />}
-                    </div>
-                    <ChevronIcon isOpen={openSection === 'amount'} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out ${openSection === 'amount' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            {/* Static Amount Section */}
+            <div className="border-b border-[#005ca0] pb-4">
+                 <div className="flex items-center gap-3 py-2">
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
+                </div>
+                <div className="mt-4">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         {predefinedAmounts.map(preAmount => (
-                            <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`p-4 rounded-md font-bold text-lg transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
+                            <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`p-3 rounded-md font-bold text-base transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
                                 ${preAmount}
                             </button>
                         ))}
@@ -191,12 +190,12 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                             value={typeof amount === 'number' ? '' : amount}
                             onChange={(e) => setAmount(e.target.value)}
                             onFocus={() => handleAmountSelect('custom')}
-                            className={`p-4 rounded-md font-bold text-lg text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
+                            className={`p-3 rounded-md font-bold text-base text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
                         />
                     </div>
                     {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}
                 </div>
-            </fieldset>
+            </div>
 
             {/* Donor Information Section */}
             <fieldset className="border-b border-[#005ca0] pb-4">
@@ -252,7 +251,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                         </div>
                     ) : (
-                        `Donate $${Number(amount).toFixed(2)}`
+                        `Donate $${Number(amount) > 0 ? Number(amount).toFixed(2) : '0.00'}`
                     )}
                 </button>
             </div>
