@@ -57,7 +57,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
         </div>
 
         {/* Secondary Tiles */}
-        <div className="grid grid-cols-2 gap-6 w-full mt-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 gap-6 w-full mt-12 max-w-2xl mx-auto">
           <SubActionCard 
             title="FAQs" 
             description="Find answers to common questions." 
