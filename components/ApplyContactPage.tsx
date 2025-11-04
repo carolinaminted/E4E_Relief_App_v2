@@ -383,13 +383,13 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                         required
                         value={formData.eligibilityType}
                         options={employmentTypes}
-                        onUpdate={value => handleFormUpdate({ eligibilityType: value as UserProfile['eligibilityType'] })}
+                        onUpdate={value => handleFormUpdate({ eligibilityType: value })}
                         variant="underline"
                         error={errors.eligibilityType}
                     />
                     <FormInput type="number" label="Estimated Annual Household Income" id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormUpdate({ householdIncome: parseFloat(e.target.value) || '' })} error={errors.householdIncome} />
                     <FormInput type="number" label="Number of people in household" id="householdSize" required value={formData.householdSize} onChange={e => handleFormUpdate({ householdSize: parseInt(e.target.value, 10) || '' })} error={errors.householdSize} />
-                    <FormRadioGroup legend="Do you own your own home?" name="homeowner" options={['Yes', 'No']} value={formData.homeowner} onChange={value => handleFormUpdate({ homeowner: value })} required error={errors.homeowner} />
+                    <FormRadioGroup legend="Do you own your own home?" name="homeowner" options={['Yes', 'No']} value={formData.homeowner} onChange={value => handleFormUpdate({ homeowner: value as 'Yes' | 'No' })} required error={errors.homeowner} />
                     <SearchableSelector
                         label="Preferred Language"
                         id="preferredLanguage"

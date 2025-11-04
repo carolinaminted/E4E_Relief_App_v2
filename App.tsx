@@ -21,9 +21,10 @@ import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
+import EligibilityPage from './components/EligibilityPage';
 
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification';
+type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility';
 
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
@@ -45,7 +46,7 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     },
     // 1c
     employmentStartDate: '2020-05-15',
-    eligibilityType: 'Full-time',
+    eligibilityType: 'Active Full Time',
     householdIncome: 75000,
     householdSize: 4,
     homeowner: 'Yes',
@@ -450,6 +451,8 @@ function App() {
         return <PaymentOptionsPage navigate={navigate} />;
       case 'donate':
         return <DonatePage navigate={navigate} />;
+      case 'eligibility':
+        return <EligibilityPage navigate={navigate} user={currentUser} />;
       case 'home':
       default:
         return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;

@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate';
+type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'eligibility';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
@@ -29,6 +29,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName 
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
         <ActionCard title="Apply for Relief" description="Submit a new application for financial assistance." onClick={() => navigate('apply')} className="md:col-span-2" disabled={!isApplyEnabled} />
+        <ActionCard title="Eligible for Assistance?" description="Check which events and eligibility types your program covers." onClick={() => navigate('eligibility')} />
         <ActionCard title="Profile" description="View your application history and manage your contact information." onClick={() => navigate('profile')} />
         <ActionCard title="Support" description="Find contact information and answers to frequently asked questions." onClick={() => navigate('support')} />
         <ActionCard title="Donate" description="Support our cause and help others in need." onClick={() => navigate('donate')} />
@@ -36,6 +37,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName 
             title="Token Usage" 
             description="AI model token consumption dashboard & token usage reports" 
             onClick={() => navigate('tokenUsage')} 
+            className="md:col-span-2"
         />
       </div>
     </div>

@@ -8,7 +8,7 @@ import ApplyExpensesPage from './ApplyExpensesPage';
 import ApplyTermsPage from './ApplyTermsPage';
 
 interface ApplyPageProps {
-  navigate: (page: 'home' | 'profile') => void;
+  navigate: (page: 'home' | 'profile' | 'eligibility') => void;
   onSubmit: (application: ApplicationFormData) => Promise<void>;
   userProfile: UserProfile;
   applicationDraft: Partial<ApplicationFormData> | null;

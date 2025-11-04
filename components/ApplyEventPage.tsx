@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { EventData } from '../types';
 import SearchableSelector from './SearchableSelector';
-import { eventTypes } from '../data/appData';
+import { allEventTypes } from '../data/appData';
 import RequiredIndicator from './RequiredIndicator';
 
 interface ApplyEventPageProps {
@@ -110,9 +110,8 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 id="event"
                 required
                 value={formData.event || ''}
-                options={eventTypes}
-                // FIX: Cast the value from the generic string provided by the selector to the specific string literal union type required by EventData.
-                onUpdate={value => handleUpdate({ event: value as EventData['event'] })}
+                options={allEventTypes}
+                onUpdate={value => handleUpdate({ event: value })}
                 variant="underline"
                 error={errors.event}
             />
