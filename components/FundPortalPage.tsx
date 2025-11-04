@@ -63,9 +63,9 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
           </button>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                {user.fundName}
+                Fund Portal
             </h1>
-            <p className="text-xl font-semibold text-white mt-1">Fund Portal</p>
+            <p className="text-xl font-semibold text-white mt-1">{user.fundName}</p>
           </div>
         </div>
         
