@@ -53,32 +53,32 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
                     target="_blank" 
                     rel="noopener noreferrer"
                     title="Visit Bank of America Recipient Select"
-                    className="inline-block bg-[#003a70]/50 p-4 rounded-lg hover:bg-[#005ca0]/50 transition-all duration-300 border-2 border-transparent hover:border-[#ff8400]/50 transform hover:scale-105 mx-auto"
+                    className="inline-block transition-transform duration-300 transform hover:scale-105 mx-auto"
                 >
                     <img 
-                        src="https://gateway.pinata.cloud/ipfs/bafkreiguneyj2jw27w2h7z2i7g6lq72csg25p3abq2osv7h3p7g3i4a25a" 
+                        src="https://bronze-generous-halibut-259.mypinata.cloud/ipfs/bafkreibkvdz3awat2ixtzfddb6yvqcljbni4oxuuifmw7nad6hgsvzlc7i" 
                         alt="Bank of America Recipient Select logo" 
-                        className="h-12 w-auto" 
+                        className="h-16 w-auto" 
                     />
                 </a>
             </div>
             
             {/* International Applicants Section */}
-            <div className="bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 text-left h-full flex flex-col">
+            <div className="bg-[#004b8d] p-8 rounded-lg shadow-2xl border border-[#005ca0]/50 h-full flex flex-col">
                 <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
                     International Applicants
                 </h2>
                 
                 <div className="flex-grow">
-                    <h3 className="text-xl font-semibold text-white mt-6 mb-2">International Grant Award Payment Support</h3>
-                    <p className="text-gray-300">
+                    <h3 className="text-xl font-semibold text-white mt-6 mb-2 text-center">International Grant Award Payment Support</h3>
+                    <p className="text-gray-300 text-center">
                         Once a grant is awarded, there are a few important registration steps you must complete before financial assistance is received. To receive this financial assistance, you must successfully complete your account registration with our payment partners. 
                         <a href="https://www.e4erelief.org/international-grant-award-guide" target="_blank" rel="noopener noreferrer" className="text-[#ff8400] hover:underline font-semibold"> Click here </a>
                         to review the international grant award guide.
                     </p>
 
                     <h3 className="text-xl font-semibold text-white mt-8 mb-4 text-center">Payment Partner Information:</h3>
-                    <div className="flex items-center justify-center gap-8 mt-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mt-6">
                         {internationalPartners.map(partner => (
                         <a 
                             key={partner.name}
@@ -88,7 +88,11 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
                             title={`View the ${partner.name} guide`}
                             className="bg-[#003a70]/50 p-4 rounded-lg hover:bg-[#005ca0]/50 transition-all duration-300 border-2 border-transparent hover:border-[#ff8400]/50 transform hover:scale-105"
                         >
-                            <img src={partner.logo} alt={`${partner.name} logo`} className="h-10 w-auto" />
+                            <img 
+                                src={partner.logo} 
+                                alt={`${partner.name} logo`} 
+                                className={`w-auto ${partner.name === 'Tipalti' ? 'h-14' : 'h-10'}`} 
+                            />
                         </a>
                         ))}
                     </div>
