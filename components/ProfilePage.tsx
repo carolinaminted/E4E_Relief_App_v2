@@ -76,7 +76,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(true);
-  const [openSection, setOpenSection] = useState<ProfileSection | null>('contact');
+  const [openSection, setOpenSection] = useState<ProfileSection | null>(null);
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
