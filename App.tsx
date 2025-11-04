@@ -1,6 +1,9 @@
 
 
 
+
+
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -24,9 +27,14 @@ import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
 import EligibilityPage from './components/EligibilityPage';
+import FundPortalPage from './components/FundPortalPage';
+import DashboardPage from './components/DashboardPage';
+import TicketingPage from './components/TicketingPage';
+import ProgramDetailsPage from './components/ProgramDetailsPage';
+import ProxyPage from './components/ProxyPage';
 
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility';
+type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
@@ -65,12 +73,48 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     fundName: 'E4E Relief',
     classVerificationStatus: 'passed',
     eligibilityStatus: 'Active',
+    role: 'User',
+  },
+  'admin@example.com': {
+    identityId: 'admin@example.com',
+    firstName: 'Admin',
+    lastName: 'User',
+    email: 'admin@example.com',
+    mobileNumber: '555-987-6543',
+    primaryAddress: {
+      country: 'United States',
+      street1: '456 Admin Ave',
+      city: 'Corpville',
+      state: 'NY',
+      zip: '54321',
+    },
+    employmentStartDate: '2018-01-01',
+    eligibilityType: 'Active Full Time',
+    householdIncome: 120000,
+    householdSize: 2,
+    homeowner: 'Yes',
+    preferredLanguage: 'English',
+    isMailingAddressSame: true,
+    ackPolicies: true,
+    commConsent: true,
+    infoCorrect: true,
+    passwordHash: 'admin123',
+    fundCode: 'JHH',
+    fundName: 'JHH Relief',
+    classVerificationStatus: 'passed',
+    eligibilityStatus: 'Active',
+    role: 'Admin',
   },
 };
 
 const initialEligibility: Record<string, IdentityEligibility> = {
     'user@example.com': {
         identityId: 'user@example.com',
+        status: 'Active',
+        updatedAt: new Date().toISOString(),
+    },
+    'admin@example.com': {
+        identityId: 'admin@example.com',
         status: 'Active',
         updatedAt: new Date().toISOString(),
     }
@@ -128,6 +172,7 @@ const createNewUserProfile = (
         fundName: fund?.name || 'Relief Fund',
         classVerificationStatus: 'pending',
         eligibilityStatus: 'Inactive',
+        role: 'User',
     };
 };
 
@@ -446,7 +491,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -456,9 +501,19 @@ function App() {
         return <DonatePage navigate={navigate} />;
       case 'eligibility':
         return <EligibilityPage navigate={navigate} user={currentUser} />;
+      case 'fundPortal':
+        return <FundPortalPage navigate={navigate} user={currentUser} />;
+      case 'dashboard':
+        return <DashboardPage navigate={navigate} />;
+      case 'ticketing':
+        return <TicketingPage navigate={navigate} />;
+      case 'programDetails':
+        return <ProgramDetailsPage navigate={navigate} user={currentUser} />;
+      case 'proxy':
+        return <ProxyPage navigate={navigate} />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} />;
+        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
     }
   };
 

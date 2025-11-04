@@ -1,15 +1,19 @@
 
+
+
+
 import React from 'react';
 
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'eligibility';
+type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'eligibility' | 'fundPortal';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
   isApplyEnabled: boolean;
   fundName?: string;
+  userRole: 'User' | 'Admin';
 }
 
-const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName }) => {
+const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName, userRole }) => {
   const ActionCard: React.FC<{ title: string; description: string; onClick: () => void; className?: string, disabled?: boolean }> = ({ title, description, onClick, className = '', disabled = false }) => (
     <div 
       className={`bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform ${disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105'} ${className}`}
@@ -33,11 +37,18 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName 
         <ActionCard title="Profile" description="View your application history and manage your contact information." onClick={() => navigate('profile')} />
         <ActionCard title="Support" description="Find contact information and answers to frequently asked questions." onClick={() => navigate('support')} />
         <ActionCard title="Donate" description="Support our cause and help others in need." onClick={() => navigate('donate')} />
+        {userRole === 'Admin' && (
+            <ActionCard 
+                title="Fund Portal" 
+                description="Access fund management tools and analytics." 
+                onClick={() => navigate('fundPortal')} 
+            />
+        )}
         <ActionCard 
             title="Token Usage" 
             description="AI model token consumption dashboard & token usage reports" 
             onClick={() => navigate('tokenUsage')} 
-            className="md:col-span-2"
+            className={`md:col-span-2 ${userRole === 'Admin' ? 'md:col-span-1' : ''}`}
         />
       </div>
     </div>

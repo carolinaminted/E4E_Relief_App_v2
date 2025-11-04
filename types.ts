@@ -43,6 +43,7 @@ export interface UserProfile {
   fundName?: string;
   classVerificationStatus: ClassVerificationStatus;
   eligibilityStatus: EligibilityStatus;
+  role: 'User' | 'Admin';
 }
 
 export interface Expense {
