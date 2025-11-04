@@ -112,6 +112,7 @@ function App() {
   const [applications, setApplications] = useState(initialApplications);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
+  const [autofillTrigger, setAutofillTrigger] = useState(0);
 
 
   const userApplications = useMemo(() => {
@@ -293,13 +294,14 @@ function App() {
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className="mx-auto h-48 w-auto"
+              className={`mx-auto h-48 w-auto ${page === 'register' ? 'cursor-pointer' : ''}`}
+              onClick={page === 'register' ? () => setAutofillTrigger(c => c + 1) : undefined}
             />
           </div>
           
           <div className="w-full max-w-md">
             {page === 'register' ? (
-              <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} />
+              <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
             ) : (
               <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} />
             )}

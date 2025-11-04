@@ -1,16 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface RegisterPageProps {
   onRegister: (firstName: string, lastName: string, email: string, password: string) => boolean;
   switchToLogin: () => void;
+  autofillTrigger: number;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, autofillTrigger }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const generateFakeUserData = () => {
+      const firstNames = ["Liam", "Olivia", "Noah", "Emma", "Oliver", "Charlotte", "Elijah", "Amelia", "James", "Ava", "Benjamin", "Sophia", "Lucas", "Isabella", "Henry", "Mia", "Alexander", "Evelyn"];
+      const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas"];
+
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}@fakemail.example`;
+      const password = 'e4e';
+
+      return { firstName, lastName, email, password };
+  };
+
+  useEffect(() => {
+    if (autofillTrigger > 0) {
+      const { firstName, lastName, email, password } = generateFakeUserData();
+      setFirstName(firstName);
+      setLastName(lastName);
+      setEmail(email);
+      setPassword(password);
+    }
+  }, [autofillTrigger]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
