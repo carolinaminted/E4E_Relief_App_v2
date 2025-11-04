@@ -51,6 +51,12 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             <span className="font-semibold text-white opacity-70">Application ID:</span>
             <span className="font-mono">{application.id}</span>
           </div>
+          {application.submittedBy && (
+            <div className="flex justify-between border-b border-[#002a50] pb-2">
+              <span className="font-semibold text-white opacity-70">Submitted By:</span>
+              <span className="font-mono">{application.submittedBy}</span>
+            </div>
+          )}
           <div className="flex justify-between border-b border-[#002a50] pb-2 items-center">
             <span className="font-semibold text-white opacity-70">Status:</span>
             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[application.status]}`}>

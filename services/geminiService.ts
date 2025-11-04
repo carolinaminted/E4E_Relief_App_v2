@@ -449,6 +449,7 @@ const applicationDetailsJsonSchema = {
                 homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
                 mobileNumber: { type: Type.STRING, description: "The user's mobile phone number." },
                 preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication." },
+                fundCode: { type: Type.STRING, description: "The applicant's fund code." },
             }
         },
         eventData: {
@@ -468,12 +469,17 @@ const applicationDetailsJsonSchema = {
 };
 
 export async function parseApplicationDetailsWithGemini(
-  description: string
+  description: string,
+  isProxy: boolean = false
 ): Promise<Partial<ApplicationFormData>> {
   if (!description) return {};
 
+  const instruction = isProxy
+    ? `You are parsing a description submitted by a proxy on behalf of an applicant. Your task is to extract the **applicant's** details from the text. The applicant is the person who experienced the hardship.`
+    : `Parse the user's description of their situation into a structured JSON object for a relief application.`;
+
   const prompt = `
-    Parse the user's description of their situation into a structured JSON object for a relief application.
+    ${instruction}
     Extract any mentioned details that match the schema, including personal info, address, event details (like evacuation status or power loss), and other profile information.
     
     Rules for address parsing:

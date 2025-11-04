@@ -117,7 +117,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
   const handleAIParse = async (description: string) => {
     setIsAIParsing(true);
     try {
-      const parsedDetails = await parseApplicationDetailsWithGemini(description);
+      const parsedDetails = await parseApplicationDetailsWithGemini(description, true);
       onAIParsed(parsedDetails);
     } catch (e) {
       console.error("AI Parsing failed in parent component:", e);

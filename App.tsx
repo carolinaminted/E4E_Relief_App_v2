@@ -136,6 +136,7 @@ const initialApplications: Record<string, Application[]> = {
       lifetimeGrantRemaining: 47500,
       shareStory: true,
       receiveAdditionalInfo: false,
+      submittedBy: 'user@example.com',
     },
   ],
 };
@@ -158,6 +159,7 @@ const initialProxyApplications: Application[] = [
       lifetimeGrantRemaining: 47500,
       shareStory: false,
       receiveAdditionalInfo: true,
+      submittedBy: 'admin@example.com',
     }
 ];
 
@@ -430,6 +432,7 @@ function App() {
       lifetimeGrantRemaining: finalDecision.remaining_lifetime,
       shareStory: appFormData.agreementData.shareStory ?? false,
       receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
+      submittedBy: currentUser.email,
     };
 
     setApplications(prev => ({
@@ -534,6 +537,7 @@ function App() {
       lifetimeGrantRemaining: finalDecision.remaining_lifetime,
       shareStory: appFormData.agreementData.shareStory ?? false,
       receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
+      submittedBy: currentUser.email,
     };
     
     setProxyApplications(prev => [...prev, newApplication]);

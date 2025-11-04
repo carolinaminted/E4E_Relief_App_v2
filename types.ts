@@ -90,6 +90,7 @@ export interface Application extends EventData {
   lifetimeGrantRemaining: number;
   shareStory: boolean;
   receiveAdditionalInfo: boolean;
+  submittedBy?: string;
 }
 
 export interface EligibilityDecision {
