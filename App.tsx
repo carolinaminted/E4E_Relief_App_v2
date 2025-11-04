@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -223,6 +224,12 @@ function App() {
     if (!currentUser) return false;
     return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Active';
   }, [currentUser]);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
+  }, [page]);
 
   const handleLogin = useCallback((email: string, password: string): boolean => {
     const user = users[email];
@@ -628,7 +635,7 @@ function App() {
       case 'classVerification':
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} />;
       case 'apply':
-        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} />;
+        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} />;
       case 'profile':
         return <ProfilePage navigate={navigate} applications={userApplications} userProfile={currentUser} onProfileUpdate={handleProfileUpdate} />;
       case 'support':

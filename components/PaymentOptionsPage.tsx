@@ -20,9 +20,6 @@ const internationalPartners = [
 ];
 
 const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
   
   return (
     <div className="flex-1 flex flex-col p-8">

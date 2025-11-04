@@ -12,9 +12,10 @@ interface ApplyPageProps {
   onSubmit: (application: ApplicationFormData) => Promise<void>;
   userProfile: UserProfile;
   applicationDraft: Partial<ApplicationFormData> | null;
+  mainRef: React.RefObject<HTMLElement>;
 }
 
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef }) => {
   const [step, setStep] = useState(1);
   
   // Initialize state by deeply merging the user's profile with any draft data from the chatbot
@@ -65,11 +66,15 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
   });
 
   const nextStep = () => {
-    window.scrollTo(0, 0);
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
     setStep(prev => prev + 1);
   };
   const prevStep = () => {
-    window.scrollTo(0, 0);
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
     setStep(prev => prev - 1);
   };
   
