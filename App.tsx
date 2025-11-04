@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
 import type { ApplicationFormData } from './types';
@@ -26,6 +26,8 @@ type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 's
 // --- MOCK DATABASE ---
 const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
   'user@example.com': {
+    // Identity
+    identityId: 'user@example.com',
     // 1a
     firstName: 'John',
     lastName: 'Doe',
@@ -56,7 +58,16 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     passwordHash: 'password123', // In a real app, this would be a hash
     fundCode: 'E4E',
     classVerificationStatus: 'passed',
+    eligibilityStatus: 'Active',
   },
+};
+
+const initialEligibility: Record<string, IdentityEligibility> = {
+    'user@example.com': {
+        identityId: 'user@example.com',
+        status: 'Active',
+        updatedAt: new Date().toISOString(),
+    }
 };
 
 const initialApplications: Record<string, Application[]> = {
@@ -90,6 +101,7 @@ const createNewUserProfile = (
     email: string,
     fundCode: string,
 ): UserProfile => ({
+    identityId: email,
     firstName,
     lastName,
     email,
@@ -106,6 +118,7 @@ const createNewUserProfile = (
     infoCorrect: false,
     fundCode,
     classVerificationStatus: 'pending',
+    eligibilityStatus: 'Inactive',
 });
 
 
@@ -116,6 +129,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState(initialUsers);
   const [applications, setApplications] = useState(initialApplications);
+  const [eligibilityByIdentity, setEligibilityByIdentity] = useState(initialEligibility);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [autofillTrigger, setAutofillTrigger] = useState(0);
@@ -128,14 +142,27 @@ function App() {
     }
     return [];
   }, [currentUser, applications]);
+  
+  const isApplyEnabled = useMemo(() => {
+    if (!currentUser) return false;
+    return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Active';
+  }, [currentUser]);
 
   const handleLogin = useCallback((email: string, password: string): boolean => {
     const user = users[email];
     if (user && user.passwordHash === password) {
       const { passwordHash, ...profile } = user;
-      setCurrentUser(profile);
-      initTokenTracker(profile);
-      if (profile.classVerificationStatus !== 'passed') {
+      
+      const eligibility = eligibilityByIdentity[profile.identityId];
+      const hydratedProfile = {
+        ...profile,
+        eligibilityStatus: eligibility ? eligibility.status : 'Inactive',
+      };
+      
+      setCurrentUser(hydratedProfile);
+      initTokenTracker(hydratedProfile);
+      
+      if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Active') {
         setPage('classVerification');
       } else {
         setPage('home');
@@ -143,7 +170,7 @@ function App() {
       return true;
     }
     return false;
-  }, [users]);
+  }, [users, eligibilityByIdentity]);
   
   const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string, fundCode: string): boolean => {
     if (users[email]) {
@@ -156,6 +183,17 @@ function App() {
     };
     setUsers(prev => ({ ...prev, [email]: newUser }));
     setApplications(prev => ({ ...prev, [email]: [] }));
+    
+    // Set initial eligibility
+    setEligibilityByIdentity(prev => ({
+        ...prev,
+        [newUserProfile.identityId]: {
+            identityId: newUserProfile.identityId,
+            status: 'Inactive',
+            updatedAt: new Date().toISOString(),
+        }
+    }));
+
     setCurrentUser(newUserProfile);
     initTokenTracker(newUserProfile);
     setPage('classVerification');
@@ -169,20 +207,48 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: Page) => {
-    if (targetPage === 'apply' && currentUser?.classVerificationStatus !== 'passed') {
+    if (targetPage === 'apply' && !isApplyEnabled) {
+        console.log("Gating 'apply' page. User not verified or not eligible.");
         setPage('classVerification');
     } else {
         setPage(targetPage);
     }
-  }, [currentUser]);
+  }, [isApplyEnabled]);
 
+  const handleSetEligibility = useCallback((identityId: string, status: EligibilityStatus) => {
+    const previousStatus = eligibilityByIdentity[identityId]?.status || 'unknown';
+    console.log(`[Telemetry] eligibility_status_changed: { identityId: ${identityId}, from: ${previousStatus}, to: ${status} }`);
+
+    setEligibilityByIdentity(prev => ({
+        ...prev,
+        [identityId]: {
+            identityId,
+            status,
+            updatedAt: new Date().toISOString(),
+        }
+    }));
+    
+    setCurrentUser(prevUser => {
+        if (prevUser && prevUser.identityId === identityId) {
+            return { ...prevUser, eligibilityStatus: status };
+        }
+        return prevUser;
+    });
+
+  }, [eligibilityByIdentity]);
+  
   const handleVerificationSuccess = useCallback(() => {
     if (!currentUser) return;
     
+    console.log("[Telemetry] cv_redirect: { method: 'any', destination: 'Home' }");
+
     const updatedProfile: UserProfile = {
         ...currentUser,
         classVerificationStatus: 'passed',
+        eligibilityStatus: 'Active',
     };
+    
+    handleSetEligibility(currentUser.identityId, 'Active');
     
     setCurrentUser(updatedProfile);
     setUsers(prev => {
@@ -199,10 +265,9 @@ function App() {
         return prev;
     });
     
-    // After success, navigate them to the apply page
-    setPage('apply');
+    setPage('home');
     
-  }, [currentUser]);
+  }, [currentUser, handleSetEligibility]);
   
   const handleProfileUpdate = useCallback((updatedProfile: UserProfile) => {
     if (!currentUser) return;
@@ -365,7 +430,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isVerified={currentUser.classVerificationStatus === 'passed'} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -375,7 +440,7 @@ function App() {
         return <DonatePage navigate={navigate} />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isVerified={currentUser.classVerificationStatus === 'passed'} />;
+        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} />;
     }
   };
 

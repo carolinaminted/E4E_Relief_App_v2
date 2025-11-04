@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Application, UserProfile, Address } from '../types';
+import type { Application, UserProfile, Address, EligibilityStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -9,7 +9,7 @@ import RequiredIndicator from './RequiredIndicator';
 import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 
 interface ProfilePageProps {
-  navigate: (page: 'home' | 'apply') => void;
+  navigate: (page: 'home' | 'apply' | 'classVerification') => void;
   applications: Application[];
   userProfile: UserProfile;
   onProfileUpdate: (updatedProfile: UserProfile) => void;
@@ -21,7 +21,7 @@ const statusStyles: Record<Application['status'], string> = {
     Declined: 'text-red-400',
 };
 
-// --- UI Icons ---
+// --- UI Components ---
 const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -34,6 +34,40 @@ const NotificationIcon: React.FC = () => (
         <span className="relative inline-flex rounded-full h-3 w-3 bg-[#ff9d33]"></span>
     </span>
 );
+
+const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () => void }> = ({ status, onClick }) => {
+    const isActive = status === 'Active';
+
+    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
+    const activeClasses = "bg-green-800/50 text-green-300";
+    const inactiveClasses = "bg-red-800/50 text-red-300 cursor-pointer hover:bg-red-800/80";
+
+    const handleClick = () => {
+        if (!isActive) {
+             console.log("[Telemetry] eligibility_cta_clicked");
+             onClick();
+        }
+    };
+    
+    return (
+        <button
+            onClick={handleClick}
+            disabled={isActive}
+            role={isActive ? 'status' : 'button'}
+            aria-label={isActive ? "Eligibility Status: Active" : "Eligibility Inactive. Tap to verify."}
+            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+        >
+            {!isActive && (
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+            )}
+            <span>{isActive ? 'Active' : 'Inactive'}</span>
+        </button>
+    );
+};
+
 
 type ProfileSection = 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
@@ -254,6 +288,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
           Profile
         </h1>
+        <div className="absolute right-0">
+          <EligibilityIndicator 
+            status={userProfile.eligibilityStatus}
+            onClick={() => navigate('classVerification')} 
+          />
+        </div>
       </div>
       
       {/* Applications Section */}
@@ -295,7 +335,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <div className="flex justify-center pt-4">
                             <button 
                                 onClick={() => navigate('apply')} 
-                                className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200"
+                                className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                disabled={userProfile.eligibilityStatus !== 'Active'}
+                                title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
                             >
                                 Apply Now
                             </button>
@@ -304,8 +346,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 ) : (
                     <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
                         <p className="text-gray-300">You have not submitted any applications yet.</p>
-                        <button onClick={() => navigate('apply')} className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md">
-                        Apply Now
+                        <button 
+                            onClick={() => navigate('apply')} 
+                            className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
+                            disabled={userProfile.eligibilityStatus !== 'Active'}
+                            title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                        >
+                            Apply Now
                         </button>
                     </div>
                 )}
