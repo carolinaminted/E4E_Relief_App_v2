@@ -54,10 +54,20 @@ const DashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-1
 
 // --- Component ---
 
+interface Tile {
+  key: string;
+  title: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  disabledTooltip?: string;
+  colSpan?: string;
+}
+
 const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName, userRole }) => {
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
-    const tiles = [
+    const tiles: Tile[] = [
         { 
             key: 'apply', 
             title: 'Apply', 
@@ -72,7 +82,13 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
     ];
 
     if (userRole === 'Admin') {
-        tiles.push({ key: 'dashboards', title: 'Dashboards', icon: <DashboardIcon />, onClick: () => navigate('fundPortal') });
+        tiles.push({ 
+            key: 'dashboards', 
+            title: 'Dashboards', 
+            icon: <DashboardIcon />, 
+            onClick: () => navigate('fundPortal'),
+            colSpan: 'col-span-2'
+        });
     }
 
   return (
@@ -80,7 +96,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
       <div> {/* Content wrapper */}
         <IconDefs />
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-          Welcome to {fundName || 'E4E Relief'}
+          {fundName || 'E4E Relief'}
         </h1>
 
         <div className={`w-full max-w-4xl mt-12 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6`}>
@@ -92,7 +108,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
                   aria-disabled={!!tile.disabled}
                   className={`bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center ${
                       tile.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105'
-                  }`}
+                  } ${tile.colSpan || ''}`}
               >
                   {tile.icon}
                   <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">

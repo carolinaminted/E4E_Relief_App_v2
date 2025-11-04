@@ -46,7 +46,7 @@ The home screen provides quick access to all major sections of the app.
 
 
 <img width="425" height="755" alt="E4E App v2 - Home - Applicant" src="https://github.com/user-attachments/assets/23d435f3-477a-45fa-a076-f156d0ee3bca" />
-
+<img width="427" height="753" alt="image" src="https://github.com/user-attachments/assets/3e9d7cb6-7d86-4bae-b37f-631f7fd9c2e0" />
 
 ---
 
