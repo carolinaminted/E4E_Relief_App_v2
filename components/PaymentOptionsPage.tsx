@@ -49,12 +49,17 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
                     For applicants within the United States, please review our payment guide to understand the available options and requirements for receiving your grant.
                 </p>
                 <a 
-                    href="https://www.e4erelief.org/rs-grant-payment-guide?hs_preview=tPjgviPn-128427360771"
+                    href="https://www.bankofamerica.com/recipient-select/"
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-block bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-8 rounded-md transition-colors duration-200"
+                    title="Visit Bank of America Recipient Select"
+                    className="inline-block bg-[#003a70]/50 p-4 rounded-lg hover:bg-[#005ca0]/50 transition-all duration-300 border-2 border-transparent hover:border-[#ff8400]/50 transform hover:scale-105 mx-auto"
                 >
-                    View US Payment Guide
+                    <img 
+                        src="https://gateway.pinata.cloud/ipfs/bafkreiguneyj2jw27w2h7z2i7g6lq72csg25p3abq2osv7h3p7g3i4a25a" 
+                        alt="Bank of America Recipient Select logo" 
+                        className="h-12 w-auto" 
+                    />
                 </a>
             </div>
             
