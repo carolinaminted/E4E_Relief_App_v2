@@ -32,7 +32,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled }) => {
         <ActionCard title="Donate Now" description="Support our cause and help others in need." onClick={() => navigate('donate')} />
         <ActionCard 
             title="View Token Usage" 
-            description="Review AI model token consumption." 
+            description="AI model token consumption dashboard & token usage reports" 
             onClick={() => navigate('tokenUsage')} 
         />
       </div>

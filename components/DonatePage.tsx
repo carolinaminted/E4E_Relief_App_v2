@@ -166,7 +166,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                 </svg>
             </button>
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-              Make a Donation
+              Donate
             </h1>
         </div>
         
