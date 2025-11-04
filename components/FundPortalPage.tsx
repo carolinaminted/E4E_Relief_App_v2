@@ -55,7 +55,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
   return (
     <div className="flex-1 flex flex-col p-8">
       <div className="max-w-5xl mx-auto w-full">
-        <div className="relative flex justify-center items-center mb-6">
+        <div className="relative flex justify-center items-center mb-12">
           <button onClick={() => navigate('home')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
@@ -69,10 +69,6 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
           </div>
         </div>
         
-        <p className="text-center text-white mb-12 max-w-2xl mx-auto">
-            Welcome, {user.firstName}. Access fund management tools and analytics below.
-        </p>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-12 max-w-4xl mx-auto">
           <FundPortalCard 
             title="Dashboard" 
