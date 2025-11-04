@@ -9,45 +9,56 @@ interface FundPortalPageProps {
 }
 
 // --- Icons ---
+const IconDefs: React.FC = () => (
+  <svg width="0" height="0" style={{ position: 'absolute' }}>
+    <defs>
+      <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style={{ stopColor: '#ff8400' }} />
+        <stop offset="100%" style={{ stopColor: '#edda26' }} />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 const DashboardIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4" fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
   </svg>
 );
 
 const TicketingIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2H5z" />
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4" fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h5.25m-5.25 0h5.25m-5.25 0h5.25M3 4.5h15a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H3a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 3 4.5Z" />
     </svg>
 );
 
 const ProgramDetailsIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4" fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2-2Z" />
     </svg>
 );
 
 const ProxyIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4" fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" transform="translate(6, -4)" opacity="0.6"/>
     </svg>
 );
 
 const TokenUsageIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4" fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
 );
 
 
-const FundPortalCard: React.FC<{ title: string; description: string; onClick: () => void; icon: React.ReactNode }> = ({ title, description, onClick, icon }) => (
+const FundPortalCard: React.FC<{ title: string; onClick: () => void; icon: React.ReactNode }> = ({ title, onClick, icon }) => (
   <div 
     onClick={onClick}
     className="bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
   >
     {icon}
-    <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-2">{title}</h2>
-    <p className="text-white text-sm">{description}</p>
+    <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{title}</h2>
   </div>
 );
 
@@ -69,34 +80,30 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 w-full mt-12 max-w-4xl mx-auto">
+          <IconDefs />
           <FundPortalCard 
             title="Dashboard" 
-            description="Shows fund analytics, metrics, and reports." 
             onClick={() => navigate('dashboard')}
             icon={<DashboardIcon />}
           />
           <FundPortalCard 
             title="Ticketing" 
-            description="Access and manage support or case tickets." 
             onClick={() => navigate('ticketing')} 
             icon={<TicketingIcon />}
           />
           <FundPortalCard 
             title="Program Details" 
-            description="Displays fund parameters, eligibility criteria, and limits." 
             onClick={() => navigate('programDetails')} 
             icon={<ProgramDetailsIcon />}
           />
           <FundPortalCard 
             title="Proxy" 
-            description="Submit applications on behalf of employees." 
             onClick={() => navigate('proxy')} 
             icon={<ProxyIcon />}
           />
           <FundPortalCard 
             title="Token Usage" 
-            description="Monitor AI model token consumption and costs." 
             onClick={() => navigate('tokenUsage')}
             icon={<TokenUsageIcon />}
           />
