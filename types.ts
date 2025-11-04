@@ -19,6 +19,25 @@ export interface IdentityEligibility {
   updatedAt: string;
 }
 
+export type FundIdentityId = string;
+
+export interface FundIdentity {
+  id: FundIdentityId;
+  userEmail: string;
+  fundCode: string;
+  fundName: string;
+  cvType: 'Domain' | 'Roster' | 'SSO' | 'Manual';
+  eligibilityStatus: EligibilityStatus;
+  classVerificationStatus: ClassVerificationStatus;
+  createdAt: string;
+  lastUsedAt?: string;
+}
+export interface ActiveIdentity {
+  id: FundIdentityId;
+  fundCode: string;
+}
+
+
 export interface UserProfile {
   identityId: string;
   firstName: string;

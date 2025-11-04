@@ -1,7 +1,7 @@
 
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
 import type { ApplicationFormData } from './types';
@@ -103,18 +103,41 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
   },
 };
 
-const initialEligibility: Record<string, IdentityEligibility> = {
-    'user@example.com': {
-        identityId: 'user@example.com',
-        status: 'Active',
-        updatedAt: new Date().toISOString(),
+const initialIdentitiesData: FundIdentity[] = [
+    {
+        id: 'user@example.com-E4E',
+        userEmail: 'user@example.com',
+        fundCode: 'E4E',
+        fundName: 'E4E Relief',
+        cvType: 'Domain',
+        eligibilityStatus: 'Active',
+        classVerificationStatus: 'passed',
+        createdAt: '2023-01-01T12:00:00Z',
+        lastUsedAt: new Date().toISOString(),
     },
-    'admin@example.com': {
-        identityId: 'admin@example.com',
-        status: 'Active',
-        updatedAt: new Date().toISOString(),
+    {
+        id: 'user@example.com-JHH',
+        userEmail: 'user@example.com',
+        fundCode: 'JHH',
+        fundName: 'JHH Relief',
+        cvType: 'Roster',
+        eligibilityStatus: 'Inactive',
+        classVerificationStatus: 'pending',
+        createdAt: '2024-05-10T10:00:00Z',
+    },
+    {
+        id: 'admin@example.com-ADMIN',
+        userEmail: 'admin@example.com',
+        fundCode: 'ADMIN',
+        fundName: 'Admin Relief Fund',
+        cvType: 'Domain',
+        eligibilityStatus: 'Active',
+        classVerificationStatus: 'passed',
+        createdAt: '2022-01-01T12:00:00Z',
+        lastUsedAt: new Date().toISOString(),
     }
-};
+];
+
 
 const initialApplications: Record<string, Application[]> = {
   'user@example.com': [
@@ -137,6 +160,25 @@ const initialApplications: Record<string, Application[]> = {
       lifetimeGrantRemaining: 47500,
       shareStory: true,
       receiveAdditionalInfo: false,
+      submittedBy: 'user@example.com',
+    },
+     {
+      id: 'APP-1002',
+      profileSnapshot: { ...initialUsers['user@example.com'], fundCode: 'JHH', fundName: 'JHH Relief' },
+      event: 'Crime',
+      eventDate: '2024-03-20',
+      requestedAmount: 1000,
+      expenses: [],
+      evacuated: 'No',
+      powerLoss: 'No',
+      submittedDate: '2024-03-22',
+      status: 'Declined',
+      reasons: ["Requested amount exceeds the remaining 12-month limit of $500.00."],
+      decisionedDate: '2024-03-22',
+      twelveMonthGrantRemaining: 500,
+      lifetimeGrantRemaining: 24000,
+      shareStory: false,
+      receiveAdditionalInfo: true,
       submittedBy: 'user@example.com',
     },
   ],
@@ -204,7 +246,11 @@ function App() {
   const [users, setUsers] = useState(initialUsers);
   const [applications, setApplications] = useState(initialApplications);
   const [proxyApplications, setProxyApplications] = useState(initialProxyApplications);
-  const [eligibilityByIdentity, setEligibilityByIdentity] = useState(initialEligibility);
+  
+  const [allIdentities, setAllIdentities] = useState<FundIdentity[]>(initialIdentitiesData);
+  const [activeIdentity, setActiveIdentity] = useState<ActiveIdentity | null>(null);
+  const [verifyingFundCode, setVerifyingFundCode] = useState<string | null>(null);
+
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [autofillTrigger, setAutofillTrigger] = useState(0);
@@ -212,13 +258,17 @@ function App() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
+  const userIdentities = useMemo(() => {
+    if (!currentUser) return [];
+    return allIdentities.filter(id => id.userEmail === currentUser.email);
+  }, [currentUser, allIdentities]);
 
   const userApplications = useMemo(() => {
-    if (currentUser) {
-      return applications[currentUser.email] || [];
+    if (currentUser && activeIdentity) {
+      return applications[currentUser.email]?.filter(app => app.profileSnapshot.fundCode === activeIdentity.fundCode) || [];
     }
     return [];
-  }, [currentUser, applications]);
+  }, [currentUser, applications, activeIdentity]);
   
   const isApplyEnabled = useMemo(() => {
     if (!currentUser) return false;
@@ -231,31 +281,74 @@ function App() {
     }
   }, [page]);
 
+  const handleSetActiveIdentity = useCallback((identityId: string) => {
+    if (!currentUser) return;
+
+    const identityToActivate = allIdentities.find(i => i.id === identityId);
+    if (identityToActivate && identityToActivate.eligibilityStatus === 'Active') {
+        console.log(`[Telemetry] track('IdentitySwitch', { from: ${activeIdentity?.fundCode}, to: ${identityToActivate.fundCode} })`);
+        
+        setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
+
+        // Update current user composite object
+        setCurrentUser(prevUser => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                fundCode: identityToActivate.fundCode,
+                fundName: identityToActivate.fundName,
+                classVerificationStatus: identityToActivate.classVerificationStatus,
+                eligibilityStatus: identityToActivate.eligibilityStatus,
+            };
+        });
+
+        // Update last used timestamp
+        setAllIdentities(prev => prev.map(id => id.id === identityId ? { ...id, lastUsedAt: new Date().toISOString() } : id));
+    }
+  }, [currentUser, allIdentities, activeIdentity]);
+
   const handleLogin = useCallback((email: string, password: string): boolean => {
     const user = users[email];
     if (user && user.passwordHash === password) {
       const { passwordHash, ...profile } = user;
-      const fund = getFundByCode(profile.fundCode);
       
-      const eligibility = eligibilityByIdentity[profile.identityId];
-      const hydratedProfile = {
-        ...profile,
-        fundName: fund?.name || 'Relief Fund',
-        eligibilityStatus: eligibility ? eligibility.status : 'Inactive',
-      };
+      const userIdentities = allIdentities.filter(id => id.userEmail === email);
+      const lastUsedIdentity = userIdentities.sort((a,b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
       
-      setCurrentUser(hydratedProfile);
-      initTokenTracker(hydratedProfile);
-      
-      if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Active') {
-        setPage('classVerification');
-      } else {
-        setPage('home');
+      let identityToActivate = lastUsedIdentity;
+      // If last used is inactive, find the first active one
+      if (lastUsedIdentity && lastUsedIdentity.eligibilityStatus !== 'Active') {
+          identityToActivate = userIdentities.find(id => id.eligibilityStatus === 'Active') || lastUsedIdentity;
       }
+      
+      if (identityToActivate) {
+          const hydratedProfile: UserProfile = {
+            ...profile,
+            fundCode: identityToActivate.fundCode,
+            fundName: identityToActivate.fundName,
+            classVerificationStatus: identityToActivate.classVerificationStatus,
+            eligibilityStatus: identityToActivate.eligibilityStatus,
+          };
+          setCurrentUser(hydratedProfile);
+          setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
+          initTokenTracker(hydratedProfile);
+
+          if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Active') {
+            setPage('classVerification');
+          } else {
+            setPage('home');
+          }
+      } else {
+          // No identities found, treat as fresh registration
+          setCurrentUser(profile);
+          initTokenTracker(profile);
+          setPage('classVerification');
+      }
+      
       return true;
     }
     return false;
-  }, [users, eligibilityByIdentity]);
+  }, [users, allIdentities]);
   
   const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string, fundCode: string): boolean => {
     if (users[email]) {
@@ -269,24 +362,45 @@ function App() {
     setUsers(prev => ({ ...prev, [email]: newUser }));
     setApplications(prev => ({ ...prev, [email]: [] }));
     
-    // Set initial eligibility
-    setEligibilityByIdentity(prev => ({
-        ...prev,
-        [newUserProfile.identityId]: {
-            identityId: newUserProfile.identityId,
-            status: 'Inactive',
-            updatedAt: new Date().toISOString(),
-        }
-    }));
-
     setCurrentUser(newUserProfile);
     initTokenTracker(newUserProfile);
+    setVerifyingFundCode(fundCode); // Set context for verification
     setPage('classVerification');
     return true;
   }, [users]);
+  
+  const handleStartAddIdentity = useCallback((fundCode: string) => {
+      if (!currentUser) return;
+      const alreadyExists = allIdentities.some(id => id.userEmail === currentUser.email && id.fundCode === fundCode);
+      if (alreadyExists) {
+          alert(`You already have an identity for fund code ${fundCode}.`);
+          return;
+      }
+      console.log(`[Telemetry] track('AddIdentityStarted', { fundCode: ${fundCode} })`);
+      setVerifyingFundCode(fundCode);
+      setPage('classVerification');
+  }, [currentUser, allIdentities]);
+
+  const handleRemoveIdentity = useCallback((identityId: string) => {
+    if (!currentUser) return;
+    const identityToRemove = allIdentities.find(id => id.id === identityId);
+    if (!identityToRemove) return;
+
+    if (activeIdentity?.id === identityId) {
+        alert("You cannot remove your active identity.");
+        return;
+    }
+
+    if (window.confirm(`Are you sure you want to remove the identity for ${identityToRemove.fundName}?`)) {
+        console.log(`[Telemetry] track('IdentityRemove', { fundCode: ${identityToRemove.fundCode} })`);
+        setAllIdentities(prev => prev.filter(id => id.id !== identityId));
+    }
+  }, [currentUser, allIdentities, activeIdentity]);
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setActiveIdentity(null);
+    setVerifyingFundCode(null);
     resetTokenTracker();
     setPage('login');
   };
@@ -300,59 +414,71 @@ function App() {
     }
   }, [isApplyEnabled]);
 
-  const handleSetEligibility = useCallback((identityId: string, status: EligibilityStatus) => {
-    const previousStatus = eligibilityByIdentity[identityId]?.status || 'unknown';
-    console.log(`[Telemetry] eligibility_status_changed: { identityId: ${identityId}, from: ${previousStatus}, to: ${status} }`);
-
-    setEligibilityByIdentity(prev => ({
-        ...prev,
-        [identityId]: {
-            identityId,
-            status,
-            updatedAt: new Date().toISOString(),
-        }
-    }));
-    
-    setCurrentUser(prevUser => {
-        if (prevUser && prevUser.identityId === identityId) {
-            return { ...prevUser, eligibilityStatus: status };
-        }
-        return prevUser;
-    });
-
-  }, [eligibilityByIdentity]);
-  
   const handleVerificationSuccess = useCallback(() => {
     if (!currentUser) return;
-    
-    console.log("[Telemetry] cv_redirect: { method: 'any', destination: 'Home' }");
 
-    const updatedProfile: UserProfile = {
-        ...currentUser,
-        classVerificationStatus: 'passed',
-        eligibilityStatus: 'Active',
-    };
+    const fundCodeToVerify = verifyingFundCode || currentUser.fundCode;
+    const fund = getFundByCode(fundCodeToVerify);
     
-    handleSetEligibility(currentUser.identityId, 'Active');
-    
-    setCurrentUser(updatedProfile);
-    setUsers(prev => {
-        const currentUserData = prev[currentUser.email];
-        if (currentUserData) {
-            return {
-                ...prev,
-                [currentUser.email]: {
-                    ...currentUserData,
-                    ...updatedProfile,
-                }
+    if (!fund) {
+        console.error("Verification successful but could not find fund config for", fundCodeToVerify);
+        setVerifyingFundCode(null);
+        setPage('profile'); // or home
+        return;
+    }
+
+    if (verifyingFundCode) { // This is a new identity being added
+        console.log(`[Telemetry] track('IdentityCreated', { fundCode: ${fund.code}, cvType: ${fund.cvType} })`);
+        const newIdentity: FundIdentity = {
+            id: `${currentUser.email}-${fund.code}`,
+            userEmail: currentUser.email,
+            fundCode: fund.code,
+            fundName: fund.name,
+            cvType: fund.cvType,
+            eligibilityStatus: 'Active',
+            classVerificationStatus: 'passed',
+            createdAt: new Date().toISOString(),
+        };
+
+        setAllIdentities(prev => [...prev, newIdentity]);
+        // Automatically make the new identity active
+        handleSetActiveIdentity(newIdentity.id);
+        setVerifyingFundCode(null);
+        setPage('profile'); // Go back to profile to see the new identity
+
+    } else { // This is an initial registration or re-verification
+        const identityIdToUpdate = `${currentUser.email}-${fund.code}`;
+        const existingIdentity = allIdentities.find(id => id.id === identityIdToUpdate);
+
+        if (existingIdentity) { // Re-verifying existing identity
+            setAllIdentities(prev => prev.map(id => id.id === identityIdToUpdate ? { ...id, eligibilityStatus: 'Active', classVerificationStatus: 'passed' } : id));
+        } else { // First time registration verification
+             const newIdentity: FundIdentity = {
+                id: identityIdToUpdate,
+                userEmail: currentUser.email,
+                fundCode: fund.code,
+                fundName: fund.name,
+                cvType: fund.cvType,
+                eligibilityStatus: 'Active',
+                classVerificationStatus: 'passed',
+                createdAt: new Date().toISOString(),
             };
+            setAllIdentities(prev => [...prev, newIdentity]);
         }
-        return prev;
-    });
-    
-    setPage('home');
-    
-  }, [currentUser, handleSetEligibility]);
+        
+        // Update user state and navigate home
+        const updatedProfile: UserProfile = {
+            ...currentUser,
+            classVerificationStatus: 'passed',
+            eligibilityStatus: 'Active',
+            fundCode: fund.code,
+            fundName: fund.name,
+        };
+        setCurrentUser(updatedProfile);
+        setActiveIdentity({ id: identityIdToUpdate, fundCode: fund.code });
+        setPage('home');
+    }
+  }, [currentUser, verifyingFundCode, allIdentities, handleSetActiveIdentity]);
   
   const handleProfileUpdate = useCallback((updatedProfile: UserProfile) => {
     if (!currentUser) return;
@@ -485,14 +611,6 @@ function App() {
         };
         setUsers(prev => ({ ...prev, [applicantEmail]: newProfile }));
         setApplications(prev => ({ ...prev, [applicantEmail]: [] }));
-        setEligibilityByIdentity(prev => ({
-            ...prev,
-            [newProfile.identityId]: {
-                identityId: newProfile.identityId,
-                status: 'Active',
-                updatedAt: new Date().toISOString(),
-            }
-        }));
     }
 
     const lastApplication = usersPastApplications.length > 0 ? usersPastApplications[usersPastApplications.length - 1] : null;
@@ -633,11 +751,21 @@ function App() {
     
     switch (page) {
       case 'classVerification':
-        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} />;
+        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
         return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} />;
       case 'profile':
-        return <ProfilePage navigate={navigate} applications={userApplications} userProfile={currentUser} onProfileUpdate={handleProfileUpdate} />;
+        return <ProfilePage 
+                    navigate={navigate} 
+                    applications={userApplications} 
+                    userProfile={currentUser} 
+                    onProfileUpdate={handleProfileUpdate}
+                    identities={userIdentities}
+                    activeIdentity={activeIdentity}
+                    onSetActiveIdentity={handleSetActiveIdentity}
+                    onAddIdentity={handleStartAddIdentity}
+                    onRemoveIdentity={handleRemoveIdentity}
+                />;
       case 'support':
         return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;
        case 'tokenUsage':
@@ -686,7 +814,10 @@ function App() {
               />
             </button>
           </div>
-          <div className="justify-self-center text-center">
+          <div className="justify-self-center text-center flex items-center">
+             {activeIdentity && (
+              <span className="bg-[#ff8400]/80 text-white text-xs font-bold mr-3 px-2.5 py-1 rounded-full">{activeIdentity.fundCode}</span>
+            )}
             <span className="text-gray-200">Welcome, {currentUser.firstName}</span>
           </div>
           <div className="justify-self-end">
@@ -701,6 +832,7 @@ function App() {
         {renderPage()}
       </main>
 
+      {/* FIX: Passed the correct state setter function `setIsChatbotOpen` to the `setIsOpen` prop. */}
       {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
     </div>
   );
