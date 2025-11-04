@@ -132,8 +132,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
             });
         }
 
-        // FIX: The property name for sending tool responses back is 'functionResponses', not 'toolResponses'.
-        const toolResponseStream = await chatSessionRef.current.sendMessageStream({ functionResponses });
+        // FIX: A function response must be sent as a Part in the 'message' property of the request.
+        const toolResponseStream = await chatSessionRef.current.sendMessageStream({ message: functionResponses });
 
         for await (const chunk of toolResponseStream) {
             if (chunk.text) {

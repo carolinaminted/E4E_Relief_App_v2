@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 type Page = 'support';
 
@@ -157,8 +157,14 @@ const FAQItem: React.FC<{ faq: { question: string, answer: React.ReactNode }, is
 };
 
 const FAQSection: React.FC<{ title: string, faqs: { question: string, answer: React.ReactNode }[], isOpen: boolean, onToggleSection: () => void }> = ({ title, faqs, isOpen, onToggleSection }) => {
-    const [openIndex, setOpenIndex] = useState<number | null>(isOpen ? 0 : null);
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
     
+    useEffect(() => {
+        if (!isOpen) {
+            setOpenIndex(null);
+        }
+    }, [isOpen]);
+
     const handleToggle = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
     };
@@ -193,11 +199,9 @@ const FAQSection: React.FC<{ title: string, faqs: { question: string, answer: Re
 
 
 const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
-    // FIX: Changed state type to allow null for closed sections, which is consistent with the child component `FAQSection` and fixes the type error.
-    const [openSection, setOpenSection] = useState<'applicant' | 'donor' | null>('applicant');
+    const [openSection, setOpenSection] = useState<'applicant' | 'donor' | null>(null);
 
     const handleToggleSection = (section: 'applicant' | 'donor') => {
-        // FIX: Toggling to null instead of an empty string to match the updated state type.
         setOpenSection(openSection === section ? null : section);
     };
 
