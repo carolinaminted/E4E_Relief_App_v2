@@ -1,233 +1,152 @@
 # E4E Relief — User Guide
 
-## Getting started
-- Open the app in your browser.
-- Choose **Register** to create an account or **Sign in** if you already have one. You will need a **Fund Code** from your employer to register.
-- After signing in, you may be asked to complete a one-time verification step before you can apply for relief.
+This guide will walk you through all the features of the E4E Relief application, from creating an account and applying for a grant to using the advanced AI tools and administrative features.
 
-<img width="334" height="602" alt="image" src="https://github.com/user-attachments/assets/61007eb0-e080-421d-865e-32cd926a243f" />
-<img width="334" height="604" alt="image" src="https://github.com/user-attachments/assets/639aab15-e872-4842-9a89-0528af5150a6" />
+## Getting Started
+
+### Registration & Sign In
+-   Open the app and choose **Register** to create a new account or **Sign In** if you already have one.
+-   When registering, you will need a **Fund Code** provided by your employer or program.
+
+### Secret Shortcuts (For Demo & Testing)
+-   **On the Register page:** Click the E4E Relief logo to automatically fill in the form with randomly generated user data.
+-   **On the Login page:** Click the E4E Relief logo to automatically fill in the credentials for the **admin user** (`admin@example.com`).
+
+---
 
 ## Class Verification
-To ensure grants are distributed to eligible employees, you must complete a one-time verification after your first sign-in. The method depends on your employer's program:
-- **Domain Verification**: Your account is automatically verified if your email address uses a company-approved domain.
-- **Roster Verification**: You will be asked to enter details like your Employee ID and date of birth to match against company records.
-- **SSO Verification**: You will be prompted to log in with your company's Single Sign-On (SSO) to link your account.
+After your first sign-in, you must complete a one-time verification to confirm your eligibility for your designated fund. The method depends on your employer's program configuration.
 
-Once verified, you will have full access to the application.
+-   **Domain Verification**: Your account is automatically verified if your email address (e.g., `you@company.com`) uses a company-approved domain.
+-   **Roster Verification**: You will be asked to enter specific details like your Employee ID and date of birth, which are then matched against secure company records.
+-   **SSO Verification**: You will be prompted to log in with your company's Single Sign-On (SSO) to securely link your E4E Relief account.
 
-## Home
-- **Apply for Relief**: start a new application.
-- **My Applications**: view status of past submissions.
-- **Profile**: update your personal details, address, and consent acknowledgements.
-- **Support**: read help content and ways to contact support.
-- The **Relief Assistant** icon opens the AI assistant for quick questions, filling out applications, and updating contact information.
+Once verified, you will have full access to the application. If your eligibility status is `Inactive`, you may need to complete this step to apply for relief.
 
-Home Page:
+---
 
-<img width="339" height="609" alt="image" src="https://github.com/user-attachments/assets/8815c8c7-5d81-491a-a9f9-b2d04318b417" />
+## Main Dashboard (Home)
+The home screen provides quick access to all major sections of the app.
 
+-   **Apply**: Start a new application for financial assistance. (This is only enabled if your status is 'Active').
+-   **Profile**: View past applications and update your personal details.
+-   **Support**: Find contact information and answers to frequently asked questions.
+-   **Donate**: Make a contribution to the relief fund.
+-   **Dashboards** (Admin only): Access the Fund Portal for administrative features.
 
-## Apply for Relief
-The application is a guided, step‑by‑step form. Your progress is saved in the session.
+---
 
-1. **Contact & Address**
-   - Enter your name, email, phone, and residential address.
-   - Use the **Country** picker to quickly filter and select your country.
-   - Address tips are available via the helper component.
+## Applying for Relief
+The application is a guided, multi-step form. Your progress is saved as you move through the steps.
 
-2. **Event & Request**
-   - Select the event type and describe the impact.
-   - Enter the **requested amount** you need assistance with.
+### Step 1: Contact, Address & Profile
+-   **AI Application Starter**: You can start by describing your situation in your own words. The AI will parse the text and pre-fill as many fields as possible throughout the application, including your contact info, address, event details, and requested amount.
+-   **Manual Entry**: You can fill out the form manually. The application is organized into collapsible sections for contact details, primary address, mailing address, and other personal information. The AI-powered **Address Helper** can parse a pasted address to fill in the fields for you.
 
-3. **Expenses**
-   - Provide estimated costs or categories. Totals are shown where applicable.
+### Step 2: Event Details
+-   Select the type of disaster or hardship event.
+-   Provide the date of the event, details about power loss or evacuation, and the amount you are requesting.
 
-4. **Terms & Acknowledgments**
-   - Read and accept required terms.
-   - Optional choices: share your story and receive additional information.
+### Step 3: Expenses
+-   Itemize your expenses based on predefined categories (e.g., Food Spoilage, Meals).
+-   You can add, edit, or delete expenses. Receipts are optional but can be uploaded.
 
-5. **Submit**
-   - You will see a **Submission Success** page.
-   - Your application will appear in **My Applications** with a status.
+### Step 4: Agreements & Submission
+-   Review and agree to the Terms of Acceptance.
+-   Indicate your preferences for sharing your story and receiving additional information.
+-   Once you submit, your application is sent for an instant decision.
 
-Apply for Relief Page:
+### Submission Success
+-   After submission, you will see a confirmation page with your unique Application ID.
+-   Your application will now appear in the "My Applications" section of your Profile page.
 
-<img width="324" height="610" alt="image" src="https://github.com/user-attachments/assets/22c4be77-17f5-4cca-b750-f5f12e5a92e5" />
-<img width="325" height="617" alt="image" src="https://github.com/user-attachments/assets/8fff68c5-edc3-4858-989d-dac899423d43" />
-<img width="321" height="621" alt="image" src="https://github.com/user-attachments/assets/0fc04d3d-f463-4cf7-80b2-15e2b4f4634d" />
-<img width="326" height="619" alt="image" src="https://github.com/user-attachments/assets/7c0bb3f8-b964-434c-be08-bb99c7481c06" />
-<img width="316" height="615" alt="image" src="https://github.com/user-attachments/assets/766a3be0-bba5-49e8-a709-c0edf5fc3de4" />
-<img width="330" height="612" alt="image" src="https://github.com/user-attachments/assets/adb16fc7-3250-43b8-b3ae-9f432e4bdf52" />
-<img width="331" height="614" alt="image" src="https://github.com/user-attachments/assets/98651770-a6b3-4ce3-adbc-f9173ed91589" />
-<img width="316" height="601" alt="image" src="https://github.com/user-attachments/assets/937d8fb4-412d-4301-a74d-48f8deda9e34" />
-<img width="335" height="614" alt="image" src="https://github.com/user-attachments/assets/d5400bf7-8893-476b-a9c6-a0cd54c4872d" />
-<img width="328" height="609" alt="image" src="https://github.com/user-attachments/assets/3c196b2b-0a80-4d2a-bc97-ee593af263ad" />
-<img width="327" height="614" alt="image" src="https://github.com/user-attachments/assets/2d0ba2ab-5ba3-4088-bae5-6f37bb419284" />
-<img width="336" height="606" alt="image" src="https://github.com/user-attachments/assets/e4f3dc91-24a2-49a3-9948-0d1f0afd1161" />
+---
 
+## Managing Your Account
 
-## My Applications Page
-- View a list of all your submissions with status (Submitted, Awarded, Declined).
-- Select an entry to open a **detail view** showing what you submitted.
-- Use this area to confirm what the organization received.
+### Profile Page
+-   **My Applications**: View a list of all your past submissions with their status (Submitted, Awarded, Declined). Click any application to see a detailed summary in a modal window.
+-   **Grant Limits**: See your remaining 12-month and lifetime grant balances.
+-   **Update Information**: All your personal details are organized in collapsible sections. You can update your contact info, addresses, employment details, and consent preferences here.
 
-<img width="324" height="600" alt="image" src="https://github.com/user-attachments/assets/95ebd3b3-9132-4826-9fa6-37461bc6cfc9" />
-<img width="332" height="622" alt="image" src="https://github.com/user-attachments/assets/16133a5c-a0a4-4985-9122-f4377e7a2d3f" />
+---
 
+## AI-Powered Features
 
-## Profile Page
-- Update name, preferred language, and contact details.
-- Edit your addresses. The **Country** picker supports searching.
-- Save to keep changes for your current session.
+### Relief Assistant (AI Chatbot)
+The Relief Assistant is a powerful AI chatbot available via the floating widget. It can:
+-   **Answer Questions**: Ask about the application process, eligibility criteria, or where to find information in the app.
+-   **Understand Your History**: The assistant is aware of your past applications and can provide status updates or explain decision reasons.
+-   **Update Your Profile**: Ask the assistant to update your information. For example: *"My new phone number is 555-867-5309."*
+-   **Start an Application**: Describe your situation to the assistant. For example: *"I was affected by the recent flood and need $1500 for repairs."* The assistant will use this information to create a draft, which will pre-fill the form when you navigate to the **Apply** page.
 
-<img width="323" height="616" alt="image" src="https://github.com/user-attachments/assets/89e865d3-07b0-429e-825e-e8f672cc2bd6" />
-<img width="330" height="612" alt="image" src="https://github.com/user-attachments/assets/a9d7a406-90ef-416b-ada7-c33b28e35046" />
-<img width="327" height="615" alt="image" src="https://github.com/user-attachments/assets/5b9c4cf4-a5b5-43c3-96c9-56d3e5db9524" />
-<img width="328" height="611" alt="image" src="https://github.com/user-attachments/assets/2bb3038b-b758-4547-808f-bd0cdbb5203a" />
+### AI Decisioning & Instant Grants
+When you submit an application, it goes through a two-stage automated decisioning process for an instant result.
+1.  **Rules Engine Evaluation**: The application is first checked against a set of deterministic, hard-coded rules (e.g., Is the event date within 90 days? Does the requested amount exceed fund limits?). This generates a preliminary decision (`Approved`, `Denied`, or `Review`).
+2.  **AI Final Review**: The application data and the preliminary decision are sent to a Gemini model. The AI acts as a senior grant approver, holistically reviews the case, and makes the final binding decision. It also generates a concise, empathetic reason for the outcome, which is shown to you.
 
+This process ensures decisions are fast, consistent, and transparent.
 
-## Support Page
-- Read guidance on eligibility, timelines, and contact options.
-- This page is a placeholder and can be replaced with your organization’s content and links.
+---
 
-<img width="342" height="617" alt="image" src="https://github.com/user-attachments/assets/450f1dd3-a0be-476c-b892-8c7346f8381b" />
-<img width="325" height="610" alt="image" src="https://github.com/user-attachments/assets/bf694ecc-76cd-4f40-920f-fca93d04b896" />
+## Fund Portal (For Admins)
+If you are logged in as an admin, you have access to the Fund Portal, a central hub for managing the relief program.
 
-## FAQ Page
+-   **Dashboard**: A high-level overview of key metrics, including total grants awarded, application statuses, user engagement, and top event types.
+-   **Ticketing**: A simple system for viewing and managing support tickets submitted by users.
+-   **Program Details**: A summary of the configuration for the selected fund, including grant limits and eligible event types.
+-   **Proxy Applications**: Submit an application on behalf of another employee. This is useful for users who may not have easy access to the app.
+-   **Token Usage**: An analytics dashboard to monitor the usage and cost of the Gemini AI models across different features (AI Assistant, Decisioning, etc.).
 
-<img width="333" height="609" alt="image" src="https://github.com/user-attachments/assets/feac3abb-a9f5-4815-9aba-f4029e22e6de" />
+---
 
+## Page Hierarchy for Screenshots
 
-## Token Usage
+Here is a complete map of every page and view in the application.
 
+-   **Logged Out Experience**
+    -   Login Page
+    -   Register Page
 
+-   **Initial User Flow**
+    -   Class Verification Page
+        -   Domain Verification View
+        -   Roster Verification View
+        -   SSO Verification View
+        -   Verification Success View
 
+-   **Main Application (Standard User)**
+    -   Home Page
+    -   Apply for Relief (Wrapper Page)
+        -   Step 1: Contact Page (`ApplyContactPage`)
+            -   AI Application Starter
+            -   Address Helper
+        -   Step 2: Event Page (`ApplyEventPage`)
+        -   Step 3: Expenses Page (`ApplyExpensesPage`)
+        -   Step 4: Terms Page (`ApplyTermsPage`)
+            -   Terms of Acceptance Modal
+    -   Submission Success Page
+    -   Profile Page
+        -   Application Detail Modal
+    -   Support Page
+    -   FAQ Page
+    -   Payment Options Page
+    -   Donate Page
+    -   Eligibility Page
+    -   Policy Modal (from Home page footer)
 
+-   **Main Application (Admin User)**
+    -   Home Page (with "Dashboards" tile)
+    -   Fund Portal Page
+        -   Dashboard Page
+        -   Ticketing Page
+        -   Program Details Page
+        -   Proxy Application Page (Wrapper)
+            -   Step 1: Proxy Contact Page (`ApplyProxyContactPage`)
+            -   (Steps 2-4 use the same components as the standard Apply flow)
+        -   Token Usage Page
+            -   Token Usage Filter Modal
 
-
-## Relief Assistant (AI Assistant)
-- Open the chat from the floating widget.
-- Ask “how do I…” questions about the process.
-- The assistant can perform a simple **eligibility check** and explain the result.
-- Responses are for guidance of the program.
-- Provide information to prefillout application information.
-- Context aware of applications and previous submission decisions.
-
-<img width="335" height="609" alt="image" src="https://github.com/user-attachments/assets/a8f64df1-c745-4cc7-8ef9-8a19945415c7" />
-<img width="339" height="605" alt="image" src="https://github.com/user-attachments/assets/257a27df-1cb7-41d3-937a-7756a3eb8616" />
-
-
-## AI Decisioning and Instant Grant Eligibility
-
-When a user completes the **Apply for Relief** form and clicks **Submit**, the application triggers the **AI Decisioning Service**.  
-This service evaluates the applicant’s data against fund-specific eligibility rules and renders a decision in real time.
-
-### Flow Overview
-1. **Form Submission**
-   - The user’s completed application (contact, event, expenses, acknowledgments) is serialized into a structured payload.
-   - This payload includes user metadata and contextual fund information.
-
-2. **AI Eligibility Evaluation**
-   - The payload is passed to the AI Decisioning module (`geminiService.ts` or equivalent).
-   - The module constructs a structured request aligned with the **eligibility evaluation schema**:
-     ```ts
-     {
-       "tool": "EligibilityEvaluation",
-       "input": {
-         "fund_id": "<fund-uuid>",
-         "country": "US",
-         "event_type": "Hurricane",
-         "requested_amount": 1200,
-         "time_since_event": "5 days",
-         "prior_awards": 0
-       }
-     }
-     ```
-   - The AI model (e.g., Gemini or GPT) uses fund policy rules and prior case patterns to assess:
-     - Applicant eligibility (yes/no + reasoning)
-     - Decision type (approve, deny, review)
-     - Suggested grant amount (if approved)
-     - Policy rationale (text summary for auditing)
-
-3. **Decision Output**
-   - The AI returns a structured JSON response:
-     ```json
-     {
-       "eligible": true,
-       "decision": "Approved",
-       "recommended_award": 1000,
-       "reasoning": "Applicant meets criteria and has no prior awards."
-     }
-     ```
-   - The UI displays an instant confirmation banner summarizing the result.
-   - The result is logged with the application record for auditing.
-
-4. **Post-Decision Handling**
-   - If approved: the app can initiate a **payment creation** record in Dynamics 365 via API.
-   - If pending review: it flags the record for manual approval by case workers.
-   - If denied: it provides a clear explanation to the applicant, referencing relevant criteria.
-
-  
-<img width="333" height="615" alt="image" src="https://github.com/user-attachments/assets/a323002c-28b4-4495-bb27-7b2afc24c162" />
-<img width="339" height="605" alt="image" src="https://github.com/user-attachments/assets/0361b00d-7d99-4189-8b49-03d7536d389c" />
-<img width="324" height="611" alt="image" src="https://github.com/user-attachments/assets/e5fca3f2-3c6c-4d52-8576-9a69efa6412a" />
-
-
-### Key Advantages
-- **Instant Eligibility Feedback** — applicants know their outcome immediately.
-- **Consistent Rule Enforcement** — AI applies the same logic for all applicants.
-- **Transparent Reasoning** — every decision carries human-readable justification.
-- **Audit Ready** — results are logged for compliance and reporting.
-
-
-# Integration Overview — Azure AD B2C + Dataverse
-
-## High-Level Plan
-
-1. **Authentication**
-   - Use **Azure AD B2C** with **OIDC + PKCE** for secure sign-in and sign-up.
-   - Each B2C user is mapped to a **Dataverse Contact** by storing the B2C `oid` (Object ID) on the Contact record.
-
-2. **Backend API Layer**
-   - Introduce a **thin backend API** (Azure Function or App Service) as the single integration point between the mobile app and Dataverse.
-   - This API validates B2C access tokens, executes business logic, and prevents client-side exposure of secrets.
-
-3. **Token Flow**
-   - **Frontend → API**: Authenticated using **B2C access tokens**.
-   - **API → Dataverse**: Authenticated using a **Dataverse Application User** (via Azure AD app registration with client credentials).
-
-4. **Data Integration**
-   - Replace all mock or local state with **live Dataverse data**:
-     - **Contacts** for user profiles.
-     - **Applications** for relief submissions.
-     - **Awards** for grant outcomes.
-   - Use **TanStack Query** to manage cache, sync, and optimistic updates.
-
-5. **AI Decisioning**
-   - Run **AI eligibility and grant decisioning** server-side within the API before saving an Application.
-   - Store decision outcome, reasoning, and audit trail directly in Dataverse.
-
-6. **Security & Configuration**
-   - Store tokens securely in **Keychain/Keystore**.
-   - Keep environment variables and API endpoints in a **.env file**.
-   - Avoid embedding secrets in mobile code.
-   - Enforce **least-privilege roles** and **data access controls** in Dataverse.
-
-7. **Deployment & CI/CD**
-   - Implement automated build and release pipelines to:
-     - Build and deploy the React Native app.
-     - Deploy the API to Azure.
-     - Run integration and regression tests against a **UAT Dataverse** environment.
-
-8. **Observability & Reliability**
-   - Add **structured logs**, **correlation IDs**, and **error telemetry**.
-   - AI decision logs with updates on cases with artifacts used to make the eligibility award or decline decision
-   - Provide **user-friendly error messages** for predictable recovery and smoother UX.
-
-
-
-## Tips
-- This demo does not persist data across refreshes.
-- If you see “missing API key,” add your AI key via the environment file.
-- Keep your browser tab open during an application session to avoid losing inputs.
+-   **Shared Components**
+    -   AI Relief Assistant (Chatbot Widget)
+    -   Loading Overlays
