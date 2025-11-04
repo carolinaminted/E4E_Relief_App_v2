@@ -370,15 +370,22 @@ function App() {
   }, [users]);
   
   const handleStartAddIdentity = useCallback((fundCode: string) => {
-      if (!currentUser) return;
-      const alreadyExists = allIdentities.some(id => id.userEmail === currentUser.email && id.fundCode === fundCode);
-      if (alreadyExists) {
-          alert(`You already have an identity for fund code ${fundCode}.`);
-          return;
-      }
-      console.log(`[Telemetry] track('AddIdentityStarted', { fundCode: ${fundCode} })`);
-      setVerifyingFundCode(fundCode);
-      setPage('classVerification');
+    if (!currentUser) return;
+    
+    const identity = allIdentities.find(id => id.userEmail === currentUser.email && id.fundCode === fundCode);
+    if (identity && identity.eligibilityStatus === 'Active') {
+        alert(`Your identity for fund code ${fundCode} is already active.`);
+        return;
+    }
+
+    if (identity) {
+        console.log(`[Telemetry] track('IdentityReverifyStarted', { fundCode: ${fundCode} })`);
+    } else {
+        console.log(`[Telemetry] track('AddIdentityStarted', { fundCode: ${fundCode} })`);
+    }
+
+    setVerifyingFundCode(fundCode);
+    setPage('classVerification');
   }, [currentUser, allIdentities]);
 
   const handleRemoveIdentity = useCallback((identityId: string) => {
@@ -417,6 +424,9 @@ function App() {
   const handleVerificationSuccess = useCallback(() => {
     if (!currentUser) return;
 
+    const isInitialRegistration = allIdentities.filter(id => id.userEmail === currentUser.email).length === 0;
+
+    // This is the fund code that was just verified, either a new one or the user's initial one.
     const fundCodeToVerify = verifyingFundCode || currentUser.fundCode;
     const fund = getFundByCode(fundCodeToVerify);
     
@@ -426,11 +436,23 @@ function App() {
         setPage('profile'); // or home
         return;
     }
+    
+    const identityIdToUpdate = `${currentUser.email}-${fund.code}`;
+    const existingIdentity = allIdentities.find(id => id.id === identityIdToUpdate);
 
-    if (verifyingFundCode) { // This is a new identity being added
+    if (existingIdentity) { // UPDATE existing identity (re-verification)
+        console.log(`[Telemetry] track('IdentityReverified', { fundCode: ${fund.code} })`);
+        setAllIdentities(prev => prev.map(id => 
+            id.id === identityIdToUpdate 
+            ? { ...id, eligibilityStatus: 'Active', classVerificationStatus: 'passed' } 
+            : id
+        ));
+        // If we just re-verified, let's make it active.
+        handleSetActiveIdentity(identityIdToUpdate);
+    } else { // ADD new identity
         console.log(`[Telemetry] track('IdentityCreated', { fundCode: ${fund.code}, cvType: ${fund.cvType} })`);
         const newIdentity: FundIdentity = {
-            id: `${currentUser.email}-${fund.code}`,
+            id: identityIdToUpdate,
             userEmail: currentUser.email,
             fundCode: fund.code,
             fundName: fund.name,
@@ -439,44 +461,26 @@ function App() {
             classVerificationStatus: 'passed',
             createdAt: new Date().toISOString(),
         };
-
         setAllIdentities(prev => [...prev, newIdentity]);
         // Automatically make the new identity active
         handleSetActiveIdentity(newIdentity.id);
-        setVerifyingFundCode(null);
-        setPage('profile'); // Go back to profile to see the new identity
+    }
 
-    } else { // This is an initial registration or re-verification
-        const identityIdToUpdate = `${currentUser.email}-${fund.code}`;
-        const existingIdentity = allIdentities.find(id => id.id === identityIdToUpdate);
+    setVerifyingFundCode(null);
 
-        if (existingIdentity) { // Re-verifying existing identity
-            setAllIdentities(prev => prev.map(id => id.id === identityIdToUpdate ? { ...id, eligibilityStatus: 'Active', classVerificationStatus: 'passed' } : id));
-        } else { // First time registration verification
-             const newIdentity: FundIdentity = {
-                id: identityIdToUpdate,
-                userEmail: currentUser.email,
-                fundCode: fund.code,
-                fundName: fund.name,
-                cvType: fund.cvType,
-                eligibilityStatus: 'Active',
-                classVerificationStatus: 'passed',
-                createdAt: new Date().toISOString(),
-            };
-            setAllIdentities(prev => [...prev, newIdentity]);
-        }
-        
-        // Update user state and navigate home
+    if (isInitialRegistration) {
+        // We also need to fully hydrate the currentUser object for the first time
         const updatedProfile: UserProfile = {
             ...currentUser,
             classVerificationStatus: 'passed',
             eligibilityStatus: 'Active',
-            fundCode: fund.code,
+            fundCode: fund.code, // Set the fund code from the newly verified identity
             fundName: fund.name,
         };
         setCurrentUser(updatedProfile);
-        setActiveIdentity({ id: identityIdToUpdate, fundCode: fund.code });
         setPage('home');
+    } else {
+        setPage('profile');
     }
   }, [currentUser, verifyingFundCode, allIdentities, handleSetActiveIdentity]);
   

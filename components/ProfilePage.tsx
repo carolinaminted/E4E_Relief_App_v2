@@ -80,7 +80,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSection, setOpenSection] = useState<ProfileSection | null>('identities');
+  const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
   
@@ -105,6 +105,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const sortedApplicationsForDisplay = useMemo(() => {
     return [...applications].reverse();
   }, [applications]);
+
+  const singleIdentity = useMemo(() => identities.length === 1 ? identities[0] : null, [identities]);
   
   const sortedIdentities = useMemo(() => {
     return [...identities].sort((a, b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime());
@@ -307,9 +309,82 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Profile
             </h1>
+            {singleIdentity && (
+              <div className="mt-2 flex flex-col items-center gap-2">
+                <p className="text-lg text-gray-300">{singleIdentity.fundName} ({singleIdentity.fundCode})</p>
+                <EligibilityIndicator 
+                  status={singleIdentity.eligibilityStatus} 
+                  onClick={() => onAddIdentity(singleIdentity.fundCode)} 
+                />
+              </div>
+            )}
         </div>
       </div>
       
+      {/* Applications Section */}
+        <section className="border-b border-[#005ca0] pb-4 mb-4">
+            <button type="button" onClick={() => toggleSection('applications')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'applications'}>
+                <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Applications</h2>
+                <ChevronIcon isOpen={openSection === 'applications'} />
+            </button>
+            <div className={`transition-all duration-500 ease-in-out ${openSection === 'applications' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="bg-[#003a70]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center border border-[#005ca0]">
+                    <div>
+                        <p className="text-sm text-white uppercase tracking-wider">12-Month Remaining</p>
+                        <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                            ${twelveMonthRemaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-white uppercase tracking-wider">Lifetime Remaining</p>
+                        <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                            ${lifetimeRemaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                {applications.length > 0 ? (
+                    <>
+                        {sortedApplicationsForDisplay.map(app => (
+                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
+                            <div>
+                            <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
+                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
+                            </div>
+                            <div className="text-right">
+                            <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
+                            <p className="text-sm text-gray-300">Status: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
+                            </div>
+                        </button>
+                        ))}
+                        <div className="flex justify-center pt-4">
+                            <button 
+                                onClick={() => navigate('apply')} 
+                                className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                disabled={userProfile.eligibilityStatus !== 'Active'}
+                                title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                            >
+                                Apply Now
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
+                        <p className="text-gray-300">You have not submitted any applications for this fund yet.</p>
+                        <button 
+                            onClick={() => navigate('apply')} 
+                            className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
+                            disabled={userProfile.eligibilityStatus !== 'Active'}
+                            title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                        >
+                            Apply Now
+                        </button>
+                    </div>
+                )}
+                </div>
+            </div>
+        </section>
+
       {/* Identities Section */}
       <section className="border-b border-[#005ca0] pb-4 mb-4">
         <button type="button" onClick={() => toggleSection('identities')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'identities'}>
@@ -379,72 +454,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </div>
       </section>
-
-
-      {/* Applications Section */}
-        <section className="border-b border-[#005ca0] pb-4 mb-4">
-            <button type="button" onClick={() => toggleSection('applications')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'applications'}>
-                <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Applications</h2>
-                <ChevronIcon isOpen={openSection === 'applications'} />
-            </button>
-            <div className={`transition-all duration-500 ease-in-out ${openSection === 'applications' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="bg-[#003a70]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center border border-[#005ca0]">
-                    <div>
-                        <p className="text-sm text-white uppercase tracking-wider">12-Month Remaining</p>
-                        <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                            ${twelveMonthRemaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-white uppercase tracking-wider">Lifetime Remaining</p>
-                        <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                            ${lifetimeRemaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                    </div>
-                </div>
-                <div className="space-y-4">
-                {applications.length > 0 ? (
-                    <>
-                        {sortedApplicationsForDisplay.map(app => (
-                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
-                            <div>
-                            <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
-                            </div>
-                            <div className="text-right">
-                            <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
-                            <p className="text-sm text-gray-300">Status: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
-                            </div>
-                        </button>
-                        ))}
-                        <div className="flex justify-center pt-4">
-                            <button 
-                                onClick={() => navigate('apply')} 
-                                className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                disabled={userProfile.eligibilityStatus !== 'Active'}
-                                title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
-                            >
-                                Apply Now
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
-                        <p className="text-gray-300">You have not submitted any applications for this fund yet.</p>
-                        <button 
-                            onClick={() => navigate('apply')} 
-                            className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
-                            disabled={userProfile.eligibilityStatus !== 'Active'}
-                            title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
-                        >
-                            Apply Now
-                        </button>
-                    </div>
-                )}
-                </div>
-            </div>
-        </section>
-
 
       <form onSubmit={handleSave} className="space-y-4">
         {/* 1a Contact Information */}
