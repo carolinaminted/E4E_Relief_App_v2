@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UserProfile } from '../types';
 
-type Page = 'home' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
+type Page = 'home' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'tokenUsage';
 
 interface FundPortalPageProps {
   navigate: (page: Page) => void;
@@ -30,6 +30,12 @@ const ProgramDetailsIcon: React.FC = () => (
 const ProxyIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+    </svg>
+);
+
+const TokenUsageIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-4 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
     </svg>
 );
 
@@ -91,6 +97,12 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
             description="Submit applications on behalf of employees." 
             onClick={() => navigate('proxy')} 
             icon={<ProxyIcon />}
+          />
+          <FundPortalCard 
+            title="Token Usage" 
+            description="Monitor AI model token consumption and costs." 
+            onClick={() => navigate('tokenUsage')}
+            icon={<TokenUsageIcon />}
           />
         </div>
         

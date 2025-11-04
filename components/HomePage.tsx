@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PolicyModal from './PolicyModal';
 
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'eligibility' | 'fundPortal';
+type Page = 'home' | 'apply' | 'profile' | 'support' | 'donate' | 'fundPortal';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
@@ -25,12 +25,6 @@ const IconDefs: React.FC = () => (
 const ApplyIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-);
-
-const EligibilityIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
@@ -58,32 +52,28 @@ const DashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-1
     </svg>
 );
 
-const TokenUsageIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
-    </svg>
-);
-
-
 // --- Component ---
 
 const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName, userRole }) => {
-  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
-  const tiles = [
-    { key: 'eligibility', title: 'Eligibility', icon: <EligibilityIcon />, onClick: () => navigate('eligibility') },
-    { key: 'profile', title: 'Profile', icon: <ProfileIcon />, onClick: () => navigate('profile') },
-    { key: 'support', title: 'Support', icon: <SupportIcon />, onClick: () => navigate('support') },
-    { key: 'donate', title: 'Donate', icon: <DonateIcon />, onClick: () => navigate('donate') },
-  ];
+    const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
-  if (userRole === 'Admin') {
-    tiles.push(
-      { key: 'fundPortal', title: 'Dashboards', icon: <DashboardIcon />, onClick: () => navigate('fundPortal') },
-      { key: 'tokenUsage', title: 'Tokens', icon: <TokenUsageIcon />, onClick: () => navigate('tokenUsage') },
-    );
-  } else {
-      tiles.push({ key: 'tokenUsage', title: 'Tokens', icon: <TokenUsageIcon />, onClick: () => navigate('tokenUsage') });
-  }
+    const tiles = [
+        { 
+            key: 'apply', 
+            title: 'Apply', 
+            icon: <ApplyIcon />, 
+            onClick: () => navigate('apply'),
+            disabled: !isApplyEnabled,
+            disabledTooltip: "Class Verification required to access applications."
+        },
+        { key: 'profile', title: 'Profile', icon: <ProfileIcon />, onClick: () => navigate('profile') },
+        { key: 'support', title: 'Support', icon: <SupportIcon />, onClick: () => navigate('support') },
+        { key: 'donate', title: 'Donate', icon: <DonateIcon />, onClick: () => navigate('donate') },
+    ];
+
+    if (userRole === 'Admin') {
+        tiles.push({ key: 'dashboards', title: 'Dashboards', icon: <DashboardIcon />, onClick: () => navigate('fundPortal') });
+    }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between pt-12 md:pt-16 pb-8 px-4 sm:px-8 text-center">
@@ -93,33 +83,16 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
           Welcome to {fundName || 'E4E Relief'}
         </h1>
 
-        <div className="w-full max-w-4xl mt-12 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
-          {/* Apply Banner */}
-          <div
-              onClick={!isApplyEnabled ? undefined : () => navigate('apply')}
-              title={!isApplyEnabled ? "Class Verification required to access applications." : ""}
-              aria-disabled={!isApplyEnabled}
-              className={`col-span-2 sm:col-span-3 bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col sm:flex-row items-center text-center sm:text-left ${
-                  isApplyEnabled ? 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105' : 'opacity-60 cursor-not-allowed'
-              }`}
-          >
-              <ApplyIcon className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0" />
-              <div className="mt-4 sm:mt-0 sm:ml-6">
-                  <h2 className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] ${!isApplyEnabled ? 'opacity-70' : ''}`}>
-                      Apply for Relief
-                  </h2>
-                  <p className="text-white text-sm mt-1">
-                      Submit a new application for financial assistance.
-                  </p>
-              </div>
-          </div>
-
-          {/* Other Tiles */}
+        <div className={`w-full max-w-4xl mt-12 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6`}>
           {tiles.map((tile) => (
               <div 
                   key={tile.key}
-                  onClick={tile.onClick}
-                  className="bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105"
+                  onClick={!tile.disabled ? tile.onClick : undefined}
+                  title={tile.disabled ? tile.disabledTooltip : ""}
+                  aria-disabled={!!tile.disabled}
+                  className={`bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center ${
+                      tile.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105'
+                  }`}
               >
                   {tile.icon}
                   <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
