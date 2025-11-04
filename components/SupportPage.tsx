@@ -33,9 +33,9 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
           </h1>
         </div>
         
-        {/* Main Contact Card */}
-        <div className="bg-[#004b8d] p-8 rounded-lg shadow-2xl max-w-2xl mx-auto border border-[#005ca0]/50">
-          <div className="bg-[#003a70]/50 p-6 rounded-lg space-y-6 text-center">
+        {/* Main Contact Section */}
+        <div className="p-8 max-w-2xl mx-auto">
+          <div className="space-y-6 text-center">
             <div>
               <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Email</h3>
               <a href="mailto:support@e4erelief.example" className="font-semibold text-white hover:underline text-lg">support@e4erelief.example</a>

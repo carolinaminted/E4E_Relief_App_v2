@@ -30,7 +30,8 @@ Once verified, you will have full access to the application. If your eligibility
 
 <img width="450" height="775" alt="E4E App v2 - Class Verification - SSO" src="https://github.com/user-attachments/assets/e945d58f-c951-4340-8a9b-048405a11797" />
 <img width="450" height="775" alt="E4E App v2 - Class Verification - Roster" src="https://github.com/user-attachments/assets/71cb83be-124f-4eaa-b147-b1e2e55d2164" />
-<img width="450" height="775" alt="E4E App v2 - Class Verification Success" src="https://github.com/user-attachments/assets/af3a2dee-3fc1-440e-b238-d448d28798a2" />
+<img width="450" height="775" alt="E4E App v2 - Class Verification - Success" src="https://github.com/user-attachments/assets/af3a2dee-3fc1-440e-b238-d448d28798a2" />
+<img width="450" height="775" alt="E4E App v2 - Class Verification - Failure" src="https://github.com/user-attachments/assets/ca467629-9b98-41f9-acfa-8d539d3d4f11" />
 
 
 ---
@@ -114,7 +115,17 @@ The application is a guided, multi-step form. Your progress is saved as you move
 
 <img width="450" height="775" alt="Profile Page" src="https://github.com/user-attachments/assets/5dcbc6b5-455c-4860-8750-e84797a314b4" />
 <img width="450" height="775" alt="Profile Page - Inactive" src="https://github.com/user-attachments/assets/2820dc0e-f7ef-4359-9477-59f565a6a737" />
-<img width="426" height="245" alt="image" src="https://github.com/user-attachments/assets/2e361f5f-600b-46a9-ac0e-436fd7cea88e" />
+<img width="450" height="2250" alt="image" src="https://github.com/user-attachments/assets/2e361f5f-600b-46a9-ac0e-436fd7cea88e" />
+
+---
+
+
+## Support Page
+- FAQ's
+- PAyment Options
+- Contact Support
+
+<img width="450" height="775" alt="Support Center" src="https://github.com/user-attachments/assets/6c1e54e0-6749-44b7-8895-0a2aba890198" />
 
 
 ---
