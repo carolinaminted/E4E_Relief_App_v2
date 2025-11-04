@@ -22,7 +22,12 @@ const LoadingSpinner: React.FC = () => (
 
 // --- Sub-components for each verification method ---
 
-const DomainVerificationView: React.FC<{ user: UserProfile, onVerified: () => void }> = ({ user, onVerified }) => {
+interface DomainVerificationViewProps {
+    user: UserProfile;
+    onVerified: () => void;
+    navigate: (page: Page) => void;
+}
+const DomainVerificationView: React.FC<DomainVerificationViewProps> = ({ user, onVerified, navigate }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isVerified, setIsVerified] = useState(false);
@@ -38,7 +43,6 @@ const DomainVerificationView: React.FC<{ user: UserProfile, onVerified: () => vo
             const userDomain = user.email.split('@')[1];
             if (fund.domainConfig.allowedDomains.map(d => d.toLowerCase()).includes(userDomain.toLowerCase())) {
                 setIsVerified(true);
-                // Parent component will now handle showing success and next step
                 onVerified();
             } else {
                 setError(`Your email domain (${userDomain}) is not eligible for this fund.`);
@@ -59,16 +63,39 @@ const DomainVerificationView: React.FC<{ user: UserProfile, onVerified: () => vo
             <h3 className="text-xl font-semibold mb-4 text-white">Verifying with Company Email Domain</h3>
             <p className="text-gray-300 mb-6">We are checking if your email <span className="font-bold text-white">{user.email}</span> belongs to an approved domain for fund code <span className="font-bold text-white">{user.fundCode}</span>.</p>
             {isLoading && <div className="h-8"><LoadingSpinner /></div>}
-            {error && <p className="text-red-400 bg-red-900/50 p-3 rounded-md">{error}</p>}
+            
+            {error && (
+                <div className="mt-4 space-y-4">
+                    <p className="text-red-400 bg-red-900/50 p-3 rounded-md">{error}</p>
+                    <button 
+                        onClick={() => navigate('home')}
+                        className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
+                    >
+                        Go to Home Page
+                    </button>
+                    <p className="text-gray-300 text-sm">
+                       Your email domain is not eligible for automatic verification. You can proceed to the app and contact support if you believe this is an error.
+                    </p>
+                </div>
+            )}
+
             {isVerified && <p className="text-green-400 bg-green-900/50 p-3 rounded-md">Checking domain...</p>}
         </div>
     );
 };
 
-const RosterVerificationView: React.FC<{ user: UserProfile, onVerified: () => void }> = ({ user, onVerified }) => {
+
+interface RosterVerificationViewProps {
+    user: UserProfile;
+    onVerified: () => void;
+    navigate: (page: Page) => void;
+}
+const RosterVerificationView: React.FC<RosterVerificationViewProps> = ({ user, onVerified, navigate }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({ employeeId: '', birthMonth: '', birthDay: '' });
+    const [attempts, setAttempts] = useState(0);
+    const MAX_ATTEMPTS = 3;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({...prev, [e.target.id]: e.target.value}));
@@ -88,29 +115,52 @@ const RosterVerificationView: React.FC<{ user: UserProfile, onVerified: () => vo
                 onVerified();
             } else {
                 setError('The details provided do not match our records. Please try again.');
+                setAttempts(prev => prev + 1);
             }
         } catch (e) {
             setError('An error occurred during verification. Please try again later.');
+            setAttempts(prev => prev + 1);
         } finally {
             setIsLoading(false);
         }
     };
+    
+    const hasMaxedAttempts = attempts >= MAX_ATTEMPTS;
 
     return (
         <div className="text-center">
-             <h3 className="text-xl font-semibold mb-4 text-white">Verifying with Roster Match</h3>
-             <p className="text-gray-300 mb-6">Please enter the following details to verify your status.</p>
-             <form onSubmit={handleSubmit} className="space-y-6 text-left">
-                <FormInput label="Employee ID" id="employeeId" value={formData.employeeId} onChange={handleChange} required />
-                <div className="flex gap-4">
-                    <FormInput label="Birth Month (1-12)" type="number" id="birthMonth" value={formData.birthMonth} onChange={handleChange} required min="1" max="12" />
-                    <FormInput label="Birth Day (1-31)" type="number" id="birthDay" value={formData.birthDay} onChange={handleChange} required min="1" max="31" />
+             {hasMaxedAttempts ? (
+                <div className="space-y-4">
+                    <p className="text-red-400 bg-red-900/50 p-3 rounded-md">
+                        The details provided do not match our records.
+                    </p>
+                     <p className="text-gray-300 text-sm">
+                        Too many failed attempts to pass Class Verification. Please login to verify later in the profile page
+                    </p>
+                    <button
+                        onClick={() => navigate('home')}
+                        className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
+                    >
+                        Go to Home Page
+                    </button>
                 </div>
-                {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-                <button type="submit" disabled={isLoading} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
-                    {isLoading ? <LoadingSpinner /> : 'Verify'}
-                </button>
-             </form>
+             ) : (
+                <>
+                    <h3 className="text-xl font-semibold mb-4 text-white">Verify Your Status</h3>
+                    <p className="text-gray-300 mb-6">Please enter the following details to verify your status. Attempts remaining: {MAX_ATTEMPTS - attempts}</p>
+                    <form onSubmit={handleSubmit} className="space-y-6 text-left">
+                        <FormInput label="Employee ID" id="employeeId" value={formData.employeeId} onChange={handleChange} required />
+                        <div className="flex gap-4">
+                            <FormInput label="Birth Month (1-12)" type="number" id="birthMonth" value={formData.birthMonth} onChange={handleChange} required min="1" max="12" />
+                            <FormInput label="Birth Day (1-31)" type="number" id="birthDay" value={formData.birthDay} onChange={handleChange} required min="1" max="31" />
+                        </div>
+                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                        <button type="submit" disabled={isLoading} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
+                            {isLoading ? <LoadingSpinner /> : 'Verify'}
+                        </button>
+                    </form>
+                </>
+             )}
         </div>
     );
 };
@@ -194,9 +244,9 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
 
         switch (cvType) {
             case 'Domain':
-                return <DomainVerificationView user={user} onVerified={handleLocalVerificationSuccess} />;
+                return <DomainVerificationView user={user} onVerified={handleLocalVerificationSuccess} navigate={navigate} />;
             case 'Roster':
-                return <RosterVerificationView user={user} onVerified={handleLocalVerificationSuccess} />;
+                return <RosterVerificationView user={user} onVerified={handleLocalVerificationSuccess} navigate={navigate} />;
             case 'SSO':
                 return <SSOVerificationView onVerified={handleLocalVerificationSuccess} />;
             default:

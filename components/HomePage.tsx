@@ -93,13 +93,13 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between pt-12 md:pt-16 pb-8 px-4 sm:px-8 text-center">
-      <div> {/* Content wrapper */}
+      <div className="w-full"> {/* Content wrapper */}
         <IconDefs />
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
           {fundName || 'E4E Relief'}
         </h1>
 
-        <div className={`w-full max-w-4xl mt-12 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6`}>
+        <div className={`w-full max-w-lg mx-auto mt-12 grid grid-cols-2 gap-4 sm:gap-6`}>
           {tiles.map((tile) => (
               <div 
                   key={tile.key}
