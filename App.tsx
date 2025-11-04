@@ -113,6 +113,7 @@ function App() {
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [autofillTrigger, setAutofillTrigger] = useState(0);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
 
   const userApplications = useMemo(() => {
@@ -316,7 +317,7 @@ function App() {
       case 'profile':
         return <ProfilePage navigate={navigate} applications={userApplications} userProfile={currentUser} onProfileUpdate={handleProfileUpdate} />;
       case 'support':
-        return <SupportPage navigate={navigate} />;
+        return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
@@ -358,7 +359,7 @@ function App() {
         {renderPage()}
       </main>
 
-      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} />}
+      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />}
     </div>
   );
 }

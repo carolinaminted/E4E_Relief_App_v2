@@ -4,9 +4,10 @@ type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'faq' | 'p
 
 interface SupportPageProps {
   navigate: (page: Page) => void;
+  openChatbot: () => void;
 }
 
-const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
+const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
   
   const SubActionCard: React.FC<{ title: string; description: string; onClick: () => void; }> = ({ title, description, onClick }) => (
     <div 
@@ -43,7 +44,16 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
               <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Phone</h3>
               <a href="tel:800-555-0199" className="font-semibold text-white hover:underline text-lg">(800) 555-0199</a>
             </div>
+            <div>
+              <button 
+                onClick={openChatbot}
+                className="bg-transparent border border-[#ff8400] text-[#ff8400] hover:bg-[#ff8400]/20 font-semibold py-2 px-6 rounded-md transition-colors duration-200"
+              >
+                Talk to Relief Assistant
+              </button>
+            </div>
           </div>
+          <p className="text-xs text-gray-400 mt-4 text-center">Relief Assistant uses AI. Call or email us with any additional questions.</p>
         </div>
 
         {/* Secondary Tiles */}
@@ -60,9 +70,6 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
           />
         </div>
         
-        <p className="text-white pt-12 italic text-center text-sm">
-          You can also chat with the in-app AI assistant for quick answers to common questions.
-        </p>
       </div>
     </div>
   );

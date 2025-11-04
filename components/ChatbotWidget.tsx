@@ -11,10 +11,11 @@ import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTrac
 interface ChatbotWidgetProps {
   applications: Application[];
   onChatbotAction: (functionName: string, args: any) => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation." }
   ]);
