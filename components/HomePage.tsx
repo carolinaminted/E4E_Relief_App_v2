@@ -31,7 +31,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled }) => {
         <ActionCard title="Support" description="Find contact information and answers to frequently asked questions." onClick={() => navigate('support')} />
         <ActionCard title="Donate" description="Support our cause and help others in need." onClick={() => navigate('donate')} />
         <ActionCard 
-            title="View Token Usage" 
+            title="Token Usage" 
             description="AI model token consumption dashboard & token usage reports" 
             onClick={() => navigate('tokenUsage')} 
         />
