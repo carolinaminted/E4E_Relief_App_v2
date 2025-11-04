@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FormInput } from './FormControls';
 
 interface DonatePageProps {
@@ -14,7 +14,14 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     </svg>
 );
 
-type DonateSection = 'amount' | 'details';
+const NotificationIcon: React.FC = () => (
+    <span className="relative flex h-3 w-3" title="Action required in this section">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff8400] opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#ff9d33]"></span>
+    </span>
+);
+
+type DonateSection = 'amount' | 'donor' | 'payment';
 
 const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [amount, setAmount] = useState<number | string>(50);
@@ -31,6 +38,18 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [openSection, setOpenSection] = useState<DonateSection | null>('amount');
+
+  const sectionHasErrors = useMemo(() => {
+    const amountHasBlanks = !amount || Number(amount) <= 0;
+    const donorHasBlanks = !formData.firstName || !formData.lastName || !formData.email || !/\S+@\S+\.\S+/.test(formData.email);
+    const paymentHasBlanks = !formData.cardholderName || formData.cardNumber.replace(/\s/g, '').length < 15 || !/^(0[1-9]|1[0-2]) \/ \d{2}$/.test(formData.expiryDate) || formData.cvc.length < 3;
+
+    return {
+        amount: amountHasBlanks,
+        donor: donorHasBlanks,
+        payment: paymentHasBlanks,
+    };
+  }, [amount, formData]);
 
   const toggleSection = (section: DonateSection) => {
     setOpenSection(prev => (prev === section ? null : section));
@@ -91,8 +110,10 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
     if (Object.keys(newErrors).length > 0) {
         if (newErrors.amount) {
             setOpenSection('amount');
+        } else if (newErrors.firstName || newErrors.lastName || newErrors.email) {
+            setOpenSection('donor');
         } else {
-            setOpenSection('details');
+            setOpenSection('payment');
         }
     }
     return Object.keys(newErrors).length === 0;
@@ -151,7 +172,10 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
             {/* Amount Section */}
             <fieldset className="border-b border-[#005ca0] pb-4">
                  <button type="button" onClick={() => toggleSection('amount')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'amount'}>
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Choose an Amount</h2>
+                        {sectionHasErrors.amount && openSection !== 'amount' && <NotificationIcon />}
+                    </div>
                     <ChevronIcon isOpen={openSection === 'amount'} />
                 </button>
                 <div className={`transition-all duration-500 ease-in-out ${openSection === 'amount' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
@@ -174,32 +198,43 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                 </div>
             </fieldset>
 
-            {/* Details Section */}
-             <fieldset className="pb-4">
-                 <button type="button" onClick={() => toggleSection('details')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'details'}>
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Donor & Payment Information</h2>
-                    <ChevronIcon isOpen={openSection === 'details'} />
+            {/* Donor Information Section */}
+            <fieldset className="border-b border-[#005ca0] pb-4">
+                 <button type="button" onClick={() => toggleSection('donor')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'donor'}>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Donor Information</h2>
+                        {sectionHasErrors.donor && openSection !== 'donor' && <NotificationIcon />}
+                    </div>
+                    <ChevronIcon isOpen={openSection === 'donor'} />
                 </button>
-                <div className={`transition-all duration-500 ease-in-out ${openSection === 'details' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className={`transition-all duration-500 ease-in-out ${openSection === 'donor' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                        {/* Donor Information */}
-                        <fieldset className="space-y-6">
-                            <legend className="text-lg font-semibold text-white/90 mb-2">Your Information</legend>
-                            <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
-                            <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
-                            <FormInput label="Email Address" id="email" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
-                        </fieldset>
+                        <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
+                        <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
+                        <div className="md:col-span-2">
+                           <FormInput label="Email Address" id="email" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
 
-                        {/* Payment Details */}
-                        <fieldset className="space-y-6">
-                            <legend className="text-lg font-semibold text-white/90 mb-2">Payment Details</legend>
-                            <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
-                            <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
-                            <div className="flex gap-6">
-                                <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
-                                <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
-                            </div>
-                        </fieldset>
+            {/* Payment Information Section */}
+            <fieldset className="pb-4">
+                 <button type="button" onClick={() => toggleSection('payment')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'payment'}>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Payment Information</h2>
+                        {sectionHasErrors.payment && openSection !== 'payment' && <NotificationIcon />}
+                    </div>
+                    <ChevronIcon isOpen={openSection === 'payment'} />
+                </button>
+                <div className={`transition-all duration-500 ease-in-out ${openSection === 'payment' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    <div className="space-y-6 pt-4">
+                        <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
+                        <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
+                        <div className="flex gap-6">
+                            <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
+                            <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
+                        </div>
                     </div>
                 </div>
             </fieldset>
