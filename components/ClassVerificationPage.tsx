@@ -177,15 +177,17 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
 
         if (isVerified) {
             return (
-                <div className="text-center">
+                <div className="text-center pt-4">
                     <svg className="w-16 h-16 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <h3 className="text-xl font-semibold mb-4 text-white">Verification Complete!</h3>
-                    <p className="text-gray-300 mb-6">You are now eligible to apply for relief.</p>
-                    <button onClick={handleNavigateHome} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200">
-                        Next
-                    </button>
+                    <h3 className="text-2xl font-bold mb-2 text-white">Verification Complete!</h3>
+                    <p className="text-white mb-8">You are now eligible to apply for relief.</p>
+                    <div className="mt-8 flex justify-center">
+                        <button onClick={handleNavigateHome} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-16 rounded-md transition-colors duration-200">
+                            Next
+                        </button>
+                    </div>
                 </div>
             );
         }
@@ -208,19 +210,14 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
         }
     };
 
-    return (
+   return (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
             <div className="w-full max-w-2xl bg-[#003a70] p-8 md:p-12 rounded-lg shadow-2xl border border-[#005ca0]">
-                 <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center mb-2">
-                    Verify Your Employee Status
-                 </h1>
-                <p className="text-center text-gray-200 mb-8">
-                    Your fund requires a specific verification method. Please follow the instructions below.
-                </p>
                 {renderContent()}
             </div>
         </div>
     );
+
 };
 
 export default ClassVerificationPage;
