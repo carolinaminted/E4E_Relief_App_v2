@@ -33,17 +33,11 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
+type ApplySection = 'aiStarter' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSections, setOpenSections] = useState({
-    aiStarter: true,
-    contact: false,
-    primaryAddress: false,
-    additionalDetails: false,
-    mailingAddress: false,
-    consent: false,
-  });
+  const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
   const [isAIParsing, setIsAIParsing] = useState(false);
 
   const sectionHasErrors = useMemo(() => {
@@ -76,8 +70,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
     };
   }, [formData]);
   
-  const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  const toggleSection = (section: ApplySection) => {
+    setOpenSection(prev => (prev === section ? null : section));
   };
   
   const handleFormUpdate = (data: Partial<UserProfile>) => {
@@ -144,7 +138,6 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
   const validate = (): boolean => {
     const newErrors: Record<string, any> = {};
-    const sectionsToOpen: Partial<Record<keyof typeof openSections, boolean>> = {};
 
     // Contact Info
     if (!formData.firstName) newErrors.firstName = 'First name is required.';
@@ -194,12 +187,22 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-        if(newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) sectionsToOpen.contact = true;
-        if(newErrors.primaryAddress) sectionsToOpen.primaryAddress = true;
-        if(newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) sectionsToOpen.additionalDetails = true;
-        if(newErrors.mailingAddress || newErrors.isMailingAddressSame) sectionsToOpen.mailingAddress = true;
-        if(newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) sectionsToOpen.consent = true;
-        setOpenSections(prev => ({ ...prev, ...sectionsToOpen }));
+        let firstErrorSection: ApplySection | null = null;
+        if (newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) {
+            firstErrorSection = 'contact';
+        } else if (newErrors.primaryAddress) {
+            firstErrorSection = 'primaryAddress';
+        } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
+            firstErrorSection = 'additionalDetails';
+        } else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) {
+            firstErrorSection = 'mailingAddress';
+        } else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) {
+            firstErrorSection = 'consent';
+        }
+        
+        if (firstErrorSection) {
+            setOpenSection(firstErrorSection);
+        }
     }
     
     return Object.keys(newErrors).length === 0;
@@ -217,13 +220,13 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
         {/* AI Application Starter Section */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('aiStarter')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.aiStarter} aria-controls="ai-starter-section">
+            <button type="button" onClick={() => toggleSection('aiStarter')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'aiStarter'} aria-controls="ai-starter-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Let's Get Started</h2>
                 </div>
-                <ChevronIcon isOpen={openSections.aiStarter} />
+                <ChevronIcon isOpen={openSection === 'aiStarter'} />
             </button>
-            <div id="ai-starter-section" className={`transition-all duration-500 ease-in-out ${openSections.aiStarter ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="ai-starter-section" className={`transition-all duration-500 ease-in-out ${openSection === 'aiStarter' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="pt-4">
                     <AIApplicationStarter 
                         onParse={handleAIParse}
@@ -231,7 +234,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                         variant="underline"
                     />
                 </div>
-                {openSections.aiStarter && (
+                {openSection === 'aiStarter' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -252,14 +255,14 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         
         {/* 1a Contact Information */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.contact} aria-controls="contact-section">
+            <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'contact'} aria-controls="contact-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Contact Information</h2>
-                    {sectionHasErrors.contact && !openSections.contact && <NotificationIcon />}
+                    {sectionHasErrors.contact && openSection !== 'contact' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.contact} />
+                <ChevronIcon isOpen={openSection === 'contact'} />
             </button>
-            <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSections.contact ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSection === 'contact' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                     <FormInput label="First Name" id="firstName" required value={formData.firstName} onChange={e => handleFormUpdate({ firstName: e.target.value })} error={errors.firstName} />
                     <FormInput label="Middle Name(s)" id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
@@ -268,7 +271,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                     <FormInput label="Email" id="email" required value={formData.email} disabled />
                     <FormInput label="Mobile Number" id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormUpdate({ mobileNumber: e.target.value })} error={errors.mobileNumber} placeholder="(555) 555-5555" />
                 </div>
-                {openSections.contact && (
+                {openSection === 'contact' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -289,18 +292,18 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
         {/* 1b Primary Address */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.primaryAddress} aria-controls="address-section">
+            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Primary Address</h2>
-                    {sectionHasErrors.primaryAddress && !openSections.primaryAddress && <NotificationIcon />}
+                    {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.primaryAddress} />
+                <ChevronIcon isOpen={openSection === 'primaryAddress'} />
             </button>
-            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSections.primaryAddress ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'primaryAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-6 pt-4">
                     <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
                 </div>
-                {openSections.primaryAddress && (
+                {openSection === 'primaryAddress' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -321,14 +324,14 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         
         {/* 1c Additional Details */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.additionalDetails} aria-controls="details-section">
+            <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Additional Details</h2>
-                    {sectionHasErrors.additionalDetails && !openSections.additionalDetails && <NotificationIcon />}
+                    {sectionHasErrors.additionalDetails && openSection !== 'additionalDetails' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.additionalDetails} />
+                <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
-            <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSections.additionalDetails ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                     <FormInput type="date" label="Employment Start Date" id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
                     <SearchableSelector
@@ -353,7 +356,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                         variant="underline"
                     />
                 </div>
-                {openSections.additionalDetails && (
+                {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -374,14 +377,14 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
         {/* 1d Mailing Address */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.mailingAddress} aria-controls="mailing-section">
+            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Mailing Address</h2>
-                    {sectionHasErrors.mailingAddress && !openSections.mailingAddress && <NotificationIcon />}
+                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.mailingAddress} />
+                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
             </button>
-             <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSections.mailingAddress ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+             <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-4 pt-4">
                     <FormRadioGroup 
                         legend="Mailing Address Same as Primary?" 
@@ -398,7 +401,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                         </div>
                     )}
                 </div>
-                {openSections.mailingAddress && (
+                {openSection === 'mailingAddress' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
@@ -419,14 +422,14 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
         {/* 1e Consent and Acknowledgement */}
         <fieldset className="pb-4">
-            <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSections.consent} aria-controls="consent-section">
+            <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'consent'} aria-controls="consent-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Consent & Acknowledgement</h2>
-                    {sectionHasErrors.consent && !openSections.consent && <NotificationIcon />}
+                    {sectionHasErrors.consent && openSection !== 'consent' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSections.consent} />
+                <ChevronIcon isOpen={openSection === 'consent'} />
             </button>
-            <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSections.consent ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSection === 'consent' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-3 pt-4">
                     {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
                     <div className="flex items-start">
@@ -444,7 +447,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">All information I have provided is accurate. <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
                 </div>
-                {openSections.consent && (
+                {openSection === 'consent' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
