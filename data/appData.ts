@@ -12,6 +12,12 @@ export const employmentTypes: string[] = [
     'Contractor'
 ];
 
+export const expenseTypes: string[] = [
+    'Basic Disaster Supplies',
+    'Food Spoilage',
+    'Meals'
+];
+
 export const languages: string[] = [
     "Arabic",
     "Bengali",

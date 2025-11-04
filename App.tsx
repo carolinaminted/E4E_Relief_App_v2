@@ -63,6 +63,8 @@ const initialApplications: Record<string, Application[]> = {
       event: 'Flood',
       eventDate: '2023-08-10',
       requestedAmount: 2500,
+      // FIX: Add missing 'expenses' property to satisfy the Application type.
+      expenses: [],
       // FIX: Added missing 'evacuated' and 'powerLoss' properties to satisfy the Application type.
       evacuated: 'No',
       powerLoss: 'Yes',

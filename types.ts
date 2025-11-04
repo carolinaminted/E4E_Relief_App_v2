@@ -30,6 +30,13 @@ export interface UserProfile {
   infoCorrect: boolean;
 }
 
+export interface Expense {
+  id: string;
+  type: 'Basic Disaster Supplies' | 'Food Spoilage' | 'Meals' | '';
+  amount: number | '';
+  fileName: string;
+}
+
 export interface EventData {
   event: 'Flood' | 'Tornado' | 'Tropical Storm/Hurricane' | 'Wildfire' | 'My disaster is not listed' | '';
   otherEvent?: string;
@@ -44,6 +51,7 @@ export interface EventData {
   powerLossDays?: number | '';
   additionalDetails?: string;
   requestedAmount: number;
+  expenses: Expense[];
 }
 
 export interface ApplicationFormData {

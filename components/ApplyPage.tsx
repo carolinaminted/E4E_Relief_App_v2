@@ -50,6 +50,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
         powerLossDays: '',
         additionalDetails: '',
         requestedAmount: 0,
+        expenses: [],
         ...draftEvent,
     };
 
@@ -137,7 +138,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
           case 2:
               return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
           case 3:
-              return <ApplyExpensesPage nextStep={nextStep} prevStep={prevStep} />;
+              return <ApplyExpensesPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
           case 4:
               return <ApplyTermsPage formData={formData.agreementData} updateFormData={updateAgreementData} prevStep={prevStep} onSubmit={handleFinalSubmit} />;
           default:

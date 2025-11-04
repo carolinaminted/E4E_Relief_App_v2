@@ -122,6 +122,7 @@ ${applicationList}
     dynamicContext += `\nThe user currently has no submitted applications.`;
   }
   
+  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
   const model = 'gemini-2.5-flash';
   return ai.chats.create({
     model: model,
@@ -315,6 +316,7 @@ export async function getAIAssistedDecision(
         ${JSON.stringify(preliminaryDecision, null, 2)}
         ---
     `;
+    // FIX: Use the latest recommended model 'gemini-2.5-flash'.
     const model = 'gemini-2.5-flash';
     const inputTokens = estimateTokens(prompt);
     const sessionId = generateSessionId('ai-decisioning');
@@ -391,6 +393,7 @@ export async function parseAddressWithGemini(addressString: string): Promise<Par
     
     Address to parse: "${addressString}"
   `;
+  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
   const model = 'gemini-2.5-flash';
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-address-parsing');
@@ -484,6 +487,7 @@ export async function parseApplicationDetailsWithGemini(
 
     User's description: "${description}"
   `;
+  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
   const model = 'gemini-2.5-flash';
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-app-parsing');
