@@ -64,21 +64,70 @@ const DonutChart: React.FC<{ data: { label: string; value: number; color: string
   );
 };
 
+const HorizontalBarChartList: React.FC<{ data: { label: string; value: number }[]; colors: string[] }> = ({ data, colors }) => {
+  const maxValue = Math.max(1, ...data.map(item => item.value));
+  return (
+    <div className="space-y-3 w-full">
+      {data.map((item, index) => (
+        <div key={item.label} className="flex items-center gap-3 w-full text-sm">
+          <span className="text-gray-300 w-28 truncate text-right">{item.label}</span>
+          <div className="flex-grow bg-[#004b8d] h-5 rounded-sm overflow-hidden">
+            <div
+              style={{ width: `${(item.value / maxValue) * 100}%`, backgroundColor: colors[index % colors.length] }}
+              className="h-5 rounded-sm flex items-center justify-end pr-2 text-xs font-bold text-black transition-all duration-500"
+            >
+              {item.value}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ navigate }) => {
+  // --- Official Color Palette ---
+  const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600', '#d4d756'];
+  const grayColor = '#898c8d';
+
   // --- Mock Data ---
   const applicationStatusData = [
-    { label: 'Awarded', value: 125, color: '#edda26' },
-    { label: 'Declined', value: 42, color: '#f87171' },
-    { label: 'In Review', value: 18, color: '#ff8400' },
+    { label: 'Awarded', value: 125, color: chartColors[1] }, // yellow: #edda26
+    { label: 'Declined', value: 42, color: grayColor },      // gray: #898c8d
+    { label: 'In Review', value: 18, color: chartColors[0] }, // orange: #ff8400
   ];
 
   const totalAwarded = 789500;
 
   const userEngagementData = [
-    { label: 'Donated', value: 89, color: '#60a5fa' },
-    { label: 'Applied', value: 215, color: '#ff8400' },
-    { label: 'Not Engaged', value: 450, color: '#4b5563' },
+    { label: 'Donated', value: 89, color: chartColors[2] }, // teal: #0091b3
+    { label: 'Applied', value: 215, color: chartColors[0] }, // orange: #ff8400
+    { label: 'Not Engaged', value: 450, color: grayColor }, // gray: #898c8d
+  ];
+
+  const topCountriesData = [
+      { label: 'United States', value: 450 },
+      { label: 'Canada', value: 120 },
+      { label: 'United Kingdom', value: 95 },
+      { label: 'Mexico', value: 78 },
+      { label: 'India', value: 62 },
+  ];
+
+  const recentUsersData = [
+      { name: 'Olivia Chen', email: 'olivia.c@example.com', fund: 'E4E' },
+      { name: 'Benjamin Carter', email: 'ben.carter@example.com', fund: 'JHH' },
+      { name: 'Sophia Rodriguez', email: 'sophia.r@example.com', fund: 'E4E' },
+      { name: 'Liam Goldberg', email: 'liam.g@example.com', fund: 'SQRT' },
+      { name: 'Ava Nguyen', email: 'ava.n@example.com', fund: 'JHH' },
+  ];
+
+  const topEventsData = [
+      { label: 'Hurricane', value: 85 },
+      { label: 'Wildfire', value: 62 },
+      { label: 'Household Loss', value: 45 },
+      { label: 'Flood', value: 31 },
+      { label: 'Winter Storm', value: 22 },
   ];
 
   return (
@@ -107,6 +156,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ navigate }) => {
 
              <MetricCard title="User Engagement">
                 <DonutChart data={userEngagementData} />
+            </MetricCard>
+
+            <MetricCard title="Top 5 Countries by Users">
+                <HorizontalBarChartList data={topCountriesData} colors={chartColors} />
+            </MetricCard>
+
+            <MetricCard title="Top 5 Apps by Event Type">
+                <HorizontalBarChartList data={topEventsData} colors={chartColors} />
+            </MetricCard>
+
+            <MetricCard title="Recently Registered Users">
+                <div className="space-y-2 w-full">
+                    {recentUsersData.map((user, index) => (
+                        <div key={index} className="grid grid-cols-10 gap-2 text-sm p-2 rounded hover:bg-[#004b8d]/50">
+                            <span className="text-white truncate col-span-4">{user.name}</span>
+                            <span className="text-gray-300 truncate col-span-4">{user.email}</span>
+                            <span className="text-white font-mono text-right col-span-2">{user.fund}</span>
+                        </div>
+                    ))}
+                </div>
             </MetricCard>
         </div>
     </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -25,7 +26,7 @@ import FundPortalPage from './components/FundPortalPage';
 import DashboardPage from './components/DashboardPage';
 import TicketingPage from './components/TicketingPage';
 import ProgramDetailsPage from './components/ProgramDetailsPage';
-import ProxyPage from './components/ProxyPage';
+import ProxyApplyPage from './components/ProxyPage';
 
 
 type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -139,6 +140,27 @@ const initialApplications: Record<string, Application[]> = {
   ],
 };
 
+const initialProxyApplications: Application[] = [
+    {
+      id: 'PROXY-001',
+      profileSnapshot: initialUsers['user@example.com'],
+      event: 'Wildfire',
+      eventDate: '2024-06-15',
+      requestedAmount: 1500,
+      expenses: [],
+      evacuated: 'Yes',
+      powerLoss: 'No',
+      submittedDate: '2024-06-18',
+      status: 'Submitted',
+      reasons: ["Application is under review."],
+      decisionedDate: '2024-06-18',
+      twelveMonthGrantRemaining: 7500,
+      lifetimeGrantRemaining: 47500,
+      shareStory: false,
+      receiveAdditionalInfo: true,
+    }
+];
+
 const createNewUserProfile = (
     firstName: string,
     lastName: string,
@@ -178,6 +200,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState(initialUsers);
   const [applications, setApplications] = useState(initialApplications);
+  const [proxyApplications, setProxyApplications] = useState(initialProxyApplications);
   const [eligibilityByIdentity, setEligibilityByIdentity] = useState(initialEligibility);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
@@ -424,6 +447,123 @@ function App() {
 
   }, [currentUser, handleProfileUpdate, applications]);
   
+  const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
+    if (!currentUser || currentUser.role !== 'Admin') {
+        console.error("Only admins can submit proxy applications.");
+        return;
+    };
+
+    const applicantEmail = appFormData.profileData.email?.toLowerCase();
+    if (!applicantEmail) {
+        alert("Applicant email is required to submit a proxy application.");
+        return;
+    }
+
+    const tempId = `PROXY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+    const applicantInDb = users[applicantEmail];
+    const usersPastApplications = applicantInDb ? (applications[applicantEmail] || []) : [];
+
+    if (!applicantInDb) {
+        const newPasswordHash = 'password123'; // Default password
+        // FIX: The appFormData.profileData (UserProfile) does not contain a passwordHash.
+        // Create a new user object by spreading the profile data and adding the hash.
+        const newProfile: UserProfile & { passwordHash: string } = {
+            ...appFormData.profileData,
+            passwordHash: newPasswordHash,
+            role: 'User'
+        };
+        setUsers(prev => ({ ...prev, [applicantEmail]: newProfile }));
+        setApplications(prev => ({ ...prev, [applicantEmail]: [] }));
+        setEligibilityByIdentity(prev => ({
+            ...prev,
+            [newProfile.identityId]: {
+                identityId: newProfile.identityId,
+                status: 'Active',
+                updatedAt: new Date().toISOString(),
+            }
+        }));
+    }
+
+    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications[usersPastApplications.length - 1] : null;
+    
+    const applicantFundCode = appFormData.profileData.fundCode;
+    const fund = getFundByCode(applicantFundCode);
+    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
+    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
+    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
+
+    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
+    const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
+    
+    const preliminaryDecision = evaluateApplicationEligibility({
+        id: tempId,
+        employmentStartDate: appFormData.profileData.employmentStartDate,
+        eventData: appFormData.eventData,
+        currentTwelveMonthRemaining,
+        currentLifetimeRemaining,
+        singleRequestMax,
+    });
+    
+    const finalDecision = await getAIAssistedDecision(
+      { eventData: appFormData.eventData, currentTwelveMonthRemaining, currentLifetimeRemaining },
+      preliminaryDecision
+    );
+
+    const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
+        if (decision === 'Approved') return 'Awarded';
+        if (decision === 'Denied') return 'Declined';
+        return 'Submitted';
+    };
+
+    const newApplication: Application = {
+      id: tempId,
+      profileSnapshot: appFormData.profileData,
+      ...appFormData.eventData,
+      evacuated: appFormData.eventData.evacuated || '',
+      evacuatingFromPrimary: appFormData.eventData.evacuatingFromPrimary || undefined,
+      stayedWithFamilyOrFriend: appFormData.eventData.stayedWithFamilyOrFriend || undefined,
+      powerLoss: appFormData.eventData.powerLoss || '',
+      evacuationNights: appFormData.eventData.evacuationNights || undefined,
+      powerLossDays: appFormData.eventData.powerLossDays || undefined,
+      submittedDate: new Date().toLocaleDateString('en-CA'),
+      status: getStatusFromDecision(finalDecision.decision),
+      reasons: finalDecision.reasons,
+      decisionedDate: finalDecision.decisionedDate,
+      twelveMonthGrantRemaining: finalDecision.remaining_12mo,
+      lifetimeGrantRemaining: finalDecision.remaining_lifetime,
+      shareStory: appFormData.agreementData.shareStory ?? false,
+      receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
+    };
+    
+    setProxyApplications(prev => [...prev, newApplication]);
+    
+    setApplications(prev => ({
+      ...prev,
+      [applicantEmail]: [...(prev[applicantEmail] || []), newApplication],
+    }));
+    
+    // FIX: The appFormData.profileData (UserProfile) does not contain a passwordHash.
+    // To compare if the profile was updated, we must remove the passwordHash from the existing
+    // user record in the database (`applicantInDb`) before comparing it with the form data.
+    if (applicantInDb) {
+        const { passwordHash, ...dbProfileData } = applicantInDb;
+        if (JSON.stringify(appFormData.profileData) !== JSON.stringify(dbProfileData)) {
+            setUsers(prev => ({
+                ...prev,
+                [applicantEmail]: {
+                    ...prev[applicantEmail],
+                    ...appFormData.profileData
+                }
+            }));
+        }
+    }
+    
+    setApplicationDraft(null);
+    setLastSubmittedApp(newApplication);
+    setPage('submissionSuccess');
+  }, [currentUser, applications, users]);
+
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     console.log(`Executing tool: ${functionName}`, args);
     setApplicationDraft(prevDraft => {
@@ -511,7 +651,11 @@ function App() {
       case 'programDetails':
         return <ProgramDetailsPage navigate={navigate} user={currentUser} />;
       case 'proxy':
-        return <ProxyPage navigate={navigate} />;
+        return <ProxyApplyPage 
+                    navigate={navigate}
+                    onSubmit={handleProxyApplicationSubmit}
+                    proxyApplications={proxyApplications}
+                />;
       case 'home':
       default:
         return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
