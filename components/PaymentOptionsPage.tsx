@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 type Page = 'support';
 
@@ -49,6 +49,10 @@ const PaymentOptionCard: React.FC<typeof paymentOptions[0]> = ({ name, logo, des
 
 
 const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   return (
     <div className="flex-1 flex flex-col p-8">
       <div className="max-w-5xl mx-auto w-full">

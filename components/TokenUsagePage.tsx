@@ -45,6 +45,10 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     lifetime: true,
   });
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { totalCost, totalTokens } = useMemo(() => {
     if (!tableData || tableData.length === 0) {
         return { totalCost: 0, totalTokens: 0 };

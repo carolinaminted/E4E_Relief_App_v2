@@ -1,3 +1,5 @@
+import { getFundByCode } from '../data/fundData';
+
 export interface FundConfig {
     allowedDomains: string[];
 }
@@ -6,11 +8,21 @@ export interface FundConfig {
 export const getFundConfig = async (fundCode: string): Promise<FundConfig> => {
     console.log(`Fetching config for fundCode: ${fundCode}`);
     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+
+    const fund = getFundByCode(fundCode);
+    if (fund && fund.domainConfig) {
+        return {
+            allowedDomains: fund.domainConfig.allowedDomains,
+        };
+    }
+    
+    // Fallback for original logic if fund not found
     if (fundCode.toUpperCase() === 'E4E') {
         return {
             allowedDomains: ['example.com', 'fakemail.example'],
         };
     }
+
     return {
         allowedDomains: [],
     };
@@ -23,10 +35,21 @@ export interface RosterVerificationInput {
 }
 
 // Mock API to verify user against a roster
-export const verifyRoster = async (input: RosterVerificationInput): Promise<{ ok: boolean }> => {
-    console.log('Verifying roster with input:', input);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Mock success logic
+export const verifyRoster = async (input: RosterVerificationInput, fundCode: string): Promise<{ ok: boolean }> => {
+    console.log('Verifying roster with input:', input, 'for fund:', fundCode);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+
+    const fund = getFundByCode(fundCode);
+    if (fund && fund.rosterConfig) {
+        const match = fund.rosterConfig.sampleEligibilityRecords.find(record => 
+            record.employeeId === input.employeeId &&
+            record.birthDay === input.birthDay &&
+            record.birthMonth === input.birthMonth
+        );
+        return { ok: !!match };
+    }
+
+    // Fallback for original logic if fund is not configured
     if (input.employeeId === '12345' && input.birthDay === 15 && input.birthMonth === 5) {
         return { ok: true };
     }
