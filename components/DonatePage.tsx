@@ -212,7 +212,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                         <ChevronIcon isOpen={openSection === 'donor'} />
                     </button>
                     <div className={`transition-all duration-500 ease-in-out ${openSection === 'donor' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                             <FormInput label="First Name" id="firstName" value={formData.firstName} onChange={handleInputChange} error={errors.firstName} required />
                             <FormInput label="Last Name" id="lastName" value={formData.lastName} onChange={handleInputChange} error={errors.lastName} required />
                             <div className="md:col-span-2">
@@ -232,10 +232,10 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                         <ChevronIcon isOpen={openSection === 'payment'} />
                     </button>
                     <div className={`transition-all duration-500 ease-in-out ${openSection === 'payment' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                        <div className="space-y-6 pt-4">
+                        <div className="space-y-5 pt-4">
                             <FormInput label="Name on Card" id="cardholderName" value={formData.cardholderName} onChange={handleInputChange} error={errors.cardholderName} required />
                             <FormInput label="Card Number" id="cardNumber" value={formData.cardNumber} onChange={handleInputChange} error={errors.cardNumber} placeholder="0000 0000 0000 0000" required />
-                            <div className="flex gap-6">
+                            <div className="flex gap-5">
                                 <FormInput label="Expiry Date" id="expiryDate" value={formData.expiryDate} onChange={handleInputChange} error={errors.expiryDate} placeholder="MM / YY" required />
                                 <FormInput label="CVC" id="cvc" value={formData.cvc} onChange={handleInputChange} error={errors.cvc} placeholder="123" required />
                             </div>
