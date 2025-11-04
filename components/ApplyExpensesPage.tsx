@@ -169,7 +169,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
       </div>
 
       {/* Expense Entry Form */}
-      {availableExpenseTypes.length > 0 ? (
+      {availableExpenseTypes.length > 0 || editingId ? (
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] space-y-4">
           <h3 className="font-semibold text-lg text-white">{editingId ? 'Edit Expense' : 'Add New Expense'}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
@@ -178,7 +178,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                   id="expenseType"
                   required
                   value={expenseForm.type}
-                  // FIX: Cast the expense type value to the correct string literal union type to resolve the type error.
+                  // FIX: Cast the value from the generic string provided by the selector to the specific string literal union type required by Expense.
                   onUpdate={value => handleFormChange({ type: value as Expense['type'] })}
                   options={editingId ? expenseTypes : availableExpenseTypes}
                   variant="underline"
