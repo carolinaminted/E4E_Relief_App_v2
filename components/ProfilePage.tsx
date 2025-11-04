@@ -274,8 +274,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="relative flex justify-center items-center mb-6">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
+      <div className="relative flex justify-center items-center mb-8">
         <button 
           onClick={() => navigate('home')} 
           className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" 
