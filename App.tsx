@@ -112,7 +112,6 @@ const initialIdentitiesData: FundIdentity[] = [
         classVerificationStatus: 'passed',
         createdAt: '2023-01-01T12:00:00Z',
         lastUsedAt: new Date().toISOString(),
-        defaultFundIdentity: true,
     },
     {
         id: 'user@example.com-JHH',
@@ -123,7 +122,6 @@ const initialIdentitiesData: FundIdentity[] = [
         eligibilityStatus: 'Not Eligible',
         classVerificationStatus: 'pending',
         createdAt: '2024-05-10T10:00:00Z',
-        defaultFundIdentity: false,
     },
     {
         id: 'admin@example.com-ADMIN',
@@ -135,7 +133,6 @@ const initialIdentitiesData: FundIdentity[] = [
         classVerificationStatus: 'passed',
         createdAt: '2022-01-01T12:00:00Z',
         lastUsedAt: new Date().toISOString(),
-        defaultFundIdentity: true,
     }
 ];
 
@@ -308,34 +305,13 @@ function App() {
     }
   }, [currentUser, allIdentities, activeIdentity]);
 
-  const handleSetDefaultIdentity = useCallback((identityId: string) => {
-    if (!currentUser) return;
-    
-    console.log(`[Telemetry] track('IdentityDefaultChanged', { identityId: ${identityId} })`);
-    
-    setAllIdentities(prevIdentities => 
-        prevIdentities.map(id => {
-            if (id.userEmail === currentUser.email) {
-                return { ...id, defaultFundIdentity: id.id === identityId };
-            }
-            return id;
-        })
-    );
-  }, [currentUser]);
-
   const handleLogin = useCallback((email: string, password: string): boolean => {
     const user = users[email];
     if (user && user.passwordHash === password) {
       const { passwordHash, ...profile } = user;
       
       const userIdentities = allIdentities.filter(id => id.userEmail === email);
-      // Find the default identity first.
-      let identityToActivate = userIdentities.find(id => id.defaultFundIdentity);
-      
-      // Fallback to last used if no default is set
-      if (!identityToActivate) {
-          identityToActivate = userIdentities.sort((a,b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
-      }
+      const identityToActivate = userIdentities.sort((a,b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
       
       if (identityToActivate) {
           const hydratedProfile: UserProfile = {
@@ -487,15 +463,9 @@ function App() {
             classVerificationStatus: 'passed',
             createdAt: new Date().toISOString(),
             lastUsedAt: new Date().toISOString(),
-            defaultFundIdentity: true,
         };
         
-        setAllIdentities(prev => [
-            ...prev.map(id => 
-                id.userEmail === currentUser.email ? { ...id, defaultFundIdentity: false } : id
-            ),
-            newIdentity
-        ]);
+        setAllIdentities(prev => [...prev, newIdentity]);
 
         setActiveIdentity({ id: newIdentity.id, fundCode: newIdentity.fundCode });
         
@@ -658,7 +628,7 @@ function App() {
     const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
     const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
 
-    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
+    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialLifetimeMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
     
     const preliminaryDecision = evaluateApplicationEligibility({
@@ -800,7 +770,6 @@ function App() {
                     identities={userIdentities}
                     activeIdentity={activeIdentity}
                     onSetActiveIdentity={handleSetActiveIdentity}
-                    onSetDefaultIdentity={handleSetDefaultIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
                 />;
