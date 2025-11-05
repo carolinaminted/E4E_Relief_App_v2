@@ -31,6 +31,7 @@ export interface FundIdentity {
   classVerificationStatus: ClassVerificationStatus;
   createdAt: string;
   lastUsedAt?: string;
+  defaultFundIdentity?: boolean;
 }
 export interface ActiveIdentity {
   id: FundIdentityId;

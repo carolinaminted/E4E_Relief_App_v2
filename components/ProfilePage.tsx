@@ -16,6 +16,7 @@ interface ProfilePageProps {
   identities: FundIdentity[];
   activeIdentity: ActiveIdentity | null;
   onSetActiveIdentity: (identityId: string) => void;
+  onSetDefaultIdentity: (identityId: string) => void;
   onAddIdentity: (fundCode: string) => void;
   onRemoveIdentity: (identityId: string) => void;
 }
@@ -76,7 +77,7 @@ const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () =>
 
 type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onSetDefaultIdentity, onAddIdentity, onRemoveIdentity }) => {
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
@@ -401,6 +402,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <div className="space-y-4">
                 {sortedIdentities.map(identity => {
                     const isActive = activeIdentity?.id === identity.id;
+                    const isDefault = identity.defaultFundIdentity;
                     return (
                         <div key={identity.id} className={`bg-[#004b8d] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[#ff8400]' : 'border-transparent'}`}>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -412,17 +414,28 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                     <div className="flex items-center gap-4 mt-2">
                                         <EligibilityIndicator status={identity.eligibilityStatus} onClick={() => onAddIdentity(identity.fundCode)} />
                                         {isActive && <span className="text-xs font-bold text-green-300">(Active)</span>}
+                                        {isDefault && <span className="text-xs font-bold text-yellow-300">(Default)</span>}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 self-end sm:self-center">
+                                <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
                                     <button
-                                        onClick={() => onSetActiveIdentity(identity.id)}
-                                        disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
+                                        onClick={() => onSetDefaultIdentity(identity.id)}
+                                        disabled={isDefault}
                                         className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                        aria-label={`Set ${identity.fundName} as active identity`}
+                                        aria-label={`Set ${identity.fundName} as default identity`}
                                     >
-                                        Set Active
+                                        Set Default
                                     </button>
+                                    {identities.length > 1 && (
+                                        <button
+                                            onClick={() => onSetActiveIdentity(identity.id)}
+                                            disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
+                                            className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                            aria-label={`Set ${identity.fundName} as active identity`}
+                                        >
+                                            Set Active
+                                        </button>
+                                    )}
                                      <button
                                         onClick={() => onRemoveIdentity(identity.id)}
                                         disabled={isActive}

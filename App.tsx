@@ -112,6 +112,7 @@ const initialIdentitiesData: FundIdentity[] = [
         classVerificationStatus: 'passed',
         createdAt: '2023-01-01T12:00:00Z',
         lastUsedAt: new Date().toISOString(),
+        defaultFundIdentity: true,
     },
     {
         id: 'user@example.com-JHH',
@@ -122,6 +123,7 @@ const initialIdentitiesData: FundIdentity[] = [
         eligibilityStatus: 'Not Eligible',
         classVerificationStatus: 'pending',
         createdAt: '2024-05-10T10:00:00Z',
+        defaultFundIdentity: false,
     },
     {
         id: 'admin@example.com-ADMIN',
@@ -133,6 +135,7 @@ const initialIdentitiesData: FundIdentity[] = [
         classVerificationStatus: 'passed',
         createdAt: '2022-01-01T12:00:00Z',
         lastUsedAt: new Date().toISOString(),
+        defaultFundIdentity: true,
     }
 ];
 
@@ -305,18 +308,33 @@ function App() {
     }
   }, [currentUser, allIdentities, activeIdentity]);
 
+  const handleSetDefaultIdentity = useCallback((identityId: string) => {
+    if (!currentUser) return;
+    
+    console.log(`[Telemetry] track('IdentityDefaultChanged', { identityId: ${identityId} })`);
+    
+    setAllIdentities(prevIdentities => 
+        prevIdentities.map(id => {
+            if (id.userEmail === currentUser.email) {
+                return { ...id, defaultFundIdentity: id.id === identityId };
+            }
+            return id;
+        })
+    );
+  }, [currentUser]);
+
   const handleLogin = useCallback((email: string, password: string): boolean => {
     const user = users[email];
     if (user && user.passwordHash === password) {
       const { passwordHash, ...profile } = user;
       
       const userIdentities = allIdentities.filter(id => id.userEmail === email);
-      const lastUsedIdentity = userIdentities.sort((a,b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
+      // Find the default identity first.
+      let identityToActivate = userIdentities.find(id => id.defaultFundIdentity);
       
-      let identityToActivate = lastUsedIdentity;
-      // If last used is inactive, find the first active one
-      if (lastUsedIdentity && lastUsedIdentity.eligibilityStatus !== 'Eligible') {
-          identityToActivate = userIdentities.find(id => id.eligibilityStatus === 'Eligible') || lastUsedIdentity;
+      // Fallback to last used if no default is set
+      if (!identityToActivate) {
+          identityToActivate = userIdentities.sort((a,b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
       }
       
       if (identityToActivate) {
@@ -424,15 +442,13 @@ function App() {
 
     const userExistingIdentities = allIdentities.filter(id => id.userEmail === currentUser.email);
     const isInitialRegistration = userExistingIdentities.length === 0;
-
-    // This is the fund code that was just verified, either a new one or the user's initial one.
     const fundCodeToVerify = verifyingFundCode || currentUser.fundCode;
     const fund = getFundByCode(fundCodeToVerify);
     
     if (!fund) {
         console.error("Verification successful but could not find fund config for", fundCodeToVerify);
         setVerifyingFundCode(null);
-        setPage('profile'); // or home
+        setPage('profile');
         return;
     }
     
@@ -441,13 +457,24 @@ function App() {
 
     if (existingIdentity) { // UPDATE existing identity (re-verification)
         console.log(`[Telemetry] track('IdentityReverified', { fundCode: ${fund.code} })`);
-        setAllIdentities(prev => prev.map(id => 
-            id.id === identityIdToUpdate 
-            ? { ...id, eligibilityStatus: 'Eligible', classVerificationStatus: 'passed' } 
-            : id
-        ));
-        // If we just re-verified, let's make it active.
-        handleSetActiveIdentity(identityIdToUpdate);
+
+        const reVerifiedIdentity = { 
+            ...existingIdentity, 
+            eligibilityStatus: 'Eligible' as EligibilityStatus, 
+            classVerificationStatus: 'passed' as ClassVerificationStatus,
+            lastUsedAt: new Date().toISOString()
+        };
+        
+        setAllIdentities(prev => prev.map(id => id.id === identityIdToUpdate ? reVerifiedIdentity : id));
+        setActiveIdentity({ id: reVerifiedIdentity.id, fundCode: reVerifiedIdentity.fundCode });
+        setCurrentUser(prevUser => prevUser ? {
+            ...prevUser,
+            fundCode: reVerifiedIdentity.fundCode,
+            fundName: reVerifiedIdentity.fundName,
+            classVerificationStatus: reVerifiedIdentity.classVerificationStatus,
+            eligibilityStatus: reVerifiedIdentity.eligibilityStatus,
+        } : null);
+
     } else { // ADD new identity
         console.log(`[Telemetry] track('IdentityCreated', { fundCode: ${fund.code}, cvType: ${fund.cvType} })`);
         const newIdentity: FundIdentity = {
@@ -459,29 +486,36 @@ function App() {
             eligibilityStatus: 'Eligible',
             classVerificationStatus: 'passed',
             createdAt: new Date().toISOString(),
+            lastUsedAt: new Date().toISOString(),
+            defaultFundIdentity: true,
         };
-        setAllIdentities(prev => [...prev, newIdentity]);
-        // Automatically make the new identity active
-        handleSetActiveIdentity(newIdentity.id);
+        
+        setAllIdentities(prev => [
+            ...prev.map(id => 
+                id.userEmail === currentUser.email ? { ...id, defaultFundIdentity: false } : id
+            ),
+            newIdentity
+        ]);
+
+        setActiveIdentity({ id: newIdentity.id, fundCode: newIdentity.fundCode });
+        
+        setCurrentUser(prevUser => prevUser ? {
+            ...prevUser,
+            fundCode: newIdentity.fundCode,
+            fundName: newIdentity.fundName,
+            classVerificationStatus: newIdentity.classVerificationStatus,
+            eligibilityStatus: newIdentity.eligibilityStatus,
+        } : null);
     }
 
     setVerifyingFundCode(null);
 
     if (isInitialRegistration) {
-        // We also need to fully hydrate the currentUser object for the first time
-        const updatedProfile: UserProfile = {
-            ...currentUser,
-            classVerificationStatus: 'passed',
-            eligibilityStatus: 'Eligible',
-            fundCode: fund.code, // Set the fund code from the newly verified identity
-            fundName: fund.name,
-        };
-        setCurrentUser(updatedProfile);
         setPage('home');
     } else {
         setPage('profile');
     }
-  }, [currentUser, verifyingFundCode, allIdentities, handleSetActiveIdentity]);
+  }, [currentUser, verifyingFundCode, allIdentities]);
   
   const handleProfileUpdate = useCallback((updatedProfile: UserProfile) => {
     if (!currentUser) return;
@@ -766,6 +800,7 @@ function App() {
                     identities={userIdentities}
                     activeIdentity={activeIdentity}
                     onSetActiveIdentity={handleSetActiveIdentity}
+                    onSetDefaultIdentity={handleSetDefaultIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
                 />;
