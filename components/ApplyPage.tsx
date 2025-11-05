@@ -160,7 +160,14 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
           </svg>
         </button>
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Apply for Relief</h1>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Apply for Relief</h1>
+          {userProfile?.fundName && userProfile?.fundCode ? (
+            <p className="text-lg text-gray-300 mt-2">{userProfile.fundName} ({userProfile.fundCode})</p>
+          ) : (
+            <p className="text-lg text-gray-400 mt-2 italic">No active fund selected.</p>
+          )}
+        </div>
       </div>
       <div>
         {renderStep()}
