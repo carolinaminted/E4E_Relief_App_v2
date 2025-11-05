@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity } from '../types';
+import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -40,35 +40,37 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () => void }> = ({ status, onClick }) => {
-    const isEligible = status === 'Eligible';
+const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const hasPassedCV = cvStatus === 'passed';
 
     const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const activeClasses = "bg-green-800/50 text-green-300";
-    const inactiveClasses = "bg-red-800/50 text-red-300 cursor-pointer hover:bg-red-800/80";
+    const passedClasses = "bg-green-800/50 text-green-300";
+    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
 
     const handleClick = () => {
-        if (!isEligible) {
-             console.log("[Telemetry] eligibility_cta_clicked");
+        if (!hasPassedCV) {
+             console.log("[Telemetry] verification_needed_cta_clicked");
              onClick();
         }
     };
+
+    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
     
     return (
         <button
             onClick={handleClick}
-            disabled={isEligible}
-            role={isEligible ? 'status' : 'button'}
-            aria-label={isEligible ? "Eligibility Status: Eligible" : "Eligibility: Not Eligible. Tap to verify."}
-            className={`${baseClasses} ${isEligible ? activeClasses : inactiveClasses}`}
+            disabled={hasPassedCV}
+            role={hasPassedCV ? 'status' : 'button'}
+            aria-label={text}
+            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
         >
-            {!isEligible && (
+            {!hasPassedCV && (
                 <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                 </span>
             )}
-            <span>{isEligible ? 'Eligible' : 'Not Eligible'}</span>
+            <span>{text}</span>
         </button>
     );
 };
@@ -316,7 +318,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
               <div className="mt-2 flex flex-col items-center gap-2">
                 <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
                 <EligibilityIndicator 
-                  status={currentActiveFullIdentity.eligibilityStatus} 
+                  cvStatus={currentActiveFullIdentity.classVerificationStatus} 
                   onClick={() => onAddIdentity(currentActiveFullIdentity.fundCode)} 
                 />
               </div>
@@ -410,7 +412,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
-                                        <EligibilityIndicator status={identity.eligibilityStatus} onClick={() => onAddIdentity(identity.fundCode)} />
+                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} onClick={() => onAddIdentity(identity.fundCode)} />
                                         {isActive && <span className="text-xs font-bold text-green-300">(Active)</span>}
                                     </div>
                                 </div>
