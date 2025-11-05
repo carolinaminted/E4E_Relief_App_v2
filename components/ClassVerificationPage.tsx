@@ -21,6 +21,28 @@ const LoadingSpinner: React.FC = () => (
     </div>
 );
 
+const MaxAttemptsView: React.FC<{ navigate: (page: Page) => void, verifyingFundCode: string | null }> = ({ navigate, verifyingFundCode }) => (
+    <div className="text-center space-y-4">
+        <p className="text-red-400 bg-red-900/50 p-3 rounded-md">
+            The details provided do not match our records.
+        </p>
+        <p className="text-gray-300 text-sm">
+            Too many failed attempts. Please contact support if you believe this is an error.
+        </p>
+        <button
+            onClick={() => {
+                // If adding a new identity, go to profile. Otherwise, there's nowhere to go, but 'home' is a safe default.
+                const destination = verifyingFundCode ? 'profile' : 'home';
+                navigate(destination);
+            }}
+            className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
+        >
+            {verifyingFundCode ? 'Back to Profile' : 'Back to Home'}
+        </button>
+    </div>
+);
+
+
 // --- Sub-components for each verification method ---
 
 interface DomainVerificationViewProps {
@@ -28,8 +50,9 @@ interface DomainVerificationViewProps {
     fundCode: string;
     onVerified: () => void;
     navigate: (page: Page) => void;
+    onVerificationFailure: (error: string) => void;
 }
-const DomainVerificationView: React.FC<DomainVerificationViewProps> = ({ user, fundCode, onVerified, navigate }) => {
+const DomainVerificationView: React.FC<DomainVerificationViewProps> = ({ user, fundCode, onVerified, navigate, onVerificationFailure }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isVerified, setIsVerified] = useState(false);
@@ -40,7 +63,10 @@ const DomainVerificationView: React.FC<DomainVerificationViewProps> = ({ user, f
         try {
             const fund = getFundByCode(fundCode);
             if (!fund || !fund.domainConfig) {
-                throw new Error("No domain configuration found for this fund.");
+                const msg = "No domain configuration found for this fund.";
+                setError(msg);
+                onVerificationFailure(msg);
+                return;
             }
             const userDomain = user.email.split('@')[1];
             if (fund.domainConfig.allowedDomains.map(d => d.toLowerCase()).includes(userDomain.toLowerCase())) {
@@ -48,14 +74,16 @@ const DomainVerificationView: React.FC<DomainVerificationViewProps> = ({ user, f
                 // Wait a bit to show success before calling callback which will navigate away
                 setTimeout(onVerified, 1000);
             } else {
-                setError(`Your email domain (${userDomain}) is not eligible for this fund.`);
+                const msg = `Your email domain (${userDomain}) is not eligible for this fund.`;
+                setError(msg);
+                onVerificationFailure(msg);
             }
         } catch (e: any) {
-            setError(e.message || 'Could not verify domain. Please contact support.');
+            onVerificationFailure(e.message || 'Could not verify domain.');
         } finally {
             setIsLoading(false);
         }
-    }, [user, fundCode, onVerified]);
+    }, [user, fundCode, onVerified, onVerificationFailure]);
     
     useEffect(() => {
         handleDomainCheck();
@@ -93,13 +121,14 @@ interface RosterVerificationViewProps {
     fundCode: string;
     onVerified: () => void;
     navigate: (page: Page) => void;
+    onVerificationFailure: (error: string) => void;
+    attempts: number;
+    maxAttempts: number;
 }
-const RosterVerificationView: React.FC<RosterVerificationViewProps> = ({ user, fundCode, onVerified, navigate }) => {
+const RosterVerificationView: React.FC<RosterVerificationViewProps> = ({ user, fundCode, onVerified, navigate, onVerificationFailure, attempts, maxAttempts }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({ employeeId: '', birthMonth: '', birthDay: '' });
-    const [attempts, setAttempts] = useState(0);
-    const MAX_ATTEMPTS = 3;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({...prev, [e.target.id]: e.target.value}));
@@ -118,58 +147,39 @@ const RosterVerificationView: React.FC<RosterVerificationViewProps> = ({ user, f
             if (result.ok) {
                 onVerified();
             } else {
-                setError('The details provided do not match our records. Please try again.');
-                setAttempts(prev => prev + 1);
+                const msg = 'The details provided do not match our records. Please try again.';
+                setError(msg);
+                onVerificationFailure(msg);
             }
         } catch (e) {
-            setError('An error occurred during verification. Please try again later.');
-            setAttempts(prev => prev + 1);
+            const msg = 'An error occurred during verification. Please try again later.';
+            setError(msg);
+            onVerificationFailure(msg);
         } finally {
             setIsLoading(false);
         }
     };
-    
-    const hasMaxedAttempts = attempts >= MAX_ATTEMPTS;
 
     return (
         <div className="text-center">
-             {hasMaxedAttempts ? (
-                <div className="space-y-4">
-                    <p className="text-red-400 bg-red-900/50 p-3 rounded-md">
-                        The details provided do not match our records.
-                    </p>
-                     <p className="text-gray-300 text-sm">
-                        Too many failed attempts. Please go back and contact support if you believe this is an error.
-                    </p>
-                    <button
-                        onClick={() => navigate('profile')}
-                        className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
-                    >
-                        Back to Profile
-                    </button>
+            <h3 className="text-xl font-semibold mb-4 text-white">Verify Your Status</h3>
+            <p className="text-gray-300 mb-6">Please enter the following details to verify your status. Attempts remaining: {maxAttempts - attempts}</p>
+            <form onSubmit={handleSubmit} className="space-y-6 text-left">
+                <FormInput label="Employee ID" id="employeeId" value={formData.employeeId} onChange={handleChange} required />
+                <div className="flex gap-4">
+                    <FormInput label="Birth Month (1-12)" type="number" id="birthMonth" value={formData.birthMonth} onChange={handleChange} required min="1" max="12" />
+                    <FormInput label="Birth Day (1-31)" type="number" id="birthDay" value={formData.birthDay} onChange={handleChange} required min="1" max="31" />
                 </div>
-             ) : (
-                <>
-                    <h3 className="text-xl font-semibold mb-4 text-white">Verify Your Status</h3>
-                    <p className="text-gray-300 mb-6">Please enter the following details to verify your status. Attempts remaining: {MAX_ATTEMPTS - attempts}</p>
-                    <form onSubmit={handleSubmit} className="space-y-6 text-left">
-                        <FormInput label="Employee ID" id="employeeId" value={formData.employeeId} onChange={handleChange} required />
-                        <div className="flex gap-4">
-                            <FormInput label="Birth Month (1-12)" type="number" id="birthMonth" value={formData.birthMonth} onChange={handleChange} required min="1" max="12" />
-                            <FormInput label="Birth Day (1-31)" type="number" id="birthDay" value={formData.birthDay} onChange={handleChange} required min="1" max="31" />
-                        </div>
-                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-                        <button type="submit" disabled={isLoading} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
-                            {isLoading ? <LoadingSpinner /> : 'Verify'}
-                        </button>
-                    </form>
-                </>
-             )}
+                {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                <button type="submit" disabled={isLoading} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
+                    {isLoading ? <LoadingSpinner /> : 'Verify'}
+                </button>
+            </form>
         </div>
     );
 };
 
-const SSOVerificationView: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
+const SSOVerificationView: React.FC<{ onVerified: () => void, onVerificationFailure: (error: string) => void }> = ({ onVerified, onVerificationFailure }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -182,10 +192,14 @@ const SSOVerificationView: React.FC<{ onVerified: () => void }> = ({ onVerified 
                  // Wait a bit to show success before calling callback which will navigate away
                 setTimeout(onVerified, 1000);
             } else {
-                setError('SSO linking failed. Please try again or use another method.');
+                const msg = 'SSO linking failed. Please try again or use another method.';
+                setError(msg);
+                onVerificationFailure(msg);
             }
         } catch(e) {
-            setError('An error occurred. Please try again.');
+            const msg = 'An error occurred. Please try again.';
+            setError(msg);
+            onVerificationFailure(msg);
         } finally {
             setIsLoading(false);
         }
@@ -208,6 +222,8 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
     const [cvType, setCvType] = useState<CVType | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isVerified, setIsVerified] = useState(false);
+    const [attempts, setAttempts] = useState(0);
+    const MAX_ATTEMPTS = 3;
     
     const fundCodeToVerify = verifyingFundCode || user.fundCode;
 
@@ -218,6 +234,10 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
         }
         setIsLoading(false);
     }, [fundCodeToVerify]);
+
+    const handleVerificationFailure = () => {
+        setAttempts(prev => prev + 1);
+    };
 
     const handleLocalVerificationSuccess = () => {
         setIsVerified(true);
@@ -250,13 +270,17 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
             );
         }
 
+        if (attempts >= MAX_ATTEMPTS) {
+            return <MaxAttemptsView navigate={navigate} verifyingFundCode={verifyingFundCode} />;
+        }
+
         switch (cvType) {
             case 'Domain':
-                return <DomainVerificationView user={user} fundCode={fundCodeToVerify} onVerified={handleLocalVerificationSuccess} navigate={navigate} />;
+                return <DomainVerificationView user={user} fundCode={fundCodeToVerify} onVerified={handleLocalVerificationSuccess} navigate={navigate} onVerificationFailure={handleVerificationFailure} />;
             case 'Roster':
-                return <RosterVerificationView user={user} fundCode={fundCodeToVerify} onVerified={handleLocalVerificationSuccess} navigate={navigate} />;
+                return <RosterVerificationView user={user} fundCode={fundCodeToVerify} onVerified={handleLocalVerificationSuccess} navigate={navigate} onVerificationFailure={handleVerificationFailure} attempts={attempts} maxAttempts={MAX_ATTEMPTS} />;
             case 'SSO':
-                return <SSOVerificationView onVerified={handleLocalVerificationSuccess} />;
+                return <SSOVerificationView onVerified={handleLocalVerificationSuccess} onVerificationFailure={handleVerificationFailure} />;
             default:
                 return (
                     <div className="text-center space-y-4">

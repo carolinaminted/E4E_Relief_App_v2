@@ -106,8 +106,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     return [...applications].reverse();
   }, [applications]);
 
-  const singleIdentity = useMemo(() => identities.length === 1 ? identities[0] : null, [identities]);
-  
+  const currentActiveFullIdentity = useMemo(() => {
+    if (!activeIdentity) return null;
+    return identities.find(id => id.id === activeIdentity.id);
+  }, [identities, activeIdentity]);
+
   const sortedIdentities = useMemo(() => {
     return [...identities].sort((a, b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime());
   }, [identities]);
@@ -309,12 +312,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Profile
             </h1>
-            {singleIdentity && (
+            {currentActiveFullIdentity && (
               <div className="mt-2 flex flex-col items-center gap-2">
-                <p className="text-lg text-gray-300">{singleIdentity.fundName} ({singleIdentity.fundCode})</p>
+                <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
                 <EligibilityIndicator 
-                  status={singleIdentity.eligibilityStatus} 
-                  onClick={() => onAddIdentity(singleIdentity.fundCode)} 
+                  status={currentActiveFullIdentity.eligibilityStatus} 
+                  onClick={() => onAddIdentity(currentActiveFullIdentity.fundCode)} 
                 />
               </div>
             )}
