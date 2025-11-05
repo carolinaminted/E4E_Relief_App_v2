@@ -41,14 +41,14 @@ const NotificationIcon: React.FC = () => (
 );
 
 const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () => void }> = ({ status, onClick }) => {
-    const isActive = status === 'Active';
+    const isEligible = status === 'Eligible';
 
     const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
     const activeClasses = "bg-green-800/50 text-green-300";
     const inactiveClasses = "bg-red-800/50 text-red-300 cursor-pointer hover:bg-red-800/80";
 
     const handleClick = () => {
-        if (!isActive) {
+        if (!isEligible) {
              console.log("[Telemetry] eligibility_cta_clicked");
              onClick();
         }
@@ -57,18 +57,18 @@ const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () =>
     return (
         <button
             onClick={handleClick}
-            disabled={isActive}
-            role={isActive ? 'status' : 'button'}
-            aria-label={isActive ? "Eligibility Status: Active" : "Eligibility Inactive. Tap to verify."}
-            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+            disabled={isEligible}
+            role={isEligible ? 'status' : 'button'}
+            aria-label={isEligible ? "Eligibility Status: Eligible" : "Eligibility: Not Eligible. Tap to verify."}
+            className={`${baseClasses} ${isEligible ? activeClasses : inactiveClasses}`}
         >
-            {!isActive && (
+            {!isEligible && (
                 <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                 </span>
             )}
-            <span>{isActive ? 'Active' : 'Inactive'}</span>
+            <span>{isEligible ? 'Eligible' : 'Not Eligible'}</span>
         </button>
     );
 };
@@ -361,8 +361,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             <button 
                                 onClick={() => navigate('apply')} 
                                 className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                disabled={userProfile.eligibilityStatus !== 'Active'}
-                                title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                                disabled={userProfile.eligibilityStatus !== 'Eligible'}
+                                title={userProfile.eligibilityStatus !== 'Eligible' ? "Class Verification required to access applications." : ""}
                             >
                                 Apply Now
                             </button>
@@ -374,8 +374,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <button 
                             onClick={() => navigate('apply')} 
                             className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
-                            disabled={userProfile.eligibilityStatus !== 'Active'}
-                            title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                            disabled={userProfile.eligibilityStatus !== 'Eligible'}
+                            title={userProfile.eligibilityStatus !== 'Eligible' ? "Class Verification required to access applications." : ""}
                         >
                             Apply Now
                         </button>
@@ -392,6 +392,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <ChevronIcon isOpen={openSection === 'identities'} />
         </button>
         <div className={`transition-all duration-500 ease-in-out ${openSection === 'identities' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <p className="text-sm text-gray-300 mb-4">
+                Manage your fund identities. Add or remove additional fund codes if you’re eligible for more than one program.
+            </p>
             <div className="space-y-4">
                 {sortedIdentities.map(identity => {
                     const isActive = activeIdentity?.id === identity.id;
@@ -411,7 +414,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                 <div className="flex items-center gap-2 self-end sm:self-center">
                                     <button
                                         onClick={() => onSetActiveIdentity(identity.id)}
-                                        disabled={isActive || identity.eligibilityStatus !== 'Active'}
+                                        disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
                                         className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
                                         aria-label={`Set ${identity.fundName} as active identity`}
                                     >

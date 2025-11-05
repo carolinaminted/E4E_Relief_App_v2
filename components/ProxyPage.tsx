@@ -50,7 +50,8 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
             infoCorrect: false,
             fundCode: '',
             classVerificationStatus: 'pending',
-            eligibilityStatus: 'Inactive',
+            // FIX: Changed 'Inactive' to 'Not Eligible' to match the EligibilityStatus type definition.
+            eligibilityStatus: 'Not Eligible',
             role: 'User',
         };
 

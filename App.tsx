@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -68,7 +66,7 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     fundCode: 'E4E',
     fundName: 'E4E Relief',
     classVerificationStatus: 'passed',
-    eligibilityStatus: 'Active',
+    eligibilityStatus: 'Eligible',
     role: 'User',
   },
   'admin@example.com': {
@@ -98,7 +96,7 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     fundCode: 'ADMIN',
     fundName: 'Admin Relief Fund',
     classVerificationStatus: 'passed',
-    eligibilityStatus: 'Active',
+    eligibilityStatus: 'Eligible',
     role: 'Admin',
   },
 };
@@ -110,7 +108,7 @@ const initialIdentitiesData: FundIdentity[] = [
         fundCode: 'E4E',
         fundName: 'E4E Relief',
         cvType: 'Domain',
-        eligibilityStatus: 'Active',
+        eligibilityStatus: 'Eligible',
         classVerificationStatus: 'passed',
         createdAt: '2023-01-01T12:00:00Z',
         lastUsedAt: new Date().toISOString(),
@@ -121,7 +119,7 @@ const initialIdentitiesData: FundIdentity[] = [
         fundCode: 'JHH',
         fundName: 'JHH Relief',
         cvType: 'Roster',
-        eligibilityStatus: 'Inactive',
+        eligibilityStatus: 'Not Eligible',
         classVerificationStatus: 'pending',
         createdAt: '2024-05-10T10:00:00Z',
     },
@@ -131,7 +129,7 @@ const initialIdentitiesData: FundIdentity[] = [
         fundCode: 'ADMIN',
         fundName: 'Admin Relief Fund',
         cvType: 'Domain',
-        eligibilityStatus: 'Active',
+        eligibilityStatus: 'Eligible',
         classVerificationStatus: 'passed',
         createdAt: '2022-01-01T12:00:00Z',
         lastUsedAt: new Date().toISOString(),
@@ -232,7 +230,7 @@ const createNewUserProfile = (
         fundCode,
         fundName: fund?.name || 'Relief Fund',
         classVerificationStatus: 'pending',
-        eligibilityStatus: 'Inactive',
+        eligibilityStatus: 'Not Eligible',
         role: 'User',
     };
 };
@@ -272,7 +270,7 @@ function App() {
   
   const isApplyEnabled = useMemo(() => {
     if (!currentUser) return false;
-    return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Active';
+    return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Eligible';
   }, [currentUser]);
 
   useEffect(() => {
@@ -285,7 +283,7 @@ function App() {
     if (!currentUser) return;
 
     const identityToActivate = allIdentities.find(i => i.id === identityId);
-    if (identityToActivate && identityToActivate.eligibilityStatus === 'Active') {
+    if (identityToActivate && identityToActivate.eligibilityStatus === 'Eligible') {
         console.log(`[Telemetry] track('IdentitySwitch', { from: ${activeIdentity?.fundCode}, to: ${identityToActivate.fundCode} })`);
         
         setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
@@ -317,8 +315,8 @@ function App() {
       
       let identityToActivate = lastUsedIdentity;
       // If last used is inactive, find the first active one
-      if (lastUsedIdentity && lastUsedIdentity.eligibilityStatus !== 'Active') {
-          identityToActivate = userIdentities.find(id => id.eligibilityStatus === 'Active') || lastUsedIdentity;
+      if (lastUsedIdentity && lastUsedIdentity.eligibilityStatus !== 'Eligible') {
+          identityToActivate = userIdentities.find(id => id.eligibilityStatus === 'Eligible') || lastUsedIdentity;
       }
       
       if (identityToActivate) {
@@ -333,7 +331,7 @@ function App() {
           setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
           initTokenTracker(hydratedProfile);
 
-          if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Active') {
+          if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
             setPage('classVerification');
           } else {
             setPage('home');
@@ -373,8 +371,8 @@ function App() {
     if (!currentUser) return;
     
     const identity = allIdentities.find(id => id.userEmail === currentUser.email && id.fundCode === fundCode);
-    if (identity && identity.eligibilityStatus === 'Active') {
-        alert(`Your identity for fund code ${fundCode} is already active.`);
+    if (identity && identity.eligibilityStatus === 'Eligible') {
+        alert(`Your identity for fund code ${fundCode} is already eligible.`);
         return;
     }
 
@@ -424,7 +422,8 @@ function App() {
   const handleVerificationSuccess = useCallback(() => {
     if (!currentUser) return;
 
-    const isInitialRegistration = allIdentities.filter(id => id.userEmail === currentUser.email).length === 0;
+    const userExistingIdentities = allIdentities.filter(id => id.userEmail === currentUser.email);
+    const isInitialRegistration = userExistingIdentities.length === 0;
 
     // This is the fund code that was just verified, either a new one or the user's initial one.
     const fundCodeToVerify = verifyingFundCode || currentUser.fundCode;
@@ -438,13 +437,13 @@ function App() {
     }
     
     const identityIdToUpdate = `${currentUser.email}-${fund.code}`;
-    const existingIdentity = allIdentities.find(id => id.id === identityIdToUpdate);
+    const existingIdentity = userExistingIdentities.find(id => id.id === identityIdToUpdate);
 
     if (existingIdentity) { // UPDATE existing identity (re-verification)
         console.log(`[Telemetry] track('IdentityReverified', { fundCode: ${fund.code} })`);
         setAllIdentities(prev => prev.map(id => 
             id.id === identityIdToUpdate 
-            ? { ...id, eligibilityStatus: 'Active', classVerificationStatus: 'passed' } 
+            ? { ...id, eligibilityStatus: 'Eligible', classVerificationStatus: 'passed' } 
             : id
         ));
         // If we just re-verified, let's make it active.
@@ -457,7 +456,7 @@ function App() {
             fundCode: fund.code,
             fundName: fund.name,
             cvType: fund.cvType,
-            eligibilityStatus: 'Active',
+            eligibilityStatus: 'Eligible',
             classVerificationStatus: 'passed',
             createdAt: new Date().toISOString(),
         };
@@ -473,7 +472,7 @@ function App() {
         const updatedProfile: UserProfile = {
             ...currentUser,
             classVerificationStatus: 'passed',
-            eligibilityStatus: 'Active',
+            eligibilityStatus: 'Eligible',
             fundCode: fund.code, // Set the fund code from the newly verified identity
             fundName: fund.name,
         };
@@ -836,8 +835,7 @@ function App() {
         {renderPage()}
       </main>
 
-      {/* FIX: Passed the correct state setter function `setIsChatbotOpen` to the `setIsOpen` prop. */}
-      {currentUser && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
+      {currentUser && currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
     </div>
   );
 }

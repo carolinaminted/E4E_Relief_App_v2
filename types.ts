@@ -11,7 +11,7 @@ export interface Address {
 
 export type ClassVerificationStatus = 'unknown' | 'pending' | 'passed' | 'failed';
 
-export type EligibilityStatus = 'Active' | 'Inactive';
+export type EligibilityStatus = 'Eligible' | 'Not Eligible';
 
 export interface IdentityEligibility {
   identityId: string;
