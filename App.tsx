@@ -36,8 +36,8 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     // Identity
     identityId: 'user@example.com',
     // 1a
-    firstName: 'John',
-    lastName: 'Doe',
+    firstName: 'Pikachu',
+    lastName: 'Raichu',
     email: 'user@example.com',
     mobileNumber: '555-123-4567',
     // 1b
@@ -63,8 +63,8 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
     infoCorrect: true,
     // Auth
     passwordHash: 'password123', // In a real app, this would be a hash
-    fundCode: 'E4E',
-    fundName: 'E4E Relief',
+    fundCode: 'DOM',
+    fundName: 'Blastoise Relief Fund',
     classVerificationStatus: 'passed',
     eligibilityStatus: 'Eligible',
     role: 'User',
@@ -103,10 +103,10 @@ const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
 
 const initialIdentitiesData: FundIdentity[] = [
     {
-        id: 'user@example.com-E4E',
+        id: 'user@example.com-DOM',
         userEmail: 'user@example.com',
-        fundCode: 'E4E',
-        fundName: 'E4E Relief',
+        fundCode: 'DOM',
+        fundName: 'Blastoise Relief Fund',
         cvType: 'Domain',
         eligibilityStatus: 'Eligible',
         classVerificationStatus: 'passed',
@@ -114,10 +114,10 @@ const initialIdentitiesData: FundIdentity[] = [
         lastUsedAt: new Date().toISOString(),
     },
     {
-        id: 'user@example.com-JHH',
+        id: 'user@example.com-ROST',
         userEmail: 'user@example.com',
-        fundCode: 'JHH',
-        fundName: 'JHH Relief',
+        fundCode: 'ROST',
+        fundName: 'Venusaur Relief Fund',
         cvType: 'Roster',
         eligibilityStatus: 'Not Eligible',
         classVerificationStatus: 'pending',
@@ -162,7 +162,7 @@ const initialApplications: Record<string, Application[]> = {
     },
      {
       id: 'APP-1002',
-      profileSnapshot: { ...initialUsers['user@example.com'], fundCode: 'JHH', fundName: 'JHH Relief' },
+      profileSnapshot: { ...initialUsers['user@example.com'], fundCode: 'ROST', fundName: 'Venusaur Relief Fund' },
       event: 'Crime',
       eventDate: '2024-03-20',
       requestedAmount: 1000,
@@ -628,7 +628,7 @@ function App() {
     const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
     const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
 
-    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialLifetimeMax;
+    const currentTwelveMonthRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
     
     const preliminaryDecision = evaluateApplicationEligibility({
@@ -811,7 +811,7 @@ function App() {
   return (
     <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
       {currentUser && (
-        <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-3 items-center shadow-md sticky top-0 z-30 border-b border-[#002a50]">
+        <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-[auto_1fr_auto] items-center gap-4 shadow-md sticky top-0 z-30 border-b border-[#002a50]">
           <div className="justify-self-start">
             <button onClick={() => navigate('home')} className="flex items-center transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
               <img
@@ -821,11 +821,8 @@ function App() {
               />
             </button>
           </div>
-          <div className="justify-self-center text-center flex items-center">
-             {activeIdentity && (
-              <span className="bg-[#ff8400]/80 text-white text-xs font-bold mr-3 px-2.5 py-1 rounded-full">{activeIdentity.fundCode}</span>
-            )}
-            <span className="text-gray-200">Welcome, {currentUser.firstName}</span>
+          <div className="text-center">
+            <span className="text-gray-200 truncate">Welcome, {currentUser.firstName}</span>
           </div>
           <div className="justify-self-end">
             <button onClick={handleLogout} className="bg-[#ff8400]/80 hover:bg-[#ff8400] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200">

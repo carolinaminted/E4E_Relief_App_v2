@@ -115,11 +115,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ navigate }) => {
   ];
 
   const recentUsersData = [
-      { name: 'Olivia Chen', email: 'olivia.c@example.com', fund: 'E4E' },
-      { name: 'Benjamin Carter', email: 'ben.carter@example.com', fund: 'JHH' },
-      { name: 'Sophia Rodriguez', email: 'sophia.r@example.com', fund: 'E4E' },
-      { name: 'Liam Goldberg', email: 'liam.g@example.com', fund: 'SQRT' },
-      { name: 'Ava Nguyen', email: 'ava.n@example.com', fund: 'JHH' },
+      { name: 'Pikachu Raichu', email: 'pikachu.r@example.com', fund: 'DOM' },
+      { name: 'Charmander Charmeleon', email: 'charmander.c@example.com', fund: 'ROST' },
+      { name: 'Squirtle Wartortle', email: 'squirtle.w@example.com', fund: 'DOM' },
+      { name: 'Bulbasaur Ivysaur', email: 'bulbasaur.i@example.com', fund: 'SSO' },
+      { name: 'Eevee Vaporeon', email: 'eevee.v@example.com', fund: 'ROST' },
   ];
 
   const topEventsData = [

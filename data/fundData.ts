@@ -40,8 +40,8 @@ export interface Fund {
 // Store the fund data
 const funds: Fund[] = [
     {
-      "code": "E4E",
-      "name": "E4E Relief",
+      "code": "DOM",
+      "name": "Blastoise Relief Fund",
       "cvType": "Domain",
       "limits": { "twelveMonthMax": 10000, "lifetimeMax": 50000, "singleRequestMax": 10000 },
       "eligibleCountries": ["US", "CA", "MX"],
@@ -74,8 +74,8 @@ const funds: Fund[] = [
       ]
     },
     {
-      "code": "JHH",
-      "name": "JHH Relief",
+      "code": "ROST",
+      "name": "Venusaur Relief Fund",
       "cvType": "Roster",
       "limits": { "twelveMonthMax": 5000, "lifetimeMax": 25000, "singleRequestMax": 2500 },
       "eligibleCountries": ["US"],
@@ -110,8 +110,8 @@ const funds: Fund[] = [
       ]
     },
     {
-      "code": "SQRT",
-      "name": "Squirtle Relief",
+      "code": "SSO",
+      "name": "Charizard Relief Fund",
       "cvType": "SSO",
       "limits": { "twelveMonthMax": 15000, "lifetimeMax": 75000, "singleRequestMax": 7500 },
       "eligibleCountries": ["US", "GB", "AU", "JP"],
