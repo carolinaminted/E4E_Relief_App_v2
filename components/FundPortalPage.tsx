@@ -52,17 +52,40 @@ const TokenUsageIcon: React.FC = () => (
 );
 
 
-const FundPortalCard: React.FC<{ title: string; onClick: () => void; icon: React.ReactNode }> = ({ title, onClick, icon }) => (
-  <div 
-    onClick={onClick}
-    className="bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
-  >
-    {icon}
-    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{title}</h2>
-  </div>
-);
-
 const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
+  const portalTiles = [
+    {
+      key: 'dashboard',
+      title: 'Dashboard',
+      onClick: () => navigate('dashboard'),
+      icon: <DashboardIcon />,
+    },
+    {
+      key: 'ticketing',
+      title: 'Ticketing',
+      onClick: () => navigate('ticketing'),
+      icon: <TicketingIcon />,
+    },
+    {
+      key: 'details',
+      title: 'Details',
+      onClick: () => navigate('programDetails'),
+      icon: <ProgramDetailsIcon />,
+    },
+    {
+      key: 'proxy',
+      title: 'Proxy',
+      onClick: () => navigate('proxy'),
+      icon: <ProxyIcon />,
+    },
+    {
+      key: 'tokens',
+      title: 'Tokens',
+      onClick: () => navigate('tokenUsage'),
+      icon: <TokenUsageIcon />,
+    },
+  ];
+  
   return (
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-5xl mx-auto w-full">
@@ -80,33 +103,23 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 w-full mt-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full mt-12 max-w-4xl mx-auto">
           <IconDefs />
-          <FundPortalCard 
-            title="Dashboard" 
-            onClick={() => navigate('dashboard')}
-            icon={<DashboardIcon />}
-          />
-          <FundPortalCard 
-            title="Ticketing" 
-            onClick={() => navigate('ticketing')} 
-            icon={<TicketingIcon />}
-          />
-          <FundPortalCard
-            title="Details"
-            onClick={() => navigate('programDetails')}
-            icon={<ProgramDetailsIcon />}
-          />
-          <FundPortalCard 
-            title="Proxy" 
-            onClick={() => navigate('proxy')} 
-            icon={<ProxyIcon />}
-          />
-          <FundPortalCard 
-            title="Tokens"
-            onClick={() => navigate('tokenUsage')}
-            icon={<TokenUsageIcon />}
-          />
+          {portalTiles.map((tile, index) => {
+            const isLastAndOdd = (index === portalTiles.length - 1) && (portalTiles.length % 2 !== 0);
+            const colSpanClass = isLastAndOdd ? 'col-span-2' : '';
+
+            return (
+              <div 
+                key={tile.key}
+                onClick={tile.onClick}
+                className={`bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center ${colSpanClass}`}
+              >
+                {tile.icon}
+                <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{tile.title}</h2>
+              </div>
+            );
+          })}
         </div>
         
       </div>
