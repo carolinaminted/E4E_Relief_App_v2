@@ -24,14 +24,14 @@ const EligibilityPage: React.FC<EligibilityPageProps> = ({ navigate, user }) => 
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto w-full">
-      <div className="relative flex justify-center items-center mb-8 text-center">
-        <button onClick={() => navigate('home')} className="absolute left-0 top-1/2 -translate-y-1/2 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
+      <div className="relative flex justify-center items-center mb-8">
+        <button onClick={() => navigate('home')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
             </svg>
         </button>
-        <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Eligible for Assistance?</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">Eligible for Assistance?</h1>
       </div>
 
       <div className="text-center text-gray-300 max-w-2xl mx-auto my-8 space-y-4">
@@ -40,8 +40,8 @@ const EligibilityPage: React.FC<EligibilityPageProps> = ({ navigate, user }) => 
             You can check your current eligibility status on your <button onClick={() => navigate('profile')} className="font-semibold text-[#ff8400] hover:underline">Profile page</button>.
         </p>
         <div className="text-center inline-block space-y-1 bg-[#003a70]/50 p-4 rounded-md border border-[#005ca0]">
-            <p><strong className="text-green-300">'Active'</strong> status means you can apply.</p>
-            <p><strong className="text-red-300">'Inactive'</strong> status requires additional verification steps.</p>
+            <p><strong className="text-green-300">'Active'</strong> means you are eligible to apply.</p>
+            <p><strong className="text-red-300">'Inactive'</strong> requires additional verification.</p>
         </div>
       </div>
 

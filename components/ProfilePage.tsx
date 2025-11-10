@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Application, UserProfile, Address, EligibilityStatus } from '../types';
+import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -13,6 +13,11 @@ interface ProfilePageProps {
   applications: Application[];
   userProfile: UserProfile;
   onProfileUpdate: (updatedProfile: UserProfile) => void;
+  identities: FundIdentity[];
+  activeIdentity: ActiveIdentity | null;
+  onSetActiveIdentity: (identityId: string) => void;
+  onAddIdentity: (fundCode: string) => void;
+  onRemoveIdentity: (identityId: string) => void;
 }
 
 const statusStyles: Record<Application['status'], string> = {
@@ -35,48 +40,51 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-const EligibilityIndicator: React.FC<{ status: EligibilityStatus, onClick: () => void }> = ({ status, onClick }) => {
-    const isActive = status === 'Active';
+const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const hasPassedCV = cvStatus === 'passed';
 
     const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const activeClasses = "bg-green-800/50 text-green-300";
-    const inactiveClasses = "bg-red-800/50 text-red-300 cursor-pointer hover:bg-red-800/80";
+    const passedClasses = "bg-green-800/50 text-green-300";
+    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
 
     const handleClick = () => {
-        if (!isActive) {
-             console.log("[Telemetry] eligibility_cta_clicked");
+        if (!hasPassedCV) {
+             console.log("[Telemetry] verification_needed_cta_clicked");
              onClick();
         }
     };
+
+    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
     
     return (
         <button
             onClick={handleClick}
-            disabled={isActive}
-            role={isActive ? 'status' : 'button'}
-            aria-label={isActive ? "Eligibility Status: Active" : "Eligibility Inactive. Tap to verify."}
-            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+            disabled={hasPassedCV}
+            role={hasPassedCV ? 'status' : 'button'}
+            aria-label={text}
+            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
         >
-            {!isActive && (
+            {!hasPassedCV && (
                 <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                 </span>
             )}
-            <span>{isActive ? 'Active' : 'Inactive'}</span>
+            <span>{text}</span>
         </button>
     );
 };
 
 
-type ProfileSection = 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
+type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [isApplicationsOpen, setIsApplicationsOpen] = useState(true);
-  const [openSection, setOpenSection] = useState<ProfileSection | null>(null);
+  const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
+  const [isAddingIdentity, setIsAddingIdentity] = useState(false);
+  const [newFundCode, setNewFundCode] = useState('');
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
@@ -99,6 +107,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const sortedApplicationsForDisplay = useMemo(() => {
     return [...applications].reverse();
   }, [applications]);
+
+  const currentActiveFullIdentity = useMemo(() => {
+    if (!activeIdentity) return null;
+    return identities.find(id => id.id === activeIdentity.id);
+  }, [identities, activeIdentity]);
+
+  const sortedIdentities = useMemo(() => {
+    return [...identities].sort((a, b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime());
+  }, [identities]);
 
   const sectionHasErrors = useMemo(() => {
     // Contact
@@ -272,10 +289,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
       alert('Profile saved!'); // Simple feedback
     }
   };
+  
+  const handleAddIdentitySubmit = () => {
+      if(newFundCode.trim()) {
+          onAddIdentity(newFundCode.trim().toUpperCase());
+          setNewFundCode('');
+          setIsAddingIdentity(false);
+      }
+  };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="relative flex justify-center items-center mb-6">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
+      <div className="relative flex justify-center items-center mb-8">
         <button 
           onClick={() => navigate('home')} 
           className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" 
@@ -289,23 +314,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Profile
             </h1>
-            <p className="text-sm text-white mt-1">Fund Code: {userProfile.fundCode}</p>
-        </div>
-        <div className="absolute right-0">
-          <EligibilityIndicator 
-            status={userProfile.eligibilityStatus}
-            onClick={() => navigate('classVerification')} 
-          />
+            {currentActiveFullIdentity && (
+              <div className="mt-2 flex flex-col items-center gap-2">
+                <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
+                <EligibilityIndicator 
+                  cvStatus={currentActiveFullIdentity.classVerificationStatus} 
+                  onClick={() => onAddIdentity(currentActiveFullIdentity.fundCode)} 
+                />
+              </div>
+            )}
         </div>
       </div>
       
       {/* Applications Section */}
         <section className="border-b border-[#005ca0] pb-4 mb-4">
-            <button type="button" onClick={() => setIsApplicationsOpen(p => !p)} className="w-full flex justify-between items-center text-left py-2" aria-expanded={isApplicationsOpen}>
+            <button type="button" onClick={() => toggleSection('applications')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'applications'}>
                 <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Applications</h2>
-                <ChevronIcon isOpen={isApplicationsOpen} />
+                <ChevronIcon isOpen={openSection === 'applications'} />
             </button>
-            <div className={`transition-all duration-500 ease-in-out ${isApplicationsOpen ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${openSection === 'applications' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="bg-[#003a70]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center border border-[#005ca0]">
                     <div>
                         <p className="text-sm text-white uppercase tracking-wider">12-Month Remaining</p>
@@ -339,8 +366,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             <button 
                                 onClick={() => navigate('apply')} 
                                 className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                disabled={userProfile.eligibilityStatus !== 'Active'}
-                                title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                                disabled={userProfile.eligibilityStatus !== 'Eligible'}
+                                title={userProfile.eligibilityStatus !== 'Eligible' ? "Class Verification required to access applications." : ""}
                             >
                                 Apply Now
                             </button>
@@ -348,12 +375,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                     </>
                 ) : (
                     <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
-                        <p className="text-gray-300">You have not submitted any applications yet.</p>
+                        <p className="text-gray-300">You have not submitted any applications for this fund yet.</p>
                         <button 
                             onClick={() => navigate('apply')} 
                             className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
-                            disabled={userProfile.eligibilityStatus !== 'Active'}
-                            title={userProfile.eligibilityStatus !== 'Active' ? "Class Verification required to access applications." : ""}
+                            disabled={userProfile.eligibilityStatus !== 'Eligible'}
+                            title={userProfile.eligibilityStatus !== 'Eligible' ? "Class Verification required to access applications." : ""}
                         >
                             Apply Now
                         </button>
@@ -363,6 +390,80 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </section>
 
+      {/* Identities Section */}
+      <section className="border-b border-[#005ca0] pb-4 mb-4">
+        <button type="button" onClick={() => toggleSection('identities')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'identities'}>
+            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Fund Identities</h2>
+            <ChevronIcon isOpen={openSection === 'identities'} />
+        </button>
+        <div className={`transition-all duration-500 ease-in-out ${openSection === 'identities' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <p className="text-sm text-gray-300 mb-4">
+                Manage your fund identities. Add or remove additional fund codes if you’re eligible for more than one program.
+            </p>
+            <div className="space-y-4">
+                {sortedIdentities.map(identity => {
+                    const isActive = activeIdentity?.id === identity.id;
+                    return (
+                        <div key={identity.id} className={`bg-[#004b8d] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[#ff8400]' : 'border-transparent'}`}>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <div className="flex items-center gap-3">
+                                        <h3 className="font-bold text-lg text-white">{identity.fundName}</h3>
+                                        <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-2">
+                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} onClick={() => onAddIdentity(identity.fundCode)} />
+                                        {isActive && <span className="text-xs font-bold text-green-300">(Active)</span>}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
+                                    {identities.length > 1 && (
+                                        <button
+                                            onClick={() => onSetActiveIdentity(identity.id)}
+                                            disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
+                                            className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                            aria-label={`Set ${identity.fundName} as active identity`}
+                                        >
+                                            Set Active
+                                        </button>
+                                    )}
+                                     <button
+                                        onClick={() => onRemoveIdentity(identity.id)}
+                                        disabled={isActive}
+                                        className="bg-red-900/50 text-red-300 text-sm font-semibold p-2 rounded-md transition-colors duration-200 hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label={`Remove ${identity.fundName} identity`}
+                                    >
+                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+                {!isAddingIdentity ? (
+                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
+                        + Add New Identity
+                    </button>
+                ) : (
+                    <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+                        <h4 className="text-md font-semibold text-white mb-2">Enter New Fund Code</h4>
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="text"
+                                value={newFundCode}
+                                onChange={e => setNewFundCode(e.target.value)}
+                                className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
+                                placeholder="e.g., JHH"
+                                autoFocus
+                            />
+                             <button onClick={() => { setIsAddingIdentity(false); setNewFundCode(''); }} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">Cancel</button>
+                            <button onClick={handleAddIdentitySubmit} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">Verify</button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+      </section>
 
       <form onSubmit={handleSave} className="space-y-4">
         {/* 1a Contact Information */}

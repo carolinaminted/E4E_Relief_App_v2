@@ -1,5 +1,9 @@
 // --- Base Data Structures ---
 
+/**
+ * Represents a standard physical address.
+ * Used for both primary and mailing addresses in the UserProfile.
+ */
 export interface Address {
   country: string;
   street1: string;
@@ -9,18 +13,69 @@ export interface Address {
   zip: string;
 }
 
+/**
+ * Defines the possible states of an applicant's class verification process for a specific fund.
+ * - 'unknown': The initial state before any verification has been attempted.
+ * - 'pending': The verification process has been initiated but is not yet complete.
+ * - 'passed': The user has successfully been verified for the fund.
+ * - 'failed': The user failed the verification process.
+ */
 export type ClassVerificationStatus = 'unknown' | 'pending' | 'passed' | 'failed';
 
-export type EligibilityStatus = 'Active' | 'Inactive';
+/**
+ * Defines the user's eligibility status to apply for a grant from a specific fund.
+ * This is typically determined after a successful class verification.
+ */
+export type EligibilityStatus = 'Eligible' | 'Not Eligible';
 
+/**
+ * Represents the eligibility status for a specific user identity.
+ * (Currently not in active use, but available for more granular eligibility tracking).
+ */
 export interface IdentityEligibility {
   identityId: string;
   status: EligibilityStatus;
   updatedAt: string;
 }
 
+/**
+ * A unique identifier for a FundIdentity, typically a composite of user email and fund code.
+ */
+export type FundIdentityId = string;
+
+/**
+ * Represents a user's relationship with a specific relief fund.
+ * A single user (identified by `userEmail`) can have multiple identities if they are
+ * eligible for more than one fund.
+ */
+export interface FundIdentity {
+  id: FundIdentityId;
+  userEmail: string;
+  fundCode: string;
+  fundName: string;
+  cvType: 'Domain' | 'Roster' | 'SSO' | 'Manual'; // The method used for class verification.
+  eligibilityStatus: EligibilityStatus;
+  classVerificationStatus: ClassVerificationStatus;
+  createdAt: string;
+  lastUsedAt?: string; // Tracks the last time this identity was the active one.
+}
+/**
+ * A lightweight object representing the currently active fund identity for the logged-in user.
+ * This determines which fund's applications and data are displayed.
+ */
+export interface ActiveIdentity {
+  id: FundIdentityId;
+  fundCode: string;
+}
+
+
+/**
+ * The main data model for a user's profile information.
+ * This is a composite object that also reflects the state of their currently active FundIdentity
+ * (e.g., fundCode, fundName, eligibilityStatus).
+ */
 export interface UserProfile {
-  identityId: string;
+  identityId: string; // Corresponds to the user's primary identifier, usually their email.
   firstName: string;
   lastName:string;
   middleName?: string;
@@ -39,23 +94,29 @@ export interface UserProfile {
   ackPolicies: boolean;
   commConsent: boolean;
   infoCorrect: boolean;
-  fundCode: string;
-  fundName?: string;
-  classVerificationStatus: ClassVerificationStatus;
-  eligibilityStatus: EligibilityStatus;
+  fundCode: string; // The fund code of the *active* identity.
+  fundName?: string; // The fund name of the *active* identity.
+  classVerificationStatus: ClassVerificationStatus; // Status for the *active* identity.
+  eligibilityStatus: EligibilityStatus; // Status for the *active* identity.
   role: 'User' | 'Admin';
 }
 
+/**
+ * Represents a single expense item within a relief application.
+ */
 export interface Expense {
-  id: string;
+  id: string; // A unique identifier for the expense item.
   type: 'Basic Disaster Supplies' | 'Food Spoilage' | 'Meals' | '';
   amount: number | '';
-  fileName: string;
+  fileName: string; // Name of the uploaded receipt file, if any.
 }
 
+/**
+ * Contains all data related to the specific event for which a user is applying for relief.
+ */
 export interface EventData {
-  event: string;
-  otherEvent?: string;
+  event: string; // The primary type of event (e.g., 'Flood', 'Wildfire').
+  otherEvent?: string; // Details if 'My disaster is not listed' is selected.
   eventDate: string;
   evacuated: 'Yes' | 'No' | '';
   evacuatingFromPrimary?: 'Yes' | 'No' | '';
@@ -70,6 +131,10 @@ export interface EventData {
   expenses: Expense[];
 }
 
+/**
+ * A composite object representing the complete state of an application form during the submission process.
+ * This structure is passed between the different steps of the application flow.
+ */
 export interface ApplicationFormData {
   profileData: UserProfile;
   eventData: EventData;
@@ -79,20 +144,28 @@ export interface ApplicationFormData {
   };
 }
 
+/**
+ * Represents a submitted application record, including the decision and resulting grant balances.
+ * This interface extends EventData with metadata about the submission and decision.
+ */
 export interface Application extends EventData {
   id: string;
-  profileSnapshot: UserProfile;
+  profileSnapshot: UserProfile; // A snapshot of the user's profile at the time of submission.
   submittedDate: string;
   status: 'Submitted' | 'Awarded' | 'Declined';
-  reasons: string[];
+  reasons: string[]; // Justification for the decision, can be from the rules engine or AI.
   decisionedDate: string;
   twelveMonthGrantRemaining: number;
   lifetimeGrantRemaining: number;
   shareStory: boolean;
   receiveAdditionalInfo: boolean;
-  submittedBy?: string;
+  submittedBy?: string; // Email of the user who submitted (can be applicant or admin proxy).
 }
 
+/**
+ * Represents the output of the eligibility decision engine (local or AI-assisted).
+ * This provides a structured breakdown of the decision-making process for auditing and review.
+ */
 export interface EligibilityDecision {
   decision: 'Approved' | 'Denied' | 'Review';
   reasons: string[];
@@ -111,12 +184,18 @@ export interface EligibilityDecision {
 
 // --- Chat-related Types ---
 
+/**
+ * Defines the sender of a message in the chat interface.
+ */
 export enum MessageRole {
   USER = 'user',
   MODEL = 'model',
   ERROR = 'error',
 }
 
+/**
+ * Represents a single message within a chat conversation.
+ */
 export interface ChatMessage {
   role: MessageRole;
   content: string;
@@ -124,6 +203,9 @@ export interface ChatMessage {
 
 // --- Token Usage Analytics Types ---
 
+/**
+ * Defines the cost per 1000 tokens for input and output for a given Gemini model.
+ */
 export interface ModelPricing {
   [key: string]: {
     input: number; // Price per 1000 tokens
@@ -131,6 +213,10 @@ export interface ModelPricing {
   };
 }
 
+/**
+ * Represents a single logged event of a Gemini API call.
+ * This is the raw data used for generating analytics.
+ */
 export interface TokenEvent {
   id: string;
   sessionId: string;
@@ -145,6 +231,9 @@ export interface TokenEvent {
   account: string;
 }
 
+/**
+ * Represents a single row in the aggregated token usage table displayed on the analytics dashboard.
+ */
 export interface TokenUsageTableRow {
   user: string;
   session: string;
@@ -156,6 +245,9 @@ export interface TokenUsageTableRow {
   cost: number;
 }
 
+/**
+ * Represents the aggregated data for the session with the highest token usage.
+ */
 export interface TopSessionData {
   sessionId: string;
   inputTokens: number;
@@ -164,16 +256,25 @@ export interface TopSessionData {
   totalTokens: number;
 }
 
+/**
+ * Represents a single data point for a time-series chart (e.g., usage over the last hour).
+ */
 export interface LastHourUsageDataPoint {
     timestamp: string;
     totalTokens: number;
 }
 
+/**
+ * Represents aggregated daily token usage for charts.
+ */
 export interface DailyUsageData {
     date: string;
     totalTokens: number;
 }
 
+/**
+ * Defines the available filters for the token usage analytics dashboard.
+ */
 export interface TokenUsageFilters {
   account: string;
   dateRange: {
