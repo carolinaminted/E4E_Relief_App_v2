@@ -1,25 +1,33 @@
 /**
- * Formats a phone number string as the user types.
- * It strips invalid characters, enforces a 16-digit limit,
- * and applies US-style formatting. International numbers
- * are returned as a string of digits with a leading '+'.
+ * Formats a phone number string as the user types, applying US-style formatting.
+ * It's designed to be used in an `onChange` handler of an input field.
+ *
+ * This function performs the following steps:
+ * 1.  Checks if the number starts with '+', treating it as an international number.
+ * 2.  Strips all non-digit characters from the input.
+ * 3.  Enforces a maximum limit of 16 digits to prevent excessively long inputs.
+ * 4.  If international, it returns the '+' followed by the cleaned digits (e.g., `+447...`).
+ * 5.  If not international, it applies US-style formatting `(XXX) XXX-XXXX` as the user types.
+ *
+ * @param value The raw string value from the input field.
+ * @returns The formatted phone number string.
  */
 export function formatPhoneNumber(value: string): string {
     if (!value) {
         return '';
     }
 
-    // 1. Check for international format and clean the input to get only digits.
+    // Check for international format and clean the input to get only digits.
     const isInternational = value.trim().startsWith('+');
     let digits = value.replace(/[^\d]/g, '');
 
-    // 2. Enforce a 16-digit limit.
+    // Enforce a 16-digit limit.
     const maxDigits = 16;
     if (digits.length > maxDigits) {
         digits = digits.slice(0, maxDigits);
     }
 
-    // 3. Apply formatting based on whether it's international or US-style.
+    // Apply formatting based on whether it's international or US-style.
     if (isInternational) {
         // For international numbers, just return the '+' and the cleaned digits.
         return `+${digits}`;

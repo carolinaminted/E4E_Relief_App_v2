@@ -8,6 +8,15 @@ interface FundPortalPageProps {
   user: UserProfile;
 }
 
+// --- Reusable Tile Data Structure ---
+interface PortalTile {
+  key: Page;
+  title: string;
+  onClick: () => void;
+  icon: React.ReactNode;
+}
+
+
 // --- Icons ---
 const IconDefs: React.FC = () => (
   <svg width="0" height="0" style={{ position: 'absolute' }}>
@@ -53,7 +62,12 @@ const TokenUsageIcon: React.FC = () => (
 
 
 const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
-  const portalTiles = [
+  /**
+   * Defines the navigation tiles for the admin portal.
+   * Storing this in an array makes it easy to manage and render the grid,
+   * especially for handling layouts with an odd number of items.
+   */
+  const portalTiles: PortalTile[] = [
     {
       key: 'dashboard',
       title: 'Dashboard',
@@ -67,7 +81,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
       icon: <TicketingIcon />,
     },
     {
-      key: 'details',
+      key: 'programDetails',
       title: 'Details',
       onClick: () => navigate('programDetails'),
       icon: <ProgramDetailsIcon />,
@@ -79,7 +93,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
       icon: <ProxyIcon />,
     },
     {
-      key: 'tokens',
+      key: 'tokenUsage',
       title: 'Tokens',
       onClick: () => navigate('tokenUsage'),
       icon: <TokenUsageIcon />,
@@ -106,6 +120,9 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
         <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full mt-12 max-w-4xl mx-auto">
           <IconDefs />
           {portalTiles.map((tile, index) => {
+            // This logic checks if the current tile is the last one in the list AND if the total number of tiles is odd.
+            // If so, it applies a `col-span-2` class to make the last tile span the full width of the grid,
+            // creating a more balanced and visually appealing layout.
             const isLastAndOdd = (index === portalTiles.length - 1) && (portalTiles.length % 2 !== 0);
             const colSpanClass = isLastAndOdd ? 'col-span-2' : '';
 
