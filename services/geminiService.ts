@@ -287,7 +287,7 @@ export function evaluateApplicationEligibility(
       evacuated: eventData.evacuated || '',
       powerLossDays: normalizedPowerLossDays
     },
-    decisionedDate: today.toISOString().split('T')[0]
+    decisionedDate: today.toISOString()
   };
 }
 

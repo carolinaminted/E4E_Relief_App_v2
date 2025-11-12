@@ -6,7 +6,8 @@ import type { Page } from '../types';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
-  isApplyEnabled: boolean;
+  isVerifiedAndEligible: boolean;
+  canApply: boolean;
   fundName?: string;
   userRole: 'User' | 'Admin';
 }
@@ -23,7 +24,7 @@ interface Tile {
   colSpan?: string;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName, userRole }) => {
+const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, canApply, fundName, userRole }) => {
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
     const tiles: Tile[] = [
@@ -32,8 +33,8 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
             title: 'Apply', 
             icon: <ApplyIcon />, 
             onClick: () => navigate('apply'),
-            disabled: !isApplyEnabled,
-            disabledTooltip: "Class Verification required to access applications."
+            disabled: !canApply,
+            disabledTooltip: !isVerifiedAndEligible ? "Class Verification required to access applications." : "Your grant limits have been reached."
         },
         { key: 'profile', title: 'Profile', icon: <ProfileIcon />, onClick: () => navigate('profile') },
         { key: 'support', title: 'Support', icon: <SupportIcon />, onClick: () => navigate('support') },

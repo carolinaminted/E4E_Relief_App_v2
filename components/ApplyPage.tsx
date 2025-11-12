@@ -13,6 +13,7 @@ interface ApplyPageProps {
   userProfile: UserProfile;
   applicationDraft: Partial<ApplicationFormData> | null;
   mainRef: React.RefObject<HTMLElement>;
+  canApply: boolean;
 }
 
 const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
@@ -50,7 +51,7 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
     );
 };
 
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply }) => {
   const [step, setStep] = useState(1);
   
   const [formData, setFormData] = useState<ApplicationFormData>(() => {
@@ -206,6 +207,19 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
             navigate('home');
             return null;
       }
+  }
+
+  // New guard clause to prevent application if grant limits are reached
+  if (!canApply && userProfile.eligibilityStatus === 'Eligible') {
+    return (
+      <div className="p-4 md:p-8 max-w-4xl mx-auto w-full text-center flex-1 flex flex-col items-center justify-center">
+        <div className="bg-[#004b8d]/50 p-10 rounded-lg shadow-lg border border-[#005ca0]">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Grant Limits Reached</h1>
+            <p className="text-white mt-4 max-w-md">You are not eligible to apply at this time because your 12-month or lifetime grant limits have been reached.</p>
+            <p className="text-white mt-4">Please check your <button onClick={() => navigate('profile')} className="font-semibold text-[#ff8400] hover:underline">Profile</button> for more details.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

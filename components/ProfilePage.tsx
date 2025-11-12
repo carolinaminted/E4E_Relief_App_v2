@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
+import type { Fund } from '../data/fundData';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -19,6 +20,7 @@ interface ProfilePageProps {
   onSetActiveIdentity: (identityId: string) => void;
   onAddIdentity: (fundCode: string) => void;
   onRemoveIdentity: (identityId: string) => void;
+  activeFund: Fund | null;
 }
 
 const statusStyles: Record<Application['status'], string> = {
@@ -79,7 +81,7 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 
 type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity, activeFund }) => {
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
@@ -91,8 +93,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
       return {
-        twelveMonthRemaining: 10000,
-        lifetimeRemaining: 50000,
+        twelveMonthRemaining: activeFund?.limits.twelveMonthMax ?? 0,
+        lifetimeRemaining: activeFund?.limits.lifetimeMax ?? 0,
       };
     }
 
@@ -103,7 +105,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
       twelveMonthRemaining: latestApplication.twelveMonthGrantRemaining,
       lifetimeRemaining: latestApplication.lifetimeGrantRemaining,
     };
-  }, [applications]);
+  }, [applications, activeFund]);
 
   // Create a reversed list for display so newest applications appear first
   const sortedApplicationsForDisplay = useMemo(() => {
@@ -301,7 +303,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
-      <div className="relative flex justify-center items-center mb-8">
+      <div className="relative flex justify-center items-center mb-8 md:hidden">
         <div className="text-center">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Profile
@@ -346,7 +348,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
+                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleDateString('en-CA')}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>

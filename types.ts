@@ -1,4 +1,5 @@
 // --- Base Data Structures ---
+import type { Fund } from './data/fundData';
 
 /**
  * Represents a standard physical address.

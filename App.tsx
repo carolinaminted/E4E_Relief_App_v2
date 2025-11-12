@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts.
@@ -194,10 +195,24 @@ function App() {
     return [];
   }, [currentUser, applications, activeIdentity]);
   
-  const isApplyEnabled = useMemo(() => {
+  const isVerifiedAndEligible = useMemo(() => {
     if (!currentUser) return false;
     return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Eligible';
   }, [currentUser]);
+
+  const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
+      const latestApp = userApplications.length > 0 ? userApplications[userApplications.length - 1] : null;
+      
+      const initialTwelveMonthMax = activeFund?.limits?.twelveMonthMax ?? 0;
+      const initialLifetimeMax = activeFund?.limits?.lifetimeMax ?? 0;
+
+      return {
+          twelveMonthRemaining: latestApp ? latestApp.twelveMonthGrantRemaining : initialTwelveMonthMax,
+          lifetimeRemaining: latestApp ? latestApp.lifetimeGrantRemaining : initialLifetimeMax,
+      };
+  }, [userApplications, activeFund]);
+
+  const canApply = isVerifiedAndEligible && twelveMonthRemaining > 0 && lifetimeRemaining > 0;
 
   useEffect(() => {
     if (mainRef.current) {
@@ -240,13 +255,13 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: GlobalPage) => {
-    if (targetPage === 'apply' && !isApplyEnabled) {
+    if (targetPage === 'apply' && !isVerifiedAndEligible) {
         console.log("Gating 'apply' page. User not verified or not eligible.");
         setPage('classVerification');
     } else {
         setPage(targetPage);
     }
-  }, [isApplyEnabled]);
+  }, [isVerifiedAndEligible]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
@@ -379,7 +394,7 @@ function App() {
       uid: currentUser.uid,
       profileSnapshot: appFormData.profileData,
       ...appFormData.eventData,
-      submittedDate: new Date().toLocaleDateString('en-CA'),
+      submittedDate: new Date().toISOString(),
       status: getStatusFromDecision(finalDecision.decision),
       reasons: finalDecision.reasons,
       decisionedDate: finalDecision.decisionedDate,
@@ -475,7 +490,7 @@ function App() {
       uid: applicantProfile.uid,
       profileSnapshot: appFormData.profileData,
       ...appFormData.eventData,
-      submittedDate: new Date().toLocaleDateString('en-CA'),
+      submittedDate: new Date().toISOString(),
       status: getStatusFromDecision(finalDecision.decision),
       reasons: finalDecision.reasons,
       decisionedDate: finalDecision.decisionedDate,
@@ -559,7 +574,7 @@ function App() {
       case 'classVerification':
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
-        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} />;
+        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} />;
       case 'profile':
         return <ProfilePage 
                     navigate={navigate} 
@@ -571,13 +586,14 @@ function App() {
                     onSetActiveIdentity={handleSetActiveIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
+                    activeFund={activeFund}
                 />;
       case 'support':
         return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -605,7 +621,7 @@ function App() {
                 />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
     }
   };
   
@@ -629,7 +645,7 @@ function App() {
         userRole={currentUser.role}
         userName={currentUser.firstName}
         onLogout={handleLogout}
-        isApplyEnabled={isApplyEnabled}
+        canApply={canApply}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -639,6 +655,25 @@ function App() {
             onLogout={handleLogout}
         />
         <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
+          <div className="hidden md:block">
+            {page === 'profile' && (
+               <div className="relative flex justify-center items-center my-8">
+                  <div className="text-center">
+                      <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                        Profile
+                      </h1>
+                      {activeIdentity && (
+                        <div className="mt-2 flex flex-col items-center gap-2">
+                          <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
+                           <span className="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors bg-green-800/50 text-green-300">
+                              Eligible to apply
+                          </span>
+                        </div>
+                      )}
+                  </div>
+              </div>
+            )}
+          </div>
           {renderPage()}
           {!pagesWithoutFooter.includes(page) && <Footer />}
         </main>
@@ -647,7 +682,7 @@ function App() {
             navigate={navigate}
             currentPage={page}
             userRole={currentUser.role}
-            isApplyEnabled={isApplyEnabled}
+            canApply={canApply}
         />
         
         {/* FIX: Pass setIsChatbotOpen to the setIsOpen prop. */}

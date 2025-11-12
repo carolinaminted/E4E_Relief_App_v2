@@ -9,7 +9,7 @@ interface SideNavBarProps {
   userRole: 'User' | 'Admin';
   userName: string;
   onLogout: () => void;
-  isApplyEnabled: boolean;
+  canApply: boolean;
 }
 
 interface NavItemType {
@@ -33,11 +33,11 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, isApplyEnabled }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply }) => {
   const baseNavItems: NavItemType[] = [
     { page: 'home', label: 'Home', icon: <HomeIcon className="h-6 w-6" /> },
     { page: 'profile', label: 'Profile', icon: <ProfileIcon className="h-6 w-6" /> },
-    { page: 'apply', label: 'Apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !isApplyEnabled },
+    { page: 'apply', label: 'Apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
     { page: 'support', label: 'Support', icon: <SupportIcon className="h-6 w-6" /> },
     { page: 'donate', label: 'Donate', icon: <DonateIcon className="h-6 w-6" /> },
   ];
