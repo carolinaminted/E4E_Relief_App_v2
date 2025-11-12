@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { UserProfile } from '../types';
 import { verifyRoster, linkSSO } from '../services/verificationService';
 import { FormInput } from './FormControls';
-import { getFundByCode, CVType } from '../data/fundData';
+import { fundsRepo } from '../services/firestoreRepo';
+import type { CVType } from '../data/fundData';
 
 type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'classVerification';
 
@@ -61,7 +62,7 @@ const DomainVerificationView: React.FC<DomainVerificationViewProps> = ({ user, f
         setIsLoading(true);
         setError('');
         try {
-            const fund = getFundByCode(fundCode);
+            const fund = await fundsRepo.getFund(fundCode);
             if (!fund || !fund.domainConfig) {
                 const msg = "No domain configuration found for this fund.";
                 setError(msg);
@@ -228,11 +229,15 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
     const fundCodeToVerify = verifyingFundCode || user.fundCode;
 
     useEffect(() => {
-        const fund = getFundByCode(fundCodeToVerify);
-        if (fund) {
-            setCvType(fund.cvType);
-        }
-        setIsLoading(false);
+        const fetchFundData = async () => {
+            setIsLoading(true);
+            const fund = await fundsRepo.getFund(fundCodeToVerify);
+            if (fund) {
+                setCvType(fund.cvType);
+            }
+            setIsLoading(false);
+        };
+        fetchFundData();
     }, [fundCodeToVerify]);
 
     const handleVerificationFailure = () => {

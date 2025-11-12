@@ -1,11 +1,13 @@
+
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import type { User, IdTokenResult } from 'firebase/auth';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
-// FIX: Corrected the import path for ApplicationFormData. It should be imported from './types' instead of a component file.
 import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
-import { getFundByCode } from './data/fundData';
-import ClassVerificationPage from './components/ClassVerificationPage';
+import { authClient } from './services/firebaseAuthClient';
+import { usersRepo, identitiesRepo, applicationsRepo, fundsRepo } from './services/firestoreRepo';
 
 // Page Components
 import LoginPage from './components/LoginPage';
@@ -26,244 +28,136 @@ import DashboardPage from './components/DashboardPage';
 import TicketingPage from './components/TicketingPage';
 import ProgramDetailsPage from './components/ProgramDetailsPage';
 import ProxyApplyPage from './components/ProxyPage';
-
+import ClassVerificationPage from './components/ClassVerificationPage';
+import LoadingOverlay from './components/LoadingOverlay';
 
 type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
-// --- MOCK DATABASE ---
-const initialUsers: Record<string, UserProfile & { passwordHash: string }> = {
-  'user@example.com': {
-    // Identity
-    identityId: 'user@example.com',
-    // 1a
-    firstName: 'Pikachu',
-    lastName: 'Raichu',
-    email: 'user@example.com',
-    mobileNumber: '555-123-4567',
-    // 1b
-    primaryAddress: {
-      country: 'United States',
-      street1: '123 Main St',
-      city: 'Anytown',
-      state: 'CA',
-      zip: '12345',
-    },
-    // 1c
-    employmentStartDate: '2020-05-15',
-    eligibilityType: 'Active Full Time',
-    householdIncome: 75000,
-    householdSize: 4,
-    homeowner: 'Yes',
-    preferredLanguage: 'English',
-    // 1d
-    isMailingAddressSame: true,
-    // 1e
-    ackPolicies: true,
-    commConsent: true,
-    infoCorrect: true,
-    // Auth
-    passwordHash: 'password123', // In a real app, this would be a hash
-    fundCode: 'DOM',
-    fundName: 'Blastoise Relief Fund',
-    classVerificationStatus: 'passed',
-    eligibilityStatus: 'Eligible',
-    role: 'User',
-  },
-  'admin@example.com': {
-    identityId: 'admin@example.com',
-    firstName: 'Admin',
-    lastName: 'User',
-    email: 'admin@example.com',
-    mobileNumber: '555-987-6543',
-    primaryAddress: {
-      country: 'United States',
-      street1: '456 Admin Ave',
-      city: 'Corpville',
-      state: 'NY',
-      zip: '54321',
-    },
-    employmentStartDate: '2018-01-01',
-    eligibilityType: 'Active Full Time',
-    householdIncome: 120000,
-    householdSize: 2,
-    homeowner: 'Yes',
-    preferredLanguage: 'English',
-    isMailingAddressSame: true,
-    ackPolicies: true,
-    commConsent: true,
-    infoCorrect: true,
-    passwordHash: 'admin123',
-    fundCode: 'ADMIN',
-    fundName: 'Admin Relief Fund',
-    classVerificationStatus: 'passed',
-    eligibilityStatus: 'Eligible',
-    role: 'Admin',
-  },
+type AuthState = {
+    status: 'loading' | 'signedIn' | 'signedOut';
+    user: User | null;
+    profile: UserProfile | null;
+    claims: { admin?: boolean };
 };
-
-const initialIdentitiesData: FundIdentity[] = [
-    {
-        id: 'user@example.com-DOM',
-        userEmail: 'user@example.com',
-        fundCode: 'DOM',
-        fundName: 'Blastoise Relief Fund',
-        cvType: 'Domain',
-        eligibilityStatus: 'Eligible',
-        classVerificationStatus: 'passed',
-        createdAt: '2023-01-01T12:00:00Z',
-        lastUsedAt: new Date().toISOString(),
-    },
-    {
-        id: 'user@example.com-ROST',
-        userEmail: 'user@example.com',
-        fundCode: 'ROST',
-        fundName: 'Venusaur Relief Fund',
-        cvType: 'Roster',
-        eligibilityStatus: 'Not Eligible',
-        classVerificationStatus: 'pending',
-        createdAt: '2024-05-10T10:00:00Z',
-    },
-    {
-        id: 'admin@example.com-ADMIN',
-        userEmail: 'admin@example.com',
-        fundCode: 'ADMIN',
-        fundName: 'Admin Relief Fund',
-        cvType: 'Domain',
-        eligibilityStatus: 'Eligible',
-        classVerificationStatus: 'passed',
-        createdAt: '2022-01-01T12:00:00Z',
-        lastUsedAt: new Date().toISOString(),
-    }
-];
-
-
-const initialApplications: Record<string, Application[]> = {
-  'user@example.com': [
-    {
-      id: 'APP-1001',
-      profileSnapshot: initialUsers['user@example.com'], // Snapshot of the user profile
-      event: 'Flood',
-      eventDate: '2023-08-10',
-      requestedAmount: 2500,
-      // FIX: Add missing 'expenses' property to satisfy the Application type.
-      expenses: [],
-      // FIX: Added missing 'evacuated' and 'powerLoss' properties to satisfy the Application type.
-      evacuated: 'No',
-      powerLoss: 'Yes',
-      submittedDate: '2023-08-12',
-      status: 'Awarded',
-      reasons: ["Application meets all automatic approval criteria."],
-      decisionedDate: '2023-08-12',
-      twelveMonthGrantRemaining: 7500,
-      lifetimeGrantRemaining: 47500,
-      shareStory: true,
-      receiveAdditionalInfo: false,
-      submittedBy: 'user@example.com',
-    },
-     {
-      id: 'APP-1002',
-      profileSnapshot: { ...initialUsers['user@example.com'], fundCode: 'ROST', fundName: 'Venusaur Relief Fund' },
-      event: 'Crime',
-      eventDate: '2024-03-20',
-      requestedAmount: 1000,
-      expenses: [],
-      evacuated: 'No',
-      powerLoss: 'No',
-      submittedDate: '2024-03-22',
-      status: 'Declined',
-      reasons: ["Requested amount exceeds the remaining 12-month limit of $500.00."],
-      decisionedDate: '2024-03-22',
-      twelveMonthGrantRemaining: 500,
-      lifetimeGrantRemaining: 24000,
-      shareStory: false,
-      receiveAdditionalInfo: true,
-      submittedBy: 'user@example.com',
-    },
-  ],
-};
-
-const initialProxyApplications: Application[] = [
-    {
-      id: 'PROXY-001',
-      profileSnapshot: initialUsers['user@example.com'],
-      event: 'Wildfire',
-      eventDate: '2024-06-15',
-      requestedAmount: 1500,
-      expenses: [],
-      evacuated: 'Yes',
-      powerLoss: 'No',
-      submittedDate: '2024-06-18',
-      status: 'Submitted',
-      reasons: ["Application is under review."],
-      decisionedDate: '2024-06-18',
-      twelveMonthGrantRemaining: 7500,
-      lifetimeGrantRemaining: 47500,
-      shareStory: false,
-      receiveAdditionalInfo: true,
-      submittedBy: 'admin@example.com',
-    }
-];
-
-const createNewUserProfile = (
-    firstName: string,
-    lastName: string,
-    email: string,
-    fundCode: string,
-): UserProfile => {
-    const fund = getFundByCode(fundCode);
-    return {
-        identityId: email,
-        firstName,
-        lastName,
-        email,
-        mobileNumber: '',
-        primaryAddress: { country: '', street1: '', city: '', state: '', zip: '' },
-        employmentStartDate: '',
-        eligibilityType: '',
-        householdIncome: '',
-        householdSize: '',
-        homeowner: '',
-        isMailingAddressSame: null,
-        ackPolicies: false,
-        commConsent: false,
-        infoCorrect: false,
-        fundCode,
-        fundName: fund?.name || 'Relief Fund',
-        classVerificationStatus: 'pending',
-        eligibilityStatus: 'Not Eligible',
-        role: 'User',
-    };
-};
-
-
-// --- END MOCK DATABASE ---
 
 function App() {
   const [page, setPage] = useState<Page>('login');
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [users, setUsers] = useState(initialUsers);
-  const [applications, setApplications] = useState(initialApplications);
-  const [proxyApplications, setProxyApplications] = useState(initialProxyApplications);
+  const [authState, setAuthState] = useState<AuthState>({ status: 'loading', user: null, profile: null, claims: {} });
   
-  const [allIdentities, setAllIdentities] = useState<FundIdentity[]>(initialIdentitiesData);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [proxyApplications, setProxyApplications] = useState<Application[]>([]);
+  const [allIdentities, setAllIdentities] = useState<FundIdentity[]>([]);
   const [activeIdentity, setActiveIdentity] = useState<ActiveIdentity | null>(null);
+  
   const [verifyingFundCode, setVerifyingFundCode] = useState<string | null>(null);
-
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
-  const [autofillTrigger, setAutofillTrigger] = useState(0);
-  const [adminAutofillTrigger, setAdminAutofillTrigger] = useState(0);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
+  useEffect(() => {
+    let profileUnsubscribe: (() => void) | null = null;
+
+    const authUnsubscribe = authClient.onAuthStateChanged((user, token) => {
+      // Clean up any existing profile listener when auth state changes.
+      if (profileUnsubscribe) {
+        profileUnsubscribe();
+        profileUnsubscribe = null;
+      }
+
+      if (user && token) {
+        const claims = (token.claims as { admin?: boolean }) || {};
+        
+        // Set a listener on the user's profile document.
+        profileUnsubscribe = usersRepo.listen(user.uid, async (profile) => {
+          if (profile) {
+            // --- Profile found, hydrate the full application state ---
+            const identities = await identitiesRepo.getForUser(user.uid);
+            const userApps = await applicationsRepo.getForUser(user.uid);
+
+            let activeId: FundIdentity | undefined = undefined;
+            if (identities.length > 0) {
+              activeId = identities.find(id => id.id === profile.activeIdentityId) ||
+                         [...identities].sort((a, b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
+            }
+
+            let hydratedProfile: UserProfile;
+            if (activeId) {
+              hydratedProfile = {
+                ...profile,
+                fundCode: activeId.fundCode,
+                fundName: activeId.fundName,
+                classVerificationStatus: activeId.classVerificationStatus,
+                eligibilityStatus: activeId.eligibilityStatus,
+              };
+              setActiveIdentity({ id: activeId.id, fundCode: activeId.fundCode });
+            } else {
+              // User has a profile but no identities yet.
+              hydratedProfile = profile;
+            }
+
+            setAllIdentities(identities);
+            setApplications(userApps);
+            setAuthState({ status: 'signedIn', user, profile: hydratedProfile, claims });
+            initTokenTracker(hydratedProfile);
+
+            if (claims.admin) {
+              const proxyApps = await applicationsRepo.getProxySubmissions(user.uid);
+              setProxyApplications(proxyApps);
+            }
+
+            // Navigation logic based on the hydrated profile state
+            if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
+              setPage('classVerification');
+            } else {
+              // Only navigate to home if not already on a specific page (prevents overriding navigation)
+              setPage(prevPage => (prevPage === 'login' || prevPage === 'register' || prevPage === 'classVerification' ? 'home' : prevPage));
+            }
+          } else {
+            // --- Profile not found ---
+            const creationTime = new Date(user.metadata.creationTime || 0).getTime();
+            // Check if the user was created within the last 10 seconds.
+            const isNewUser = (Date.now() - creationTime) < 10000;
+
+            if (isNewUser) {
+              // This is a new user registration. The profile document is being created.
+              // We do nothing and wait. The listener will fire again when the document appears.
+              // The UI will show the main loading overlay because authState.profile is null.
+              setAuthState({ status: 'loading', user, profile: null, claims });
+            } else {
+              // This is an existing user whose profile document is missing. This is an error state.
+              console.error("User profile not found for an existing user. Signing out.");
+              authClient.signOut();
+            }
+          }
+        });
+      } else {
+        // --- User is signed out ---
+        setAuthState({ status: 'signedOut', user: null, profile: null, claims: {} });
+        setCurrentUser(null);
+        setPage('login');
+        resetTokenTracker();
+      }
+    });
+
+    return () => {
+      authUnsubscribe();
+      if (profileUnsubscribe) {
+        profileUnsubscribe();
+      }
+    };
+  }, []);
+
+  const currentUser = authState.profile;
+
   const userIdentities = useMemo(() => {
     if (!currentUser) return [];
-    return allIdentities.filter(id => id.userEmail === currentUser.email);
+    return allIdentities.filter(id => id.uid === currentUser.uid);
   }, [currentUser, allIdentities]);
 
   const userApplications = useMemo(() => {
     if (currentUser && activeIdentity) {
-      return applications[currentUser.email]?.filter(app => app.profileSnapshot.fundCode === activeIdentity.fundCode) || [];
+      return applications.filter(app => app.profileSnapshot.fundCode === activeIdentity.fundCode) || [];
     }
     return [];
   }, [currentUser, applications, activeIdentity]);
@@ -279,92 +173,53 @@ function App() {
     }
   }, [page]);
 
-  const handleSetActiveIdentity = useCallback((identityId: string) => {
+  const setCurrentUser = (profile: UserProfile | null) => {
+      setAuthState(prev => ({...prev, profile}));
+  }
+
+  const handleSetActiveIdentity = useCallback(async (identityId: string) => {
     if (!currentUser) return;
 
     const identityToActivate = allIdentities.find(i => i.id === identityId);
     if (identityToActivate && identityToActivate.eligibilityStatus === 'Eligible') {
         console.log(`[Telemetry] track('IdentitySwitch', { from: ${activeIdentity?.fundCode}, to: ${identityToActivate.fundCode} })`);
         
+        await identitiesRepo.update(identityId, { lastUsedAt: new Date().toISOString() });
+        await usersRepo.update(currentUser.uid, { activeIdentityId: identityId });
+
         setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
 
-        // Update current user composite object
-        setCurrentUser(prevUser => {
-            if (!prevUser) return null;
-            return {
-                ...prevUser,
-                fundCode: identityToActivate.fundCode,
-                fundName: identityToActivate.fundName,
-                classVerificationStatus: identityToActivate.classVerificationStatus,
-                eligibilityStatus: identityToActivate.eligibilityStatus,
-            };
-        });
-
-        // Update last used timestamp
-        setAllIdentities(prev => prev.map(id => id.id === identityId ? { ...id, lastUsedAt: new Date().toISOString() } : id));
-    }
-  }, [currentUser, allIdentities, activeIdentity]);
-
-  const handleLogin = useCallback((email: string, password: string): boolean => {
-    const user = users[email];
-    if (user && user.passwordHash === password) {
-      const { passwordHash, ...profile } = user;
-      
-      const userIdentities = allIdentities.filter(id => id.userEmail === email);
-      const identityToActivate = userIdentities.sort((a,b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime())[0];
-      
-      if (identityToActivate) {
-          const hydratedProfile: UserProfile = {
-            ...profile,
+        setCurrentUser({
+            ...currentUser,
             fundCode: identityToActivate.fundCode,
             fundName: identityToActivate.fundName,
             classVerificationStatus: identityToActivate.classVerificationStatus,
             eligibilityStatus: identityToActivate.eligibilityStatus,
-          };
-          setCurrentUser(hydratedProfile);
-          setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
-          initTokenTracker(hydratedProfile);
+        });
+        
+        // Refresh identities list to reflect lastUsedAt change for sorting
+        const updatedIdentities = await identitiesRepo.getForUser(currentUser.uid);
+        setAllIdentities(updatedIdentities);
+    }
+  }, [currentUser, allIdentities, activeIdentity]);
+  
+  const handleLogout = () => {
+    authClient.signOut();
+  };
+  
+  const navigate = useCallback((targetPage: Page) => {
+    if (targetPage === 'apply' && !isApplyEnabled) {
+        console.log("Gating 'apply' page. User not verified or not eligible.");
+        setPage('classVerification');
+    } else {
+        setPage(targetPage);
+    }
+  }, [isApplyEnabled]);
 
-          if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
-            setPage('classVerification');
-          } else {
-            setPage('home');
-          }
-      } else {
-          // No identities found, treat as fresh registration
-          setCurrentUser(profile);
-          initTokenTracker(profile);
-          setPage('classVerification');
-      }
-      
-      return true;
-    }
-    return false;
-  }, [users, allIdentities]);
-  
-  const handleRegister = useCallback((firstName: string, lastName: string, email: string, password: string, fundCode: string): boolean => {
-    if (users[email]) {
-      return false; // User already exists
-    }
-    const newUserProfile = createNewUserProfile(firstName, lastName, email, fundCode);
-    const newUser = {
-      ...newUserProfile,
-      passwordHash: password,
-    };
-    setUsers(prev => ({ ...prev, [email]: newUser }));
-    setApplications(prev => ({ ...prev, [email]: [] }));
-    
-    setCurrentUser(newUserProfile);
-    initTokenTracker(newUserProfile);
-    setVerifyingFundCode(fundCode); // Set context for verification
-    setPage('classVerification');
-    return true;
-  }, [users]);
-  
-  const handleStartAddIdentity = useCallback((fundCode: string) => {
+  const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
     
-    const identity = allIdentities.find(id => id.userEmail === currentUser.email && id.fundCode === fundCode);
+    const identity = allIdentities.find(id => id.uid === currentUser.uid && id.fundCode === fundCode);
     if (identity && identity.eligibilityStatus === 'Eligible') {
         alert(`Your identity for fund code ${fundCode} is already eligible.`);
         return;
@@ -380,7 +235,7 @@ function App() {
     setPage('classVerification');
   }, [currentUser, allIdentities]);
 
-  const handleRemoveIdentity = useCallback((identityId: string) => {
+  const handleRemoveIdentity = useCallback(async (identityId: string) => {
     if (!currentUser) return;
     const identityToRemove = allIdentities.find(id => id.id === identityId);
     if (!identityToRemove) return;
@@ -392,34 +247,17 @@ function App() {
 
     if (window.confirm(`Are you sure you want to remove the identity for ${identityToRemove.fundName}?`)) {
         console.log(`[Telemetry] track('IdentityRemove', { fundCode: ${identityToRemove.fundCode} })`);
+        await identitiesRepo.remove(identityId);
         setAllIdentities(prev => prev.filter(id => id.id !== identityId));
     }
   }, [currentUser, allIdentities, activeIdentity]);
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setActiveIdentity(null);
-    setVerifyingFundCode(null);
-    resetTokenTracker();
-    setPage('login');
-  };
-  
-  const navigate = useCallback((targetPage: Page) => {
-    if (targetPage === 'apply' && !isApplyEnabled) {
-        console.log("Gating 'apply' page. User not verified or not eligible.");
-        setPage('classVerification');
-    } else {
-        setPage(targetPage);
-    }
-  }, [isApplyEnabled]);
-
-  const handleVerificationSuccess = useCallback(() => {
+  const handleVerificationSuccess = useCallback(async () => {
     if (!currentUser) return;
 
-    const userExistingIdentities = allIdentities.filter(id => id.userEmail === currentUser.email);
-    const isInitialRegistration = userExistingIdentities.length === 0;
+    const userExistingIdentities = allIdentities;
     const fundCodeToVerify = verifyingFundCode || currentUser.fundCode;
-    const fund = getFundByCode(fundCodeToVerify);
+    const fund = await fundsRepo.getFund(fundCodeToVerify);
     
     if (!fund) {
         console.error("Verification successful but could not find fund config for", fundCodeToVerify);
@@ -428,34 +266,25 @@ function App() {
         return;
     }
     
-    const identityIdToUpdate = `${currentUser.email}-${fund.code}`;
+    const identityIdToUpdate = `${currentUser.uid}-${fund.code}`;
     const existingIdentity = userExistingIdentities.find(id => id.id === identityIdToUpdate);
+    let newActiveIdentity: FundIdentity;
 
-    if (existingIdentity) { // UPDATE existing identity (re-verification)
+    const updates = { 
+        eligibilityStatus: 'Eligible' as EligibilityStatus, 
+        classVerificationStatus: 'passed' as ClassVerificationStatus,
+        lastUsedAt: new Date().toISOString()
+    };
+
+    if (existingIdentity) {
         console.log(`[Telemetry] track('IdentityReverified', { fundCode: ${fund.code} })`);
-
-        const reVerifiedIdentity = { 
-            ...existingIdentity, 
-            eligibilityStatus: 'Eligible' as EligibilityStatus, 
-            classVerificationStatus: 'passed' as ClassVerificationStatus,
-            lastUsedAt: new Date().toISOString()
-        };
-        
-        setAllIdentities(prev => prev.map(id => id.id === identityIdToUpdate ? reVerifiedIdentity : id));
-        setActiveIdentity({ id: reVerifiedIdentity.id, fundCode: reVerifiedIdentity.fundCode });
-        setCurrentUser(prevUser => prevUser ? {
-            ...prevUser,
-            fundCode: reVerifiedIdentity.fundCode,
-            fundName: reVerifiedIdentity.fundName,
-            classVerificationStatus: reVerifiedIdentity.classVerificationStatus,
-            eligibilityStatus: reVerifiedIdentity.eligibilityStatus,
-        } : null);
-
-    } else { // ADD new identity
+        await identitiesRepo.update(identityIdToUpdate, updates);
+        newActiveIdentity = { ...existingIdentity, ...updates };
+    } else {
         console.log(`[Telemetry] track('IdentityCreated', { fundCode: ${fund.code}, cvType: ${fund.cvType} })`);
-        const newIdentity: FundIdentity = {
+        newActiveIdentity = {
             id: identityIdToUpdate,
-            userEmail: currentUser.email,
+            uid: currentUser.uid,
             fundCode: fund.code,
             fundName: fund.name,
             cvType: fund.cvType,
@@ -464,175 +293,38 @@ function App() {
             createdAt: new Date().toISOString(),
             lastUsedAt: new Date().toISOString(),
         };
-        
-        setAllIdentities(prev => [...prev, newIdentity]);
-
-        setActiveIdentity({ id: newIdentity.id, fundCode: newIdentity.fundCode });
-        
-        setCurrentUser(prevUser => prevUser ? {
-            ...prevUser,
-            fundCode: newIdentity.fundCode,
-            fundName: newIdentity.fundName,
-            classVerificationStatus: newIdentity.classVerificationStatus,
-            eligibilityStatus: newIdentity.eligibilityStatus,
-        } : null);
+        await identitiesRepo.add(newActiveIdentity);
     }
-
+    
+    // This update will trigger the onSnapshot listener to re-hydrate the app state and navigate.
+    await usersRepo.update(currentUser.uid, { activeIdentityId: newActiveIdentity.id });
     setVerifyingFundCode(null);
 
-    if (isInitialRegistration) {
-        setPage('home');
-    } else {
-        setPage('profile');
-    }
   }, [currentUser, verifyingFundCode, allIdentities]);
   
-  const handleProfileUpdate = useCallback((updatedProfile: UserProfile) => {
+  const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile) => {
     if (!currentUser) return;
-
-    setCurrentUser(updatedProfile);
-    setUsers(prev => {
-        const currentUserData = prev[currentUser.email];
-        if (currentUserData) {
-            return {
-                ...prev,
-                [currentUser.email]: {
-                    ...currentUserData, // a.k.a. passwordHash
-                    ...updatedProfile,
-                }
-            };
-        }
-        return prev;
-    });
-    // Maybe show a success message
+    // The onSnapshot listener will automatically update the UI state from this write.
+    await usersRepo.update(currentUser.uid, updatedProfile);
+    alert('Profile saved!');
   }, [currentUser]);
 
   const handleApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
     if (!currentUser) return;
     
-    const tempId = `APP-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
-    const usersPastApplications = applications[currentUser.email] || [];
-    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications[usersPastApplications.length - 1] : null;
+    const usersPastApplications = applications || [];
+    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
     
-    const fund = getFundByCode(currentUser.fundCode);
+    const fund = await fundsRepo.getFund(currentUser.fundCode);
     const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
     const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
     const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
 
     const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
-
-    // Step 1: Call the local rules engine to get a preliminary decision
-    const preliminaryDecision = evaluateApplicationEligibility({
-        id: tempId,
-        employmentStartDate: appFormData.profileData.employmentStartDate,
-        eventData: appFormData.eventData,
-        currentTwelveMonthRemaining: currentTwelveMonthRemaining,
-        currentLifetimeRemaining: currentLifetimeRemaining,
-        singleRequestMax: singleRequestMax,
-    });
-    
-    console.log("Preliminary Rules Engine Decision:", preliminaryDecision);
-
-    // Step 2: Send the preliminary decision and application data to the AI for a final review
-    const finalDecision = await getAIAssistedDecision(
-      { 
-        eventData: appFormData.eventData,
-        currentTwelveMonthRemaining: currentTwelveMonthRemaining,
-        currentLifetimeRemaining: currentLifetimeRemaining,
-      },
-      preliminaryDecision
-    );
-
-    console.log("Final AI-Assisted Decision:", finalDecision);
-
-
-    const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
-        if (decision === 'Approved') return 'Awarded';
-        if (decision === 'Denied') return 'Declined';
-        return 'Submitted'; // for 'Review'
-    };
-
-    const newApplication: Application = {
-      id: tempId,
-      profileSnapshot: appFormData.profileData,
-      ...appFormData.eventData,
-      evacuated: appFormData.eventData.evacuated || '',
-      evacuatingFromPrimary: appFormData.eventData.evacuatingFromPrimary || undefined,
-      stayedWithFamilyOrFriend: appFormData.eventData.stayedWithFamilyOrFriend || undefined,
-      powerLoss: appFormData.eventData.powerLoss || '',
-      evacuationNights: appFormData.eventData.evacuationNights || undefined,
-      powerLossDays: appFormData.eventData.powerLossDays || undefined,
-      submittedDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
-      status: getStatusFromDecision(finalDecision.decision),
-      reasons: finalDecision.reasons,
-      decisionedDate: finalDecision.decisionedDate,
-      twelveMonthGrantRemaining: finalDecision.remaining_12mo,
-      lifetimeGrantRemaining: finalDecision.remaining_lifetime,
-      shareStory: appFormData.agreementData.shareStory ?? false,
-      receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
-      submittedBy: currentUser.email,
-    };
-
-    setApplications(prev => ({
-      ...prev,
-      [currentUser.email]: [...(prev[currentUser.email] || []), newApplication],
-    }));
-    
-    if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
-        handleProfileUpdate(appFormData.profileData);
-    }
-    
-    setApplicationDraft(null);
-    setLastSubmittedApp(newApplication);
-    setPage('submissionSuccess');
-
-  }, [currentUser, handleProfileUpdate, applications]);
-  
-  const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
-    if (!currentUser || currentUser.role !== 'Admin') {
-        console.error("Only admins can submit proxy applications.");
-        return;
-    };
-
-    const applicantEmail = appFormData.profileData.email?.toLowerCase();
-    if (!applicantEmail) {
-        alert("Applicant email is required to submit a proxy application.");
-        return;
-    }
-
-    const tempId = `PROXY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
-    const applicantInDb = users[applicantEmail];
-    const usersPastApplications = applicantInDb ? (applications[applicantEmail] || []) : [];
-
-    if (!applicantInDb) {
-        const newPasswordHash = 'password123'; // Default password
-        // FIX: The appFormData.profileData (UserProfile) does not contain a passwordHash.
-        // Create a new user object by spreading the profile data and adding the hash.
-        const newProfile: UserProfile & { passwordHash: string } = {
-            ...appFormData.profileData,
-            passwordHash: newPasswordHash,
-            role: 'User'
-        };
-        setUsers(prev => ({ ...prev, [applicantEmail]: newProfile }));
-        setApplications(prev => ({ ...prev, [applicantEmail]: [] }));
-    }
-
-    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications[usersPastApplications.length - 1] : null;
-    
-    const applicantFundCode = appFormData.profileData.fundCode;
-    const fund = getFundByCode(applicantFundCode);
-    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
-    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
-    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
-
-    const currentTwelveMonthRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
-    const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
     
     const preliminaryDecision = evaluateApplicationEligibility({
-        id: tempId,
+        id: 'temp',
         employmentStartDate: appFormData.profileData.employmentStartDate,
         eventData: appFormData.eventData,
         currentTwelveMonthRemaining,
@@ -651,16 +343,10 @@ function App() {
         return 'Submitted';
     };
 
-    const newApplication: Application = {
-      id: tempId,
+    const newApplicationData: Omit<Application, 'id'> = {
+      uid: currentUser.uid,
       profileSnapshot: appFormData.profileData,
       ...appFormData.eventData,
-      evacuated: appFormData.eventData.evacuated || '',
-      evacuatingFromPrimary: appFormData.eventData.evacuatingFromPrimary || undefined,
-      stayedWithFamilyOrFriend: appFormData.eventData.stayedWithFamilyOrFriend || undefined,
-      powerLoss: appFormData.eventData.powerLoss || '',
-      evacuationNights: appFormData.eventData.evacuationNights || undefined,
-      powerLossDays: appFormData.eventData.powerLossDays || undefined,
       submittedDate: new Date().toLocaleDateString('en-CA'),
       status: getStatusFromDecision(finalDecision.decision),
       reasons: finalDecision.reasons,
@@ -669,36 +355,108 @@ function App() {
       lifetimeGrantRemaining: finalDecision.remaining_lifetime,
       shareStory: appFormData.agreementData.shareStory ?? false,
       receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
-      submittedBy: currentUser.email,
+      submittedBy: currentUser.uid,
     };
+
+    const newApplication = await applicationsRepo.add(newApplicationData);
+
+    setApplications(prev => [...prev, newApplication]);
     
-    setProxyApplications(prev => [...prev, newApplication]);
-    
-    setApplications(prev => ({
-      ...prev,
-      [applicantEmail]: [...(prev[applicantEmail] || []), newApplication],
-    }));
-    
-    // FIX: The appFormData.profileData (UserProfile) does not contain a passwordHash.
-    // To compare if the profile was updated, we must remove the passwordHash from the existing
-    // user record in the database (`applicantInDb`) before comparing it with the form data.
-    if (applicantInDb) {
-        const { passwordHash, ...dbProfileData } = applicantInDb;
-        if (JSON.stringify(appFormData.profileData) !== JSON.stringify(dbProfileData)) {
-            setUsers(prev => ({
-                ...prev,
-                [applicantEmail]: {
-                    ...prev[applicantEmail],
-                    ...appFormData.profileData
-                }
-            }));
-        }
+    if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
+        await handleProfileUpdate(appFormData.profileData);
     }
     
     setApplicationDraft(null);
     setLastSubmittedApp(newApplication);
     setPage('submissionSuccess');
-  }, [currentUser, applications, users]);
+
+  }, [currentUser, handleProfileUpdate, applications]);
+  
+  const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
+    if (!currentUser || authState.claims.admin !== true) {
+        console.error("Only admins can submit proxy applications.");
+        return;
+    };
+
+    const applicantEmail = appFormData.profileData.email?.toLowerCase();
+    if (!applicantEmail) {
+        alert("Applicant email is required to submit a proxy application.");
+        return;
+    }
+
+    let applicantProfile = await usersRepo.getByEmail(applicantEmail);
+
+    if (!applicantProfile) {
+        // Create a new user if they don't exist
+        const { user } = await authClient.createProxyUser(applicantEmail, 'password123'); // Default password
+        const newProfileData = {
+            ...appFormData.profileData,
+            uid: user.uid,
+            email: applicantEmail,
+            role: 'User' as 'User',
+            activeIdentityId: null,
+        };
+        await usersRepo.add(newProfileData, user.uid);
+        applicantProfile = newProfileData;
+    }
+    
+    if (!applicantProfile) { // Should not happen
+        alert("Failed to find or create applicant profile.");
+        return;
+    }
+
+    const applicantPastApps = await applicationsRepo.getForUser(applicantProfile.uid);
+    const lastApplication = applicantPastApps.length > 0 ? applicantPastApps.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
+    
+    const fund = await fundsRepo.getFund(appFormData.profileData.fundCode);
+    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
+    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
+    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
+
+    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
+    const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
+    
+    const preliminaryDecision = evaluateApplicationEligibility({
+        id: 'temp', employmentStartDate: appFormData.profileData.employmentStartDate, eventData: appFormData.eventData,
+        currentTwelveMonthRemaining, currentLifetimeRemaining, singleRequestMax,
+    });
+    
+    const finalDecision = await getAIAssistedDecision(
+      { eventData: appFormData.eventData, currentTwelveMonthRemaining, currentLifetimeRemaining },
+      preliminaryDecision
+    );
+
+    const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
+        if (decision === 'Approved') return 'Awarded'; if (decision === 'Denied') return 'Declined'; return 'Submitted';
+    };
+
+    const newApplicationData: Omit<Application, 'id'> = {
+      uid: applicantProfile.uid,
+      profileSnapshot: appFormData.profileData,
+      ...appFormData.eventData,
+      submittedDate: new Date().toLocaleDateString('en-CA'),
+      status: getStatusFromDecision(finalDecision.decision),
+      reasons: finalDecision.reasons,
+      decisionedDate: finalDecision.decisionedDate,
+      twelveMonthGrantRemaining: finalDecision.remaining_12mo,
+      lifetimeGrantRemaining: finalDecision.remaining_lifetime,
+      shareStory: appFormData.agreementData.shareStory ?? false,
+      receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
+      submittedBy: currentUser.uid,
+    };
+
+    const newApplication = await applicationsRepo.add(newApplicationData);
+    setProxyApplications(prev => [...prev, newApplication]);
+    
+    // Update profile if changed
+    if (JSON.stringify(appFormData.profileData) !== JSON.stringify(applicantProfile)) {
+        await usersRepo.update(applicantProfile.uid, appFormData.profileData);
+    }
+    
+    setApplicationDraft(null);
+    setLastSubmittedApp(newApplication);
+    setPage('submissionSuccess');
+  }, [currentUser, authState.claims.admin]);
 
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     console.log(`Executing tool: ${functionName}`, args);
@@ -710,10 +468,7 @@ function App() {
             const newProfile = { ...prevProfile, ...args };
 
             if (args.primaryAddress) {
-                newProfile.primaryAddress = {
-                    ...(prevProfile.primaryAddress || {}),
-                    ...args.primaryAddress
-                };
+                newProfile.primaryAddress = { ...(prevProfile.primaryAddress || {}), ...args.primaryAddress };
             }
             newDraft.profileData = newProfile as UserProfile;
         }
@@ -727,35 +482,34 @@ function App() {
   }, []);
 
   const renderPage = () => {
-    if (!currentUser) {
+    if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
+      return <LoadingOverlay message="Authenticating..." />;
+    }
+    
+    if (authState.status === 'signedOut') {
       return (
         <>
           <div className="w-full flex justify-center items-center py-12">
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className="mx-auto h-32 w-auto cursor-pointer"
-              onClick={() => {
-                if (page === 'register') {
-                  setAutofillTrigger(c => c + 1);
-                } else {
-                  setAdminAutofillTrigger(c => c + 1);
-                }
-              }}
+              className="mx-auto h-32 w-auto"
             />
           </div>
-          
           <div className="w-full max-w-md px-4 pb-8">
             {page === 'register' ? (
-              <RegisterPage onRegister={handleRegister} switchToLogin={() => setPage('login')} autofillTrigger={autofillTrigger} />
+              <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
             ) : (
-              <LoginPage onLogin={handleLogin} switchToRegister={() => setPage('register')} adminAutofillTrigger={adminAutofillTrigger} />
+              <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
             )}
           </div>
         </>
       );
     }
     
+    // This case should now be covered by the loading overlay above, but as a fallback:
+    if (!currentUser) return <LoadingOverlay message="Loading Profile..." />;
+
     switch (page) {
       case 'classVerification':
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;

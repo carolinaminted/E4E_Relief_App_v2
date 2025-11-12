@@ -12,7 +12,7 @@ interface ProfilePageProps {
   navigate: (page: 'home' | 'apply' | 'classVerification') => void;
   applications: Application[];
   userProfile: UserProfile;
-  onProfileUpdate: (updatedProfile: UserProfile) => void;
+  onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
   identities: FundIdentity[];
   activeIdentity: ActiveIdentity | null;
   onSetActiveIdentity: (identityId: string) => void;
@@ -282,11 +282,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onProfileUpdate(formData);
-      alert('Profile saved!'); // Simple feedback
+      await onProfileUpdate(formData);
     }
   };
   

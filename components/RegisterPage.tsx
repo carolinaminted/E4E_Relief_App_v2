@@ -1,82 +1,52 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import type { IAuthClient } from '../services/authClient';
 
 interface RegisterPageProps {
-  onRegister: (firstName: string, lastName: string, email: string, password: string, fundCode: string) => boolean;
+  onRegister: IAuthClient['register'];
   switchToLogin: () => void;
-  autofillTrigger: number;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, autofillTrigger }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fundCode, setFundCode] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const generateFakeUserData = () => {
-      const pokemonNames = [
-        "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", 
-        "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", 
-        "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "NidoranF", "Nidorina", 
-        "Nidoqueen", "NidoranM", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", 
-        "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", 
-        "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", 
-        "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", 
-        "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", 
-        "Magnemite", "Magneton", "Farfetchd", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", 
-        "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", 
-        "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", 
-        "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", 
-        "Starmie", "MrMime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", 
-        "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", 
-        "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"
-    ];
-
-      const getRandomName = () => pokemonNames[Math.floor(Math.random() * pokemonNames.length)];
-
-      let firstName = getRandomName();
-      let lastName = getRandomName();
-      while (firstName === lastName) {
-          lastName = getRandomName();
-      }
-
-      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}@fakemail.example`;
-      const password = 'e4e';
-      const funds = ['DOM', 'ROST', 'SSO'];
-      const fundCode = funds[Math.floor(Math.random() * funds.length)];
-
-      return { firstName, lastName, email, password, fundCode };
+  const handleDemoRegister = () => {
+    setFirstName('Pikachu');
+    setLastName('Raichu');
+    setEmail(`user${Math.floor(Math.random() * 1000)}@example.com`);
+    setPassword('password123');
+    setFundCode('DOM');
   };
 
-  useEffect(() => {
-    if (autofillTrigger > 0) {
-      const { firstName, lastName, email, password, fundCode } = generateFakeUserData();
-      setFirstName(firstName);
-      setLastName(lastName);
-      setEmail(email);
-      setPassword(password);
-      setFundCode(fundCode);
-    }
-  }, [autofillTrigger]);
-
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !email || !password || !fundCode) {
       setError('All fields are required.');
       return;
     }
-    const success = onRegister(firstName, lastName, email, password, fundCode);
-    if (!success) {
-      setError('This email is already registered. Please try logging in.');
-    } else {
-      setError('');
+    setIsLoading(true);
+    setError('');
+    const result = await onRegister(email, password, firstName, lastName, fundCode);
+    if (!result.success) {
+      setError(result.error || 'Registration failed. Please try again.');
+      setIsLoading(false);
     }
+    // On success, the App component will handle navigation
   };
 
   return (
     <div>
+      <div 
+        className="w-full flex justify-center items-center -mt-24 mb-12 cursor-pointer"
+        onClick={handleDemoRegister}
+        title="Click to autofill demo user credentials"
+        >
+      </div>
         <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-4">
             <div className="flex-1">
@@ -143,8 +113,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin, 
             <p id="fund-code-help" className="text-xs text-gray-400 mt-1">Enter the code provided by your employer or program.</p>
         </div>
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-6">
-            Sign Up
+        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-6 h-12 flex justify-center items-center disabled:bg-gray-500" disabled={isLoading}>
+          {isLoading ? (
+             <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            </div>
+          ) : 'Sign Up'}
         </button>
         <p className="text-sm text-center text-white">
             Already have an account?{' '}

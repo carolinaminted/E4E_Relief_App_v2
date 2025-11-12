@@ -1,164 +1,35 @@
-// Define types
-import { employmentTypes, disasterEvents, hardshipEvents } from './appData';
-import { countries } from './countries';
+// FIX: Added type definitions to make this file a module and define the shape of Fund data.
+export type CVType = 'Domain' | 'Roster' | 'SSO' | 'Manual';
 
-export type CVType = 'Domain' | 'Roster' | 'SSO';
+export interface FundLimits {
+  singleRequestMax: number;
+  twelveMonthMax: number;
+  lifetimeMax: number;
+}
+
+export interface FundDomainConfig {
+    allowedDomains: string[];
+}
+
+export interface RosterEligibilityRecord {
+    employeeId: string;
+    birthMonth: number;
+    birthDay: number;
+}
+
+export interface FundRosterConfig {
+    sampleEligibilityRecords: RosterEligibilityRecord[];
+}
+
 
 export interface Fund {
   code: string;
   name: string;
   cvType: CVType;
-  limits: {
-    twelveMonthMax: number;
-    lifetimeMax: number;
-    singleRequestMax: number;
-  };
-  eligibleCountries: string[];
-  hireEligibility: {
-    employmentStartOnOrBeforeEvent: boolean;
-    minTenureDays: number;
-  };
-  domainConfig?: {
-    allowedDomains: string[];
-  };
-  rosterConfig?: {
-    requiredFields: string[];
-    sampleEligibilityRecords: { employeeId: string; birthDay: number; birthMonth: number }[];
-  };
-  ssoConfig?: {
-    provider: string;
-    issuer: string;
-    clientId: string;
-    scopes: string[];
-  };
-  eligibleEmploymentTypes: string[];
+  limits: FundLimits;
   eligibleDisasters: string[];
   eligibleHardships: string[];
-  aiParams?: Record<string, any>;
+  eligibleEmploymentTypes: string[];
+  domainConfig?: FundDomainConfig;
+  rosterConfig?: FundRosterConfig;
 }
-
-// Store the fund data
-const funds: Fund[] = [
-    {
-      "code": "DOM",
-      "name": "Blastoise Relief Fund",
-      "cvType": "Domain",
-      "limits": { "twelveMonthMax": 10000, "lifetimeMax": 50000, "singleRequestMax": 10000 },
-      "eligibleCountries": ["US", "CA", "MX"],
-      "hireEligibility": {
-        "employmentStartOnOrBeforeEvent": true,
-        "minTenureDays": 0
-      },
-      "domainConfig": {
-        "allowedDomains": ["e4erelief.org", "partnerco.com", "example.com", "fakemail.example"]
-      },
-      "eligibleEmploymentTypes": [
-        "Active Full Time",
-        "Active Part Time",
-        "Full Time Short Term Disability",
-        "Part Time Short Term Disability",
-      ],
-      "eligibleDisasters": [
-        "Earthquake",
-        "Flood",
-        "House Fire",
-        "Tornado",
-        "Tropical Storm/Hurricane",
-        "Wildfire",
-        "Winter Storm",
-      ],
-      "eligibleHardships": [
-        "Home Damage (leaks or broken pipes)",
-        "Household Loss of Income",
-        "Housing Crisis",
-      ]
-    },
-    {
-      "code": "ROST",
-      "name": "Venusaur Relief Fund",
-      "cvType": "Roster",
-      "limits": { "twelveMonthMax": 5000, "lifetimeMax": 25000, "singleRequestMax": 2500 },
-      "eligibleCountries": ["US"],
-      "hireEligibility": {
-        "employmentStartOnOrBeforeEvent": true,
-        "minTenureDays": 90
-      },
-      "rosterConfig": {
-        "requiredFields": ["employeeId", "birthDay", "birthMonth"],
-        "sampleEligibilityRecords": [
-          { "employeeId": "A12345", "birthDay": 12, "birthMonth": 7 },
-          { "employeeId": "B98765", "birthDay": 3,  "birthMonth": 11 },
-          { "employeeId": "12345", "birthDay": 15, "birthMonth": 5 }
-        ]
-      },
-      "eligibleEmploymentTypes": [
-        "Active Full Time",
-        "Active Part Time",
-        "Full-Time on FMLA (U.S. only)",
-        "Part-Time on FMLA (U.S. only)",
-      ],
-      "eligibleDisasters": [
-        "Commercial Carrier Accident",
-        "House Fire",
-        "Winter Storm",
-      ],
-      "eligibleHardships": [
-        "Death",
-        "Household Loss of Income",
-        "Workplace Disruption",
-        "Mental Health and Well-Being",
-      ]
-    },
-    {
-      "code": "SSO",
-      "name": "Charizard Relief Fund",
-      "cvType": "SSO",
-      "limits": { "twelveMonthMax": 15000, "lifetimeMax": 75000, "singleRequestMax": 7500 },
-      "eligibleCountries": ["US", "GB", "AU", "JP"],
-      "hireEligibility": {
-        "employmentStartOnOrBeforeEvent": true,
-        "minTenureDays": 30
-      },
-      "ssoConfig": {
-        "provider": "oidc",
-        "issuer": "https://login.example.com/your-tenant-id",
-        "clientId": "your-client-id",
-        "scopes": ["openid", "profile", "email"]
-      },
-       "eligibleEmploymentTypes": [
-        "Active Full Time",
-        "Active Part Time",
-      ],
-      "eligibleDisasters": [
-        "Flood",
-        "Typhoon",
-        "Volcanic Eruption"
-      ],
-      "eligibleHardships": [
-        "Crime",
-        "Housing Crisis",
-      ]
-    },
-    {
-      "code": "ADMIN",
-      "name": "Admin Relief Fund",
-      "cvType": "Domain", // Simple verification for admin
-      "limits": { "twelveMonthMax": 999999, "lifetimeMax": 9999999, "singleRequestMax": 999999 },
-      "eligibleCountries": countries, // All countries
-      "hireEligibility": {
-        "employmentStartOnOrBeforeEvent": true,
-        "minTenureDays": 0 // No tenure requirement
-      },
-      "domainConfig": {
-        "allowedDomains": ["example.com"] // Admin's email domain
-      },
-      "eligibleEmploymentTypes": employmentTypes, // All employment types
-      "eligibleDisasters": disasterEvents, // All disasters
-      "eligibleHardships": hardshipEvents // All hardships
-    }
-];
-
-// Helper function
-export const getFundByCode = (code: string): Fund | undefined => {
-    return funds.find(fund => fund.code.toUpperCase() === code.toUpperCase());
-};

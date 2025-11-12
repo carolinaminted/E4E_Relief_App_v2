@@ -1,39 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface LoginPageProps {
-  onLogin: (email: string, password: string) => boolean;
+  onLogin: (email: string, password: string) => Promise<boolean>;
   switchToRegister: () => void;
-  adminAutofillTrigger: number;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, adminAutofillTrigger }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (adminAutofillTrigger > 0) {
-      setEmail('admin@example.com');
-      setPassword('admin123');
-    }
-  }, [adminAutofillTrigger]);
+  const handleDemoAdmin = () => {
+    setEmail('admin@example.com');
+    setPassword('admin123');
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
     }
-    const success = onLogin(email, password);
+    setIsLoading(true);
+    setError('');
+    const success = await onLogin(email, password);
     if (!success) {
       setError('Invalid email or password. Please try again.');
-    } else {
-      setError('');
+      setIsLoading(false);
     }
+    // On success, the App component will handle navigation
   };
 
   return (
     <div>
+      <div 
+        className="w-full flex justify-center items-center -mt-24 mb-12 cursor-pointer"
+        onClick={handleDemoAdmin}
+        title="Click to autofill admin credentials"
+        >
+      </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Email Address</label>
@@ -60,8 +66,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, adminA
           />
         </div>
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-8">
-          Sign In
+        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-8 h-12 flex justify-center items-center disabled:bg-gray-500" disabled={isLoading}>
+          {isLoading ? (
+             <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            </div>
+          ) : 'Sign In'}
         </button>
         <p className="text-sm text-center text-white">
           Don't have an account?{' '}
