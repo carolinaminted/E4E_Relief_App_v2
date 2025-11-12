@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity } from './types';
@@ -30,6 +28,7 @@ import ProgramDetailsPage from './components/ProgramDetailsPage';
 import ProxyApplyPage from './components/ProxyPage';
 import ClassVerificationPage from './components/ClassVerificationPage';
 import LoadingOverlay from './components/LoadingOverlay';
+import Footer from './components/Footer';
 
 type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
@@ -94,6 +93,14 @@ function App() {
             } else {
               // User has a profile but no identities yet.
               hydratedProfile = profile;
+            }
+
+            // Synchronize the profile's role with the auth token's custom claim.
+            // The custom claim is the source of truth for authorization.
+            if (claims.admin === true) {
+                hydratedProfile.role = 'Admin';
+            } else {
+                hydratedProfile.role = 'User';
             }
 
             setAllIdentities(identities);
@@ -506,11 +513,11 @@ function App() {
     if (authState.status === 'signedOut') {
       return (
         <div className="w-full max-w-lg">
-          <div className="w-full flex justify-center items-center py-12">
+          <div className="w-full flex justify-center items-center py-8 sm:py-12">
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className="mx-auto h-40 w-auto"
+              className="mx-auto h-[9.5rem] sm:h-40 w-auto"
             />
           </div>
           <div className="px-4">
@@ -603,9 +610,11 @@ function App() {
         </header>
       )}
 
-      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center justify-center p-4' : ''}`}>
+      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center justify-start p-4 pt-8 sm:pt-20' : ''}`}>
         {renderPage()}
       </main>
+
+      <Footer />
 
       {/* FIX: Use `setIsChatbotOpen` instead of `setIsOpen`. */}
       {currentUser && currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}

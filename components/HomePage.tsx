@@ -65,8 +65,6 @@ interface Tile {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName, userRole }) => {
-    const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
-
     const tiles: Tile[] = [
         { 
             key: 'apply', 
@@ -92,14 +90,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
     }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-between pt-12 md:pt-16 pb-8 px-4 sm:px-8 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center pt-12 md:pt-16 pb-8 px-4 sm:px-8 text-center">
       <div className="w-full"> {/* Content wrapper */}
         <IconDefs />
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
           {fundName || 'E4E Relief'}
         </h1>
 
-        <div className={`w-full max-w-lg mx-auto mt-12 grid grid-cols-2 gap-4 sm:gap-6`}>
+        <div className={`w-full max-w-2xl mx-auto mt-12 grid grid-cols-2 gap-4 sm:gap-6`}>
           {tiles.map((tile) => (
               <div 
                   key={tile.key}
@@ -118,15 +116,6 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
           ))}
         </div>
       </div>
-      <footer className="mt-8">
-        <button
-          onClick={() => setIsPolicyModalOpen(true)}
-          className="text-sm italic text-[#898c8d] hover:text-white transition-colors duration-200"
-        >
-          Powered by E4E Relief Copyright 2025
-        </button>
-      </footer>
-      {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
     </div>
   );
 };
