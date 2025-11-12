@@ -104,8 +104,8 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
                   onClick={!tile.disabled ? tile.onClick : undefined}
                   title={tile.disabled ? tile.disabledTooltip : ""}
                   aria-disabled={!!tile.disabled}
-                  className={`bg-[#004b8d] p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center ${
-                      tile.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/50 cursor-pointer hover:scale-105'
+                  className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center text-center ${
+                      tile.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/80 cursor-pointer hover:scale-105'
                   } ${tile.colSpan || ''}`}
               >
                   {tile.icon}
