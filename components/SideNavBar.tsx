@@ -8,6 +8,8 @@ interface SideNavBarProps {
   navigate: (page: Page) => void;
   currentPage: Page;
   userRole: 'User' | 'Admin';
+  userName: string;
+  onLogout: () => void;
 }
 
 interface NavItemType {
@@ -21,8 +23,8 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-colors duration-200 ${
-      isActive ? 'bg-[#ff8400] text-white' : 'text-gray-200 hover:bg-[#005ca0]'
+    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] ${
+      isActive ? 'bg-[#ff8400]/30 text-white border border-[#ff8400]/50' : 'text-gray-200 hover:bg-[#005ca0]'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
      aria-current={isActive ? 'page' : undefined}
   >
@@ -31,7 +33,7 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout }) => {
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
   const baseNavItems: NavItemType[] = [
@@ -53,7 +55,17 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
 
   return (
     <>
-      <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#005ca0] p-4">
+      <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#002a50] p-4">
+        <div className="flex flex-col items-center mb-6">
+            <button onClick={() => navigate('home')} className="transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
+                <img
+                    src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
+                    alt="E4E Relief Logo"
+                    className="h-12 w-auto"
+                />
+            </button>
+            <span className="text-gray-200 truncate mt-3">Welcome, {userName}</span>
+        </div>
         <div className="flex-grow">
           {navItems.map(item => (
             <NavItem
@@ -66,12 +78,15 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
             />
           ))}
         </div>
-        <div className="flex-shrink-0">
-          <button
+        <div className="flex-shrink-0 flex flex-col items-center space-y-3">
+           <button
             onClick={() => setIsPolicyModalOpen(true)}
-            className="text-sm italic text-[#898c8d] hover:text-white transition-colors duration-200"
+            className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
           >
-            Legal Information
+            Powered by E4E Relief
+          </button>
+          <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200">
+              Logout
           </button>
         </div>
       </nav>

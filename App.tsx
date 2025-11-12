@@ -601,29 +601,11 @@ function App() {
         navigate={navigate}
         currentPage={page}
         userRole={currentUser.role}
+        userName={currentUser.firstName}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-[auto_1fr_auto] items-center gap-4 shadow-md sticky top-0 z-30 border-b border-[#002a50]">
-          <div className="justify-self-start">
-            <button onClick={() => navigate('home')} className="flex items-center transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
-              <img
-                src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
-                alt="E4E Relief Logo"
-                className="h-10 w-auto"
-              />
-            </button>
-          </div>
-          <div className="text-center">
-            <span className="text-gray-200 truncate">Welcome, {currentUser.firstName}</span>
-          </div>
-          <div className="justify-self-end">
-            <button onClick={handleLogout} className="bg-[#ff8400]/80 hover:bg-[#ff8400] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200">
-              Logout
-            </button>
-          </div>
-        </header>
-        
         <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
           {renderPage()}
           {!pagesWithoutFooter.includes(page) && <Footer />}

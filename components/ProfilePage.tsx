@@ -7,6 +7,7 @@ import { employmentTypes, languages } from '../data/appData';
 import { formatPhoneNumber } from '../utils/formatting';
 import RequiredIndicator from './RequiredIndicator';
 import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
+import PolicyModal from './PolicyModal';
 
 interface ProfilePageProps {
   navigate: (page: 'home' | 'apply' | 'classVerification') => void;
@@ -85,6 +86,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
@@ -299,16 +301,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
-      <div className="relative flex justify-center items-center mb-8">
-        <button 
-          onClick={() => navigate('home')} 
-          className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" 
-          aria-label="Back to Home"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-          </svg>
-        </button>
+      <div className="relative flex justify-center items-center mb-8 md:hidden">
         <div className="text-center">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Profile
@@ -687,6 +680,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <button type="submit" className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-8 rounded-md transition-colors duration-200">Save Changes</button>
         </div>
       </form>
+      
+      <div className="text-center mt-6 md:hidden">
+        <button
+          onClick={() => setIsPolicyModalOpen(true)}
+          className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
+        >
+          Powered by E4E Relief
+        </button>
+      </div>
 
       {selectedApplication && (
         <ApplicationDetailModal 
@@ -694,6 +696,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
           onClose={() => setSelectedApplication(null)} 
         />
       )}
+      {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
     </div>
   );
 };

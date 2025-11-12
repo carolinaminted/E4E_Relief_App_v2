@@ -81,11 +81,10 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
         <div className="mt-8 text-center">
           <button
             onClick={() => setIsPolicyModalOpen(true)}
-            className="text-sm italic text-[#898c8d] hover:text-white transition-colors duration-200"
+            className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
           >
-            Legal Information
+            Powered by E4E Relief
           </button>
-          <p className="text-xs text-[#898c8d] mt-1">Powered by E4E Relief</p>
         </div>
       </div>
       {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
