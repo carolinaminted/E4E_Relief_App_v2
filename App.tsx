@@ -510,7 +510,7 @@ function App() {
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
               alt="E4E Relief Logo" 
-              className="mx-auto h-32 w-auto"
+              className="mx-auto h-40 w-auto"
             />
           </div>
           <div className="px-4">
