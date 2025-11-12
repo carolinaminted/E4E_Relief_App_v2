@@ -85,13 +85,15 @@ class ApplicationsRepo implements IApplicationsRepo {
     async getForUser(uid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('uid', '==', uid));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
+        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
     }
     
     async getProxySubmissions(adminUid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('submittedBy', '==', adminUid));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
+        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
     }
 
     async add(application: Omit<Application, 'id'>): Promise<Application> {
@@ -108,12 +110,14 @@ class FundsRepo implements IFundsRepo {
         // In Firestore, document IDs are case-sensitive. Assuming codes are stored uppercase.
         const docRef = doc(this.fundsCol, code.toUpperCase());
         const docSnap = await getDoc(docRef);
-        return docSnap.exists() ? ({ code: docSnap.id, ...docSnap.data() } as Fund) : null;
+        // FIX: Replaced spread operator with Object.assign to avoid type inference issues within the ternary operator.
+        return docSnap.exists() ? (Object.assign({ code: docSnap.id }, docSnap.data()) as Fund) : null;
     }
 
     async getAllFunds(): Promise<Fund[]> {
         const snapshot = await getDocs(this.fundsCol);
-        return snapshot.docs.map(doc => ({ code: doc.id, ...doc.data() } as Fund));
+        // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
+        return snapshot.docs.map(doc => Object.assign({ code: doc.id }, doc.data()) as Fund);
     }
 }
 

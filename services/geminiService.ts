@@ -1,5 +1,6 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
 import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision } from '../types';
+import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes } from '../data/appData';
 
@@ -102,8 +103,23 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 `;
 
 
-export function createChatSession(applications?: Application[]): Chat {
+export function createChatSession(activeFund: Fund | null, applications?: Application[]): Chat {
   let dynamicContext = applicationContext;
+
+  if (activeFund) {
+    dynamicContext = dynamicContext.replace(
+      "for the 'E4E Relief' application",
+      `for the '${activeFund.name}' application`
+    );
+    const limits = activeFund.limits;
+    const fundDetails = `
+**Current Fund Information (${activeFund.name})**:
+- Single Request Maximum: $${limits.singleRequestMax.toLocaleString()}
+- 12-Month Maximum: $${limits.twelveMonthMax.toLocaleString()}
+- Lifetime Maximum: $${limits.lifetimeMax.toLocaleString()}
+`;
+    dynamicContext += fundDetails;
+  }
 
   if (applications && applications.length > 0) {
     const applicationList = applications.map(app => {
@@ -121,7 +137,7 @@ If an application status is 'Declined' or 'Submitted' (which means 'Under Review
 ${applicationList}
 `;
   } else {
-    dynamicContext += `\nThe user currently has no submitted applications.`;
+    dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
   }
   
   // FIX: Use the latest recommended model 'gemini-2.5-flash'.

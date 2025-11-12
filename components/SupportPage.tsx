@@ -1,6 +1,5 @@
 import React from 'react';
-
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate';
+import type { Page } from '../types';
 
 interface SupportPageProps {
   navigate: (page: Page) => void;

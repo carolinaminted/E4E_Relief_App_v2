@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
-// FIX: Import the centralized Page type.
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity, Page } from './types';
+// FIX: Import the centralized Page type and alias it to avoid naming conflicts.
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage } from './types';
+import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
@@ -46,13 +47,14 @@ type AuthState = {
 };
 
 function App() {
-  const [page, setPage] = useState<Page>('login');
+  const [page, setPage] = useState<GlobalPage>('login');
   const [authState, setAuthState] = useState<AuthState>({ status: 'loading', user: null, profile: null, claims: {} });
   
   const [applications, setApplications] = useState<Application[]>([]);
   const [proxyApplications, setProxyApplications] = useState<Application[]>([]);
   const [allIdentities, setAllIdentities] = useState<FundIdentity[]>([]);
   const [activeIdentity, setActiveIdentity] = useState<ActiveIdentity | null>(null);
+  const [activeFund, setActiveFund] = useState<Fund | null>(null);
   
   const [verifyingFundCode, setVerifyingFundCode] = useState<string | null>(null);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
@@ -161,6 +163,21 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchActiveFund = async () => {
+      if (activeIdentity) {
+        const fundData = await fundsRepo.getFund(activeIdentity.fundCode);
+        if (fundData) {
+          setActiveFund(fundData);
+        } else {
+          console.error(`Could not load fund configuration for ${activeIdentity.fundCode}`);
+          setActiveFund(null);
+        }
+      }
+    };
+    fetchActiveFund();
+  }, [activeIdentity]);
+
   const currentUser = authState.profile;
 
   const userIdentities = useMemo(() => {
@@ -220,7 +237,7 @@ function App() {
     authClient.signOut();
   };
   
-  const navigate = useCallback((targetPage: Page) => {
+  const navigate = useCallback((targetPage: GlobalPage) => {
     if (targetPage === 'apply' && !isApplyEnabled) {
         console.log("Gating 'apply' page. User not verified or not eligible.");
         setPage('classVerification');
@@ -323,15 +340,15 @@ function App() {
   }, [currentUser]);
 
   const handleApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
-    if (!currentUser) return;
+    if (!currentUser || !activeFund) {
+        alert("Could not load fund configuration. Please try again later.");
+        return;
+    }
     
-    const usersPastApplications = applications || [];
+    const usersPastApplications = userApplications || [];
     const lastApplication = usersPastApplications.length > 0 ? usersPastApplications.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
     
-    const fund = await fundsRepo.getFund(currentUser.fundCode);
-    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
-    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
-    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
+    const { twelveMonthMax: initialTwelveMonthMax, lifetimeMax: initialLifetimeMax, singleRequestMax } = activeFund.limits;
 
     const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
@@ -391,7 +408,7 @@ function App() {
     setLastSubmittedApp(newApplication);
     setPage('submissionSuccess');
 
-  }, [currentUser, handleProfileUpdate, applications]);
+  }, [currentUser, handleProfileUpdate, userApplications, activeFund]);
   
   const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
     if (!currentUser || authState.claims.admin !== true) {
@@ -426,7 +443,8 @@ function App() {
         return;
     }
 
-    const applicantPastApps = await applicationsRepo.getForUser(applicantProfile.uid);
+    const allApplicantApps = await applicationsRepo.getForUser(applicantProfile.uid);
+    const applicantPastApps = allApplicantApps.filter(app => app.profileSnapshot.fundCode === appFormData.profileData.fundCode);
     const lastApplication = applicantPastApps.length > 0 ? applicantPastApps.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
     
     const fund = await fundsRepo.getFund(appFormData.profileData.fundCode);
@@ -511,7 +529,7 @@ function App() {
     });
   }, []);
   
-  const pagesWithoutFooter: Page[] = ['home', 'login', 'register', 'classVerification'];
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
@@ -628,7 +646,8 @@ function App() {
             isApplyEnabled={isApplyEnabled}
         />
         
-        {page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
+        {/* FIX: Pass setIsChatbotOpen to the setIsOpen prop. */}
+        {page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );

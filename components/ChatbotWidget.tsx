@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { Chat } from '@google/genai';
 // FIX: Separated type and value imports for ChatMessage, MessageRole, and Application.
 import { MessageRole } from '../types';
+import type { Fund } from '../data/fundData';
 import type { ChatMessage, Application } from '../types';
 import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
@@ -14,9 +15,10 @@ interface ChatbotWidgetProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   scrollContainerRef: React.RefObject<HTMLElement>;
+  activeFund: Fund | null;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef }) => {
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation." }
   ]);
@@ -33,10 +35,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     setIsMounted(true);
 
     if (isOpen) {
-        chatSessionRef.current = createChatSession(applications);
+        // FIX: Pass activeFund to createChatSession
+        chatSessionRef.current = createChatSession(activeFund, applications);
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
-  }, [isOpen, applications]);
+  }, [isOpen, applications, activeFund]);
   
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {
@@ -88,7 +91,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     const inputTokens = estimateTokens(userInput);
 
     if (!chatSessionRef.current) {
-        chatSessionRef.current = createChatSession(applications);
+        // FIX: Pass activeFund to createChatSession
+        chatSessionRef.current = createChatSession(activeFund, applications);
     }
 
     try {
@@ -174,7 +178,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction]);
+  }, [isLoading, applications, onChatbotAction, activeFund]);
 
   const toggleChat = () => setIsOpen(!isOpen);
   
@@ -202,7 +206,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
 
     <button
         onClick={toggleChat}
-        className={`fixed bottom-8 left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
+        className={`fixed bottom-20 right-4 md:bottom-8 md:left-8 md:right-auto bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
         aria-label={isOpen ? "Close Chat" : "Open Chat"}
       >
         {isOpen ? (
