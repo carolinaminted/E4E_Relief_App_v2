@@ -26,3 +26,7 @@ export interface IFundsRepo {
     getFund(code: string): Promise<Fund | null>;
     getAllFunds(): Promise<Fund[]>;
 }
+
+export interface IStorageRepo {
+    uploadExpenseReceipt(file: File, userId: string, expenseId: string): Promise<{ downloadURL: string; fileName: string }>;
+}

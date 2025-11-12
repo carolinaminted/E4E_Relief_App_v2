@@ -21,7 +21,7 @@ const statusStyles: Record<Application['status'], string> = {
 };
 
 const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
-    <svg xmlns="http://www.w.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
 );
@@ -151,7 +151,8 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
             case 2:
                 return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
             case 3:
-                return <ApplyExpensesPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
+                // FIX: Pass the required `userProfile` prop to ApplyExpensesPage.
+                return <ApplyExpensesPage userProfile={formData.profileData} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
             case 4:
                 return <ApplyTermsPage formData={formData.agreementData} updateFormData={updateAgreementData} prevStep={prevStep} onSubmit={handleFinalSubmit} />;
             default:

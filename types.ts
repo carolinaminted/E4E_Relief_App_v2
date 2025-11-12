@@ -112,6 +112,7 @@ export interface Expense {
   type: 'Basic Disaster Supplies' | 'Food Spoilage' | 'Meals' | '';
   amount: number | '';
   fileName: string; // Name of the uploaded receipt file, if any.
+  fileUrl?: string; // URL to the uploaded file in Firebase Storage.
 }
 
 /**

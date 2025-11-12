@@ -199,7 +199,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
           case 2:
               return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
           case 3:
-              return <ApplyExpensesPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
+              return <ApplyExpensesPage userProfile={userProfile} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
           case 4:
               return <ApplyTermsPage formData={formData.agreementData} updateFormData={updateAgreementData} prevStep={prevStep} onSubmit={handleFinalSubmit} />;
           default:

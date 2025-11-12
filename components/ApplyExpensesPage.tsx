@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { EventData, Expense } from '../types';
+import type { EventData, Expense, UserProfile } from '../types';
 import { expenseTypes } from '../data/appData';
 import SearchableSelector from './SearchableSelector';
 import { FormInput } from './FormControls';
+import { storageRepo } from '../services/firebaseStorageRepo';
 
 interface ApplyExpensesPageProps {
   formData: EventData;
+  userProfile: UserProfile; // Added userProfile to access UID for storage path
   updateFormData: (data: Partial<EventData>) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -16,7 +18,8 @@ interface ExpenseFormState {
     type: Expense['type'];
     amount: number | '';
     file: File | null;
-    fileName: string;
+    fileName?: string; // For displaying existing file name during edit
+    fileUrl?: string; // For tracking existing file URL during edit
 }
 
 const initialFormState: ExpenseFormState = {
@@ -24,6 +27,7 @@ const initialFormState: ExpenseFormState = {
     amount: '',
     file: null,
     fileName: '',
+    fileUrl: '',
 };
 
 // --- Icons ---
@@ -40,12 +44,21 @@ const DeleteIcon: React.FC = () => (
     </svg>
 );
 
+const UploadSpinner: React.FC = () => (
+    <div className="flex items-center space-x-2">
+        <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+        <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+    </div>
+);
 
-const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateFormData, nextStep, prevStep }) => {
+
+const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userProfile, updateFormData, nextStep, prevStep }) => {
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(initialFormState);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrorOverlay, setShowErrorOverlay] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
   const modalRoot = document.getElementById('modal-root');
 
@@ -62,9 +75,13 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
   
   const availableExpenseTypes = useMemo(() => {
     const usedTypes = new Set(formData.expenses.map(exp => exp.type));
-    // FIX: Cast `type` to Expense['type'] because `expenseTypes` is string[] while `usedTypes` is Set<Expense['type']>.
+    if (editingId) {
+        // If editing, the current expense type should be available in the dropdown
+        const currentType = formData.expenses.find(e => e.id === editingId)?.type;
+        if (currentType) usedTypes.delete(currentType);
+    }
     return expenseTypes.filter(type => !usedTypes.has(type as Expense['type']));
-  }, [formData.expenses]);
+  }, [formData.expenses, editingId]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -75,7 +92,6 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
     return Object.keys(newErrors).length === 0;
   };
   
-  // FIX: Refactored handleFormChange to accept a partial state object for better type safety.
   const handleFormChange = (updates: Partial<ExpenseFormState>) => {
     setExpenseForm(prev => ({ ...prev, ...updates }));
     const fields = Object.keys(updates);
@@ -90,45 +106,47 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file) {
-      handleFormChange({ file, fileName: file.name });
-    }
+    handleFormChange({ file });
   };
   
-  const handleSaveExpense = () => {
+  const handleSaveExpense = async () => {
     if (!validateForm()) return;
+    setIsUploading(true);
 
-    if (expenseForm.fileName) {
-        const isDuplicateFile = formData.expenses.some(
-          exp => exp.fileName === expenseForm.fileName && exp.id !== editingId
-        );
-        if (isDuplicateFile) {
-            setErrors(prev => ({
-                ...prev,
-                file: `The file "${expenseForm.fileName}" has already been uploaded. Please choose a different file.`
-            }));
-            return;
-        }
-    }
-    
-    const newExpense: Expense = {
-      id: editingId || `exp-${Date.now()}`,
-      type: expenseForm.type,
-      amount: expenseForm.amount,
-      fileName: expenseForm.fileName,
+    const expenseId = editingId || `exp-${Date.now()}`;
+    let fileUploadData: { fileName: string; fileUrl?: string } = {
+        fileName: expenseForm.fileName || '',
+        fileUrl: expenseForm.fileUrl || '',
     };
 
-    let updatedExpenses: Expense[];
-    if (editingId) {
-      updatedExpenses = formData.expenses.map(exp => exp.id === editingId ? newExpense : exp);
-    } else {
-      updatedExpenses = [...formData.expenses, newExpense];
-    }
+    try {
+        if (expenseForm.file) {
+            const { downloadURL, fileName } = await storageRepo.uploadExpenseReceipt(expenseForm.file, userProfile.uid, expenseId);
+            fileUploadData = { fileName, fileUrl: downloadURL };
+        }
     
-    updateFormData({ expenses: updatedExpenses });
-    setExpenseForm(initialFormState);
-    setEditingId(null);
-    setErrors({}); // Clear errors on success
+        const newExpense: Expense = {
+          id: expenseId,
+          type: expenseForm.type,
+          amount: expenseForm.amount,
+          fileName: fileUploadData.fileName,
+          fileUrl: fileUploadData.fileUrl,
+        };
+
+        const updatedExpenses = editingId
+          ? formData.expenses.map(exp => exp.id === editingId ? newExpense : exp)
+          : [...formData.expenses, newExpense];
+        
+        updateFormData({ expenses: updatedExpenses });
+        setExpenseForm(initialFormState);
+        setEditingId(null);
+        setErrors({});
+    } catch (error) {
+        console.error("File upload failed:", error);
+        setErrors(prev => ({...prev, file: "File upload failed. Please try again."}));
+    } finally {
+        setIsUploading(false);
+    }
   };
   
   const handleEdit = (expense: Expense) => {
@@ -138,11 +156,14 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
       amount: expense.amount,
       file: null, // User can optionally re-upload file on edit
       fileName: expense.fileName,
+      fileUrl: expense.fileUrl,
     });
     setErrors({});
   };
 
   const handleDelete = (id: string) => {
+    // In a real app, you'd also delete the file from storage here
+    // using a reference created from the fileUrl or path.
     const updatedExpenses = formData.expenses.filter(exp => exp.id !== id);
     updateFormData({ expenses: updatedExpenses });
   };
@@ -164,12 +185,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="text-center">
         <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Expenses</h2>
         <p className="text-gray-300 mt-1">Add your expenses for each category below. A receipt is not required for any expense.</p>
       </div>
 
-      {/* Expense Entry Form */}
       {availableExpenseTypes.length > 0 || editingId ? (
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] space-y-4">
           <h3 className="font-semibold text-lg text-white">{editingId ? 'Edit Expense' : 'Add New Expense'}</h3>
@@ -179,11 +199,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                   id="expenseType"
                   required
                   value={expenseForm.type}
-                  // FIX: Cast the value from the generic string provided by the selector to the specific string literal union type required by Expense.
                   onUpdate={value => handleFormChange({ type: value as Expense['type'] })}
-                  options={editingId ? expenseTypes : availableExpenseTypes}
+                  options={availableExpenseTypes}
                   variant="underline"
                   error={errors.type}
+                  disabled={!!editingId} // Prevent changing type on edit
               />
                <FormInput
                   label="Amount (USD)"
@@ -206,17 +226,19 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, updateF
                           <span>Upload</span>
                           <input id="receiptUpload" type="file" className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png,application/pdf" />
                       </label>
-                      <span className="text-gray-300 text-sm truncate" title={expenseForm.fileName}>{expenseForm.fileName || 'No file chosen'}</span>
+                      <span className="text-gray-300 text-sm truncate" title={expenseForm.file?.name || expenseForm.fileName}>
+                        {expenseForm.file?.name || expenseForm.fileName || 'No file chosen'}
+                      </span>
                    </div>
                    {errors.file && <p className="text-red-400 text-xs mt-1">{errors.file}</p>}
               </div>
           </div>
-          <div className="flex justify-end gap-4 pt-4">
+          <div className="flex justify-center gap-4 pt-4">
               {editingId && (
-                  <button type="button" onClick={handleCancelEdit} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 text-sm">Cancel</button>
+                  <button type="button" onClick={handleCancelEdit} disabled={isUploading} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-5 rounded-md transition-colors duration-200 text-base disabled:opacity-50">Cancel</button>
               )}
-              <button type="button" onClick={handleSaveExpense} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 text-sm">
-                  {editingId ? 'Update Expense' : 'Add Expense'}
+              <button type="button" onClick={handleSaveExpense} disabled={isUploading} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-5 rounded-md transition-colors duration-200 text-base w-40 h-12 flex items-center justify-center disabled:opacity-50">
+                  {isUploading ? <UploadSpinner /> : (editingId ? 'Update Expense' : 'Add Expense')}
               </button>
           </div>
         </div>

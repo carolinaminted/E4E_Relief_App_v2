@@ -53,7 +53,7 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
 
   return (
     <div className="space-y-8 p-8">
-      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Agreements &amp; Submission</h2>
+      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">Agreements &amp; Submission</h2>
       
       {/* Share Your Story Section */}
       <section className="space-y-4">
