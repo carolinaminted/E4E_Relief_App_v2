@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
 
 // Import step components
@@ -53,9 +53,19 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef }) => {
   const [step, setStep] = useState(1);
   
-  // Initialize state by deeply merging the user's profile with any draft data from the chatbot
   const [formData, setFormData] = useState<ApplicationFormData>(() => {
-    // FIX: Cast draftProfile to Partial<UserProfile> to allow safe access to nested properties like primaryAddress
+    const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
+    try {
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft) {
+            console.log("Loading saved application draft from localStorage.");
+            return JSON.parse(savedDraft);
+        }
+    } catch (error) {
+        console.error("Could not parse saved application draft:", error);
+        localStorage.removeItem(draftKey); // Clear corrupted data
+    }
+
     const draftProfile: Partial<UserProfile> = applicationDraft?.profileData || {};
     const draftEvent: Partial<EventData> = applicationDraft?.eventData || {};
 
@@ -99,6 +109,17 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
         },
     };
   });
+
+  useEffect(() => {
+    if (userProfile.uid && userProfile.fundCode) {
+        const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
+        try {
+            localStorage.setItem(draftKey, JSON.stringify(formData));
+        } catch (error) {
+            console.error("Could not save application draft to localStorage:", error);
+        }
+    }
+  }, [formData, userProfile.uid, userProfile.fundCode]);
 
   const nextStep = () => {
     if (mainRef.current) {
@@ -190,11 +211,6 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
       <div className="relative flex justify-center items-center mb-8">
-        <button onClick={() => navigate('home')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-          </svg>
-        </button>
         <div className="text-center">
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Apply for Relief</h1>
           {userProfile ? (

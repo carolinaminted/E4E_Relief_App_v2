@@ -360,6 +360,14 @@ function App() {
 
     const newApplication = await applicationsRepo.add(newApplicationData);
 
+    try {
+        const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
+        localStorage.removeItem(draftKey);
+        console.log("Successfully submitted. Cleared saved application draft.");
+    } catch (error) {
+        console.error("Could not remove application draft from localStorage after submission:", error);
+    }
+    
     setApplications(prev => [...prev, newApplication]);
     
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
@@ -427,7 +435,7 @@ function App() {
     );
 
     const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
-        if (decision === 'Approved') return 'Awarded'; if (decision === 'Denied') return 'Declined'; return 'Submitted';
+        if (decision === 'Approved') return 'Awarded'; if (decision === 'Denied') return 'Submitted'; return 'Submitted';
     };
 
     const newApplicationData: Omit<Application, 'id'> = {
@@ -446,6 +454,15 @@ function App() {
     };
 
     const newApplication = await applicationsRepo.add(newApplicationData);
+
+    try {
+        const draftKey = `applicationDraft-${applicantProfile.uid}-${appFormData.profileData.fundCode}`;
+        localStorage.removeItem(draftKey);
+        console.log(`Proxy submission successful. Cleared saved draft for user ${applicantProfile.email}.`);
+    } catch (error) {
+        console.error("Could not remove proxy application draft from localStorage after submission:", error);
+    }
+
     setProxyApplications(prev => [...prev, newApplication]);
     
     // Update profile if changed
@@ -590,6 +607,7 @@ function App() {
         {renderPage()}
       </main>
 
+      {/* FIX: Use `setIsChatbotOpen` instead of `setIsOpen`. */}
       {currentUser && currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
     </div>
   );
