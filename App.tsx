@@ -32,6 +32,7 @@ import SideNavBar from './components/SideNavBar';
 import BottomNavBar from './components/BottomNavBar';
 import { IconDefs } from './components/Icons';
 import Footer from './components/Footer';
+import Header from './components/Header';
 
 type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
@@ -606,6 +607,11 @@ function App() {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
+        <Header 
+            navigate={navigate}
+            userName={currentUser.firstName}
+            onLogout={handleLogout}
+        />
         <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
           {renderPage()}
           {!pagesWithoutFooter.includes(page) && <Footer />}
