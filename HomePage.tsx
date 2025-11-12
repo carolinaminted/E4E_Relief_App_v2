@@ -4,9 +4,6 @@ import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from '
 // FIX: Import the centralized Page type.
 import type { Page } from './types';
 
-
-// type Page = 'home' | 'apply' | 'profile' | 'support' | 'donate' | 'fundPortal' | 'dashboard';
-
 interface HomePageProps {
   navigate: (page: Page) => void;
   isApplyEnabled: boolean;
