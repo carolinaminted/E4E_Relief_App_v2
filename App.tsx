@@ -626,8 +626,7 @@ function App() {
             isApplyEnabled={isApplyEnabled}
         />
         
-        {/* FIX: Corrected prop name from setIsOpen to setIsChatbotOpen */}
-        {currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
+        {page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
       </div>
     </div>
   );
