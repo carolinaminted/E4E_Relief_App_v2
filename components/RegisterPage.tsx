@@ -42,7 +42,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
   return (
     <div>
       <div 
-        className="w-full flex justify-center items-center -mt-24 mb-12 cursor-pointer"
+        className="w-full flex justify-center items-center mb-4 cursor-pointer"
         onClick={handleDemoRegister}
         title="Click to autofill demo user credentials"
         >

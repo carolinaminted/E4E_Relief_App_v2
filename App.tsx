@@ -505,7 +505,7 @@ function App() {
     
     if (authState.status === 'signedOut') {
       return (
-        <>
+        <div className="w-full max-w-lg">
           <div className="w-full flex justify-center items-center py-12">
             <img 
               src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
@@ -513,14 +513,14 @@ function App() {
               className="mx-auto h-32 w-auto"
             />
           </div>
-          <div className="w-full max-w-md px-4 pb-8">
+          <div className="px-4">
             {page === 'register' ? (
               <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
             ) : (
               <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
             )}
           </div>
-        </>
+        </div>
       );
     }
     
@@ -603,7 +603,7 @@ function App() {
         </header>
       )}
 
-      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center' : ''}`}>
+      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center justify-center p-4' : ''}`}>
         {renderPage()}
       </main>
 

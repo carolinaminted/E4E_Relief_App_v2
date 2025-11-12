@@ -35,7 +35,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
   return (
     <div>
       <div 
-        className="w-full flex justify-center items-center -mt-24 mb-12 cursor-pointer"
+        className="w-full flex justify-center items-center mb-4 cursor-pointer"
         onClick={handleDemoAdmin}
         title="Click to autofill admin credentials"
         >
