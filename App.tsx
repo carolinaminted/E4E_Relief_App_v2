@@ -28,6 +28,9 @@ import ProgramDetailsPage from './components/ProgramDetailsPage';
 import ProxyApplyPage from './components/ProxyPage';
 import ClassVerificationPage from './components/ClassVerificationPage';
 import LoadingOverlay from './components/LoadingOverlay';
+import SideNavBar from './components/SideNavBar';
+import BottomNavBar from './components/BottomNavBar';
+import { IconDefs } from './components/Icons';
 import Footer from './components/Footer';
 
 type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -428,7 +431,7 @@ function App() {
     const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
     const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
 
-    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
+    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialLifetimeMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
     
     const preliminaryDecision = evaluateApplicationEligibility({
@@ -504,6 +507,8 @@ function App() {
         return newDraft;
     });
   }, []);
+  
+  const pagesWithoutFooter: Page[] = ['home', 'login', 'register', 'classVerification'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
@@ -512,21 +517,14 @@ function App() {
     
     if (authState.status === 'signedOut') {
       return (
-        <div className="w-full max-w-lg">
-          <div className="w-full flex justify-center items-center py-8 sm:py-12">
-            <img 
-              src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
-              alt="E4E Relief Logo" 
-              className="mx-auto h-[9.5rem] sm:h-40 w-auto"
-            />
-          </div>
-          <div className="px-4">
-            {page === 'register' ? (
-              <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
-            ) : (
-              <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
-            )}
-          </div>
+        <div className="flex-1 flex justify-center p-4">
+            <div className="w-full max-w-lg px-4 mt-auto mb-auto">
+                {page === 'register' ? (
+                <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
+                ) : (
+                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
+                )}
+            </div>
         </div>
       );
     }
@@ -566,8 +564,7 @@ function App() {
         return <DonatePage navigate={navigate} />;
       case 'eligibility':
         return <EligibilityPage navigate={navigate} user={currentUser} />;
-      case 'fundPortal':
-        return <FundPortalPage navigate={navigate} user={currentUser} />;
+      case 'fundPortal': // This page is now a menu, but for routing, we'll send them to the main dashboard.
       case 'dashboard':
         return <DashboardPage navigate={navigate} />;
       case 'ticketing':
@@ -585,10 +582,28 @@ function App() {
         return <HomePage navigate={navigate} isApplyEnabled={isApplyEnabled} fundName={currentUser.fundName} userRole={currentUser.role} />;
     }
   };
+  
+  // Logged out view is handled inside renderPage()
+  if (!currentUser) {
+      return (
+          <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+              <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
+                  {renderPage()}
+              </main>
+          </div>
+      );
+  }
 
   return (
-    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
-      {currentUser && (
+    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
+      <IconDefs />
+      <SideNavBar 
+        navigate={navigate}
+        currentPage={page}
+        userRole={currentUser.role}
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         <header className="bg-[#004b8d]/80 backdrop-blur-sm p-4 grid grid-cols-[auto_1fr_auto] items-center gap-4 shadow-md sticky top-0 z-30 border-b border-[#002a50]">
           <div className="justify-self-start">
             <button onClick={() => navigate('home')} className="flex items-center transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
@@ -608,16 +623,20 @@ function App() {
             </button>
           </div>
         </header>
-      )}
-
-      <main ref={mainRef} className={`flex-1 flex flex-col overflow-y-auto ${!currentUser ? 'items-center justify-start p-4 pt-8 sm:pt-20' : ''}`}>
-        {renderPage()}
-      </main>
-
-      <Footer />
-
-      {/* FIX: Use `setIsChatbotOpen` instead of `setIsOpen`. */}
-      {currentUser && currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
+        
+        <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
+          {renderPage()}
+          {!pagesWithoutFooter.includes(page) && <Footer />}
+        </main>
+        
+        <BottomNavBar
+            navigate={navigate}
+            currentPage={page}
+            userRole={currentUser.role}
+        />
+        
+        {currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
+      </div>
     </div>
   );
 }
