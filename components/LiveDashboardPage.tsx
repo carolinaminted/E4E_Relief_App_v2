@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usersRepo, applicationsRepo, fundsRepo } from '../services/firestoreRepo';
-import type { Application } from '../types';
+import type { Application, UserProfile } from '../types';
 import LoadingOverlay from './LoadingOverlay';
 
 type Page = 'fundPortal';
@@ -9,7 +9,8 @@ interface LiveDashboardPageProps {
   navigate: (page: Page) => void;
 }
 
-// Reusable UI Components from DashboardPage.tsx
+// --- Reusable UI Components (from DashboardPage) ---
+
 const MetricCard: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
     <div className={`bg-[#003a70]/50 p-6 rounded-lg border border-[#005ca0] flex flex-col ${className}`}>
       <h3 className="text-lg font-semibold text-white mb-4 text-center">{title}</h3>
@@ -22,7 +23,7 @@ const MetricCard: React.FC<{ title: string; children: React.ReactNode; className
 const DonutChart: React.FC<{ data: { label: string; value: number; color: string }[] }> = ({ data }) => {
     const totalValue = data.reduce((sum, item) => sum + item.value, 0);
     if (totalValue === 0) {
-        return <p className="text-gray-400">No data</p>;
+        return <div className="flex items-center justify-center h-full"><p className="text-gray-400">No data available</p></div>;
     }
     const radius = 45;
     const circumference = 2 * Math.PI * radius;
@@ -70,62 +71,125 @@ const DonutChart: React.FC<{ data: { label: string; value: number; color: string
     );
 };
 
+const HorizontalBarChartList: React.FC<{ data: { label: string; value: number }[]; colors: string[] }> = ({ data, colors }) => {
+    const maxValue = Math.max(1, ...data.map(item => item.value));
+    return (
+      <div className="space-y-3 w-full">
+        {data.map((item, index) => (
+          <div key={item.label} className="flex items-center gap-3 w-full text-sm">
+            <span className="text-gray-300 w-28 truncate text-right">{item.label}</span>
+            <div className="flex-grow bg-[#004b8d] h-5 rounded-sm overflow-hidden">
+              <div
+                style={{ width: `${(item.value / maxValue) * 100}%`, backgroundColor: colors[index % colors.length] }}
+                className="h-5 rounded-sm flex items-center justify-end pr-2 text-xs font-bold text-black transition-all duration-500"
+              >
+                {item.value}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+};
+
+
+interface LiveStats {
+    totalAwarded: number;
+    applicationStatusData: { label: string; value: number; color: string }[];
+    userEngagementData: { label: string; value: number; color: string }[];
+    topCountriesData: { label: string; value: number }[];
+    topEventsData: { label: string; value: number }[];
+    recentUsersData: { name: string; email: string; fund: string }[];
+}
+
+
 const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
-    const [stats, setStats] = useState({
-        totalUsers: 0,
-        totalApplications: 0,
-        totalFunds: 0,
-        totalAwarded: 0,
-        applicationStatusData: [
-            { label: 'Awarded', value: 0, color: '#edda26' },
-            { label: 'Declined', value: 0, color: '#898c8d' },
-            { label: 'In Review', value: 0, color: '#ff8400' },
-        ],
-    });
+    const [stats, setStats] = useState<LiveStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600', '#d4d756'];
+    const grayColor = '#898c8d';
 
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Fetch all data in parallel
-                const [users, applications, funds] = await Promise.all([
+                const [users, applications] = await Promise.all([
                     usersRepo.getAll(),
                     applicationsRepo.getAll(),
-                    fundsRepo.getAllFunds()
                 ]);
 
-                // Process data for stats
+                // --- Process Data for Stats ---
+
                 const totalUsers = users.length;
-                const totalApplications = applications.length;
-                const totalFunds = funds.length;
 
                 const totalAwarded = applications
                     .filter(app => app.status === 'Awarded')
                     .reduce((sum, app) => sum + app.requestedAmount, 0);
 
                 const statusCounts = applications.reduce((acc, app) => {
-                    acc[app.status] = (acc[app.status] || 0) + 1;
+                    const status = app.status === 'Submitted' ? 'In Review' : app.status;
+                    acc[status] = (acc[status] || 0) + 1;
                     return acc;
-                }, {} as Record<Application['status'], number>);
+                }, {} as Record<string, number>);
                 
                 const applicationStatusData = [
-                    { label: 'Awarded', value: statusCounts.Awarded || 0, color: '#edda26' },
-                    { label: 'Declined', value: statusCounts.Declined || 0, color: '#898c8d' },
-                    { label: 'In Review', value: statusCounts.Submitted || 0, color: '#ff8400' },
+                    { label: 'Awarded', value: statusCounts.Awarded || 0, color: chartColors[1] },
+                    { label: 'Declined', value: statusCounts.Declined || 0, color: grayColor },
+                    { label: 'In Review', value: statusCounts['In Review'] || 0, color: chartColors[0] },
                 ];
 
+                const appliedUserIds = new Set(applications.map(app => app.uid));
+                const appliedUsersCount = appliedUserIds.size;
+                const notEngagedCount = totalUsers - appliedUsersCount;
+
+                const userEngagementData = [
+                    { label: 'Applied', value: appliedUsersCount, color: chartColors[0] },
+                    { label: 'Not Engaged', value: notEngagedCount > 0 ? notEngagedCount : 0, color: grayColor },
+                ];
+
+                const countryCounts = users.reduce((acc, user) => {
+                    const country = user.primaryAddress?.country || 'Unknown';
+                    acc[country] = (acc[country] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>);
+
+                const topCountriesData = Object.entries(countryCounts)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 5)
+                    .map(([label, value]) => ({ label, value }));
+
+                const eventCounts = applications.reduce((acc, app) => {
+                    const event = app.event === 'My disaster is not listed' ? (app.otherEvent || 'Other').trim() : app.event.trim();
+                    if(event) {
+                        acc[event] = (acc[event] || 0) + 1;
+                    }
+                    return acc;
+                }, {} as Record<string, number>);
+
+                const topEventsData = Object.entries(eventCounts)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 5)
+                    .map(([label, value]) => ({ label, value }));
+
+                const recentUsersData = users.slice(-5).map(user => ({
+                    name: `${user.firstName} ${user.lastName}`,
+                    email: user.email,
+                    fund: user.fundCode || 'N/A',
+                })).reverse();
+
+
                 setStats({
-                    totalUsers,
-                    totalApplications,
-                    totalFunds,
                     totalAwarded,
                     applicationStatusData,
+                    userEngagementData,
+                    topCountriesData,
+                    topEventsData,
+                    recentUsersData,
                 });
 
             } catch (error) {
                 console.error("Failed to fetch live dashboard data:", error);
-                // Optionally set an error state to show in the UI
             } finally {
                 setIsLoading(false);
             }
@@ -134,7 +198,7 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
         fetchData();
     }, []);
 
-    if (isLoading) {
+    if (isLoading || !stats) {
         return <LoadingOverlay message="Fetching Live Data..." />;
     }
 
@@ -150,14 +214,6 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <MetricCard title="Total Users">
-                    <p className="text-5xl font-extrabold text-white">{stats.totalUsers.toLocaleString()}</p>
-                </MetricCard>
-
-                <MetricCard title="Total Funds">
-                    <p className="text-5xl font-extrabold text-white">{stats.totalFunds.toLocaleString()}</p>
-                </MetricCard>
-
                 <MetricCard title="Total Grant Payments (USD)">
                     <div className="text-center">
                         <p className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#edda26] to-[#ff8400]">
@@ -165,9 +221,33 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
                         </p>
                     </div>
                 </MetricCard>
-                
-                <MetricCard title="Applications by Decision" className="lg:col-span-3">
+
+                <MetricCard title="Applications by Decision">
                     <DonutChart data={stats.applicationStatusData} />
+                </MetricCard>
+
+                <MetricCard title="User Engagement">
+                    <DonutChart data={stats.userEngagementData} />
+                </MetricCard>
+
+                <MetricCard title="Top 5 Countries by Users">
+                    <HorizontalBarChartList data={stats.topCountriesData} colors={chartColors} />
+                </MetricCard>
+
+                <MetricCard title="Top 5 Apps by Event Type">
+                    <HorizontalBarChartList data={stats.topEventsData} colors={chartColors} />
+                </MetricCard>
+
+                <MetricCard title="Recently Registered Users">
+                    <div className="space-y-2 w-full">
+                        {stats.recentUsersData.map((user, index) => (
+                            <div key={index} className="grid grid-cols-10 gap-2 text-sm p-2 rounded hover:bg-[#004b8d]/50">
+                                <span className="text-white truncate col-span-4">{user.name}</span>
+                                <span className="text-gray-300 truncate col-span-4">{user.email}</span>
+                                <span className="text-white font-mono text-right col-span-2">{user.fund}</span>
+                            </div>
+                        ))}
+                    </div>
                 </MetricCard>
             </div>
         </div>
