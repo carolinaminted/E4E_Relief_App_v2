@@ -11,6 +11,7 @@ import {
   where,
   documentId,
   onSnapshot,
+  orderBy,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { UserProfile, FundIdentity, Application } from '../types';
@@ -91,15 +92,17 @@ class ApplicationsRepo implements IApplicationsRepo {
     async getForUser(uid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('uid', '==', uid));
         const snapshot = await getDocs(q);
-        // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
-        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        // Sort on the client to avoid needing a composite index in Firestore
+        return applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime());
     }
     
     async getProxySubmissions(adminUid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('submittedBy', '==', adminUid));
         const snapshot = await getDocs(q);
-        // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
-        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        // Sort on the client to avoid needing a composite index in Firestore
+        return applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime());
     }
 
     async getAll(): Promise<Application[]> {
