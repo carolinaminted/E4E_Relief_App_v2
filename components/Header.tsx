@@ -10,7 +10,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ navigate, userName, onLogout }) => {
   return (
-    <header className="flex md:hidden items-center justify-between w-full h-16 bg-[#003a70] px-4 flex-shrink-0 z-30">
+    <header className="flex md:hidden items-center justify-between w-full h-20 bg-[#003a70] px-4 flex-shrink-0 z-30">
       <button onClick={() => navigate('home')} className="transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
         <img
           src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"

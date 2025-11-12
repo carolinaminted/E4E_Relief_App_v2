@@ -43,10 +43,10 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
 
     if (userRole === 'Admin') {
         tiles.push({ 
-            key: 'dashboards', 
-            title: 'Dashboards', 
+            key: 'fundPortal', 
+            title: 'Fund Portal', 
             icon: <DashboardIcon />, 
-            onClick: () => navigate('dashboard'), // Navigate directly to dashboard
+            onClick: () => navigate('fundPortal'),
             colSpan: 'col-span-2'
         });
     }

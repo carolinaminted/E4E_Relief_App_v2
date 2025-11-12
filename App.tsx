@@ -565,7 +565,8 @@ function App() {
         return <DonatePage navigate={navigate} />;
       case 'eligibility':
         return <EligibilityPage navigate={navigate} user={currentUser} />;
-      case 'fundPortal': // This page is now a menu, but for routing, we'll send them to the main dashboard.
+      case 'fundPortal':
+        return <FundPortalPage navigate={navigate} user={currentUser} />;
       case 'dashboard':
         return <DashboardPage navigate={navigate} />;
       case 'ticketing':
@@ -604,6 +605,7 @@ function App() {
         userRole={currentUser.role}
         userName={currentUser.firstName}
         onLogout={handleLogout}
+        isApplyEnabled={isApplyEnabled}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -621,8 +623,10 @@ function App() {
             navigate={navigate}
             currentPage={page}
             userRole={currentUser.role}
+            isApplyEnabled={isApplyEnabled}
         />
         
+        {/* FIX: Corrected prop name from setIsOpen to setIsChatbotOpen */}
         {currentUser.role === 'User' && page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} />}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from './Icons';
+import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon } from './Icons';
 
 type Page = 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
@@ -9,6 +9,7 @@ interface SideNavBarProps {
   userRole: 'User' | 'Admin';
   userName: string;
   onLogout: () => void;
+  isApplyEnabled: boolean;
 }
 
 interface NavItemType {
@@ -32,22 +33,23 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, isApplyEnabled }) => {
   const baseNavItems: NavItemType[] = [
     { page: 'home', label: 'Home', icon: <HomeIcon className="h-6 w-6" /> },
     { page: 'profile', label: 'Profile', icon: <ProfileIcon className="h-6 w-6" /> },
+    { page: 'apply', label: 'Apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !isApplyEnabled },
     { page: 'support', label: 'Support', icon: <SupportIcon className="h-6 w-6" /> },
     { page: 'donate', label: 'Donate', icon: <DonateIcon className="h-6 w-6" /> },
   ];
 
   const navItems = [...baseNavItems];
   if (userRole === 'Admin') {
-    navItems.push({ page: 'dashboard', label: 'Dashboards', icon: <DashboardIcon className="h-6 w-6" /> });
+    navItems.push({ page: 'fundPortal', label: 'Fund Portal', icon: <DashboardIcon className="h-6 w-6" /> });
   }
 
-  // If admin is on any portal page, highlight 'Dashboards'
+  // If admin is on any portal page, highlight 'Fund Portal'
   const adminDashboardPages: Page[] = ['dashboard', 'fundPortal', 'proxy', 'ticketing', 'tokenUsage', 'programDetails'];
-  const activePage = userRole === 'Admin' && adminDashboardPages.includes(currentPage) ? 'dashboard' : currentPage;
+  const activePage = userRole === 'Admin' && adminDashboardPages.includes(currentPage) ? 'fundPortal' : currentPage;
 
 
   return (
