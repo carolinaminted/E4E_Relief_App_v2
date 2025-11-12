@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import PolicyModal from './PolicyModal';
 import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from './Icons';
+// FIX: Import the centralized Page type.
+import type { Page } from './types';
 
 
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'donate' | 'fundPortal' | 'dashboard';
+// type Page = 'home' | 'apply' | 'profile' | 'support' | 'donate' | 'fundPortal' | 'dashboard';
 
 interface HomePageProps {
   navigate: (page: Page) => void;

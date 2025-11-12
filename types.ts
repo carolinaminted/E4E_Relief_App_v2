@@ -68,6 +68,9 @@ export interface ActiveIdentity {
   fundCode: string;
 }
 
+// FIX: Add a centralized Page type for navigation.
+export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
+
 
 /**
  * The main data model for a user's profile information.

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity } from './types';
+// FIX: Import the centralized Page type.
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, IdentityEligibility, EligibilityStatus, FundIdentity, ActiveIdentity, Page } from './types';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
@@ -34,7 +35,8 @@ import { IconDefs } from './components/Icons';
 import Footer from './components/Footer';
 import Header from './components/Header';
 
-type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
+// FIX: Removed local Page type definition.
+// type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
 type AuthState = {
     status: 'loading' | 'signedIn' | 'signedOut';
