@@ -63,6 +63,9 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
                 />
             </button>
             <span className="text-gray-200 truncate mt-3">Welcome, {userName}</span>
+            <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 mt-4 w-full rounded-md text-sm transition-colors duration-200">
+              Logout
+            </button>
         </div>
         <div className="flex-grow">
           {navItems.map(item => (
@@ -75,11 +78,6 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
               disabled={item.disabled}
             />
           ))}
-        </div>
-        <div className="flex-shrink-0 flex flex-col items-center space-y-3">
-          <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200">
-              Logout
-          </button>
         </div>
       </nav>
   );
