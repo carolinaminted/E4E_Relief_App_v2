@@ -301,7 +301,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
-      <div className="relative flex justify-center items-center mb-8 md:hidden">
+      <div className="relative flex justify-center items-center mb-8">
         <div className="text-center">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Profile

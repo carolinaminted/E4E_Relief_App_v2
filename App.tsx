@@ -36,6 +36,7 @@ import BottomNavBar from './components/BottomNavBar';
 import { IconDefs } from './components/Icons';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import LiveDashboardPage from './components/LiveDashboardPage';
 
 // FIX: Removed local Page type definition.
 // type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -590,6 +591,8 @@ function App() {
         return <FundPortalPage navigate={navigate} user={currentUser} />;
       case 'dashboard':
         return <DashboardPage navigate={navigate} />;
+      case 'liveDashboard':
+        return <LiveDashboardPage navigate={navigate} />;
       case 'ticketing':
         return <TicketingPage navigate={navigate} />;
       case 'programDetails':

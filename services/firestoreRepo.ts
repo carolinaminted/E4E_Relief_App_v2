@@ -45,6 +45,12 @@ class UsersRepo implements IUsersRepo {
         return null;
     }
 
+    async getAll(): Promise<UserProfile[]> {
+        const q = query(this.usersCol);
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => doc.data() as UserProfile);
+    }
+
     async add(user: Omit<UserProfile, 'role'>, uid: string): Promise<void> {
         const userWithRole = { ...user, role: 'User' };
         await setDoc(doc(this.usersCol, uid), userWithRole);
@@ -93,6 +99,11 @@ class ApplicationsRepo implements IApplicationsRepo {
         const q = query(this.appsCol, where('submittedBy', '==', adminUid));
         const snapshot = await getDocs(q);
         // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
+        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+    }
+
+    async getAll(): Promise<Application[]> {
+        const snapshot = await getDocs(this.appsCol);
         return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
     }
 

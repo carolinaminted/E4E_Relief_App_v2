@@ -5,6 +5,7 @@ export interface IUsersRepo {
     get(uid: string): Promise<UserProfile | null>;
     listen(uid: string, callback: (profile: UserProfile | null) => void): () => void; // Returns an unsubscribe function
     getByEmail(email: string): Promise<UserProfile | null>;
+    getAll(): Promise<UserProfile[]>;
     add(user: Omit<UserProfile, 'role'>, uid: string): Promise<void>;
     update(uid: string, data: Partial<UserProfile>): Promise<void>;
 }
@@ -19,6 +20,7 @@ export interface IIdentitiesRepo {
 export interface IApplicationsRepo {
     getForUser(uid: string): Promise<Application[]>;
     getProxySubmissions(adminUid: string): Promise<Application[]>;
+    getAll(): Promise<Application[]>;
     add(application: Omit<Application, 'id'>): Promise<Application>;
 }
 
