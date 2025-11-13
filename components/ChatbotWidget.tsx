@@ -188,9 +188,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
         className={`fixed top-24 bottom-40 w-full max-w-sm max-h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-orange-800/50 transition-all duration-300 ease-in-out left-1/2 -translate-x-1/2 md:top-auto md:bottom-24 md:h-[calc(100vh-8rem)] md:left-8 md:-translate-x-0 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
         aria-hidden={!isOpen}
       >
-       <header className="bg-[#ff8400] p-4 border-b border-black/20 shadow-lg rounded-t-lg flex-shrink-0">
+       <header className="bg-[#003a70] p-4 border-b border-black/20 shadow-lg rounded-t-lg flex-shrink-0">
         <div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Relief Assistant
             </h1>
             <p className="text-xs text-white/90 italic mt-1">*AI Agent preview using generative responses</p>
@@ -199,7 +199,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
        <main className="flex-1 overflow-hidden flex flex-col">
         <ChatWindow messages={messages} isLoading={isLoading} />
       </main>
-      <footer className="p-4 bg-[#ff8400] border-t border-black/20 rounded-b-lg flex-shrink-0">
+      <footer className="p-4 bg-[#003a70] border-t border-black/20 rounded-b-lg flex-shrink-0">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </footer>
     </div>
