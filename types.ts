@@ -106,6 +106,8 @@ export interface UserProfile {
   classVerificationStatus: ClassVerificationStatus; // Status for the *active* identity.
   eligibilityStatus: EligibilityStatus; // Status for the *active* identity.
   role: 'User' | 'Admin';
+  tokensUsedTotal?: number;
+  estimatedCostTotal?: number;
 }
 
 /**
@@ -239,6 +241,7 @@ export interface TokenEvent {
   outputTokens: number;
   environment: 'Production' | 'Development';
   account: string;
+  fundCode: string;
 }
 
 // FIX: Added missing type definitions for Token Usage Analytics.

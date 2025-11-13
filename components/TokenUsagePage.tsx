@@ -26,7 +26,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   const [lastHourUsage, setLastHourUsage] = useState<LastHourUsageDataPoint[]>([]);
   const [last15MinutesUsage, setLast15MinutesUsage] = useState<LastHourUsageDataPoint[]>([]);
   
-  const [filterOptions, setFilterOptions] = useState(getFilterOptions());
+  const [filterOptions, setFilterOptions] = useState(getFilterOptions(currentUser.fundCode));
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const [filters, setFilters] = useState<TokenUsageFilters>({
@@ -46,25 +46,23 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   });
 
   const { totalCost, totalTokens } = useMemo(() => {
-    if (!tableData || tableData.length === 0) {
-        return { totalCost: 0, totalTokens: 0 };
-    }
-    const cost = tableData.reduce((sum, row) => sum + row.cost, 0);
-    const tokens = tableData.reduce((sum, row) => sum + row.total, 0);
-    return { totalCost: cost, totalTokens: tokens };
-  }, [tableData]);
+    return {
+        totalCost: currentUser.estimatedCostTotal ?? 0,
+        totalTokens: currentUser.tokensUsedTotal ?? 0,
+    };
+  }, [currentUser.estimatedCostTotal, currentUser.tokensUsedTotal]);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
   
   const fetchData = useCallback(() => {
-    setTableData(getTokenUsageTableData(filters));
-    setTopSessionData(getTopSessionData(filters));
-    setLastHourUsage(getUsageLastHour(filters));
-    setLast15MinutesUsage(getUsageLast15Minutes(filters));
-    setFilterOptions(getFilterOptions());
-  }, [filters]);
+    setTableData(getTokenUsageTableData(filters, currentUser.fundCode));
+    setTopSessionData(getTopSessionData(filters, currentUser.fundCode));
+    setLastHourUsage(getUsageLastHour(filters, currentUser.fundCode));
+    setLast15MinutesUsage(getUsageLast15Minutes(filters, currentUser.fundCode));
+    setFilterOptions(getFilterOptions(currentUser.fundCode));
+  }, [filters, currentUser.fundCode]);
 
   useEffect(() => {
     fetchData();
@@ -161,13 +159,13 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
-                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Total Cost (USD)</h3>
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Lifetime Cost (USD)</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#edda26] to-[#ff8400] text-center">
                         ${totalCost.toFixed(4)}
                     </p>
                 </div>
                 <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
-                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Total Tokens Used</h3>
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Lifetime Tokens Used</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
                         {totalTokens.toLocaleString()}
                     </p>
@@ -177,7 +175,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
                     <button type="button" onClick={() => toggleSection('lastHour')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.lastHour}>
-                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last Hour)</h3>
+                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Session Tokens (Last Hour)</h3>
                         <ChevronIcon isOpen={openSections.lastHour} />
                     </button>
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lastHour ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
@@ -189,7 +187,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
                 <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
                     <button type="button" onClick={() => toggleSection('last15')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.last15}>
-                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage (Last 15 Minutes)</h3>
+                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Session Tokens (Last 15 Min)</h3>
                         <ChevronIcon isOpen={openSections.last15} />
                     </button>
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.last15 ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
@@ -214,7 +212,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
             <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
                 <button type="button" onClick={() => toggleSection('lifetime')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.lifetime}>
-                    <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Lifetime Token Usage</h3>
+                    <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Current Session Token Usage</h3>
                     <ChevronIcon isOpen={openSections.lifetime} />
                 </button>
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lifetime ? 'max-h-[3000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>

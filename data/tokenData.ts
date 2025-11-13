@@ -14,6 +14,7 @@ const MODEL_PRICING: ModelPricing = {
 const MOCK_USERS = ['user@example.com', 'admin@example.com', 'test@example.com'];
 const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision'];
 const MOCK_MODELS: TokenEvent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+const MOCK_FUND_CODES = ['E4E', 'JHH', 'SQRT', 'DOM', 'ROST'];
 
 // --- Generate realistic mock data ---
 let mockTokenEvents: TokenEvent[] = [];
@@ -40,6 +41,8 @@ if (typeof window !== 'undefined') {
         outputTokens: Math.floor(Math.random() * 500) + 20,
         environment: Math.random() > 0.2 ? 'Production' : 'Development',
         account: 'E4E-Relief-Inc',
+        // FIX: Added missing 'fundCode' property to satisfy the TokenEvent type.
+        fundCode: MOCK_FUND_CODES[i % MOCK_FUND_CODES.length],
       });
     }
     (window as any).__mockTokenEvents = generatedEvents;

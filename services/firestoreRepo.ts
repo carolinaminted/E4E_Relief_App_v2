@@ -12,6 +12,7 @@ import {
   documentId,
   onSnapshot,
   orderBy,
+  increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { UserProfile, FundIdentity, Application } from '../types';
@@ -60,6 +61,14 @@ class UsersRepo implements IUsersRepo {
     async update(uid: string, data: Partial<UserProfile>): Promise<void> {
         const docRef = doc(this.usersCol, uid);
         await updateDoc(docRef, data);
+    }
+
+    async incrementTokenUsage(uid: string, tokens: number, cost: number): Promise<void> {
+        const docRef = doc(this.usersCol, uid);
+        await updateDoc(docRef, {
+            tokensUsedTotal: increment(tokens),
+            estimatedCostTotal: increment(cost),
+        });
     }
 }
 

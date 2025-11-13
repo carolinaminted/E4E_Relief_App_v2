@@ -8,6 +8,7 @@ export interface IUsersRepo {
     getAll(): Promise<UserProfile[]>;
     add(user: Omit<UserProfile, 'role'>, uid: string): Promise<void>;
     update(uid: string, data: Partial<UserProfile>): Promise<void>;
+    incrementTokenUsage(uid: string, tokens: number, cost: number): Promise<void>;
 }
 
 export interface IIdentitiesRepo {

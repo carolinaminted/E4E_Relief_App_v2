@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Application, UserProfile, ApplicationFormData, EventData } from '../types';
+import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
 import ApplyProxyContactPage from './ApplyProxyContactPage';
 import ApplyEventPage from './ApplyEventPage';
 import ApplyExpensesPage from './ApplyExpensesPage';
@@ -12,7 +12,44 @@ interface ProxyApplyPageProps {
   navigate: (page: Page) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   proxyApplications: Application[];
+  userProfile: UserProfile;
+  onAddIdentity: (fundCode: string) => void;
 }
+
+const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const hasPassedCV = cvStatus === 'passed';
+
+    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
+    const passedClasses = "bg-green-800/50 text-green-300";
+    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
+
+    const handleClick = () => {
+        if (!hasPassedCV) {
+             console.log("[Telemetry] verification_needed_cta_clicked_from_proxy_page");
+             onClick();
+        }
+    };
+
+    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
+    
+    return (
+        <button
+            onClick={handleClick}
+            disabled={hasPassedCV}
+            role={hasPassedCV ? 'status' : 'button'}
+            aria-label={text}
+            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
+        >
+            {!hasPassedCV && (
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+            )}
+            <span>{text}</span>
+        </button>
+    );
+};
 
 const statusStyles: Record<Application['status'], string> = {
     Submitted: 'text-[#ff8400]',
@@ -26,7 +63,7 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     </svg>
 );
 
-const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications }) => {
+const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications, userProfile, onAddIdentity }) => {
     const [step, setStep] = useState(1);
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(true);
@@ -170,7 +207,18 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                     </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Proxy Application</h1>
+                 <div className="text-center">
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Proxy Application</h1>
+                    {userProfile && (
+                        <div className="mt-2 flex flex-col items-center gap-2">
+                            <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
+                            <EligibilityIndicator 
+                                cvStatus={userProfile.classVerificationStatus} 
+                                onClick={() => onAddIdentity(userProfile.fundCode)} 
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             <section className="border border-[#005ca0] bg-[#003a70]/30 rounded-lg pb-4 mb-8">

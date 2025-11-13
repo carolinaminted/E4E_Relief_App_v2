@@ -636,6 +636,8 @@ function App() {
                     navigate={navigate}
                     onSubmit={handleProxyApplicationSubmit}
                     proxyApplications={userProxyApplications}
+                    userProfile={currentUser}
+                    onAddIdentity={handleStartAddIdentity}
                 />;
       case 'home':
       default:
