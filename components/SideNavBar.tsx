@@ -1,7 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon } from './Icons';
-// FIX: Use the centralized Page type from types.ts to ensure all navigation values are covered, including 'login' and 'register'.
 import type { Page } from '../types';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface SideNavBarProps {
   navigate: (page: Page) => void;
@@ -14,7 +15,7 @@ interface SideNavBarProps {
 
 interface NavItemType {
   page: Page;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   disabled?: boolean;
 }
@@ -34,17 +35,19 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
 );
 
 const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply }) => {
+  const { t } = useTranslation();
+
   const baseNavItems: NavItemType[] = [
-    { page: 'home', label: 'Home', icon: <HomeIcon className="h-6 w-6" /> },
-    { page: 'profile', label: 'Profile', icon: <ProfileIcon className="h-6 w-6" /> },
-    { page: 'apply', label: 'Apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
-    { page: 'support', label: 'Support', icon: <SupportIcon className="h-6 w-6" /> },
-    { page: 'donate', label: 'Donate', icon: <DonateIcon className="h-6 w-6" /> },
+    { page: 'home', labelKey: 'nav.home', icon: <HomeIcon className="h-6 w-6" /> },
+    { page: 'profile', labelKey: 'nav.profile', icon: <ProfileIcon className="h-6 w-6" /> },
+    { page: 'apply', labelKey: 'nav.apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
+    { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" /> },
+    { page: 'donate', labelKey: 'nav.donate', icon: <DonateIcon className="h-6 w-6" /> },
   ];
 
   const navItems = [...baseNavItems];
   if (userRole === 'Admin') {
-    navItems.push({ page: 'fundPortal', label: 'Fund Portal', icon: <DashboardIcon className="h-6 w-6" /> });
+    navItems.push({ page: 'fundPortal', labelKey: 'nav.fundPortal', icon: <DashboardIcon className="h-6 w-6" /> });
   }
 
   // If admin is on any portal page, highlight 'Fund Portal'
@@ -64,24 +67,27 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
                     />
                 </button>
                 <div className="flex-1 flex justify-center items-center min-w-0">
-                    <span className="text-gray-200 truncate pl-2">Welcome, {userName}</span>
+                    <span className="text-gray-200 truncate pl-2">{t('nav.welcome', { name: userName })}</span>
                 </div>
             </div>
             <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200">
-              Logout
+              {t('nav.logout')}
             </button>
         </div>
         <div className="flex-grow">
           {navItems.map(item => (
             <NavItem
               key={item.page}
-              label={item.label}
+              label={t(item.labelKey)}
               icon={item.icon}
               onClick={() => navigate(item.page as Page)}
               isActive={activePage === item.page}
               disabled={item.disabled}
             />
           ))}
+        </div>
+        <div className="mt-auto">
+          <LanguageSwitcher variant="sideNav" />
         </div>
       </nav>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
 import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from './Icons';
 import type { Page } from '../types';
@@ -16,35 +17,36 @@ interface HomePageProps {
 
 interface Tile {
   key: string;
-  title: string;
+  titleKey: string;
   icon: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
-  disabledTooltip?: string;
+  disabledTooltipKey?: string;
   colSpan?: string;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, canApply, fundName, userRole }) => {
+    const { t } = useTranslation();
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
     const tiles: Tile[] = [
         { 
             key: 'apply', 
-            title: 'Apply', 
+            titleKey: 'nav.apply', 
             icon: <ApplyIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('apply'),
             disabled: !canApply,
-            disabledTooltip: !isVerifiedAndEligible ? "Class Verification required to access applications." : "Your grant limits have been reached."
+            disabledTooltipKey: !isVerifiedAndEligible ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
         },
-        { key: 'profile', title: 'Profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
-        { key: 'support', title: 'Support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },
-        { key: 'donate', title: 'Donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') },
+        { key: 'profile', titleKey: 'nav.profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
+        { key: 'support', titleKey: 'nav.support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },
+        { key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') },
     ];
 
     if (userRole === 'Admin') {
         tiles.push({ 
             key: 'fundPortal', 
-            title: 'Fund Portal', 
+            titleKey: 'nav.fundPortal', 
             icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('fundPortal'),
             colSpan: 'col-span-2'
@@ -57,7 +59,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
         <div className="w-full flex-grow flex flex-col items-center"> {/* Content wrapper */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                Home
+                {t('homePage.title')}
             </h1>
             <p className="text-xl font-semibold text-white mt-1">{fundName || 'E4E Relief'}</p>
           </div>
@@ -67,7 +69,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
                 <div 
                     key={tile.key}
                     onClick={!tile.disabled ? tile.onClick : undefined}
-                    title={tile.disabled ? tile.disabledTooltip : ""}
+                    title={tile.disabled && tile.disabledTooltipKey ? t(tile.disabledTooltipKey) : ""}
                     aria-disabled={!!tile.disabled}
                     className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center justify-center text-center ${
                         tile.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/80 cursor-pointer hover:scale-105'
@@ -75,7 +77,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
                 >
                     {tile.icon}
                     <h2 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {tile.title}
+                        {t(tile.titleKey)}
                     </h2>
                 </div>
             ))}
@@ -86,7 +88,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
             onClick={() => setIsPolicyModalOpen(true)}
             className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
           >
-            Powered by E4E Relief
+            {t('homePage.poweredBy')}
           </button>
         </div>
       </div>

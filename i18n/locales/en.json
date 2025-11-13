@@ -1,0 +1,90 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "verify": "Verify",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "apply": "Apply",
+    "support": "Support",
+    "donate": "Donate",
+    "fundPortal": "Fund Portal",
+    "logout": "Logout",
+    "welcome": "Welcome, {{name}}"
+  },
+  "loginPage": {
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "signInButton": "Sign In",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign Up",
+    "errorGeneric": "Please enter both email and password.",
+    "errorInvalid": "Invalid email or password. Please try again."
+  },
+  "registerPage": {
+    "firstNameLabel": "First Name",
+    "lastNameLabel": "Last Name",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "fundCodeLabel": "Fund Code",
+    "fundCodeHelp": "Enter the code provided by your employer or program.",
+    "signUpButton": "Sign Up",
+    "hasAccount": "Already have an account?",
+    "signInLink": "Sign In",
+    "errorAllFields": "All fields are required.",
+    "errorGeneric": "Registration failed. Please try again."
+  },
+  "homePage": {
+    "title": "Home",
+    "poweredBy": "Powered by E4E Relief",
+    "applyTooltipVerification": "Class Verification required to access applications.",
+    "applyTooltipLimits": "Your grant limits have been reached."
+  },
+  "applyPage": {
+    "title": "Apply for Relief",
+    "eligibility": "Eligible to apply",
+    "verificationNeeded": "Verification needed",
+    "noActiveFund": "No active fund selected.",
+    "limitsReachedTitle": "Grant Limits Reached",
+    "limitsReachedBody": "You are not eligible to apply at this time because your 12-month or lifetime grant limits have been reached.",
+    "limitsReachedCta": "Please check your {{profileLink}} for more details.",
+    "profileLink": "Profile"
+  },
+  "applyContactPage": {
+    "getStartedTitle": "Let's Get Started",
+    "contactInfoTitle": "Contact Information",
+    "primaryAddressTitle": "Primary Address",
+    "mailingAddressTitle": "Mailing Address",
+    "additionalDetailsTitle": "Additional Details",
+    "consentTitle": "Consent & Acknowledgement",
+    "collapse": "Collapse",
+    "firstName": "First Name",
+    "middleName": "Middle Name(s)",
+    "lastName": "Last Name",
+    "suffix": "Suffix",
+    "email": "Email",
+    "mobileNumber": "Mobile Number",
+    "mobileNumberPlaceholder": "(555) 555-5555",
+    "mailingAddressSame": "Mailing Address Same as Primary?",
+    "employmentStartDate": "Employment Start Date",
+    "eligibilityType": "Eligibility Type",
+    "householdIncome": "Estimated Annual Household Income",
+    "householdSize": "Number of people in household",
+    "homeowner": "Do you own your own home?",
+    "preferredLanguage": "Preferred Language",
+    "ackPolicies": "I have read and agree to E4E Relief’s Privacy Policy and Cookie Policy.",
+    "commConsent": "I consent to receive emails and text messages regarding my application.",
+    "infoCorrect": "All information I have provided is accurate.",
+    "yes": "Yes",
+    "no": "No",
+    "errorCorrection": "Please correct the highlighted errors to continue."
+  }
+}

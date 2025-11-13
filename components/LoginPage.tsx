@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
@@ -6,6 +7,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,14 +21,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      setError(t('loginPage.errorGeneric'));
       return;
     }
     setIsLoading(true);
     setError('');
     const success = await onLogin(email, password);
     if (!success) {
-      setError('Invalid email or password. Please try again.');
+      setError(t('loginPage.errorInvalid'));
       setIsLoading(false);
     }
     // On success, the App component will handle navigation
@@ -47,7 +49,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
         </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Email Address</label>
+          <label htmlFor="email" className="block text-sm font-medium text-white mb-2">{t('loginPage.emailLabel')}</label>
           <input
             type="email"
             id="email"
@@ -59,7 +61,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-white mb-2">Password</label>
+          <label htmlFor="password" className="block text-sm font-medium text-white mb-2">{t('loginPage.passwordLabel')}</label>
           <input
             type="password"
             id="password"
@@ -80,12 +82,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             </div>
-          ) : 'Sign In'}
+          ) : t('loginPage.signInButton')}
         </button>
         <p className="text-sm text-center text-white">
-          Don't have an account?{' '}
+          {t('loginPage.noAccount')}{' '}
           <button type="button" onClick={switchToRegister} className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 hover:underline">
-            Sign Up
+            {t('loginPage.signUpLink')}
           </button>
         </p>
       </form>

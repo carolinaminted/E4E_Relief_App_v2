@@ -1,0 +1,90 @@
+{
+  "common": {
+    "next": "Siguiente",
+    "back": "Atrás",
+    "submit": "Enviar",
+    "save": "Guardar Cambios",
+    "cancel": "Cancelar",
+    "verify": "Verificar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "nav": {
+    "home": "Inicio",
+    "profile": "Perfil",
+    "apply": "Solicitar",
+    "support": "Soporte",
+    "donate": "Donar",
+    "fundPortal": "Portal del Fondo",
+    "logout": "Cerrar Sesión",
+    "welcome": "Bienvenido, {{name}}"
+  },
+  "loginPage": {
+    "emailLabel": "Correo Electrónico",
+    "passwordLabel": "Contraseña",
+    "signInButton": "Iniciar Sesión",
+    "noAccount": "¿No tienes una cuenta?",
+    "signUpLink": "Regístrate",
+    "errorGeneric": "Por favor, ingresa el correo y la contraseña.",
+    "errorInvalid": "Correo o contraseña no válidos. Inténtalo de nuevo."
+  },
+  "registerPage": {
+    "firstNameLabel": "Nombre",
+    "lastNameLabel": "Apellido",
+    "emailLabel": "Correo Electrónico",
+    "passwordLabel": "Contraseña",
+    "fundCodeLabel": "Código del Fondo",
+    "fundCodeHelp": "Ingresa el código proporcionado por tu empleador o programa.",
+    "signUpButton": "Registrarse",
+    "hasAccount": "¿Ya tienes una cuenta?",
+    "signInLink": "Inicia Sesión",
+    "errorAllFields": "Todos los campos son obligatorios.",
+    "errorGeneric": "El registro falló. Por favor, inténtalo de nuevo."
+  },
+  "homePage": {
+    "title": "Inicio",
+    "poweredBy": "Impulsado por E4E Relief",
+    "applyTooltipVerification": "Se requiere verificación de clase para acceder a las solicitudes.",
+    "applyTooltipLimits": "Has alcanzado los límites de tu subvención."
+  },
+  "applyPage": {
+    "title": "Solicitar Ayuda",
+    "eligibility": "Elegible para solicitar",
+    "verificationNeeded": "Verificación necesaria",
+    "noActiveFund": "No hay fondo activo seleccionado.",
+    "limitsReachedTitle": "Límites de Subvención Alcanzados",
+    "limitsReachedBody": "No eres elegible para solicitar en este momento porque has alcanzado tus límites de subvención de 12 meses o de por vida.",
+    "limitsReachedCta": "Por favor, revisa tu {{profileLink}} para más detalles.",
+    "profileLink": "Perfil"
+  },
+  "applyContactPage": {
+    "getStartedTitle": "Empecemos",
+    "contactInfoTitle": "Información de Contacto",
+    "primaryAddressTitle": "Dirección Principal",
+    "mailingAddressTitle": "Dirección Postal",
+    "additionalDetailsTitle": "Detalles Adicionales",
+    "consentTitle": "Consentimiento y Reconocimiento",
+    "collapse": "Ocultar",
+    "firstName": "Nombre",
+    "middleName": "Segundo(s) Nombre(s)",
+    "lastName": "Apellido",
+    "suffix": "Sufijo",
+    "email": "Correo Electrónico",
+    "mobileNumber": "Número de Móvil",
+    "mobileNumberPlaceholder": "(555) 555-5555",
+    "mailingAddressSame": "¿La dirección postal es la misma que la principal?",
+    "employmentStartDate": "Fecha de Inicio de Empleo",
+    "eligibilityType": "Tipo de Elegibilidad",
+    "householdIncome": "Ingreso Anual Estimado del Hogar",
+    "householdSize": "Número de personas en el hogar",
+    "homeowner": "¿Eres propietario de tu vivienda?",
+    "preferredLanguage": "Idioma de Preferencia",
+    "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
+    "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
+    "infoCorrect": "Toda la información que he proporcionado es precisa.",
+    "yes": "Sí",
+    "no": "No",
+    "errorCorrection": "Por favor, corrige los errores resaltados para continuar."
+  }
+}
