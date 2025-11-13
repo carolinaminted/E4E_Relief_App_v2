@@ -8,6 +8,7 @@ import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
 import { authClient } from './services/firebaseAuthClient';
 import { usersRepo, identitiesRepo, applicationsRepo, fundsRepo } from './services/firestoreRepo';
+import { useTranslation } from 'react-i18next';
 
 // Page Components
 import LoginPage from './components/LoginPage';
@@ -50,6 +51,7 @@ type AuthState = {
 };
 
 function App() {
+  const { t } = useTranslation();
   const [page, setPage] = useState<GlobalPage>('login');
   const [authState, setAuthState] = useState<AuthState>({ status: 'loading', user: null, profile: null, claims: {} });
   
@@ -295,16 +297,16 @@ function App() {
     if (!identityToRemove) return;
 
     if (activeIdentity?.id === identityId) {
-        alert("You cannot remove your active identity.");
+        alert(t('profilePage.cannotRemoveActive'));
         return;
     }
 
-    if (window.confirm(`Are you sure you want to remove the identity for ${identityToRemove.fundName}?`)) {
+    if (window.confirm(t('profilePage.removeIdentityConfirm', { fundName: identityToRemove.fundName }))) {
         console.log(`[Telemetry] track('IdentityRemove', { fundCode: ${identityToRemove.fundCode} })`);
         await identitiesRepo.remove(identityId);
         setAllIdentities(prev => prev.filter(id => id.id !== identityId));
     }
-  }, [currentUser, allIdentities, activeIdentity]);
+  }, [currentUser, allIdentities, activeIdentity, t]);
 
   const handleVerificationSuccess = useCallback(async () => {
     if (!currentUser) return;
@@ -360,8 +362,8 @@ function App() {
     if (!currentUser) return;
     // The onSnapshot listener will automatically update the UI state from this write.
     await usersRepo.update(currentUser.uid, updatedProfile);
-    alert('Profile saved!');
-  }, [currentUser]);
+    alert(t('profilePage.saveSuccess', 'Profile saved!')); // Using a default value
+  }, [currentUser, t]);
 
   const handleApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
     if (!currentUser || !activeFund) {
@@ -555,7 +557,7 @@ function App() {
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
-      return <LoadingOverlay message="Authenticating..." />;
+      return <LoadingOverlay message={t('app.authenticating')} />;
     }
     
     if (authState.status === 'signedOut') {
@@ -573,7 +575,7 @@ function App() {
     }
     
     // This case should now be covered by the loading overlay above, but as a fallback:
-    if (!currentUser) return <LoadingOverlay message="Loading Profile..." />;
+    if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
 
     switch (page) {
       case 'classVerification':
@@ -680,13 +682,13 @@ function App() {
                <div className="relative flex justify-center items-center my-8">
                   <div className="text-center">
                       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        Profile
+                        {t('profilePage.title')}
                       </h1>
                       {activeIdentity && (
                         <div className="mt-2 flex flex-col items-center gap-2">
                           <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
                            <span className="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors bg-green-800/50 text-green-300">
-                              Eligible to apply
+                              {t('applyPage.eligibility')}
                           </span>
                         </div>
                       )}

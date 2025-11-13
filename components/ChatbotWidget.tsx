@@ -8,6 +8,7 @@ import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
+import { useTranslation } from 'react-i18next';
 
 interface ChatbotWidgetProps {
   applications: Application[];
@@ -19,8 +20,9 @@ interface ChatbotWidgetProps {
 }
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: MessageRole.MODEL, content: "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation." }
+    { role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const chatSessionRef = useRef<Chat | null>(null);
@@ -172,13 +174,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
       console.error(error);
       const errorMessage: ChatMessage = { 
         role: MessageRole.ERROR, 
-        content: "Sorry, I encountered an error. Please try again." 
+        content: t('chatbotWidget.errorMessage') 
       };
       setMessages(prevMessages => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund]);
+  }, [isLoading, applications, onChatbotAction, activeFund, t]);
 
   const toggleChat = () => setIsOpen(!isOpen);
   
@@ -191,9 +193,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
        <header className="bg-[#003a70]/70 p-4 border-b border-[#002a50] shadow-lg rounded-t-lg flex-shrink-0">
         <div>
             <h1 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-              Relief Assistant
+              {t('chatbotWidget.title')}
             </h1>
-            <p className="text-xs text-gray-400 italic mt-1">*AI Agent preview using generative responses</p>
+            <p className="text-xs text-gray-400 italic mt-1">{t('chatbotWidget.disclaimer')}</p>
         </div>
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">
