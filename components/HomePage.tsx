@@ -55,9 +55,12 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
     <>
       <div className="flex-1 flex flex-col items-center pt-6 md:pt-16 px-4 sm:px-8 text-center">
         <div className="w-full flex-grow flex flex-col items-center"> {/* Content wrapper */}
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-            {fundName || 'E4E Relief'}
-          </h1>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                Home
+            </h1>
+            <p className="text-xl font-semibold text-white mt-1">{fundName || 'E4E Relief'}</p>
+          </div>
 
           <div className={`w-full max-w-md sm:max-w-2xl mx-auto mt-6 md:mt-12 grid grid-cols-2 gap-3 sm:gap-6`}>
             {tiles.map((tile) => (
