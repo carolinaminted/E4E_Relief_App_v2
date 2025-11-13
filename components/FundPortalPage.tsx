@@ -129,7 +129,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 w-full mt-12 max-w-md sm:max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 w-full max-w-md sm:max-w-2xl mx-auto">
           <IconDefs />
           {portalTiles.map((tile, index) => {
             // This logic checks if the current tile is the last one in the list AND if the total number of tiles is odd.
