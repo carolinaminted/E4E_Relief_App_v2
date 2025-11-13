@@ -638,6 +638,7 @@ function App() {
                     proxyApplications={userProxyApplications}
                     userProfile={currentUser}
                     onAddIdentity={handleStartAddIdentity}
+                    mainRef={mainRef}
                 />;
       case 'home':
       default:

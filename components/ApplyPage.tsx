@@ -122,16 +122,16 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
     }
   }, [formData, userProfile.uid, userProfile.fundCode]);
 
-  const nextStep = () => {
+  useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTo(0, 0);
     }
+  }, [step, mainRef]);
+
+  const nextStep = () => {
     setStep(prev => prev + 1);
   };
   const prevStep = () => {
-    if (mainRef.current) {
-      mainRef.current.scrollTo(0, 0);
-    }
     setStep(prev => prev - 1);
   };
   
