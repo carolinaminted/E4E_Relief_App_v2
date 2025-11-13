@@ -340,7 +340,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                         required
                         error={errors.isMailingAddressSame}
                     />
-                    {!formData.isMailingAddressSame && (
+                    {formData.isMailingAddressSame === false && (
                         <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
                         <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}}/>
                         </div>

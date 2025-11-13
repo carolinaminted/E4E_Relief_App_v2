@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import type { Application, UserProfile, ApplicationFormData, EventData } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
 import ApplyProxyContactPage from './ApplyProxyContactPage';
 import ApplyEventPage from './ApplyEventPage';
 import ApplyExpensesPage from './ApplyExpensesPage';
@@ -12,7 +12,45 @@ interface ProxyApplyPageProps {
   navigate: (page: Page) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   proxyApplications: Application[];
+  userProfile: UserProfile;
+  onAddIdentity: (fundCode: string) => void;
+  mainRef: React.RefObject<HTMLElement>;
 }
+
+const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const hasPassedCV = cvStatus === 'passed';
+
+    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
+    const passedClasses = "bg-green-800/50 text-green-300";
+    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
+
+    const handleClick = () => {
+        if (!hasPassedCV) {
+             console.log("[Telemetry] verification_needed_cta_clicked_from_proxy_page");
+             onClick();
+        }
+    };
+
+    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
+    
+    return (
+        <button
+            onClick={handleClick}
+            disabled={hasPassedCV}
+            role={hasPassedCV ? 'status' : 'button'}
+            aria-label={text}
+            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
+        >
+            {!hasPassedCV && (
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+            )}
+            <span>{text}</span>
+        </button>
+    );
+};
 
 const statusStyles: Record<Application['status'], string> = {
     Submitted: 'text-[#ff8400]',
@@ -26,7 +64,7 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     </svg>
 );
 
-const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications }) => {
+const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications, userProfile, onAddIdentity, mainRef }) => {
     const [step, setStep] = useState(1);
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(true);
@@ -89,13 +127,16 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
         return [...proxyApplications].reverse();
     }, [proxyApplications]);
 
+    useEffect(() => {
+        if (mainRef.current) {
+            mainRef.current.scrollTo(0, 0);
+        }
+    }, [step, mainRef]);
 
     const nextStep = () => {
-        window.scrollTo(0, 0);
         setStep(prev => prev + 1);
     };
     const prevStep = () => {
-        window.scrollTo(0, 0);
         setStep(prev => prev - 1);
     };
 
@@ -170,37 +211,50 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                     </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Proxy Application</h1>
-            </div>
-
-            <section className="border border-[#005ca0] bg-[#003a70]/30 rounded-lg pb-4 mb-8">
-                <button type="button" onClick={() => setIsHistoryOpen(p => !p)} className="w-full flex justify-between items-center text-left p-4" aria-expanded={isHistoryOpen}>
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Proxy Submissions</h2>
-                    <ChevronIcon isOpen={isHistoryOpen} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out ${isHistoryOpen ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible px-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                    <div className="space-y-4">
-                    {proxyApplications.length > 0 ? (
-                        sortedApplicationsForDisplay.map(app => (
-                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
-                            <div>
-                                <p className="font-bold text-md text-white">{app.profileSnapshot.firstName} {app.profileSnapshot.lastName}</p>
-                                <p className="text-sm text-gray-300">Event: {app.event}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-md text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
-                                <p className="text-sm text-gray-300">Status: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
-                            </div>
-                        </button>
-                        ))
-                    ) : (
-                        <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
-                            <p className="text-gray-300">You have not submitted any proxy applications yet.</p>
+                 <div className="text-center">
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Proxy Application</h1>
+                    {userProfile && (
+                        <div className="mt-2 flex flex-col items-center gap-2">
+                            <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
+                            <EligibilityIndicator 
+                                cvStatus={userProfile.classVerificationStatus} 
+                                onClick={() => onAddIdentity(userProfile.fundCode)} 
+                            />
                         </div>
                     )}
-                    </div>
                 </div>
-            </section>
+            </div>
+
+            {step === 1 && (
+                <section className="border border-[#005ca0] bg-[#003a70]/30 rounded-lg pb-4 mb-8">
+                    <button type="button" onClick={() => setIsHistoryOpen(p => !p)} className="w-full flex justify-between items-center text-left p-4" aria-expanded={isHistoryOpen}>
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Proxy Submissions</h2>
+                        <ChevronIcon isOpen={isHistoryOpen} />
+                    </button>
+                    <div className={`transition-all duration-500 ease-in-out ${isHistoryOpen ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible px-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                        <div className="space-y-4">
+                        {proxyApplications.length > 0 ? (
+                            sortedApplicationsForDisplay.map(app => (
+                            <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
+                                <div>
+                                    <p className="font-bold text-md text-white">{app.profileSnapshot.firstName} {app.profileSnapshot.lastName}</p>
+                                    <p className="text-sm text-gray-300">Event: {app.event}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-bold text-md text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
+                                    <p className="text-sm text-gray-300">Status: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
+                                </div>
+                            </button>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
+                                <p className="text-gray-300">You have not submitted any proxy applications yet.</p>
+                            </div>
+                        )}
+                        </div>
+                    </div>
+                </section>
+            )}
             
             <div>
                 {renderStep()}

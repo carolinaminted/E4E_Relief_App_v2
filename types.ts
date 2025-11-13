@@ -70,7 +70,7 @@ export interface ActiveIdentity {
 }
 
 // FIX: Add a centralized Page type for navigation.
-export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications';
+export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications' | 'myProxyApplications';
 
 
 /**
@@ -106,6 +106,8 @@ export interface UserProfile {
   classVerificationStatus: ClassVerificationStatus; // Status for the *active* identity.
   eligibilityStatus: EligibilityStatus; // Status for the *active* identity.
   role: 'User' | 'Admin';
+  tokensUsedTotal?: number;
+  estimatedCostTotal?: number;
 }
 
 /**
@@ -169,6 +171,7 @@ export interface Application extends EventData {
   shareStory: boolean;
   receiveAdditionalInfo: boolean;
   submittedBy: string; // UID of the user who submitted (can be applicant or admin proxy).
+  isProxy: boolean;
 }
 
 /**
@@ -238,10 +241,12 @@ export interface TokenEvent {
   outputTokens: number;
   environment: 'Production' | 'Development';
   account: string;
+  fundCode: string;
 }
 
+// FIX: Added missing type definitions for Token Usage Analytics.
 /**
- * Represents a single row in the aggregated token usage table displayed on the analytics dashboard.
+ * Represents a single row in the token usage table, aggregated by user, session, and feature.
  */
 export interface TokenUsageTableRow {
   user: string;
@@ -255,34 +260,7 @@ export interface TokenUsageTableRow {
 }
 
 /**
- * Represents the aggregated data for the session with the highest token usage.
- */
-export interface TopSessionData {
-  sessionId: string;
-  inputTokens: number;
-  cachedInputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-}
-
-/**
- * Represents a single data point for a time-series chart (e.g., usage over the last hour).
- */
-export interface LastHourUsageDataPoint {
-    timestamp: string;
-    totalTokens: number;
-}
-
-/**
- * Represents aggregated daily token usage for charts.
- */
-export interface DailyUsageData {
-    date: string;
-    totalTokens: number;
-}
-
-/**
- * Defines the available filters for the token usage analytics dashboard.
+ * Defines the structure for the filters used on the token usage analytics page.
  */
 export interface TokenUsageFilters {
   account: string;
@@ -294,4 +272,31 @@ export interface TokenUsageFilters {
   user: string;
   model: string;
   environment: string;
+}
+
+/**
+ * Represents aggregated token usage data for the session with the highest token count.
+ */
+export interface TopSessionData {
+  sessionId: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+/**
+ * Represents aggregated daily token usage for a specific feature (like AI Assistant).
+ */
+export interface DailyUsageData {
+  date: string;
+  totalTokens: number;
+}
+
+/**
+ * Represents a single data point for real-time charts, like usage over the last hour.
+ */
+export interface LastHourUsageDataPoint {
+  timestamp: string;
+  totalTokens: number;
 }

@@ -12,6 +12,7 @@ import {
   documentId,
   onSnapshot,
   orderBy,
+  increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { UserProfile, FundIdentity, Application } from '../types';
@@ -61,6 +62,14 @@ class UsersRepo implements IUsersRepo {
         const docRef = doc(this.usersCol, uid);
         await updateDoc(docRef, data);
     }
+
+    async incrementTokenUsage(uid: string, tokens: number, cost: number): Promise<void> {
+        const docRef = doc(this.usersCol, uid);
+        await updateDoc(docRef, {
+            tokensUsedTotal: increment(tokens),
+            estimatedCostTotal: increment(cost),
+        });
+    }
 }
 
 class IdentitiesRepo implements IIdentitiesRepo {
@@ -90,7 +99,7 @@ class ApplicationsRepo implements IApplicationsRepo {
     private appsCol = collection(db, 'applications');
 
     async getForUser(uid: string): Promise<Application[]> {
-        const q = query(this.appsCol, where('uid', '==', uid));
+        const q = query(this.appsCol, where('uid', '==', uid), where('isProxy', '==', false));
         const snapshot = await getDocs(q);
         const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
         // Sort on the client to avoid needing a composite index in Firestore
@@ -98,7 +107,7 @@ class ApplicationsRepo implements IApplicationsRepo {
     }
     
     async getProxySubmissions(adminUid: string): Promise<Application[]> {
-        const q = query(this.appsCol, where('submittedBy', '==', adminUid));
+        const q = query(this.appsCol, where('submittedBy', '==', adminUid), where('isProxy', '==', true));
         const snapshot = await getDocs(q);
         const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
         // Sort on the client to avoid needing a composite index in Firestore

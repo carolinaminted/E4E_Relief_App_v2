@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts.
@@ -43,6 +37,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import LiveDashboardPage from './components/LiveDashboardPage';
 import MyApplicationsPage from './components/MyApplicationsPage';
+import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
 
 // FIX: Removed local Page type definition.
 // type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -200,6 +195,13 @@ function App() {
     return [];
   }, [currentUser, applications, activeIdentity]);
   
+  const userProxyApplications = useMemo(() => {
+    if (currentUser?.role === 'Admin' && activeIdentity) {
+      return proxyApplications.filter(app => app.profileSnapshot.fundCode === activeIdentity.fundCode) || [];
+    }
+    return [];
+  }, [currentUser, proxyApplications, activeIdentity]);
+
   const isVerifiedAndEligible = useMemo(() => {
     if (!currentUser) return false;
     return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Eligible';
@@ -410,6 +412,7 @@ function App() {
       shareStory: appFormData.agreementData.shareStory ?? false,
       receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
       submittedBy: currentUser.uid,
+      isProxy: false,
     };
 
     const newApplication = await applicationsRepo.add(newApplicationData);
@@ -435,10 +438,14 @@ function App() {
   }, [currentUser, handleProfileUpdate, userApplications, activeFund]);
   
   const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
-    if (!currentUser || authState.claims.admin !== true) {
-        console.error("Only admins can submit proxy applications.");
+    if (!currentUser || authState.claims.admin !== true || !activeFund) {
+        console.error("Only admins with an active fund can submit proxy applications.");
         return;
     };
+
+    // Use the admin's active fund for the application, not one from the form.
+    appFormData.profileData.fundCode = activeFund.code;
+    appFormData.profileData.fundName = activeFund.name;
 
     const applicantEmail = appFormData.profileData.email?.toLowerCase();
     if (!applicantEmail) {
@@ -446,39 +453,24 @@ function App() {
         return;
     }
 
+    // Proxy submissions are only allowed for existing users to prevent auth state issues.
     let applicantProfile = await usersRepo.getByEmail(applicantEmail);
 
     if (!applicantProfile) {
-        // Create a new user if they don't exist
-        const { user } = await authClient.createProxyUser(applicantEmail, 'password123'); // Default password
-        const newProfileData = {
-            ...appFormData.profileData,
-            uid: user.uid,
-            email: applicantEmail,
-            role: 'User' as 'User',
-            activeIdentityId: null,
-        };
-        await usersRepo.add(newProfileData, user.uid);
-        applicantProfile = newProfileData;
-    }
-    
-    if (!applicantProfile) { // Should not happen
-        alert("Failed to find or create applicant profile.");
+        alert("Applicant not found. Please ensure the user has an existing account before submitting a proxy application.");
         return;
     }
+    
+    // Merge any updated form data into the existing applicant profile before snapshotting.
+    const updatedApplicantProfile = { ...applicantProfile, ...appFormData.profileData };
+    appFormData.profileData = updatedApplicantProfile;
 
     const allApplicantApps = await applicationsRepo.getForUser(applicantProfile.uid);
-    const applicantPastApps = allApplicantApps.filter(app => app.profileSnapshot.fundCode === appFormData.profileData.fundCode);
+    const applicantPastApps = allApplicantApps.filter(app => app.profileSnapshot.fundCode === activeFund.code);
     const lastApplication = applicantPastApps.length > 0 ? applicantPastApps.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
     
-    const fund = await fundsRepo.getFund(appFormData.profileData.fundCode);
-    if (!fund) {
-        alert(`Could not find fund configuration for fund code: ${appFormData.profileData.fundCode}`);
-        return;
-    }
-    const initialTwelveMonthMax = fund.limits?.twelveMonthMax ?? 10000;
-    const initialLifetimeMax = fund.limits?.lifetimeMax ?? 50000;
-    const singleRequestMax = fund.limits?.singleRequestMax ?? 10000;
+    const fund = activeFund;
+    const { twelveMonthMax: initialTwelveMonthMax, lifetimeMax: initialLifetimeMax, singleRequestMax } = fund.limits;
     const allEligibleEvents = [...(fund.eligibleDisasters || []), ...(fund.eligibleHardships || [])];
 
     const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialLifetimeMax;
@@ -511,6 +503,7 @@ function App() {
       shareStory: appFormData.agreementData.shareStory ?? false,
       receiveAdditionalInfo: appFormData.agreementData.receiveAdditionalInfo ?? false,
       submittedBy: currentUser.uid,
+      isProxy: true,
     };
 
     const newApplication = await applicationsRepo.add(newApplicationData);
@@ -533,7 +526,7 @@ function App() {
     setApplicationDraft(null);
     setLastSubmittedApp(newApplication);
     setPage('submissionSuccess');
-  }, [currentUser, authState.claims.admin]);
+  }, [currentUser, authState.claims.admin, activeFund]);
 
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     console.log(`Executing tool: ${functionName}`, args);
@@ -590,7 +583,7 @@ function App() {
       case 'profile':
         return <ProfilePage 
                     navigate={navigate} 
-                    applications={userApplications} 
+                    applications={userApplications}
                     userProfile={currentUser} 
                     onProfileUpdate={handleProfileUpdate}
                     identities={userIdentities}
@@ -606,6 +599,12 @@ function App() {
                     applications={userApplications}
                     userProfile={currentUser}
                     onAddIdentity={handleStartAddIdentity}
+                />;
+      case 'myProxyApplications':
+        return <MyProxyApplicationsPage 
+                    navigate={navigate}
+                    applications={userProxyApplications}
+                    userProfile={currentUser}
                 />;
       case 'support':
         return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;
@@ -636,7 +635,10 @@ function App() {
         return <ProxyApplyPage 
                     navigate={navigate}
                     onSubmit={handleProxyApplicationSubmit}
-                    proxyApplications={proxyApplications}
+                    proxyApplications={userProxyApplications}
+                    userProfile={currentUser}
+                    onAddIdentity={handleStartAddIdentity}
+                    mainRef={mainRef}
                 />;
       case 'home':
       default:

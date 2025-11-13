@@ -1,4 +1,5 @@
 import type { TokenEvent, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, ModelPricing, TokenUsageFilters, UserProfile } from '../types';
+import { usersRepo } from './firestoreRepo';
 
 // --- State ---
 let sessionTokenEvents: TokenEvent[] = [];
@@ -21,12 +22,21 @@ const MODEL_PRICING: ModelPricing = {
 // --- Core Functions ---
 
 /**
- * Initializes the tracker for a new user session.
+ * Initializes the tracker for a new user session or updates the user profile.
  */
 export function init(user: UserProfile) {
-  currentUser = user;
-  sessionTokenEvents = [];
-  console.log('Token Tracker Initialized for user:', user.email);
+  // If the tracker is already initialized for the same user, this is just an update.
+  // Don't wipe the session events, just update the user profile reference.
+  const isUpdate = currentUser && currentUser.uid === user.uid;
+  
+  currentUser = user; // Always update to the latest profile.
+
+  if (!isUpdate) {
+    sessionTokenEvents = []; // Only reset on the first init for a user session.
+    console.log('Token Tracker Initialized for user:', user.email);
+  } else {
+    console.log('Token Tracker user profile updated for:', user.email);
+  }
 }
 
 /**
@@ -63,6 +73,14 @@ export function logEvent(data: {
     return;
   }
 
+  const totalTokens = data.inputTokens + (data.cachedInputTokens || 0) + data.outputTokens;
+  const pricing = MODEL_PRICING[data.model] || { input: 0, output: 0 };
+  const cost = ((data.inputTokens / 1000) * pricing.input) + ((data.outputTokens / 1000) * pricing.output);
+
+  usersRepo.incrementTokenUsage(currentUser.uid, totalTokens, cost).catch(error => {
+    console.error("Failed to update token usage in Firestore:", error);
+  });
+
   const newEvent: TokenEvent = {
     id: `evt-${Math.random().toString(36).substr(2, 9)}`,
     sessionId: data.sessionId,
@@ -75,6 +93,7 @@ export function logEvent(data: {
     outputTokens: data.outputTokens,
     environment: currentEnv,
     account: currentAccount,
+    fundCode: currentUser.fundCode,
   };
 
   sessionTokenEvents.push(newEvent);
@@ -83,8 +102,9 @@ export function logEvent(data: {
 
 // --- Data Retrieval Functions (for TokenUsagePage) ---
 
-export function getTokenUsageTableData(filters: TokenUsageFilters): TokenUsageTableRow[] {
+export function getTokenUsageTableData(filters: TokenUsageFilters, fundCode: string): TokenUsageTableRow[] {
     const filteredEvents = sessionTokenEvents.filter(event => 
+        event.fundCode === fundCode &&
         (filters.account === 'all' || event.account === filters.account) &&
         (filters.user === 'all' || event.userId === filters.user) &&
         (filters.feature === 'all' || event.feature === filters.feature) &&
@@ -116,8 +136,8 @@ export function getTokenUsageTableData(filters: TokenUsageFilters): TokenUsageTa
 }
 
 
-export function getTopSessionData(filters: TokenUsageFilters): TopSessionData | null {
-    const tableData = getTokenUsageTableData(filters);
+export function getTopSessionData(filters: TokenUsageFilters, fundCode: string): TopSessionData | null {
+    const tableData = getTokenUsageTableData(filters, fundCode);
     if (tableData.length === 0) return null;
 
     // Re-aggregate by session to find the true top session, as tableData is now granular by feature
@@ -148,13 +168,14 @@ export function getTopSessionData(filters: TokenUsageFilters): TopSessionData | 
 }
 
 
-export function getUsageLastHour(filters: TokenUsageFilters): LastHourUsageDataPoint[] {
+export function getUsageLastHour(filters: TokenUsageFilters, fundCode: string): LastHourUsageDataPoint[] {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
     const filteredEvents = sessionTokenEvents.filter(event => {
         const eventDate = new Date(event.timestamp);
         return eventDate >= oneHourAgo &&
+            event.fundCode === fundCode &&
             (filters.account === 'all' || event.account === filters.account) &&
             (filters.user === 'all' || event.userId === filters.user) &&
             (filters.feature === 'all' || event.feature === filters.feature) &&
@@ -188,13 +209,14 @@ export function getUsageLastHour(filters: TokenUsageFilters): LastHourUsageDataP
     return fullHourData;
 }
 
-export function getUsageLast15Minutes(filters: TokenUsageFilters): LastHourUsageDataPoint[] {
+export function getUsageLast15Minutes(filters: TokenUsageFilters, fundCode: string): LastHourUsageDataPoint[] {
     const now = new Date();
     const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
 
     const filteredEvents = sessionTokenEvents.filter(event => {
         const eventDate = new Date(event.timestamp);
         return eventDate >= fifteenMinutesAgo &&
+            event.fundCode === fundCode &&
             (filters.account === 'all' || event.account === filters.account) &&
             (filters.user === 'all' || event.userId === filters.user) &&
             (filters.feature === 'all' || event.feature === filters.feature) &&
@@ -229,10 +251,10 @@ export function getUsageLast15Minutes(filters: TokenUsageFilters): LastHourUsage
 }
 
 
-export function getFilterOptions() {
+export function getFilterOptions(fundCode: string) {
     if (!currentUser) return { features: [], models: [], environments: [], users: [], accounts: [] };
     
-    const userEvents = sessionTokenEvents;
+    const userEvents = sessionTokenEvents.filter(e => e.fundCode === fundCode);
     const features = [...new Set(userEvents.map(e => e.feature))];
     const models = [...new Set(userEvents.map(e => e.model))];
     const environments = [...new Set(userEvents.map(e => e.environment))];
