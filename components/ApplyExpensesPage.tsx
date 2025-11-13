@@ -93,9 +93,15 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
       newExpenses[expenseIndex] = { ...newExpenses[expenseIndex], fileName, fileUrl: downloadURL };
       updateFormData({ expenses: newExpenses });
-    } catch (error) {
+    } catch (error: any) {
       console.error("File upload failed:", error);
-      setUploadErrors(prev => ({ ...prev, [type]: t('applyExpensesPage.uploadFailedError') }));
+      let errorMessage;
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = t('applyExpensesPage.uploadFailedUnauthorized');
+      } else {
+        errorMessage = t('applyExpensesPage.uploadFailedGeneric', { message: error.message || t('common.unknownError') });
+      }
+      setUploadErrors(prev => ({ ...prev, [type]: errorMessage }));
     } finally {
       setUploading(prev => ({ ...prev, [type]: false }));
     }
