@@ -40,6 +40,7 @@ import { IconDefs } from './components/Icons';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import LiveDashboardPage from './components/LiveDashboardPage';
+import MyApplicationsPage from './components/MyApplicationsPage';
 
 // FIX: Removed local Page type definition.
 // type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -596,6 +597,12 @@ function App() {
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
                     activeFund={activeFund}
+                />;
+      case 'myApplications':
+        return <MyApplicationsPage 
+                    navigate={navigate}
+                    applications={userApplications}
+                    activeFundName={currentUser.fundName}
                 />;
       case 'support':
         return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;

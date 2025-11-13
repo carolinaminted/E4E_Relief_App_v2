@@ -11,7 +11,7 @@ import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import PolicyModal from './PolicyModal';
 
 interface ProfilePageProps {
-  navigate: (page: 'home' | 'apply' | 'classVerification') => void;
+  navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
   applications: Application[];
   userProfile: UserProfile;
   onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
@@ -110,6 +110,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const sortedApplicationsForDisplay = useMemo(() => {
     return [...applications].reverse();
   }, [applications]);
+
+  const applicationsToShow = sortedApplicationsForDisplay.slice(0, 2);
 
   const currentActiveFullIdentity = useMemo(() => {
     if (!activeIdentity) return null;
@@ -343,11 +345,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <div className="space-y-4">
                 {applications.length > 0 ? (
                     <>
-                        {sortedApplicationsForDisplay.map(app => (
+                        {applicationsToShow.map(app => (
                         <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleDateString('en-CA')}</p>
+                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleDateString('en-CA')} at {new Date(app.submittedDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', hour12: true })}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
@@ -355,6 +357,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             </div>
                         </button>
                         ))}
+                        {sortedApplicationsForDisplay.length > 2 && (
+                            <button onClick={() => navigate('myApplications')} className="w-full text-center bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
+                                See All Applications
+                            </button>
+                        )}
                         <div className="flex justify-center pt-4">
                             <button 
                                 onClick={() => navigate('apply')} 

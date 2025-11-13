@@ -65,7 +65,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
           </div>
           <div className="flex justify-between border-b border-[#002a50] pb-2">
             <span className="font-semibold text-white opacity-70">Submitted Date:</span>
-            <span>{application.submittedDate}</span>
+            <span>{new Date(application.submittedDate).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/New_York' })}</span>
           </div>
            <div className="flex justify-between border-b border-[#002a50] pb-2">
             <span className="font-semibold text-white opacity-70">Decisioned Date:</span>
