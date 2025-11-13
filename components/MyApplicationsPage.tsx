@@ -1,12 +1,49 @@
 import React, { useState, useMemo } from 'react';
-import type { Application, Page } from '../types';
+import type { Application, Page, UserProfile, ClassVerificationStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 
 interface MyApplicationsPageProps {
-  navigate: (page: 'profile') => void;
+  navigate: (page: Page) => void;
   applications: Application[];
-  activeFundName: string | undefined;
+  userProfile: UserProfile;
+  onAddIdentity: (fundCode: string) => void;
 }
+
+const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const hasPassedCV = cvStatus === 'passed';
+
+    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
+    const passedClasses = "bg-green-800/50 text-green-300";
+    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
+
+    const handleClick = () => {
+        if (!hasPassedCV) {
+             console.log("[Telemetry] verification_needed_cta_clicked_from_my_applications");
+             onClick();
+        }
+    };
+
+    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
+    
+    return (
+        <button
+            onClick={handleClick}
+            disabled={hasPassedCV}
+            role={hasPassedCV ? 'status' : 'button'}
+            aria-label={text}
+            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
+        >
+            {!hasPassedCV && (
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+            )}
+            <span>{text}</span>
+        </button>
+    );
+};
+
 
 const statusStyles: Record<Application['status'], string> = {
     Submitted: 'text-[#ff8400]',
@@ -14,7 +51,7 @@ const statusStyles: Record<Application['status'], string> = {
     Declined: 'text-red-400',
 };
 
-const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, applications, activeFundName }) => {
+const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, applications, userProfile, onAddIdentity }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
 
@@ -50,7 +87,15 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
             </button>
             <div className="text-center">
                 <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Applications</h1>
-                {activeFundName && <p className="text-lg text-gray-300">{activeFundName}</p>}
+                {userProfile && (
+                  <div className="mt-2 flex flex-col items-center gap-2">
+                    <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
+                    <EligibilityIndicator 
+                      cvStatus={userProfile.classVerificationStatus} 
+                      onClick={() => onAddIdentity(userProfile.fundCode)} 
+                    />
+                  </div>
+                )}
             </div>
         </div>
         
