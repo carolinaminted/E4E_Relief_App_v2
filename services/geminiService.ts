@@ -167,9 +167,10 @@ export function evaluateApplicationEligibility(
     currentTwelveMonthRemaining: number;
     currentLifetimeRemaining: number;
     singleRequestMax: number;
+    eligibleEvents: string[];
   }
 ): EligibilityDecision {
-  const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax } = appData;
+  const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax, eligibleEvents } = appData;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -194,8 +195,13 @@ export function evaluateApplicationEligibility(
     decision = 'Denied';
     reasons.push("An event type must be selected. If 'My disaster is not listed' is chosen, the specific event must be provided.");
     policy_hits.push({ rule_id: 'R1', passed: false, detail: `Event field (201: ${eventData.event}, 202: ${eventData.otherEvent}) resulted in an empty event name.` });
+  } else if (!eligibleEvents.includes(normalizedEvent)) {
+    decision = 'Denied';
+    reasons.push(`The selected event '${normalizedEvent}' is not covered by this fund.`);
+    policy_hits.push({ rule_id: 'R1A', passed: false, detail: `Event '${normalizedEvent}' not found in eligible events list.` });
   } else {
     policy_hits.push({ rule_id: 'R1', passed: true, detail: `Event specified as '${normalizedEvent}'.` });
+    policy_hits.push({ rule_id: 'R1A', passed: true, detail: `Event '${normalizedEvent}' is an eligible event.` });
   }
 
   if (!eventDate || isNaN(eventDate.getTime()) || eventDate < ninetyDaysAgo || eventDate > today) {

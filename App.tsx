@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts.
@@ -369,6 +370,7 @@ function App() {
 
     const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
+    const allEligibleEvents = [...(activeFund.eligibleDisasters || []), ...(activeFund.eligibleHardships || [])];
     
     const preliminaryDecision = evaluateApplicationEligibility({
         id: 'temp',
@@ -377,6 +379,7 @@ function App() {
         currentTwelveMonthRemaining,
         currentLifetimeRemaining,
         singleRequestMax,
+        eligibleEvents: allEligibleEvents,
     });
     
     const finalDecision = await getAIAssistedDecision(
@@ -465,16 +468,21 @@ function App() {
     const lastApplication = applicantPastApps.length > 0 ? applicantPastApps.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
     
     const fund = await fundsRepo.getFund(appFormData.profileData.fundCode);
-    const initialTwelveMonthMax = fund?.limits?.twelveMonthMax ?? 10000;
-    const initialLifetimeMax = fund?.limits?.lifetimeMax ?? 50000;
-    const singleRequestMax = fund?.limits?.singleRequestMax ?? 10000;
+    if (!fund) {
+        alert(`Could not find fund configuration for fund code: ${appFormData.profileData.fundCode}`);
+        return;
+    }
+    const initialTwelveMonthMax = fund.limits?.twelveMonthMax ?? 10000;
+    const initialLifetimeMax = fund.limits?.lifetimeMax ?? 50000;
+    const singleRequestMax = fund.limits?.singleRequestMax ?? 10000;
+    const allEligibleEvents = [...(fund.eligibleDisasters || []), ...(fund.eligibleHardships || [])];
 
     const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialLifetimeMax;
     const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
     
     const preliminaryDecision = evaluateApplicationEligibility({
         id: 'temp', employmentStartDate: appFormData.profileData.employmentStartDate, eventData: appFormData.eventData,
-        currentTwelveMonthRemaining, currentLifetimeRemaining, singleRequestMax,
+        currentTwelveMonthRemaining, currentLifetimeRemaining, singleRequestMax, eligibleEvents: allEligibleEvents,
     });
     
     const finalDecision = await getAIAssistedDecision(
@@ -483,7 +491,7 @@ function App() {
     );
 
     const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
-        if (decision === 'Approved') return 'Awarded'; if (decision === 'Denied') return 'Submitted'; return 'Submitted';
+        if (decision === 'Approved') return 'Awarded'; if (decision === 'Denied') return 'Declined'; return 'Submitted';
     };
 
     const newApplicationData: Omit<Application, 'id'> = {
