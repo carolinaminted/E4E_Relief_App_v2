@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { UserProfile } from '../types';
+// FIX: Use the centralized Page type from types.ts to ensure all navigation values are covered.
+import type { UserProfile, Page } from '../types';
 import { verifyRoster, linkSSO } from '../services/verificationService';
 import { FormInput } from './FormControls';
 import { fundsRepo } from '../services/firestoreRepo';
 import type { CVType } from '../data/fundData';
-
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'donate' | 'classVerification';
 
 interface ClassVerificationPageProps {
   user: UserProfile;

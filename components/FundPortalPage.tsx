@@ -1,7 +1,6 @@
 import React from 'react';
-import type { UserProfile } from '../types';
-
-type Page = 'home' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'tokenUsage' | 'liveDashboard';
+// FIX: Use the centralized Page type from types.ts to ensure all navigation values are covered.
+import type { UserProfile, Page } from '../types';
 
 interface FundPortalPageProps {
   navigate: (page: Page) => void;

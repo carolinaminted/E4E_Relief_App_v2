@@ -1,7 +1,7 @@
 import React from 'react';
 import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon } from './Icons';
-
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard';
+// FIX: Use the centralized Page type from types.ts to ensure all navigation values are covered, including 'login' and 'register'.
+import type { Page } from '../types';
 
 interface SideNavBarProps {
   navigate: (page: Page) => void;
