@@ -1,3 +1,6 @@
+// FIX: Import the Expense type to create a more specific type for expenseTypes.
+import type { Expense } from '../types';
+
 // Extracted from image
 export const employmentTypes: string[] = [
     'Active Full Time',
@@ -41,7 +44,8 @@ export const allEventTypes: string[] = [
 ];
 
 
-export const expenseTypes: string[] = [
+// FIX: Use a more specific type for expenseTypes to align with the Expense type definition. This resolves type errors where a generic 'string' was being passed to functions expecting a specific literal type.
+export const expenseTypes: Exclude<Expense['type'], ''>[] = [
     'Basic Disaster Supplies',
     'Food Spoilage',
     'Meals'

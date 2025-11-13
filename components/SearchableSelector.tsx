@@ -10,9 +10,10 @@ interface SearchableSelectorProps {
   required?: boolean;
   variant?: 'boxed' | 'underline';
   error?: string;
+  disabled?: boolean;
 }
 
-const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, value, options, onUpdate, required, variant = 'boxed', error }) => {
+const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, value, options, onUpdate, required, variant = 'boxed', error, disabled }) => {
   const [searchTerm, setSearchTerm] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -86,11 +87,12 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
         value={searchTerm}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
-        className={`${baseInputClasses} ${variantClasses[variant]}`}
+        className={`${baseInputClasses} ${variantClasses[variant]} disabled:opacity-60 disabled:cursor-not-allowed`}
         autoComplete="off"
         required={required}
+        disabled={disabled}
       />
-      {isOpen && (
+      {isOpen && !disabled && (
         <ul className="absolute z-10 w-full bg-[#003a70] border border-[#005ca0] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
           {filteredOptions.length > 0 ? (
             filteredOptions.map(option => (

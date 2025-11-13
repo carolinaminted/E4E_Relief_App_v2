@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { UserProfile } from '../types';
-import { getFundByCode } from '../data/fundData';
+import { fundsRepo } from '../services/firestoreRepo';
+import type { Fund } from '../data/fundData';
 
 type Page = 'fundPortal';
 
@@ -17,12 +18,40 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
 );
 
 const ProgramDetailsPage: React.FC<ProgramDetailsPageProps> = ({ navigate, user }) => {
-  const fund = getFundByCode(user.fundCode);
+  const [fund, setFund] = useState<Fund | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!fund) {
+  useEffect(() => {
+    const fetchFund = async () => {
+      try {
+        const fundData = await fundsRepo.getFund(user.fundCode);
+        if (fundData) {
+          setFund(fundData);
+        } else {
+          setError(`Could not load program details for fund (${user.fundCode}).`);
+        }
+      } catch (e) {
+        setError('An error occurred while fetching fund details.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFund();
+  }, [user.fundCode]);
+
+  if (isLoading) {
     return (
       <div className="p-8 max-w-4xl mx-auto w-full text-center">
-        <p className="text-red-400">Could not load program details for fund ({user.fundCode}).</p>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error || !fund) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto w-full text-center">
+        <p className="text-red-400">{error}</p>
         <button onClick={() => navigate('fundPortal')} className="mt-4 text-[#ff8400] hover:opacity-80">
           Back to Fund Portal
         </button>
@@ -33,7 +62,7 @@ const ProgramDetailsPage: React.FC<ProgramDetailsPageProps> = ({ navigate, user 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
       <div className="relative flex justify-center items-center mb-8">
-        <button onClick={() => navigate('fundPortal')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Fund Portal">
+        <button onClick={() => navigate('fundPortal')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Fund Portal">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
           </svg>

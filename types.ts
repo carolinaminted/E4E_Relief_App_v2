@@ -1,4 +1,5 @@
 // --- Base Data Structures ---
+import type { Fund } from './data/fundData';
 
 /**
  * Represents a standard physical address.
@@ -45,12 +46,12 @@ export type FundIdentityId = string;
 
 /**
  * Represents a user's relationship with a specific relief fund.
- * A single user (identified by `userEmail`) can have multiple identities if they are
+ * A single user (identified by `uid`) can have multiple identities if they are
  * eligible for more than one fund.
  */
 export interface FundIdentity {
   id: FundIdentityId;
-  userEmail: string;
+  uid: string;
   fundCode: string;
   fundName: string;
   cvType: 'Domain' | 'Roster' | 'SSO' | 'Manual'; // The method used for class verification.
@@ -68,6 +69,9 @@ export interface ActiveIdentity {
   fundCode: string;
 }
 
+// FIX: Add a centralized Page type for navigation.
+export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications';
+
 
 /**
  * The main data model for a user's profile information.
@@ -75,7 +79,10 @@ export interface ActiveIdentity {
  * (e.g., fundCode, fundName, eligibilityStatus).
  */
 export interface UserProfile {
+  uid: string;
   identityId: string; // Corresponds to the user's primary identifier, usually their email.
+  // FIX: Added 'activeIdentityId' to track the user's currently selected fund identity.
+  activeIdentityId: string | null;
   firstName: string;
   lastName:string;
   middleName?: string;
@@ -109,6 +116,7 @@ export interface Expense {
   type: 'Basic Disaster Supplies' | 'Food Spoilage' | 'Meals' | '';
   amount: number | '';
   fileName: string; // Name of the uploaded receipt file, if any.
+  fileUrl?: string; // URL to the uploaded file in Firebase Storage.
 }
 
 /**
@@ -150,6 +158,7 @@ export interface ApplicationFormData {
  */
 export interface Application extends EventData {
   id: string;
+  uid: string;
   profileSnapshot: UserProfile; // A snapshot of the user's profile at the time of submission.
   submittedDate: string;
   status: 'Submitted' | 'Awarded' | 'Declined';
@@ -159,7 +168,7 @@ export interface Application extends EventData {
   lifetimeGrantRemaining: number;
   shareStory: boolean;
   receiveAdditionalInfo: boolean;
-  submittedBy?: string; // Email of the user who submitted (can be applicant or admin proxy).
+  submittedBy: string; // UID of the user who submitted (can be applicant or admin proxy).
 }
 
 /**

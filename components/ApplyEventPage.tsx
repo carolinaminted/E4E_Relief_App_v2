@@ -102,7 +102,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
 
   return (
     <div className="space-y-8 p-4 md:p-8">
-      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Event Details</h2>
+      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">Event Details</h2>
         <div className="space-y-6">
             {/* 201 */}
             <SearchableSelector

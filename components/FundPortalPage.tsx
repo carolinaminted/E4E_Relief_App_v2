@@ -1,7 +1,6 @@
 import React from 'react';
-import type { UserProfile } from '../types';
-
-type Page = 'home' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy' | 'tokenUsage';
+// FIX: Use the centralized Page type from types.ts to ensure all navigation values are covered.
+import type { UserProfile, Page } from '../types';
 
 interface FundPortalPageProps {
   navigate: (page: Page) => void;
@@ -33,6 +32,13 @@ const DashboardIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
   </svg>
+);
+
+const LiveDashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path stroke="url(#icon-gradient)" strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l3-3l3 3l3-3l3 3l3-3" />
+        <circle cx="20" cy="4" r="2" fill="#ff8400" stroke="none" />
+    </svg>
 );
 
 const TicketingIcon: React.FC = () => (
@@ -75,6 +81,12 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
       icon: <DashboardIcon />,
     },
     {
+      key: 'liveDashboard',
+      title: 'Live Dashboard',
+      onClick: () => navigate('liveDashboard'),
+      icon: <LiveDashboardIcon />,
+    },
+    {
       key: 'ticketing',
       title: 'Ticketing',
       onClick: () => navigate('ticketing'),
@@ -104,7 +116,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-5xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-8">
-          <button onClick={() => navigate('home')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
+          <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
             </svg>
@@ -117,7 +129,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full mt-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full mt-12 max-w-2xl mx-auto">
           <IconDefs />
           {portalTiles.map((tile, index) => {
             // This logic checks if the current tile is the last one in the list AND if the total number of tiles is odd.
@@ -130,7 +142,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
               <div 
                 key={tile.key}
                 onClick={tile.onClick}
-                className={`bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center ${colSpanClass}`}
+                className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/80 transition-all duration-300 cursor-pointer flex flex-col items-center text-center ${colSpanClass}`}
               >
                 {tile.icon}
                 <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{tile.title}</h2>

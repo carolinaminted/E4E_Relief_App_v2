@@ -1,6 +1,5 @@
 import React from 'react';
-
-type Page = 'home' | 'apply' | 'profile' | 'support' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate';
+import type { Page } from '../types';
 
 interface SupportPageProps {
   navigate: (page: Page) => void;
@@ -22,8 +21,8 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
   return (
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-5xl mx-auto w-full">
-        <div className="relative flex justify-center items-center mb-8">
-          <button onClick={() => navigate('home')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
+        <div className="relative flex justify-center items-center mb-4 md:mb-8">
+          <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Home">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
             </svg>
@@ -34,7 +33,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
         </div>
         
         {/* Main Contact Section */}
-        <div className="p-8 max-w-2xl mx-auto">
+        <div className="p-4 md:p-8 max-w-2xl mx-auto">
           <div className="space-y-6 text-center">
             <div>
               <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Email</h3>
@@ -57,7 +56,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
         </div>
 
         {/* Secondary Tiles */}
-        <div className="grid grid-cols-2 gap-6 w-full mt-12 max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 gap-6 w-full mt-8 md:mt-12 max-w-2xl mx-auto">
           <SubActionCard 
             title="FAQs" 
             description="Find answers to common questions." 

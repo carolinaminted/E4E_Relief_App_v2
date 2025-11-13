@@ -1,5 +1,5 @@
 {
-  "name": "e4e-relief-app-v2.1---cv-code",
+  "name": "e4e-relief-app-v2.1---cv-firebase",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,8 @@
   "dependencies": {
     "@google/genai": "^1.25.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "firebase": "^12.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

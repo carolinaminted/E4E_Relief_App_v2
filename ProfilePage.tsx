@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
-import type { Fund } from '../data/fundData';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -11,7 +10,7 @@ import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import PolicyModal from './PolicyModal';
 
 interface ProfilePageProps {
-  navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
+  navigate: (page: 'home' | 'apply' | 'classVerification') => void;
   applications: Application[];
   userProfile: UserProfile;
   onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
@@ -20,7 +19,6 @@ interface ProfilePageProps {
   onSetActiveIdentity: (identityId: string) => void;
   onAddIdentity: (fundCode: string) => void;
   onRemoveIdentity: (identityId: string) => void;
-  activeFund: Fund | null;
 }
 
 const statusStyles: Record<Application['status'], string> = {
@@ -81,19 +79,20 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 
 type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity, activeFund }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
       return {
-        twelveMonthRemaining: activeFund?.limits.twelveMonthMax ?? 0,
-        lifetimeRemaining: activeFund?.limits.lifetimeMax ?? 0,
+        twelveMonthRemaining: 10000,
+        lifetimeRemaining: 50000,
       };
     }
 
@@ -104,14 +103,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
       twelveMonthRemaining: latestApplication.twelveMonthGrantRemaining,
       lifetimeRemaining: latestApplication.lifetimeGrantRemaining,
     };
-  }, [applications, activeFund]);
+  }, [applications]);
 
   // Create a reversed list for display so newest applications appear first
   const sortedApplicationsForDisplay = useMemo(() => {
     return [...applications].reverse();
   }, [applications]);
-
-  const applicationsToShow = sortedApplicationsForDisplay.slice(0, 2);
 
   const currentActiveFullIdentity = useMemo(() => {
     if (!activeIdentity) return null;
@@ -345,11 +342,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <div className="space-y-4">
                 {applications.length > 0 ? (
                     <>
-                        {applicationsToShow.map(app => (
+                        {sortedApplicationsForDisplay.map(app => (
                         <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleDateString('en-CA')} at {new Date(app.submittedDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', hour12: true })}</p>
+                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
@@ -357,11 +354,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             </div>
                         </button>
                         ))}
-                        {sortedApplicationsForDisplay.length > 2 && (
-                            <button onClick={() => navigate('myApplications')} className="w-full text-center bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
-                                See All Applications
-                            </button>
-                        )}
                         <div className="flex justify-center pt-4">
                             <button 
                                 onClick={() => navigate('apply')} 
@@ -689,12 +681,22 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </div>
       </form>
       
+      <div className="text-center mt-6 md:hidden">
+          <button
+            onClick={() => setIsPolicyModalOpen(true)}
+            className="text-sm italic text-[#898c8d] hover:text-white transition-colors duration-200"
+          >
+            Legal Information
+          </button>
+        </div>
+
       {selectedApplication && (
         <ApplicationDetailModal 
           application={selectedApplication} 
           onClose={() => setSelectedApplication(null)} 
         />
       )}
+      {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
     </div>
   );
 };

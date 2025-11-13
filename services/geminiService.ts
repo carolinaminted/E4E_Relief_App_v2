@@ -1,5 +1,6 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
 import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision } from '../types';
+import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes } from '../data/appData';
 
@@ -93,6 +94,7 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 **Application Context for Q&A**:
 - **Purpose**: The app allows users to apply for financial assistance during times of need.
 - **Support Info**: Email is support@e4erelief.example, Phone is (800) 555-0199.
+- **Fund Details**: For any questions about what events are covered or what the grant limits are, you MUST use the information provided under "Current Fund Information" and not your general knowledge.
 
 **Response Style**:
 - Your answers MUST be short and concise. Get straight to the point.
@@ -102,8 +104,29 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 `;
 
 
-export function createChatSession(applications?: Application[]): Chat {
+export function createChatSession(activeFund: Fund | null, applications?: Application[]): Chat {
   let dynamicContext = applicationContext;
+
+  if (activeFund) {
+    dynamicContext = dynamicContext.replace(
+      "for the 'E4E Relief' application",
+      `for the '${activeFund.name}' application`
+    );
+    const limits = activeFund.limits;
+    const allCoveredEvents = [...activeFund.eligibleDisasters, ...activeFund.eligibleHardships];
+
+    const fundDetails = `
+**Current Fund Information (${activeFund.name})**:
+- Single Request Maximum: $${limits.singleRequestMax.toLocaleString()}
+- 12-Month Maximum: $${limits.twelveMonthMax.toLocaleString()}
+- Lifetime Maximum: $${limits.lifetimeMax.toLocaleString()}
+
+**What events are covered?**
+The ${activeFund.name} covers a variety of events, including:
+- ${allCoveredEvents.join('\n- ')}
+`;
+    dynamicContext += fundDetails;
+  }
 
   if (applications && applications.length > 0) {
     const applicationList = applications.map(app => {
@@ -121,7 +144,7 @@ If an application status is 'Declined' or 'Submitted' (which means 'Under Review
 ${applicationList}
 `;
   } else {
-    dynamicContext += `\nThe user currently has no submitted applications.`;
+    dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
   }
   
   // FIX: Use the latest recommended model 'gemini-2.5-flash'.
@@ -144,9 +167,10 @@ export function evaluateApplicationEligibility(
     currentTwelveMonthRemaining: number;
     currentLifetimeRemaining: number;
     singleRequestMax: number;
+    eligibleEvents: string[];
   }
 ): EligibilityDecision {
-  const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax } = appData;
+  const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax, eligibleEvents } = appData;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -171,8 +195,13 @@ export function evaluateApplicationEligibility(
     decision = 'Denied';
     reasons.push("An event type must be selected. If 'My disaster is not listed' is chosen, the specific event must be provided.");
     policy_hits.push({ rule_id: 'R1', passed: false, detail: `Event field (201: ${eventData.event}, 202: ${eventData.otherEvent}) resulted in an empty event name.` });
+  } else if (!eligibleEvents.includes(normalizedEvent)) {
+    decision = 'Denied';
+    reasons.push(`The selected event '${normalizedEvent}' is not covered by this fund.`);
+    policy_hits.push({ rule_id: 'R1A', passed: false, detail: `Event '${normalizedEvent}' not found in eligible events list.` });
   } else {
     policy_hits.push({ rule_id: 'R1', passed: true, detail: `Event specified as '${normalizedEvent}'.` });
+    policy_hits.push({ rule_id: 'R1A', passed: true, detail: `Event '${normalizedEvent}' is an eligible event.` });
   }
 
   if (!eventDate || isNaN(eventDate.getTime()) || eventDate < ninetyDaysAgo || eventDate > today) {
@@ -271,7 +300,7 @@ export function evaluateApplicationEligibility(
       evacuated: eventData.evacuated || '',
       powerLossDays: normalizedPowerLossDays
     },
-    decisionedDate: today.toISOString().split('T')[0]
+    decisionedDate: today.toISOString()
   };
 }
 

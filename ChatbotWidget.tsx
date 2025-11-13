@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { Chat } from '@google/genai';
 // FIX: Separated type and value imports for ChatMessage, MessageRole, and Application.
 import { MessageRole } from '../types';
+// FIX: Added missing import for Fund type.
 import type { Fund } from '../data/fundData';
 import type { ChatMessage, Application } from '../types';
 import { createChatSession } from '../services/geminiService';
@@ -15,6 +16,7 @@ interface ChatbotWidgetProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   scrollContainerRef: React.RefObject<HTMLElement>;
+  // FIX: Added missing activeFund prop.
   activeFund: Fund | null;
 }
 
@@ -35,7 +37,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     setIsMounted(true);
 
     if (isOpen) {
-        // FIX: Pass activeFund to createChatSession
+        // FIX: Pass activeFund to createChatSession as the first argument.
         chatSessionRef.current = createChatSession(activeFund, applications);
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
@@ -91,7 +93,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     const inputTokens = estimateTokens(userInput);
 
     if (!chatSessionRef.current) {
-        // FIX: Pass activeFund to createChatSession
+        // FIX: Pass activeFund to createChatSession as the first argument.
         chatSessionRef.current = createChatSession(activeFund, applications);
     }
 
@@ -185,12 +187,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
   return (
     <>
       <div 
-        className={`fixed top-24 bottom-40 w-full max-w-sm max-h-[600px] bg-[#004b8d] rounded-lg shadow-2xl flex flex-col z-50 border border-[#002a50] transition-all duration-300 ease-in-out left-1/2 -translate-x-1/2 md:top-auto md:bottom-24 md:h-[calc(100vh-8rem)] md:left-8 md:-translate-x-0 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        className={`fixed bottom-40 w-full max-w-sm h-[calc(100vh-8rem)] max-h-[600px] bg-[#004b8d] rounded-lg shadow-2xl flex flex-col z-50 border border-[#002a50] transition-all duration-300 ease-in-out left-1/2 -translate-x-1/2 md:left-8 md:-translate-x-0 md:bottom-24 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
         aria-hidden={!isOpen}
       >
        <header className="bg-[#003a70]/70 p-4 border-b border-[#002a50] shadow-lg rounded-t-lg flex-shrink-0">
         <div>
-            <h1 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+            <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               Relief Assistant
             </h1>
             <p className="text-xs text-gray-400 italic mt-1">*AI Agent preview using generative responses</p>
@@ -206,7 +208,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
 
     <button
         onClick={toggleChat}
-        className={`fixed bottom-20 left-4 md:bottom-8 md:left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
+        className={`fixed bottom-24 left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 md:bottom-8 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
         aria-label={isOpen ? "Close Chat" : "Open Chat"}
       >
         {isOpen ? (

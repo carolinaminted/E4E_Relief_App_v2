@@ -1,4 +1,4 @@
-import { getFundByCode } from '../data/fundData';
+import { fundsRepo } from './firestoreRepo';
 
 export interface FundConfig {
     allowedDomains: string[];
@@ -7,9 +7,8 @@ export interface FundConfig {
 // Mock API to get fund configuration
 export const getFundConfig = async (fundCode: string): Promise<FundConfig> => {
     console.log(`Fetching config for fundCode: ${fundCode}`);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-
-    const fund = getFundByCode(fundCode);
+    
+    const fund = await fundsRepo.getFund(fundCode);
     if (fund && fund.domainConfig) {
         return {
             allowedDomains: fund.domainConfig.allowedDomains,
@@ -39,7 +38,7 @@ export const verifyRoster = async (input: RosterVerificationInput, fundCode: str
     console.log('Verifying roster with input:', input, 'for fund:', fundCode);
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
 
-    const fund = getFundByCode(fundCode);
+    const fund = await fundsRepo.getFund(fundCode);
     if (fund && fund.rosterConfig) {
         const match = fund.rosterConfig.sampleEligibilityRecords.find(record => 
             record.employeeId === input.employeeId &&
