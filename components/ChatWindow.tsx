@@ -27,7 +27,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
   }, [messages, isLoading]);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-black/10">
       {messages.map((msg, index) => (
         <ChatMessageBubble key={index} message={msg} />
       ))}

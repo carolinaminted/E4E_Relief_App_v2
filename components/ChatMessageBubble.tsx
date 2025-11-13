@@ -35,7 +35,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
   const isError = message.role === MessageRole.ERROR;
 
   const bubbleAlignment = isUser ? 'justify-end' : 'justify-start';
-  const bubbleColor = isUser ? 'bg-[#003a70]' : isError ? 'bg-red-500/20 text-red-300' : 'bg-white/80 text-gray-800';
+  const bubbleColor = isUser ? 'bg-[#003a70] text-white' : isError ? 'bg-red-500/20 text-red-300' : 'bg-gray-200 text-gray-900';
   const flexDirection = isUser ? 'flex-row-reverse' : 'flex-row';
 
   const Icon = isUser ? UserIcon : isError ? ErrorIcon : ModelIcon;
@@ -43,7 +43,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
   return (
     <div className={`flex items-start gap-3 ${bubbleAlignment} ${flexDirection}`}>
       <Icon />
-      <div className={`text-white rounded-lg p-3 max-w-xl md:max-w-2xl lg:max-w-3xl whitespace-pre-wrap break-words ${bubbleColor}`}>
+      <div className={`rounded-lg p-3 max-w-xl md:max-w-2xl lg:max-w-3xl whitespace-pre-wrap break-words ${bubbleColor}`}>
         {message.content}
       </div>
     </div>
