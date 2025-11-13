@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { EventData, Expense, UserProfile } from '../types';
 import { expenseTypes } from '../data/appData';
 import { FormInput } from './FormControls';
@@ -29,6 +30,7 @@ const UploadSpinner: React.FC = () => (
 
 
 const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userProfile, updateFormData, nextStep, prevStep }) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
 
@@ -93,7 +95,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
       updateFormData({ expenses: newExpenses });
     } catch (error) {
       console.error("File upload failed:", error);
-      setUploadErrors(prev => ({ ...prev, [type]: "Upload failed. Please try again." }));
+      setUploadErrors(prev => ({ ...prev, [type]: t('applyExpensesPage.uploadFailedError') }));
     } finally {
       setUploading(prev => ({ ...prev, [type]: false }));
     }
@@ -119,8 +121,8 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Expenses</h2>
-        <p className="text-gray-300 mt-1">Add amounts and receipts for any applicable categories below. A receipt is not required for any expense.</p>
+        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyExpensesPage.title')}</h2>
+        <p className="text-gray-300 mt-1">{t('applyExpensesPage.description')}</p>
       </div>
 
       <div className="space-y-6">
@@ -128,13 +130,14 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
           const expense = formData.expenses.find(e => e.type === type);
           const isUploading = uploading[type];
           const error = uploadErrors[type];
+          const translationKey = `applyExpensesPage.expenseTypes.${type.replace(/\s+/g, '')}`;
 
           return (
             <div key={type} className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0]">
-              <h4 className="font-semibold text-lg text-white mb-4">{type}</h4>
+              <h4 className="font-semibold text-lg text-white mb-4">{t(translationKey, type)}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <FormInput
-                  label="Amount (USD)"
+                  label={t('applyExpensesPage.amountLabel')}
                   id={`amount-${type}`}
                   type="number"
                   value={expense?.amount || ''}
@@ -145,19 +148,19 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                   disabled={isUploading}
                 />
                 <div>
-                  <label htmlFor={`receipt-${type}`} className="block text-sm font-medium text-white mb-1">Receipt</label>
+                  <label htmlFor={`receipt-${type}`} className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</label>
                   <div className="flex items-center gap-2">
                     <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                      <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
+                      <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>
                       <input id={`receipt-${type}`} type="file" className="hidden" onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)} disabled={isUploading} accept="image/jpeg,image/png,application/pdf" />
                     </label>
                     {expense?.fileName ? (
                       <div className="flex items-center gap-2 text-sm text-gray-300 truncate">
                         <span title={expense.fileName}>{expense.fileName}</span>
-                        <button onClick={() => handleDeleteFile(type)} disabled={isUploading} className="text-red-400 hover:text-red-300" title="Remove receipt"><DeleteIcon /></button>
+                        <button onClick={() => handleDeleteFile(type)} disabled={isUploading} className="text-red-400 hover:text-red-300" title={t('applyExpensesPage.removeReceipt')}><DeleteIcon /></button>
                       </div>
                     ) : (
-                      !isUploading && <span className="text-gray-400 text-sm">No file chosen</span>
+                      !isUploading && <span className="text-gray-400 text-sm">{t('applyExpensesPage.noFileChosen')}</span>
                     )}
                     {isUploading && <UploadSpinner />}
                   </div>
@@ -171,7 +174,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
       <div className="mt-8 pt-4 border-t border-[#005ca0] flex justify-center items-center">
           <div className="text-center">
-              <p className="text-sm text-white uppercase tracking-wider">Total Expenses</p>
+              <p className="text-sm text-white uppercase tracking-wider">{t('applyExpensesPage.totalExpensesLabel')}</p>
               <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
                   ${totalExpenses.toFixed(2)}
               </p>
@@ -180,10 +183,10 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
       <div className="flex justify-between items-start pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Back
+          {t('common.back')}
         </button>
         <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Next
+          {t('common.next')}
         </button>
       </div>
     </div>

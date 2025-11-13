@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
@@ -46,6 +47,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
                 alt="E4E Relief Logo" 
                 className="mx-auto h-32 sm:h-36 w-auto"
             />
+        </div>
+        <div className="flex justify-center mb-6">
+          <LanguageSwitcher />
         </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
