@@ -22,12 +22,21 @@ const MODEL_PRICING: ModelPricing = {
 // --- Core Functions ---
 
 /**
- * Initializes the tracker for a new user session.
+ * Initializes the tracker for a new user session or updates the user profile.
  */
 export function init(user: UserProfile) {
-  currentUser = user;
-  sessionTokenEvents = [];
-  console.log('Token Tracker Initialized for user:', user.email);
+  // If the tracker is already initialized for the same user, this is just an update.
+  // Don't wipe the session events, just update the user profile reference.
+  const isUpdate = currentUser && currentUser.uid === user.uid;
+  
+  currentUser = user; // Always update to the latest profile.
+
+  if (!isUpdate) {
+    sessionTokenEvents = []; // Only reset on the first init for a user session.
+    console.log('Token Tracker Initialized for user:', user.email);
+  } else {
+    console.log('Token Tracker user profile updated for:', user.email);
+  }
 }
 
 /**
