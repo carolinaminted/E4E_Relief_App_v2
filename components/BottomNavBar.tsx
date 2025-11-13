@@ -42,7 +42,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
 
   const navItems = [...baseNavItems];
   if (userRole === 'Admin') {
-    navItems.push({ page: 'fundPortal', label: 'Fund Portal', icon: <DashboardIcon className="h-6 w-6" /> });
+    navItems.push({ page: 'fundPortal', label: 'Fund', icon: <DashboardIcon className="h-6 w-6" /> });
   }
 
   // If admin is on any portal page, highlight 'Fund Portal'

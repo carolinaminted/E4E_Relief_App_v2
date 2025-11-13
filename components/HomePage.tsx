@@ -53,13 +53,13 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
 
   return (
     <>
-      <div className="flex-1 flex flex-col items-center justify-between pt-8 md:pt-16 pb-4 px-4 sm:px-8 text-center">
+      <div className="flex-1 flex flex-col items-center pt-6 md:pt-16 px-4 sm:px-8 text-center">
         <div className="w-full"> {/* Content wrapper */}
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
             {fundName || 'E4E Relief'}
           </h1>
 
-          <div className={`w-full max-w-2xl mx-auto mt-8 grid grid-cols-2 gap-4 sm:gap-6`}>
+          <div className={`w-full max-w-2xl mx-auto mt-6 grid grid-cols-2 gap-4 sm:gap-6`}>
             {tiles.map((tile) => (
                 <div 
                     key={tile.key}
@@ -78,7 +78,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
             ))}
           </div>
         </div>
-        <div className="mt-8 text-center">
+        <div className="mt-auto pb-4 text-center">
           <button
             onClick={() => setIsPolicyModalOpen(true)}
             className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
