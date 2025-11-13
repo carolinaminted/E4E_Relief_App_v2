@@ -478,7 +478,6 @@ const applicationDetailsJsonSchema = {
                 homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
                 mobileNumber: { type: Type.STRING, description: "The user's mobile phone number." },
                 preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication." },
-                fundCode: { type: Type.STRING, description: "The applicant's fund code." },
             }
         },
         eventData: {

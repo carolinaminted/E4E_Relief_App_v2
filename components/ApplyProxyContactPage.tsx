@@ -38,7 +38,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
   const [isAIParsing, setIsAIParsing] = useState(false);
 
   const sectionHasErrors = useMemo(() => {
-    const applicantDetailsHasBlanks = !formData.firstName || !formData.lastName || !formData.email || !formData.fundCode;
+    const applicantDetailsHasBlanks = !formData.firstName || !formData.lastName || !formData.email;
     const contactHasBlanks = !formData.mobileNumber;
     const primaryAddressHasBlanks = !formData.primaryAddress.country || !formData.primaryAddress.street1 || !formData.primaryAddress.city || !formData.primaryAddress.state || !formData.primaryAddress.zip;
     const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
@@ -133,7 +133,6 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     if (!formData.firstName) newErrors.firstName = "Applicant's first name is required.";
     if (!formData.lastName) newErrors.lastName = "Applicant's last name is required.";
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "A valid applicant email is required.";
-    if (!formData.fundCode) newErrors.fundCode = "Applicant's fund code is required.";
     
     if (!formData.mobileNumber) {
         newErrors.mobileNumber = 'Mobile number is required.';
@@ -177,7 +176,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
         let firstErrorSection: ApplySection | null = null;
-        if (newErrors.firstName || newErrors.lastName || newErrors.email || newErrors.fundCode) firstErrorSection = 'applicantDetails';
+        if (newErrors.firstName || newErrors.lastName || newErrors.email) firstErrorSection = 'applicantDetails';
         else if (newErrors.mobileNumber) firstErrorSection = 'contact';
         else if (newErrors.primaryAddress) firstErrorSection = 'primaryAddress';
         else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) firstErrorSection = 'mailingAddress';
@@ -224,8 +223,9 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                     <FormInput label="Applicant's First Name" id="applicantFirstName" required value={formData.firstName} onChange={e => handleFormUpdate({ firstName: e.target.value })} error={errors.firstName} />
                     <FormInput label="Applicant's Last Name" id="applicantLastName" required value={formData.lastName} onChange={e => handleFormUpdate({ lastName: e.target.value })} error={errors.lastName} />
-                    <FormInput label="Applicant's Email" id="applicantEmail" type="email" required value={formData.email} onChange={e => handleFormUpdate({ email: e.target.value })} error={errors.email} />
-                    <FormInput label="Applicant's Fund Code" id="applicantFundCode" required value={formData.fundCode} onChange={e => handleFormUpdate({ fundCode: e.target.value.toUpperCase() })} error={errors.fundCode} />
+                    <div className="md:col-span-2">
+                        <FormInput label="Applicant's Email" id="applicantEmail" type="email" required value={formData.email} onChange={e => handleFormUpdate({ email: e.target.value })} error={errors.email} />
+                    </div>
                 </div>
             </div>
         </fieldset>
