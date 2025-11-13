@@ -36,16 +36,18 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
 
   const bubbleAlignment = isUser ? 'justify-end' : 'justify-start';
   const bubbleColor = isUser ? 'bg-[#ff8400] text-white' : isError ? 'bg-red-900/50 text-red-200' : 'bg-[#003a70] text-white';
-  const flexDirection = isUser ? 'flex-row-reverse' : 'flex-row';
-
+  
   const Icon = isUser ? UserIcon : isError ? ErrorIcon : ModelIcon;
 
+  // By conditionally rendering the icon, we can simplify the flexbox logic.
+  // 'justify-end' will correctly push the user's message to the right.
   return (
-    <div className={`flex items-start gap-3 ${bubbleAlignment} ${flexDirection}`}>
-      <Icon />
+    <div className={`flex items-start gap-3 ${bubbleAlignment}`}>
+      {!isUser && <Icon />}
       <div className={`rounded-lg p-3 max-w-xl md:max-w-2xl lg:max-w-3xl whitespace-pre-wrap break-words ${bubbleColor}`}>
         {message.content}
       </div>
+      {isUser && <Icon />}
     </div>
   );
 };
