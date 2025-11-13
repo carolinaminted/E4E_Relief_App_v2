@@ -59,7 +59,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
             {fundName || 'E4E Relief'}
           </h1>
 
-          <div className={`w-full max-w-2xl mx-auto mt-6 grid grid-cols-2 gap-4 sm:gap-6`}>
+          <div className={`w-full max-w-2xl mx-auto mt-6 md:mt-12 grid grid-cols-2 gap-4 sm:gap-6`}>
             {tiles.map((tile) => (
                 <div 
                     key={tile.key}

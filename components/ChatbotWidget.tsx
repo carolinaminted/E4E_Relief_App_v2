@@ -185,28 +185,28 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
   return (
     <>
       <div 
-        className={`fixed top-24 bottom-40 w-full max-w-sm max-h-[600px] bg-[#004b8d] rounded-lg shadow-2xl flex flex-col z-50 border border-[#002a50] transition-all duration-300 ease-in-out left-1/2 -translate-x-1/2 md:top-auto md:bottom-24 md:h-[calc(100vh-8rem)] md:left-8 md:-translate-x-0 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        className={`fixed top-24 bottom-40 w-full max-w-sm max-h-[600px] bg-[#ff8400] rounded-lg shadow-2xl flex flex-col z-50 border border-[#c2410c] transition-all duration-300 ease-in-out left-1/2 -translate-x-1/2 md:top-auto md:bottom-24 md:h-[calc(100vh-8rem)] md:left-8 md:-translate-x-0 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
         aria-hidden={!isOpen}
       >
-       <header className="bg-[#003a70]/70 p-4 border-b border-[#002a50] shadow-lg rounded-t-lg flex-shrink-0">
+       <header className="bg-black/20 p-4 border-b border-black/30 shadow-lg rounded-t-lg flex-shrink-0">
         <div>
-            <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+            <h1 className="text-lg font-bold text-white">
               Relief Assistant
             </h1>
-            <p className="text-xs text-gray-400 italic mt-1">*AI Agent preview using generative responses</p>
+            <p className="text-xs text-orange-200 italic mt-1">*AI Agent preview using generative responses</p>
         </div>
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">
         <ChatWindow messages={messages} isLoading={isLoading} />
       </main>
-      <footer className="p-4 bg-[#003a70]/50 border-t border-[#002a50] rounded-b-lg flex-shrink-0">
+      <footer className="p-4 bg-black/20 border-t border-black/30 rounded-b-lg flex-shrink-0">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </footer>
     </div>
 
     <button
         onClick={toggleChat}
-        className={`fixed bottom-20 right-4 md:bottom-8 md:left-8 md:right-auto bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
+        className={`fixed bottom-20 left-4 md:bottom-8 md:left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
         aria-label={isOpen ? "Close Chat" : "Open Chat"}
       >
         {isOpen ? (

@@ -35,7 +35,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   };
 
   return (
-    <div className="flex items-center space-x-2 bg-[#005ca0] rounded-lg p-2">
+    <div className="flex items-center space-x-2 bg-black/20 rounded-lg p-2">
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}

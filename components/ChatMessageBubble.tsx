@@ -35,7 +35,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
   const isError = message.role === MessageRole.ERROR;
 
   const bubbleAlignment = isUser ? 'justify-end' : 'justify-start';
-  const bubbleColor = isUser ? 'bg-[#ff8400]' : isError ? 'bg-red-500/20 text-red-300' : 'bg-[#005ca0]';
+  const bubbleColor = isUser ? 'bg-[#003a70]' : isError ? 'bg-red-500/20 text-red-300' : 'bg-white/80 text-gray-800';
   const flexDirection = isUser ? 'flex-row-reverse' : 'flex-row';
 
   const Icon = isUser ? UserIcon : isError ? ErrorIcon : ModelIcon;
