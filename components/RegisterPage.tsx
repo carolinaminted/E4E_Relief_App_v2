@@ -42,17 +42,17 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
   return (
     <div>
         <div 
-            className="w-full flex justify-center items-center mb-8 sm:mb-12 cursor-pointer"
+            className="w-full flex justify-center items-center mb-6 sm:mb-8 cursor-pointer"
             onClick={handleDemoRegister}
             title="Click to autofill demo user credentials"
         >
             <img 
                 src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
                 alt="E4E Relief Logo" 
-                className="mx-auto h-[9.5rem] sm:h-40 w-auto"
+                className="mx-auto h-32 sm:h-36 w-auto"
             />
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-4">
             <div className="flex-1">
                 <label htmlFor="firstName" className="block text-sm font-medium text-white mb-2">First Name</label>
@@ -120,7 +120,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
         <div className="h-6 text-center">
             {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
-        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-6 h-12 flex justify-center items-center disabled:bg-gray-500" disabled={isLoading}>
+        <button type="submit" className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 !mt-4 h-12 flex justify-center items-center disabled:bg-gray-500" disabled={isLoading}>
           {isLoading ? (
              <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>

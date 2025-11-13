@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts.
@@ -564,7 +565,7 @@ function App() {
     if (authState.status === 'signedOut') {
       return (
         <div className="flex-1 flex justify-center p-4">
-            <div className="w-full max-w-lg px-4 pt-16 sm:pt-20">
+            <div className="w-full max-w-lg px-4 pt-8 sm:pt-12">
                 {page === 'register' ? (
                 <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
                 ) : (
