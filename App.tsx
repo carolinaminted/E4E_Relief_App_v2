@@ -583,8 +583,7 @@ function App() {
       case 'profile':
         return <ProfilePage 
                     navigate={navigate} 
-                    applications={userApplications} 
-                    proxyApplications={userProxyApplications}
+                    applications={userApplications}
                     userProfile={currentUser} 
                     onProfileUpdate={handleProfileUpdate}
                     identities={userIdentities}

@@ -11,9 +11,8 @@ import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import PolicyModal from './PolicyModal';
 
 interface ProfilePageProps {
-  navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications' | 'myProxyApplications') => void;
+  navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
   applications: Application[];
-  proxyApplications: Application[];
   userProfile: UserProfile;
   onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
   identities: FundIdentity[];
@@ -80,9 +79,9 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 };
 
 
-type ProfileSection = 'identities' | 'applications' | 'proxyApplications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
+type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, proxyApplications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity, activeFund }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity, activeFund }) => {
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
@@ -112,12 +111,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, proxy
     return [...applications].reverse();
   }, [applications]);
 
-  const sortedProxyApplicationsForDisplay = useMemo(() => {
-    return [...proxyApplications].reverse();
-  }, [proxyApplications]);
-
   const applicationsToShow = sortedApplicationsForDisplay.slice(0, 2);
-  const proxyApplicationsToShow = sortedProxyApplicationsForDisplay.slice(0, 2);
 
   const currentActiveFullIdentity = useMemo(() => {
     if (!activeIdentity) return null;
@@ -395,45 +389,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, proxy
                 </div>
             </div>
         </section>
-
-      {/* Proxy Applications Section (Admin only) */}
-      {userProfile.role === 'Admin' && (
-        <section className="border-b border-[#005ca0] pb-4 mb-4">
-            <button type="button" onClick={() => toggleSection('proxyApplications')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'proxyApplications'}>
-                <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">My Proxy Applications</h2>
-                <ChevronIcon isOpen={openSection === 'proxyApplications'} />
-            </button>
-            <div className={`transition-all duration-500 ease-in-out ${openSection === 'proxyApplications' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-4">
-                {proxyApplications.length > 0 ? (
-                    <>
-                        {proxyApplicationsToShow.map(app => (
-                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
-                            <div>
-                                <p className="font-bold text-lg text-white">{app.profileSnapshot.firstName} {app.profileSnapshot.lastName}</p>
-                                <p className="text-sm text-gray-300">Event: {app.event}</p>
-                            </div>
-                            <div className="text-right">
-                            <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
-                            <p className="text-sm text-gray-300">Status: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
-                            </div>
-                        </button>
-                        ))}
-                        {sortedProxyApplicationsForDisplay.length > 2 && (
-                            <button onClick={() => navigate('myProxyApplications')} className="w-full text-center bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
-                                See All Proxy Applications
-                            </button>
-                        )}
-                    </>
-                ) : (
-                    <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
-                        <p className="text-gray-300">You have not submitted any proxy applications for this fund yet.</p>
-                    </div>
-                )}
-                </div>
-            </div>
-        </section>
-      )}
 
       {/* Identities Section */}
       <section className="border-b border-[#005ca0] pb-4 mb-4">

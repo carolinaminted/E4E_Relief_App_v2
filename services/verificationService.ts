@@ -41,9 +41,9 @@ export const verifyRoster = async (input: RosterVerificationInput, fundCode: str
     const fund = await fundsRepo.getFund(fundCode);
     if (fund && fund.rosterConfig) {
         const match = fund.rosterConfig.sampleEligibilityRecords.find(record => 
-            record.employeeId === input.employeeId &&
-            record.birthDay === input.birthDay &&
-            record.birthMonth === input.birthMonth
+            String(record.employeeId) === input.employeeId &&
+            Number(record.birthDay) === input.birthDay &&
+            Number(record.birthMonth) === input.birthMonth
         );
         return { ok: !!match };
     }
