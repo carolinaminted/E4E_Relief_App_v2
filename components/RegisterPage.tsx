@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { IAuthClient } from '../services/authClient';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface RegisterPageProps {
   onRegister: IAuthClient['register'];
@@ -53,6 +54,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
                 alt="E4E Relief Logo" 
                 className="mx-auto h-32 sm:h-36 w-auto"
             />
+        </div>
+        <div className="flex justify-center mb-6">
+            <LanguageSwitcher />
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-4">

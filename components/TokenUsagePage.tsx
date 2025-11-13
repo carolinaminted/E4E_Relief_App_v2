@@ -107,7 +107,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto w-full relative min-h-[calc(100vh-100px)]">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto w-full relative">
         {isLoading && <LoadingOverlay message="Loading Analytics..." />}
         
         <div className="relative flex justify-center items-center mb-8">

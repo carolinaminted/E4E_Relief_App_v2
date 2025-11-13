@@ -86,17 +86,17 @@ const ProgramDetailsPage: React.FC<ProgramDetailsPageProps> = ({ navigate, user 
             </DetailRow>
             <DetailRow label="Eligible Disasters">
                 <div className="flex flex-wrap gap-2">
-                    {fund.eligibleDisasters.map(e => <span key={e} className="bg-[#005ca0] text-xs font-medium px-2 py-1 rounded-full">{e}</span>)}
+                    {(fund.eligibleDisasters || []).map(e => <span key={e} className="bg-[#005ca0] text-xs font-medium px-2 py-1 rounded-full">{e}</span>)}
                 </div>
             </DetailRow>
             <DetailRow label="Eligible Hardships">
                  <div className="flex flex-wrap gap-2">
-                    {fund.eligibleHardships.map(e => <span key={e} className="bg-[#005ca0] text-xs font-medium px-2 py-1 rounded-full">{e}</span>)}
+                    {(fund.eligibleHardships || []).map(e => <span key={e} className="bg-[#005ca0] text-xs font-medium px-2 py-1 rounded-full">{e}</span>)}
                 </div>
             </DetailRow>
              <DetailRow label="Eligible Employment">
                  <div className="flex flex-wrap gap-2">
-                    {fund.eligibleEmploymentTypes.map(e => <span key={e} className="bg-[#005ca0] text-xs font-medium px-2 py-1 rounded-full">{e}</span>)}
+                    {(fund.eligibleEmploymentTypes || []).map(e => <span key={e} className="bg-[#005ca0] text-xs font-medium px-2 py-1 rounded-full">{e}</span>)}
                 </div>
             </DetailRow>
           </tbody>

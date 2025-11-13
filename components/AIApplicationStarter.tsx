@@ -1,5 +1,7 @@
 
+
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ApplicationFormData } from '../types';
 
 interface AIApplicationStarterProps {
@@ -9,13 +11,14 @@ interface AIApplicationStarterProps {
 }
 
 const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, isLoading, variant = 'boxed' }) => {
+  const { t } = useTranslation();
   const [descriptionInput, setDescriptionInput] = useState('');
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleParse = async () => {
     if (!descriptionInput.trim()) {
-      setError('Please describe your situation to get started.');
+      setError('Please describe your situation to get started.'); // Internal-facing, not translated
       return;
     }
     setError('');
@@ -27,7 +30,7 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
       setTimeout(() => setIsSuccess(false), 5000); // Clear after 5 seconds
     } catch (e) {
       console.error("AIApplicationStarter caught error during parse:", e);
-      setError('Could not extract details. Please try again or fill fields manually.');
+      setError(t('formControls.aiParseError'));
     }
   };
   
@@ -45,14 +48,14 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
   return (
     <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
       <p className="text-sm text-white mb-2">
-        Describe your situation below and our AI relief Assistant will pre-fill your application.
+        {t('formControls.aiStarter')}
       </p>
       <div className="flex flex-col md:flex-row md:items-end gap-2">
         <textarea
           id="ai-starter-input"
           value={descriptionInput}
           onChange={handleInputChange}
-          placeholder="e.g., I'm a homeowner affected by the recent tornado in Anytown, CA. My home was damaged and I need about $2500 for repairs. Our household of 4 makes about $60k/year. My phone is 555-123-4567 and I prefer to communicate in Spanish."
+          placeholder={t('formControls.aiStarterPlaceholder')}
           rows={6}
           className={textareaClasses[variant]}
           disabled={isLoading}
@@ -69,12 +72,12 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : (
-             "Submit Description"
+             t('formControls.submitDescription')
           )}
         </button>
       </div>
       {error && <p className="text-red-400 text-xs mt-2" role="alert">{error}</p>}
-      {isSuccess && <p className="text-green-400 text-xs mt-2" role="status">Success! We've pre-filled the form with any details we found.</p>}
+      {isSuccess && <p className="text-green-400 text-xs mt-2" role="status">{t('formControls.aiSuccess')}</p>}
     </div>
   );
 };

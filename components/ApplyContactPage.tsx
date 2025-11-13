@@ -40,6 +40,9 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
   const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
   const [isAIParsing, setIsAIParsing] = useState(false);
 
+  const yes = t('common.yes');
+  const no = t('common.no');
+
   const sectionHasErrors = useMemo(() => {
     // Contact
     const contactHasBlanks = !formData.firstName || !formData.lastName || !formData.mobileNumber;
@@ -332,9 +335,9 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                     <FormRadioGroup 
                         legend={t('applyContactPage.mailingAddressSame')}
                         name="isMailingAddressSame" 
-                        options={[t('applyContactPage.yes'), t('applyContactPage.no')]} 
-                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? t('applyContactPage.yes') : t('applyContactPage.no'))} 
-                        onChange={value => handleFormUpdate({ isMailingAddressSame: value === t('applyContactPage.yes') })} 
+                        options={[yes, no]} 
+                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} 
+                        onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} 
                         required
                         error={errors.isMailingAddressSame}
                     />
@@ -385,7 +388,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                     />
                     <FormInput type="number" label={t('applyContactPage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormUpdate({ householdIncome: parseFloat(e.target.value) || '' })} error={errors.householdIncome} />
                     <FormInput type="number" label={t('applyContactPage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormUpdate({ householdSize: parseInt(e.target.value, 10) || '' })} error={errors.householdSize} />
-                    <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[t('applyContactPage.yes'), t('applyContactPage.no')]} value={formData.homeowner as string} onChange={value => handleFormUpdate({ homeowner: value as 'Yes' | 'No' })} required error={errors.homeowner} />
+                    <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormUpdate({ homeowner: value === yes ? 'Yes' : 'No' })} required error={errors.homeowner} />
                     <SearchableSelector
                         label={t('applyContactPage.preferredLanguage')}
                         id="preferredLanguage"

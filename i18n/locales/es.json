@@ -8,7 +8,14 @@
     "verify": "Verificar",
     "loading": "Cargando...",
     "error": "Error",
-    "success": "Éxito"
+    "success": "Éxito",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "app": {
+    "loading": "Cargando...",
+    "authenticating": "Autenticando...",
+    "loadingProfile": "Cargando Perfil..."
   },
   "nav": {
     "home": "Inicio",
@@ -16,7 +23,7 @@
     "apply": "Solicitar",
     "support": "Soporte",
     "donate": "Donar",
-    "fundPortal": "Portal del Fondo",
+    "fundPortal": "Fondo",
     "logout": "Cerrar Sesión",
     "welcome": "Bienvenido, {{name}}"
   },
@@ -83,8 +90,359 @@
     "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
     "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
     "infoCorrect": "Toda la información que he proporcionado es precisa.",
-    "yes": "Sí",
-    "no": "No",
     "errorCorrection": "Por favor, corrige los errores resaltados para continuar."
+  },
+  "applyEventPage": {
+    "title": "Detalles del Evento",
+    "disasterLabel": "Selecciona el desastre ocurrido",
+    "otherDisasterLabel": "Elige el desastre que te afectó",
+    "eventDateLabel": "¿Cuál fue la fecha de tu evento?",
+    "powerLossLabel": "¿Este evento causó una pérdida de energía en tu residencia principal por más de 4 horas?",
+    "powerLossDaysLabel": "¿Cuántos día(s) estuviste sin electricidad?",
+    "evacuatedLabel": "¿Has evacuado o planeas evacuar?",
+    "evacuatingFromPrimaryLabel": "¿Estás evacuando de tu residencia principal?",
+    "evacuationReasonLabel": "Selecciona por qué se requiere la evacuación de la Dirección de Evacuación Alternativa",
+    "stayedWithFamilyLabel": "¿Te quedaste o planeas quedarte con un familiar o amigo?",
+    "evacuationStartDateLabel": "¿Cuándo comenzaste o planeas comenzar tu evacuación?",
+    "evacuationNightsLabel": "¿Cuántas noches fuiste evacuado o planeas evacuar?",
+    "additionalDetailsLabel": "Proporciona detalles adicionales que respalden tu solicitud de ayuda y necesidades de gastos",
+    "additionalDetailsPlaceholder": "Describe cualquier otra información relevante aquí...",
+    "requestedAmountLabel": "Pago de Ayuda Solicitado ($)",
+    "requestedAmountPlaceholder": "0.00",
+    "errorEvent": "Por favor, selecciona el desastre que experimentaste.",
+    "errorOtherEvent": "Por favor, especifica el desastre.",
+    "errorEventDate": "Por favor, ingresa la fecha del evento.",
+    "errorEvacuated": "Por favor, responde si has evacuado.",
+    "errorEvacuatingFromPrimary": "Por favor, responde si estás evacuando de tu residencia principal.",
+    "errorStayedWithFamily": "Por favor, responde si te quedaste con un familiar o amigo.",
+    "errorEvacuationStartDate": "Por favor, ingresa tu fecha de inicio de evacuación.",
+    "errorEvacuationNights": "Por favor, ingresa un número válido de noches.",
+    "errorPowerLoss": "Por favor, responde si perdiste la electricidad.",
+    "errorPowerLossDays": "Por favor, ingresa un número válido de días.",
+    "errorRequestedAmount": "La cantidad solicitada debe ser mayor que cero."
+  },
+  "applyExpensesPage": {
+    "title": "Gastos",
+    "description": "Agrega montos y recibos para cualquiera de las categorías aplicables a continuación. No se requiere un recibo para ningún gasto.",
+    "amountLabel": "Monto (USD)",
+    "receiptLabel": "Recibo",
+    "uploadButton": "Subir",
+    "uploadingButton": "Subiendo...",
+    "noFileChosen": "Ningún archivo elegido",
+    "removeReceipt": "Eliminar recibo",
+    "uploadFailedError": "La subida falló. Por favor, inténtalo de nuevo.",
+    "totalExpensesLabel": "Gastos Totales",
+    "expenseTypes": {
+      "BasicDisasterSupplies": "Suministros Básicos para Desastres",
+      "FoodSpoilage": "Alimentos Echados a Perder",
+      "Meals": "Comidas"
+    }
+  },
+  "applyTermsPage": {
+    "title": "Acuerdos y Envío",
+    "shareStoryTitle": "Comparte tu Historia",
+    "shareStoryQuestion": "¿Estarías dispuesto a compartir tu historia con tu empleador?",
+    "shareStoryDisclaimer": "*Si respondes que sí, compartiremos tu nombre y dirección de correo electrónico y tu empleador podría contactarte para obtener información adicional.",
+    "additionalInfoQuestion": "¿Estás interesado en recibir información adicional sobre asistencia más allá del apoyo financiero?",
+    "termsTitle": "Términos de Aceptación",
+    "termsCheckboxLabel": "Reconozco y acepto que marcar esta casilla sirve como mi firma electrónica y confirma que he leído, entiendo y acepto los",
+    "termsLink": "Términos de Aceptación",
+    "termsViewNotice": "Por favor, revisa los términos antes de aceptar.",
+    "submitButton": "Enviar Solicitud",
+    "submittingButton": "Enviando...",
+    "errorShareStory": "Por favor, indica si estás dispuesto a compartir tu historia.",
+    "errorAdditionalInfo": "Por favor, indica si estás interesado en recibir información adicional.",
+    "errorTermsAgreed": "Debes aceptar los Términos de Aceptación para enviar tu solicitud."
+  },
+  "submissionSuccessPage": {
+    "title": "¡Envío Exitoso!",
+    "body1": "Tu solicitud de ayuda ha sido recibida.",
+    "appIdLabel": "Tu ID de Solicitud es:",
+    "body2": "Puedes rastrear el estado de tu solicitud en la sección \"Mis Solicitudes\" de tu página de perfil.",
+    "goToProfileButton": "Ir a Mi Perfil"
+  },
+  "profilePage": {
+    "title": "Perfil",
+    "eligibility": "Elegible para solicitar",
+    "verificationNeeded": "Verificación necesaria",
+    "myApplicationsTitle": "Mis Solicitudes",
+    "twelveMonthRemaining": "Restante de 12 Meses",
+    "lifetimeRemaining": "Restante de por Vida",
+    "submitted": "Enviado",
+    "status": "Estado",
+    "seeAllApplications": "Ver Todas las Solicitudes",
+    "applyNow": "Solicitar Ahora",
+    "noApplications": "Aún no has enviado ninguna solicitud para este fondo.",
+    "fundIdentitiesTitle": "Identidades del Fondo",
+    "fundIdentitiesDescription": "Gestiona tus identidades de fondo. Agrega o elimina códigos de fondo adicionales si eres elegible para más de un programa.",
+    "active": "(Activo)",
+    "setActive": "Establecer Activo",
+    "addNewIdentity": "+ Agregar Nueva Identidad",
+    "enterNewFundCode": "Ingresar Nuevo Código de Fondo",
+    "contactInfoTitle": "Información de Contacto",
+    "firstName": "Nombre",
+    "middleName": "Segundo(s) Nombre(s)",
+    "lastName": "Apellido",
+    "suffix": "Sufijo",
+    "email": "Correo Electrónico",
+    "mobileNumber": "Número de Móvil",
+    "collapse": "Ocultar",
+    "primaryAddressTitle": "Dirección Principal",
+    "mailingAddressTitle": "Dirección Postal",
+    "mailingAddressSame": "¿La dirección postal es la misma que la principal?",
+    "additionalDetailsTitle": "Detalles Adicionales",
+    "employmentStartDate": "Fecha de Inicio de Empleo",
+    "eligibilityType": "Tipo de Elegibilidad",
+    "householdIncome": "Ingreso Anual Estimado del Hogar",
+    "householdSize": "Número de personas en el hogar",
+    "homeowner": "¿Eres propietario de tu vivienda?",
+    "preferredLanguage": "Idioma de Preferencia",
+    "consentTitle": "Consentimiento y Reconocimiento",
+    "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
+    "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
+    "infoCorrect": "Toda la información que he proporcionado es precisa.",
+    "errorCorrection": "Por favor, corrige los errores resaltados antes de guardar.",
+    "saveButton": "Guardar Cambios",
+    "removeIdentityConfirm": "¿Estás seguro de que quieres eliminar la identidad para {{fundName}}?",
+    "cannotRemoveActive": "No puedes eliminar tu identidad activa."
+  },
+  "myApplicationsPage": {
+    "title": "Mis Solicitudes",
+    "searchPlaceholder": "Buscar por evento, estado, fecha...",
+    "noResults": "Ninguna solicitud coincide con tu búsqueda.",
+    "noApplications": "Aún no has enviado ninguna solicitud para este fondo."
+  },
+  "myProxyApplicationsPage": {
+    "title": "Mis Solicitudes de Apoderado",
+    "searchPlaceholder": "Buscar por solicitante, evento, estado...",
+    "noResults": "Ninguna solicitud de apoderado coincide con tu búsqueda.",
+    "noApplications": "Aún no has enviado ninguna solicitud de apoderado para este fondo."
+  },
+  "supportPage": {
+    "title": "Centro de Soporte",
+    "emailLabel": "Correo de Soporte",
+    "phoneLabel": "Teléfono de Soporte",
+    "chatbotButton": "Hablar con el Asistente de Ayuda",
+    "chatbotDisclaimer": "El Asistente de Ayuda usa IA. Llámanos o envíanos un correo con cualquier pregunta adicional.",
+    "faqTitle": "Preguntas Frecuentes",
+    "faqDescription": "Encuentra respuestas a preguntas comunes.",
+    "paymentsTitle": "Pagos",
+    "paymentsDescription": "Aprende cómo se desembolsan las subvenciones."
+  },
+  "classVerificationPage": {
+    "maxAttemptsTitle": "Los detalles proporcionados no coinciden con nuestros registros.",
+    "maxAttemptsBody": "Demasiados intentos fallidos. Por favor, contacta a soporte si crees que esto es un error.",
+    "backToProfile": "Volver al Perfil",
+    "backToHome": "Volver a Inicio",
+    "domainTitle": "Verificando con Dominio de Correo de la Empresa",
+    "domainBody": "Estamos verificando si tu correo <1>{{email}}</1> pertenece a un dominio aprobado para el código de fondo <1>{{fundCode}}</1>.",
+    "domainErrorConfig": "No se encontró configuración de dominio para este fondo.",
+    "domainErrorMismatch": "El dominio de tu correo ({{userDomain}}) no es elegible para este fondo.",
+    "domainErrorGeneric": "No se pudo verificar el dominio.",
+    "domainSuccess": "¡Dominio verificado! Redirigiendo...",
+    "rosterTitle": "Verifica tu Estado",
+    "rosterBody": "Por favor, ingresa los siguientes detalles para verificar tu estado. Intentos restantes: {{attempts}}",
+    "employeeIdLabel": "ID de Empleado",
+    "birthMonthLabel": "Mes de Nacimiento (1-12)",
+    "birthDayLabel": "Día de Nacimiento (1-31)",
+    "rosterErrorMismatch": "Los detalles proporcionados no coinciden con nuestros registros. Por favor, inténtalo de nuevo.",
+    "rosterErrorGeneric": "Ocurrió un error durante la verificación. Por favor, inténtalo más tarde.",
+    "ssoTitle": "Verificando con SSO",
+    "ssoBody": "Haz clic en el botón de abajo para vincular tu cuenta SSO de la empresa y completar la verificación. Esto abrirá una nueva ventana.",
+    "ssoButton": "Vincular Cuenta SSO",
+    "ssoErrorFailed": "La vinculación SSO falló. Por favor, inténtalo de nuevo o usa otro método.",
+    "ssoErrorGeneric": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+    "successTitle": "¡Verificación Completa!",
+    "successBody": "Ahora eres elegible para solicitar ayuda para este fondo.",
+    "configError": "Error de configuración: El código de fondo \"{{fundCode}}\" no se reconoce."
+  },
+  "eligibilityPage": {
+    "title": "¿Elegible para Asistencia?",
+    "description": "Tu programa cubre los tipos de elegibilidad y eventos a continuación. Confirma que eres elegible antes de solicitar. Puedes verificar tu estado de elegibilidad actual en tu <1>página de Perfil</1>.",
+    "statusActive": "<1>'Activo'</1> significa que eres elegible para solicitar.",
+    "statusInactive": "<1>'Inactivo'</1> requiere verificación adicional.",
+    "header": "Elegible",
+    "eligibilityType": "Tipo de Elegibilidad",
+    "disasters": "Desastres",
+    "hardships": "Dificultades",
+    "errorLoading": "No se pudo cargar la información de elegibilidad para tu fondo ({{fundCode}}).",
+    "errorFetching": "Ocurrió un error al obtener los detalles del fondo."
+  },
+  "donatePage": {
+    "title": "Donar",
+    "chooseAmount": "Elige un Monto",
+    "description": "Tu generosa contribución nos ayuda a proporcionar asistencia financiera crítica a los empleados afectados por desastres imprevistos.",
+    "customAmount": "Otro",
+    "donorInfo": "Información del Donante",
+    "paymentInfo": "Información de Pago",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo Electrónico",
+    "cardholderName": "Nombre en la Tarjeta",
+    "cardNumber": "Número de Tarjeta",
+    "expiryDate": "Fecha de Vencimiento",
+    "cvc": "CVC",
+    "donateButton": "Donar ${{amount}}",
+    "processing": "Procesando...",
+    "successTitle": "¡Gracias!",
+    "successBody": "Tu generosa donación de ${{amount}} marcará la diferencia. Se ha enviado un recibo a tu correo electrónico.",
+    "backToSupport": "Volver al Centro de Soporte",
+    "errorAmount": "Por favor, ingresa un monto válido.",
+    "errorFirstName": "El nombre es obligatorio.",
+    "errorLastName": "El apellido es obligatorio.",
+    "errorEmail": "Por favor, ingresa un correo electrónico válido.",
+    "errorCardholderName": "El nombre en la tarjeta es obligatorio.",
+    "errorCardNumber": "Por favor, ingresa un número de tarjeta válido.",
+    "errorExpiryFormat": "Formato no válido (MM / AA).",
+    "errorExpiryDate": "La tarjeta ha expirado.",
+    "errorCvc": "El CVC debe tener 3 o 4 dígitos."
+  },
+  "chatbotWidget": {
+    "greeting": "¡Hola! Soy el Asistente de Ayuda. ¿Cómo puedo ayudarte hoy? No dudes en contarme tu situación.",
+    "title": "Asistente de Ayuda",
+    "disclaimer": "*Vista previa de Agente IA usando respuestas generativas",
+    "errorMessage": "Lo siento, encontré un error. Por favor, inténtalo de nuevo.",
+    "placeholder": "Escribe tu mensaje..."
+  },
+  "modals": {
+    "applicationDetail": {
+      "title": "Detalles de la Solicitud",
+      "id": "ID de Solicitud:",
+      "submittedBy": "Enviado por:",
+      "status": "Estado:",
+      "submittedDate": "Fecha de Envío:",
+      "decisionedDate": "Fecha de Decisión:",
+      "eventType": "Tipo de Evento:",
+      "requestedAmount": "Monto Solicitado:",
+      "reasons": "Razones de la Decisión:"
+    },
+    "terms": {
+      "title": "Términos de Aceptación",
+      "body": [
+        "Al enviar esta solicitud, certifico que la información proporcionada es verdadera, correcta y completa a mi leal saber y entender. Entiendo que cualquier declaración falsa, tergiversación u omisión puede llevar a la denegación de mi solicitud u otra acción disciplinaria, hasta e incluyendo la terminación del empleo, donde aplique.",
+        "Autorizo a E4E Relief y a sus agentes a verificar la información proporcionada en esta solicitud. Entiendo que esta asistencia tiene como objetivo proporcionar un alivio temporal para eventos de desastre calificados y puede no cubrir todos mis gastos.",
+        "Acepto liberar y eximir de toda responsabilidad a E4E Relief, mi empleador y sus respectivos funcionarios, directores, empleados y agentes de cualquier reclamo, responsabilidad o causa de acción que surja de o esté relacionada con esta solicitud y cualquier asistencia proporcionada.",
+        "Entiendo que los fondos se otorgan en función de la información proporcionada y están sujetos a disponibilidad. Recibir una subvención no garantiza asistencia futura. Todas las decisiones tomadas por E4E Relief son finales."
+      ],
+      "closeButton": "He Leído y Entendido"
+    },
+    "policy": {
+      "title": "Información Legal",
+      "privacy": "Política de Privacidad",
+      "terms": "Términos de Uso",
+      "cookies": "Política de Cookies"
+    }
+  },
+  "formControls": {
+    "location": "Ubicación",
+    "noCountriesFound": "No se encontraron países",
+    "noOptionsFound": "No se encontraron opciones",
+    "requiredField": "Este campo es obligatorio",
+    "addressHelper": "Escribe o pega una dirección completa a continuación y deja que nuestra IA llene los campos por ti.",
+    "addressHelperPlaceholder": "ej., 1600 Amphitheatre Parkway, Mountain View, CA 94043",
+    "aiStarter": "Describe tu situación a continuación y nuestro Asistente de Ayuda IA pre-llenará tu solicitud.",
+    "aiStarterPlaceholder": "ej., Soy propietario de una casa afectado por el reciente tornado en Anytown, CA. Mi casa sufrió daños y necesito unos $2500 para reparaciones. Nuestro hogar de 4 personas gana unos $60k/año. Mi teléfono es 555-123-4567 y prefiero comunicarme en español.",
+    "submitDescription": "Enviar Descripción",
+    "aiParseError": "No se pudieron extraer los detalles. Por favor, inténtalo de nuevo o llena los campos manualmente.",
+    "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos."
+  },
+  "faqPage": {
+    "title": "Preguntas Frecuentes",
+    "backToSupport": "Volver al Centro de Soporte",
+    "applicantTitle": "Para Solicitantes",
+    "donorTitle": "Para Donantes",
+    "applicantFaqs": [
+      {
+        "question": "¿Cuánto tiempo tardará en procesarse mi solicitud?",
+        "answer": "Una vez que hayamos recibido toda la documentación de respaldo requerida, un especialista en subvenciones revisará su solicitud y tomará una decisión sobre su solicitud dentro de 3 a 5 días hábiles. Si se aprueba, se realizará una distribución de la subvención según la preferencia de pago seleccionada en su perfil de solicitante."
+      },
+      {
+        "question": "¿Cómo puedo verificar el estado de mi solicitud?",
+        "answer": "Puede verificar fácilmente el estado de su solicitud en este portal. Una vez que haya enviado una solicitud, simplemente regrese a este portal, inicie sesión y busque una barra de estado gris en la parte superior de su página de inicio. Puede hacer clic en el enlace de detalles para obtener más información."
+      },
+      {
+        "question": "Si mi solicitud es aprobada, ¿cuánto tiempo tardaré en recibir mi pago?",
+        "answer": "El tiempo de pago de la subvención depende del tipo de pago seleccionado, la ubicación geográfica y la información bancaria. A continuación se presentan los plazos generales:\n- Los solicitantes de EE. UU. que seleccionen un método de pago digital pueden esperar que los fondos se depositen en un plazo de 1 a 3 días hábiles.\n- Los solicitantes de EE. UU. que seleccionen un cheque por correo suelen recibir los fondos en un plazo de 7 días hábiles. No hay número de seguimiento y los cheques se envían por USPS.\n- El tiempo de pago internacional varía según el país. Consulte su carta de adjudicación cuando se procese la subvención para obtener detalles adicionales."
+      },
+      {
+        "question": "¿Cuánto recibiré?",
+        "answer": "Las adjudicaciones de subvenciones se basan en la necesidad y variarán según los parámetros de subvención del programa de ayuda de su empresa."
+      },
+      {
+        "question": "¿Tengo que devolver la subvención o pagar impuestos si recibo asistencia?",
+        "answer": "Las subvenciones proporcionadas a través del Fondo de Ayuda no son préstamos y no tienen que ser devueltas.\n- Para los beneficiarios de subvenciones de EE. UU., una subvención generalmente no generará ingresos imponibles (es decir, no aparecerá en su W2).\n- Para los beneficiarios fuera de los EE. UU., consulte a su asesor fiscal local para obtener más información."
+      },
+      {
+        "question": "Si no soy seleccionado para una subvención, ¿recibiré una notificación con el motivo?",
+        "answer": "Sí, se le informará por correo electrónico que el programa no puede proporcionar la asistencia con detalles sobre por qué es posible que no haya sido seleccionado para una subvención."
+      },
+      {
+        "question": "¿Quién revisa y toma la decisión sobre las solicitudes?",
+        "answer": "Su Fondo de Ayuda es administrado por E4E Relief. E4E Relief es un tercero que ha sido designado para administrar el procesamiento de subvenciones, la toma de decisiones y los aspectos administrativos de su Programa de Ayuda. Esto garantiza la confidencialidad y la toma de decisiones imparcial. También tienen experiencia en este tema para tomar decisiones acertadas sobre eventos calificados."
+      },
+      {
+        "question": "¿Quién es E4E Relief?",
+        "answer": "E4E Relief es una organización benéfica pública 501(c)(3). El número de identificación fiscal de E4E Relief es 87-3137387. Con más de dos décadas de experiencia sirviendo a clientes, E4E Relief es el proveedor líder del país de fondos para desastres y dificultades de los empleados."
+      }
+    ],
+    "donorFaqs": [
+      {
+        "question": "¿Quién es E4E Relief?",
+        "answer": "E4E Relief es una organización benéfica pública 501(c)(3). El número de identificación fiscal de E4E Relief es 87-3137387. Con más de dos décadas de experiencia sirviendo a clientes, E4E Relief es el proveedor líder del país de fondos para desastres y dificultades de los empleados."
+      },
+      {
+        "question": "¿Puedo designar mi contribución a una persona específica?",
+        "answer": "Si bien las donaciones no se pueden designar para una persona, país (ubicación) o evento específicos, sí garantizan que haya fondos disponibles para brindar asistencia a las personas necesitadas que cumplen con los criterios del programa."
+      },
+      {
+        "question": "¿Mis donaciones al fondo son deducibles de impuestos? ¿Recibiré un estado de cuenta a fin de año?",
+        "answer": "Una donación a su fondo de ayuda administrado por E4E Relief puede ser deducible de impuestos, siempre que no se hayan recibido bienes o servicios a cambio de la donación. Recibirá un recibo de impuestos por correo electrónico para donaciones con tarjeta de crédito y criptomonedas. Para cualquier otro regalo, se proporcionará un acuse de recibo de regalo para todos aquellos, de $250 o más, hechos directamente al Fondo a través de E4E Relief. Los obsequios en efectivo, según el monto, pueden o no requerir un recibo para fines fiscales. Consulte a su asesor fiscal para obtener más información."
+      },
+      {
+        "question": "¿Necesito donar para ser elegible para solicitar asistencia del Fondo de Ayuda?",
+        "answer": "Las donaciones al Fondo de Ayuda son voluntarias y no son necesarias para solicitar asistencia."
+      },
+      {
+        "question": "¿E4E Relief acepta obsequios de fuera de los EE. UU.?",
+        "answer": "Sí, nuestros programas de ayuda actualmente aceptan obsequios de fuera de los EE. UU. Sin embargo, restringimos los países sancionados según la guía de la Oficina de Control de Activos Extranjeros (OFAC)."
+      },
+      {
+        "question": "¿Cuándo recibiré un recibo de impuestos por mi donación de tarjeta de crédito, acciones, criptomonedas o de mi Fondo Asesorado por Donantes?",
+        "answer": "Al completar su donación, recibirá un recibo de impuestos para cualquier donación de criptomonedas o tarjeta de crédito realizada a través del formulario de donación. Se proporciona un recibo de acuse de recibo para la promesa de acciones y donaciones de DAF.\n\nPara las donaciones de acciones, los recibos de impuestos para los donantes serán manejados por nuestro socio externo: Renaissance Charitable Foundation (Ren).\n\nPara las donaciones de DAF, los recibos de impuestos los proporciona la organización sin fines de lucro que maneja la transacción del regalo."
+      },
+      {
+        "question": "¿Cuánto tiempo se tarda en procesar mi donación?",
+        "answer": "**Tarjeta de Crédito**\nLas donaciones con tarjeta de crédito tardan de 3 a 5 días hábiles en recibirse en el fondo.\n\n**Cripto**\nLas donaciones de criptomonedas tardan de 2 a 5 días hábiles en completarse y recibirse en el fondo.\n\n**Acciones**\nEl tiempo para recibir los fondos de los obsequios de acciones dependerá de la rapidez con que el corredor del donante pueda procesar la transacción y mover las acciones, lo que puede tardar hasta 2-3 semanas en procesarse.\n\n**Fondos Asesorados por Donantes (DAF)**\nDependiendo del proveedor, recibiremos las donaciones de DAF entre 1 y 3 semanas."
+      },
+      {
+        "question": "¿Cómo veo mis donaciones históricas?",
+        "answer": "Puede revisar las donaciones históricas a través de su portal en 'Mis Donaciones' o accediendo al panel de donantes de The Giving Block. Deberá crear una cuenta con la misma dirección de correo electrónico utilizada al realizar la donación. Este ID de usuario y contraseña NO son necesariamente los mismos para su portal de programa, sino un inicio de sesión único con The Giving Block."
+      },
+      {
+        "question": "¿Cómo solicito un recibo de impuestos de reemplazo?",
+        "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, podrá acceder a cualquier recibo relacionado con sus donaciones anteriores."
+      },
+      {
+        "question": "¿Qué pasa si quiero hacer donaciones recurrentes?",
+        "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, puede ver sus planes de donación y actualizar la información relacionada con su tarjeta de crédito y la frecuencia de los pagos. También puede desactivar cualquier donación recurrente aquí. Las donaciones recurrentes no se pueden realizar de forma anónima por razones regulatorias."
+      },
+      {
+        "question": "¿A quién puedo contactar si tengo preguntas adicionales?",
+        "answer": "Para obtener información sobre otras formas de donar, comuníquese con los Servicios para Donantes de E4E Relief al 704-973-4564 o <1>donorservices@e4erelief.org</1>."
+      }
+    ]
+  },
+  "paymentOptionsPage": {
+    "title": "Opciones de Pago",
+    "description": "Nos asociamos con proveedores de pago líderes en la industria para garantizar que sus fondos de ayuda se entreguen de manera rápida y segura, dondequiera que se encuentre en el mundo.",
+    "usApplicantsTitle": "Solicitantes de EE. UU.",
+    "usApplicantsBody": "Para los solicitantes dentro de los Estados Unidos, revise nuestra guía de pago para comprender las opciones y los requisitos disponibles para recibir su subvención.",
+    "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
+    "intlApplicantsTitle": "Solicitantes Internacionales",
+    "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
+    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <1>Haga clic aquí</1> para revisar la guía de adjudicación de subvenciones internacionales.",
+    "intlPartnersTitle": "Información del Socio de Pago",
+    "converaGuide": "Guía de Convera",
+    "tipaltiGuide": "Guía de Tipalti"
   }
 }

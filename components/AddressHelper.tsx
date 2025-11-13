@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { parseAddressWithGemini } from '../services/geminiService';
 import type { Address } from '../types';
 
@@ -8,13 +9,14 @@ interface AddressHelperProps {
 }
 
 const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant = 'boxed' }) => {
+  const { t } = useTranslation();
   const [addressInput, setAddressInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleParse = async () => {
     if (!addressInput.trim()) {
-      setError('Please enter an address to parse.');
+      setError('Please enter an address to parse.'); // This is an internal error, not shown to user
       return;
     }
     setIsLoading(true);
@@ -25,7 +27,7 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
       setAddressInput(''); // Clear after successful parse
     } catch (e) {
       console.error("Failed to parse address:", e);
-      setError('Could not parse the address. Please try again or fill fields manually.');
+      setError(t('formControls.aiParseError'));
     } finally {
       setIsLoading(false);
     }
@@ -39,14 +41,14 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
   return (
     <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0] mb-4">
       <p className="text-xs text-white mb-2">
-        Type or paste a full address below and let our AI fill in the fields for you.
+        {t('formControls.addressHelper')}
       </p>
       <div className="flex flex-col md:flex-row gap-2">
         <textarea
           id="address-helper-input"
           value={addressInput}
           onChange={(e) => setAddressInput(e.target.value)}
-          placeholder="e.g., 1600 Amphitheatre Parkway, Mountain View, CA 94043"
+          placeholder={t('formControls.addressHelperPlaceholder')}
           rows={2}
           className={textareaClasses[variant]}
           disabled={isLoading}
@@ -63,7 +65,7 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : (
-             "Submit"
+             t('common.submit')
           )}
         </button>
       </div>
