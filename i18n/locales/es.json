@@ -16,7 +16,7 @@
     "apply": "Solicitar",
     "support": "Soporte",
     "donate": "Donar",
-    "fundPortal": "Portal del Fondo",
+    "fundPortal": "Fondo",
     "logout": "Cerrar Sesión",
     "welcome": "Bienvenido, {{name}}"
   },

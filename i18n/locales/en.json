@@ -16,7 +16,7 @@
     "apply": "Apply",
     "support": "Support",
     "donate": "Donate",
-    "fundPortal": "Fund Portal",
+    "fundPortal": "Fund",
     "logout": "Logout",
     "welcome": "Welcome, {{name}}"
   },
