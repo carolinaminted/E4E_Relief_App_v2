@@ -54,16 +54,18 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
 
   return (
       <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#002a50] p-4">
-        <div className="flex flex-col items-center mb-6">
-            <button onClick={() => navigate('home')} className="transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
-                <img
-                    src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
-                    alt="E4E Relief Logo"
-                    className="h-12 w-auto"
-                />
-            </button>
-            <span className="text-gray-200 truncate mt-3">Welcome, {userName}</span>
-            <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 mt-4 w-full rounded-md text-sm transition-colors duration-200">
+        <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+                <button onClick={() => navigate('home')} className="transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
+                    <img
+                        src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
+                        alt="E4E Relief Logo"
+                        className="h-12 w-auto"
+                    />
+                </button>
+                <span className="text-gray-200 truncate pl-2 text-right">Welcome, {userName}</span>
+            </div>
+            <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200">
               Logout
             </button>
         </div>
