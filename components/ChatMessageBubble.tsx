@@ -8,7 +8,7 @@ interface ChatMessageBubbleProps {
 }
 
 const UserIcon: React.FC = () => (
-  <div className="w-8 h-8 rounded-full bg-[#003a70] flex items-center justify-center font-bold text-white flex-shrink-0">
+  <div className="w-8 h-8 rounded-full bg-[#ff8400] flex items-center justify-center font-bold text-white flex-shrink-0">
     U
   </div>
 );
@@ -35,7 +35,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
   const isError = message.role === MessageRole.ERROR;
 
   const bubbleAlignment = isUser ? 'justify-end' : 'justify-start';
-  const bubbleColor = isUser ? 'bg-[#003a70] text-white' : isError ? 'bg-red-900/50 text-red-200' : 'bg-white text-black';
+  const bubbleColor = isUser ? 'bg-[#ff8400] text-white' : isError ? 'bg-red-900/50 text-red-200' : 'bg-[#003a70] text-white';
   const flexDirection = isUser ? 'flex-row-reverse' : 'flex-row';
 
   const Icon = isUser ? UserIcon : isError ? ErrorIcon : ModelIcon;
