@@ -53,7 +53,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
 
   return (
     <>
-      <div className="flex-1 flex flex-col items-center justify-between pt-8 pb-4 px-4 sm:px-8 text-center">
+      <div className="flex-1 flex flex-col items-center justify-between pt-8 md:pt-16 pb-4 px-4 sm:px-8 text-center">
         <div className="w-full"> {/* Content wrapper */}
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
             {fundName || 'E4E Relief'}

@@ -88,7 +88,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
-  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
@@ -683,22 +682,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </div>
       </form>
       
-      <div className="text-center mt-6 md:hidden">
-        <button
-          onClick={() => setIsPolicyModalOpen(true)}
-          className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
-        >
-          Powered by E4E Relief
-        </button>
-      </div>
-
       {selectedApplication && (
         <ApplicationDetailModal 
           application={selectedApplication} 
           onClose={() => setSelectedApplication(null)} 
         />
       )}
-      {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
     </div>
   );
 };
