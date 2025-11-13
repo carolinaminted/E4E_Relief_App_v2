@@ -671,7 +671,6 @@ function App() {
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header 
-            navigate={navigate}
             userName={currentUser.firstName}
             onLogout={handleLogout}
         />
