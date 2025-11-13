@@ -148,7 +148,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                   disabled={isUploading}
                 />
                 <div>
-                  <label htmlFor={`receipt-${type}`} className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</label>
+                  <p className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</p>
                   <div className="flex items-center gap-2">
                     <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>

@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
 import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from './Icons';
-import type { Page } from '../types';
-
+import type { Page, UserProfile, ClassVerificationStatus } from '../types';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
-  isVerifiedAndEligible: boolean;
   canApply: boolean;
-  fundName?: string;
-  userRole: 'User' | 'Admin';
+  userProfile: UserProfile;
+  onAddIdentity: (fundCode: string) => void;
 }
 
 // --- Component ---
@@ -25,7 +23,44 @@ interface Tile {
   colSpan?: string;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, canApply, fundName, userRole }) => {
+const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const { t } = useTranslation();
+    const hasPassedCV = cvStatus === 'passed';
+
+    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
+    const passedClasses = "bg-green-800/50 text-green-300";
+    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
+
+    const handleClick = () => {
+        if (!hasPassedCV) {
+             console.log("[Telemetry] verification_needed_cta_clicked_from_home_page");
+             onClick();
+        }
+    };
+
+    const text = hasPassedCV ? t('applyPage.eligibility') : t('applyPage.verificationNeeded');
+    
+    return (
+        <button
+            onClick={handleClick}
+            disabled={hasPassedCV}
+            role={hasPassedCV ? 'status' : 'button'}
+            aria-label={text}
+            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
+        >
+            {!hasPassedCV && (
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+            )}
+            <span>{text}</span>
+        </button>
+    );
+};
+
+
+const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, onAddIdentity }) => {
     const { t } = useTranslation();
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
@@ -36,14 +71,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
             icon: <ApplyIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('apply'),
             disabled: !canApply,
-            disabledTooltipKey: !isVerifiedAndEligible ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
+            disabledTooltipKey: userProfile.classVerificationStatus !== 'passed' ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
         },
         { key: 'profile', titleKey: 'nav.profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
         { key: 'support', titleKey: 'nav.support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },
         { key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') },
     ];
 
-    if (userRole === 'Admin') {
+    if (userProfile.role === 'Admin') {
         tiles.push({ 
             key: 'fundPortal', 
             titleKey: 'nav.fundPortal', 
@@ -61,7 +96,19 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isVerifiedAndEligible, ca
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
                 {t('homePage.title')}
             </h1>
-            <p className="text-xl font-semibold text-white mt-1">{fundName || 'E4E Relief'}</p>
+            {userProfile ? (
+              <div className="mt-2 flex flex-col items-center gap-2">
+                  {userProfile.fundName && userProfile.fundCode ? (
+                      <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
+                  ) : null }
+                  <EligibilityIndicator 
+                      cvStatus={userProfile.classVerificationStatus} 
+                      onClick={() => onAddIdentity(userProfile.fundCode)} 
+                  />
+              </div>
+            ) : (
+              <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>
+            )}
           </div>
 
           <div className={`w-full max-w-md sm:max-w-2xl mx-auto grid grid-cols-2 gap-3 sm:gap-6`}>

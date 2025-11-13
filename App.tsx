@@ -613,7 +613,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -644,7 +644,7 @@ function App() {
                 />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
     }
   };
   
