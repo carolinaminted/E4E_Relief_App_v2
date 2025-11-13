@@ -55,15 +55,17 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
   return (
       <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#002a50] p-4">
         <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-                <button onClick={() => navigate('home')} className="transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
+            <div className="flex items-center mb-4">
+                <button onClick={() => navigate('home')} className="flex-shrink-0 transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1" aria-label="Go to Home page">
                     <img
                         src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi"
                         alt="E4E Relief Logo"
                         className="h-12 w-auto"
                     />
                 </button>
-                <span className="text-gray-200 truncate pl-2 text-right">Welcome, {userName}</span>
+                <div className="flex-1 flex justify-center items-center min-w-0">
+                    <span className="text-gray-200 truncate pl-2">Welcome, {userName}</span>
+                </div>
             </div>
             <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200">
               Logout
