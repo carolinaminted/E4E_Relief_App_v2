@@ -226,7 +226,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
   return (
     <div className="space-y-4">
-        {isAIParsing && <LoadingOverlay message={t('common.loading')} />}
+        {isAIParsing && <LoadingOverlay message={t('common.aiApplyingDetails')} />}
 
         {/* AI Application Starter Section */}
         <fieldset className="border-b border-[#005ca0] pb-4">

@@ -19,4 +19,6 @@ export interface IAuthClient {
     signIn: (email: string, password: string) => Promise<boolean>;
     
     signOut: () => Promise<void>;
+
+    sendPasswordResetEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
 }

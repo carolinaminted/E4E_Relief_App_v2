@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { UserProfile, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, TokenUsageFilters, TokenEvent, ModelPricing } from '../types';
-// FIX: Corrected the import path for tokenEventsRepo. It is exported from firestoreRepo, not tokenTracker.
 import { tokenEventsRepo } from '../services/firestoreRepo';
 
 import { TokenUsageFilterModal } from './TokenUsageFilters';
 import { TopSessionChart, LastHourUsageChart, Last15MinutesUsageChart } from './TokenUsageCharts';
 import TokenUsageTable from './TokenUsageTable';
-import LoadingOverlay from './LoadingOverlay';
 
 interface TokenUsagePageProps {
   navigate: (page: 'fundPortal') => void;
@@ -22,6 +20,17 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
+);
+
+const CardLoader: React.FC = () => (
+    <div className="absolute inset-0 bg-[#003a70]/90 rounded-lg flex flex-col items-center justify-center z-10">
+        <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-[#ff8400] rounded-full animate-pulse" style={{ animationDelay: '-0.3s' }}></div>
+            <div className="w-3 h-3 bg-[#ff8400] rounded-full animate-pulse" style={{ animationDelay: '-0.15s' }}></div>
+            <div className="w-3 h-3 bg-[#ff8400] rounded-full animate-pulse"></div>
+        </div>
+        <p className="text-white text-sm mt-2">Loading Analytics...</p>
+    </div>
 );
 
 const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }) => {
@@ -59,13 +68,19 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   
   const fetchData = useCallback(async () => {
     setIsFetching(true);
-    const events = await tokenEventsRepo.getEventsForFund({
-      fundCode: currentUser.fundCode,
-      filters,
-      uid: currentUser.role === 'Admin' ? undefined : currentUser.uid,
-    });
-    setAllEvents(events);
-    setIsFetching(false);
+    try {
+        const events = await tokenEventsRepo.getEventsForFund({
+          fundCode: currentUser.fundCode,
+          filters,
+          uid: currentUser.role === 'Admin' ? undefined : currentUser.uid,
+        });
+        setAllEvents(events);
+    } catch (error) {
+        console.error("Failed to fetch token analytics:", error);
+        setAllEvents([]);
+    } finally {
+        setIsFetching(false);
+    }
   }, [filters, currentUser.fundCode, currentUser.uid, currentUser.role]);
 
   useEffect(() => {
@@ -211,8 +226,6 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full relative">
-        {isFetching && <LoadingOverlay message="Loading Analytics..." />}
-        
         <div className="relative flex justify-center items-center mb-8">
              <button onClick={() => navigate('fundPortal')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label="Back to Fund Portal">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -261,17 +274,19 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
             <TokenUsageFilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} filters={filters} setFilters={setFilters} filterOptions={filterOptions} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+                <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
                     <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Cost (USD) - Filtered</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#edda26] to-[#ff8400] text-center">
-                        ${totalCost.toFixed(4)}
+                        {isFetching ? '$0.0000' : `$${totalCost.toFixed(4)}`}
                     </p>
+                    {isFetching && <CardLoader />}
                 </div>
-                <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+                <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
                     <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Tokens Used - Filtered</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
-                        {totalTokens.toLocaleString()}
+                        {isFetching ? '0' : totalTokens.toLocaleString()}
                     </p>
+                    {isFetching && <CardLoader />}
                 </div>
             </div>
 

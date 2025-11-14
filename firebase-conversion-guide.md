@@ -226,7 +226,7 @@ The following composite indexes must be created in Firestore to support admin qu
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "fundCode", "order": "ASCENDING" },
-        { "fieldPath": "timestamp", "order": "DESCENDING" }
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
       ]
     },
      {
@@ -235,7 +235,7 @@ The following composite indexes must be created in Firestore to support admin qu
       "fields": [
         { "fieldPath": "fundCode", "order": "ASCENDING" },
         { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "timestamp", "order": "DESCENDING" }
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
       ]
     }
   ]

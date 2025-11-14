@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
-// FIX: Import the centralized Page type and alias it to avoid naming conflicts.
+// FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage } from './types';
 import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 // Page Components
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 import HomePage from './components/HomePage';
 import ApplyPage from './components/ApplyPage';
 import ProfilePage from './components/ProfilePage';
@@ -565,8 +566,10 @@ function App() {
             <div className="w-full max-w-lg px-4 pt-8 sm:pt-12">
                 {page === 'register' ? (
                 <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
+                ) : page === 'forgotPassword' ? (
+                <ForgotPasswordPage onSendResetLink={authClient.sendPasswordResetEmail} switchToLogin={() => setPage('login')} />
                 ) : (
-                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
+                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} switchToForgotPassword={() => setPage('forgotPassword')} />
                 )}
             </div>
         </div>

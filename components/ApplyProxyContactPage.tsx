@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { UserProfile, Address, ApplicationFormData } from '../types';
 import { employmentTypes, languages } from '../data/appData';
 import { formatPhoneNumber } from '../utils/formatting';
@@ -33,6 +34,7 @@ const NotificationIcon: React.FC = () => (
 type ApplySection = 'aiStarter' | 'applicantDetails' |'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
+  const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
   const [isAIParsing, setIsAIParsing] = useState(false);
@@ -199,7 +201,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
 
   return (
     <div className="space-y-4">
-        {isAIParsing && <LoadingOverlay message="We are applying your details to the application now..." />}
+        {isAIParsing && <LoadingOverlay message={t('common.aiApplyingDetails')} />}
 
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('aiStarter')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'aiStarter'}>

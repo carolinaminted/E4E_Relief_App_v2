@@ -10,7 +10,8 @@
     "error": "Error",
     "success": "Éxito",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora."
   },
   "app": {
     "loading": "Cargando...",
@@ -34,7 +35,17 @@
     "noAccount": "¿No tienes una cuenta?",
     "signUpLink": "Regístrate",
     "errorGeneric": "Por favor, ingresa el correo y la contraseña.",
-    "errorInvalid": "Correo o contraseña no válidos. Inténtalo de nuevo."
+    "errorInvalid": "Correo o contraseña no válidos. Inténtalo de nuevo.",
+    "forgotPasswordLink": "¿Olvidaste tu contraseña?"
+  },
+  "forgotPasswordPage": {
+    "title": "Restablecer Contraseña",
+    "instruction": "Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "sendButton": "Enviar Enlace de Restablecimiento",
+    "backToLogin": "Volver a Iniciar Sesión",
+    "successMessage": "Si existe una cuenta con ese correo electrónico, se ha enviado un enlace para restablecer la contraseña. Por favor, revisa tu bandeja de entrada.",
+    "errorGeneric": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+    "errorEmailRequired": "Por favor, ingresa una dirección de correo electrónico válida."
   },
   "registerPage": {
     "firstNameLabel": "Nombre",

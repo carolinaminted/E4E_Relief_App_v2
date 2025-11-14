@@ -11,7 +11,8 @@
     "success": "Success",
     "yes": "Yes",
     "no": "No",
-    "unknownError": "An unknown error occurred."
+    "unknownError": "An unknown error occurred.",
+    "aiApplyingDetails": "We are applying your details to the application now."
   },
   "app": {
     "loading": "Loading...",
@@ -35,7 +36,17 @@
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign Up",
     "errorGeneric": "Please enter both email and password.",
-    "errorInvalid": "Invalid email or password. Please try again."
+    "errorInvalid": "Invalid email or password. Please try again.",
+    "forgotPasswordLink": "Forgot password?"
+  },
+  "forgotPasswordPage": {
+    "title": "Reset Password",
+    "instruction": "Enter your email address and we'll send you a link to reset your password.",
+    "sendButton": "Send Reset Link",
+    "backToLogin": "Back to Sign In",
+    "successMessage": "If an account with that email exists, a password reset link has been sent. Please check your inbox.",
+    "errorGeneric": "An unexpected error occurred. Please try again.",
+    "errorEmailRequired": "Please enter a valid email address."
   },
   "registerPage": {
     "firstNameLabel": "First Name",
@@ -203,7 +214,6 @@
     "householdSize": "Number of people in household",
     "homeowner": "Do you own your own home?",
     "preferredLanguage": "Preferred Language",
-    "consentTitle": "Consent & Acknowledgement",
     "ackPolicies": "I have read and agree to E4E Relief’s Privacy Policy and Cookie Policy.",
     "commConsent": "I consent to receive emails and text messages regarding my application.",
     "infoCorrect": "All information I have provided is accurate.",
@@ -453,16 +463,16 @@
     ]
   },
   "paymentOptionsPage": {
-    "title": "Payment Options",
-    "description": "We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.",
-    "usApplicantsTitle": "US Applicants",
-    "usApplicantsBody": "For applicants within the United States, please review our payment guide to understand the available options and requirements for receiving your grant.",
-    "usApplicantsLink": "Bank of America Recipient Select Guide",
-    "intlApplicantsTitle": "International Applicants",
-    "intlSupportTitle": "International Grant Award Payment Support",
-    "intlSupportBody": "Once a grant is awarded, there are a few important registration steps you must complete before financial assistance is received. To receive this financial assistance, you must successfully complete your account registration with our payment partners. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Click here </a> to review the international grant award guide.",
-    "intlPartnersTitle": "Payment Partner Information",
-    "converaGuide": "Convera Guide",
-    "tipaltiGuide": "Tipalti Guide"
+    "title": "Opciones de Pago",
+    "description": "Nos asociamos con proveedores de pago líderes en la industria para garantizar que sus fondos de ayuda se entreguen de manera rápida y segura, dondequiera que se encuentre en el mundo.",
+    "usApplicantsTitle": "Solicitantes de EE. UU.",
+    "usApplicantsBody": "Para los solicitantes dentro de los Estados Unidos, revise nuestra guía de pago para comprender las opciones y los requisitos disponibles para recibir su subvención.",
+    "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
+    "intlApplicantsTitle": "Solicitantes Internacionales",
+    "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
+    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Haga clic aquí </a> para revisar la guía de adjudicación de subvenciones internacionales.",
+    "intlPartnersTitle": "Información del Socio de Pago",
+    "converaGuide": "Guía de Convera",
+    "tipaltiGuide": "Guía de Tipalti"
   }
 }

@@ -5,9 +5,10 @@ import LanguageSwitcher from './LanguageSwitcher';
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
   switchToRegister: () => void;
+  switchToForgotPassword: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, switchToForgotPassword }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,6 +76,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
             required
             autoComplete="current-password"
           />
+        </div>
+        <div className="text-right text-sm">
+            <button
+                type="button"
+                onClick={switchToForgotPassword}
+                className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 hover:underline"
+            >
+                {t('loginPage.forgotPasswordLink', 'Forgot password?')}
+            </button>
         </div>
         <div className="h-6 text-center">
           {error && <p className="text-red-400 text-sm">{error}</p>}

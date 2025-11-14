@@ -10,7 +10,7 @@ interface LiveDashboardPageProps {
   currentUser: UserProfile;
 }
 
-// --- Reusable UI Components (from DashboardPage) ---
+// --- Reusable UI Components ---
 
 const MetricCard: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
     <div className={`bg-[#003a70]/50 p-6 rounded-lg border border-[#005ca0] flex flex-col ${className}`}>
@@ -109,8 +109,7 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
     const [isFetching, setIsFetching] = useState(true);
     const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-    const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600', '#d4d756'];
-    const grayColor = '#898c8d';
+    const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600'];
 
     const fetchData = useCallback(async () => {
         setIsFetching(true);
@@ -151,8 +150,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
             }, {} as Record<string, number>);
             
             const applicationStatusData = [
-                { label: 'Awarded', value: statusCounts.Awarded || 0, color: chartColors[1] },
-                { label: 'Declined', value: statusCounts.Declined || 0, color: grayColor },
+                { label: 'Awarded', value: statusCounts.Awarded || 0, color: chartColors[1] }, // yellow
+                { label: 'Declined', value: statusCounts.Declined || 0, color: chartColors[2] }, // teal
                 { label: 'In Review', value: statusCounts['In Review'] || 0, color: chartColors[0] },
             ];
 
@@ -161,8 +160,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
             const notEngagedCount = totalUsers - appliedUsersCount;
 
             const userEngagementData = [
-                { label: 'Applied', value: appliedUsersCount, color: chartColors[0] },
-                { label: 'Not Engaged', value: notEngagedCount > 0 ? notEngagedCount : 0, color: grayColor },
+                { label: 'Applied', value: appliedUsersCount, color: chartColors[0] }, // orange
+                { label: 'Not Engaged', value: notEngagedCount > 0 ? notEngagedCount : 0, color: chartColors[3] }, // green
             ];
 
             const countryCounts = users.reduce((acc, user) => {

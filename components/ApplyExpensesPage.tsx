@@ -125,26 +125,19 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   const handleNext = () => {
     const validationErrors: Record<string, string> = {};
     
+    // Per user feedback, ALL amount fields for the presented expense types are required.
     expenseTypes.forEach(type => {
         const expense = formData.expenses.find(e => e.type === type);
         
-        if (expense) {
-            const hasInteraction = expense.amount !== '' || !!expense.fileName;
-
-            if (hasInteraction) {
-                if (!expense.amount || Number(expense.amount) <= 0) {
-                    validationErrors[type] = t('applyExpensesPage.errorAmount');
-                }
-            }
+        if (!expense || expense.amount === '' || Number(expense.amount) <= 0) {
+            validationErrors[type] = t('applyExpensesPage.errorAmount');
         }
     });
 
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-        const finalExpenses = formData.expenses.filter(exp => (exp.amount && Number(exp.amount) > 0) || !!exp.fileName);
-        updateFormData({ expenses: finalExpenses });
-        nextStep();
+      nextStep();
     }
   };
 
@@ -212,9 +205,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           {t('common.back')}
         </button>
-        <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          {t('common.next')}
-        </button>
+        <div className="flex flex-col items-end">
+            <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+              {t('common.next')}
+            </button>
+        </div>
       </div>
     </div>
   );
