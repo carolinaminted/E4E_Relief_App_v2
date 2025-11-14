@@ -46,7 +46,7 @@
     "fundCodeHelp": "Enter the code provided by your employer or program.",
     "signUpButton": "Sign Up",
     "hasAccount": "Already have an account?",
-    "signInLink": "Sign In",
+    "signInLink": "Inicia Sesión",
     "errorAllFields": "All fields are required.",
     "errorGeneric": "Registration failed. Please try again."
   },
@@ -178,8 +178,8 @@
     "noApplications": "You have not submitted any applications for this fund yet.",
     "fundIdentitiesTitle": "Fund Identities",
     "fundIdentitiesDescription": "Manage your fund identities. Add or remove additional fund codes if you’re eligible for more than one program.",
-    "active": "(Active)",
-    "setActive": "Set Active",
+    "active": "Active",
+    "setActive": "Active",
     "addNewIdentity": "+ Add New Identity",
     "enterNewFundCode": "Enter New Fund Code",
     "contactInfoTitle": "Contact Information",
@@ -421,14 +421,6 @@
       {
         "question": "When will I get a tax receipt for my donation of credit card, stock, crypto, or from my Donor Advised Fund?",
         "answer": [
-          "Upon completion of your donation, you will receive a tax receipt for any crypto or credit card donations made through the donation form. An acknowledgement receipt is provided for the pledge of stock and DAF donations.",
-          "For stock donations, tax receipts for donors will be handled by our third-party partner - Renaissance Charitable Foundation (Ren).",
-          "For DAF donations, tax receipts are provided by the nonprofit handling the gift transaction."
-        ]
-      },
-      {
-        "question": "How long does it take to process my donation?",
-        "answer": [
           "#### Credit Card",
           "Credit Card donations take 3-5 business days to be received into the fund.",
           "#### Crypto",
@@ -448,7 +440,7 @@
         "answer": "Once you login to The Giving Block Donor Dashboard, you can access any receipts related to your previous donations."
       },
       {
-        "question": "What if I want to make recurring donations?",
+        "question": "How do I make recurring donations?",
         "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
       },
       {

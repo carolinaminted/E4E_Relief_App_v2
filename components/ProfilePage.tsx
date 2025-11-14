@@ -397,19 +397,27 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
                                         <EligibilityIndicator cvStatus={identity.classVerificationStatus} onClick={() => onAddIdentity(identity.fundCode)} />
-                                        {isActive && <span className="text-xs font-bold text-green-300">{t('profilePage.active')}</span>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
                                     {identities.length > 1 && (
-                                        <button
-                                            onClick={() => onSetActiveIdentity(identity.id)}
-                                            disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
-                                            className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                            aria-label={`Set ${identity.fundName} as active identity`}
-                                        >
-                                            {t('profilePage.setActive')}
-                                        </button>
+                                        isActive ? (
+                                            <span className="bg-green-800/50 text-green-300 text-sm font-semibold py-2 px-3 rounded-md flex items-center gap-2 cursor-default">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                                {t('profilePage.active')}
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={() => onSetActiveIdentity(identity.id)}
+                                                disabled={identity.eligibilityStatus !== 'Eligible'}
+                                                className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                                aria-label={`Set ${identity.fundName} as active identity`}
+                                            >
+                                                {t('profilePage.setActive')}
+                                            </button>
+                                        )
                                     )}
                                      <button
                                         onClick={() => onRemoveIdentity(identity.id)}

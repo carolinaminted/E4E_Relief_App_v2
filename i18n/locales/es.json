@@ -175,8 +175,8 @@
     "noApplications": "Aún no has enviado ninguna solicitud para este fondo.",
     "fundIdentitiesTitle": "Identidades del Fondo",
     "fundIdentitiesDescription": "Gestiona tus identidades de fondo. Agrega o elimina códigos de fondo adicionales si eres elegible para más de un programa.",
-    "active": "(Activo)",
-    "setActive": "Establecer Activo",
+    "active": "Activo",
+    "setActive": "Activo",
     "addNewIdentity": "+ Agregar Nueva Identidad",
     "enterNewFundCode": "Ingresar Nuevo Código de Fondo",
     "contactInfoTitle": "Información de Contacto",
@@ -417,14 +417,6 @@
       },
       {
         "question": "¿Cuándo recibiré un recibo de impuestos por mi donación de tarjeta de crédito, acciones, criptomonedas o de mi Fondo Asesorado por Donantes?",
-        "answer": [
-          "Al completar su donación, recibirá un recibo de impuestos para cualquier donación de criptomonedas o tarjeta de crédito realizada a través del formulario de donación. Se proporciona un recibo de acuse de recibo para la promesa de acciones y donaciones de DAF.",
-          "Para las donaciones de acciones, los recibos de impuestos para los donantes serán manejados por nuestro socio externo: Renaissance Charitable Foundation (Ren).",
-          "Para las donaciones de DAF, los recibos de impuestos los proporciona la organización sin fines de lucro que maneja la transacción del regalo."
-        ]
-      },
-      {
-        "question": "¿Cuánto tiempo se tarda en procesar mi donación?",
         "answer": [
           "#### Tarjeta de Crédito",
           "Las donaciones con tarjeta de crédito tardan de 3 a 5 días hábiles en recibirse en el fondo.",
