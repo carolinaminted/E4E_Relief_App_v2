@@ -8,7 +8,7 @@ import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface ChatbotWidgetProps {
   userProfile: UserProfile | null;
@@ -202,7 +202,15 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
             <h1 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
               {t('chatbotWidget.title')}
             </h1>
-            <p className="text-xs text-gray-400 italic mt-1">{t('chatbotWidget.disclaimer')}</p>
+            <p className="text-xs text-gray-400 italic mt-1">
+                <Trans
+                  i18nKey="chatbotWidget.disclaimer"
+                  components={{
+                    1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                    2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                  }}
+                />
+            </p>
         </div>
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">

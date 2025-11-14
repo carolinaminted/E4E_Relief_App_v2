@@ -317,7 +317,7 @@
   "chatbotWidget": {
     "greeting": "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation.",
     "title": "Relief Assistant",
-    "disclaimer": "*AI Agent preview using generative responses",
+    "disclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>.",
     "errorMessage": "Sorry, I encountered an error. Please try again.",
     "placeholder": "Type your message..."
   },
@@ -347,7 +347,8 @@
       "title": "Legal Information",
       "privacy": "Privacy Policy",
       "terms": "Terms of Use",
-      "cookies": "Cookie Policy"
+      "cookies": "Cookie Policy",
+      "ai": "AI Policy"
     }
   },
   "formControls": {
@@ -361,7 +362,8 @@
     "aiStarterPlaceholder": "e.g., I'm a homeowner affected by the recent tornado in Anytown, CA. My home was damaged and I need about $2500 for repairs. Our household of 4 makes about $60k/year. My phone is 555-123-4567 and I prefer to communicate in Spanish.",
     "submitDescription": "Submit Description",
     "aiParseError": "Could not extract details. Please try again or fill fields manually.",
-    "aiSuccess": "Success! We've pre-filled the form with any details we found."
+    "aiSuccess": "Success! We've pre-filled the form with any details we found.",
+    "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>."
   },
   "faqPage": {
     "title": "FAQ's",

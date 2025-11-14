@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import PasswordInput from './PasswordInput';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
@@ -65,18 +66,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, switch
             autoComplete="email"
           />
         </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-white mb-2">{t('loginPage.passwordLabel')}</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
-            required
-            autoComplete="current-password"
-          />
-        </div>
+        <PasswordInput
+          label={t('loginPage.passwordLabel')}
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+        />
         <div className="h-6 text-center">
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>

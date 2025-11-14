@@ -314,7 +314,7 @@
   "chatbotWidget": {
     "greeting": "¡Hola! Soy el Asistente de Ayuda. ¿Cómo puedo ayudarte hoy? No dudes en contarme tu situación.",
     "title": "Asistente de Ayuda",
-    "disclaimer": "*Vista previa de Agente IA usando respuestas generativas",
+    "disclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>.",
     "errorMessage": "Lo siento, encontré un error. Por favor, inténtalo de nuevo.",
     "placeholder": "Escribe tu mensaje..."
   },
@@ -344,7 +344,8 @@
       "title": "Información Legal",
       "privacy": "Política de Privacidad",
       "terms": "Términos de Uso",
-      "cookies": "Política de Cookies"
+      "cookies": "Política de Cookies",
+      "ai": "Política de IA"
     }
   },
   "formControls": {
@@ -358,7 +359,8 @@
     "aiStarterPlaceholder": "ej., Soy propietario de una casa afectado por el reciente tornado en Anytown, CA. Mi casa sufrió daños y necesito unos $2500 para reparaciones. Nuestro hogar de 4 personas gana unos $60k/año. Mi teléfono es 555-123-4567 y prefiero comunicarme en español.",
     "submitDescription": "Enviar Descripción",
     "aiParseError": "No se pudieron extraer los detalles. Por favor, inténtalo de nuevo o llena los campos manualmente.",
-    "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos."
+    "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos.",
+    "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>."
   },
   "faqPage": {
     "title": "Preguntas Frecuentes",

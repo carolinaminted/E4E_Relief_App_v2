@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { IAuthClient } from '../services/authClient';
 import LanguageSwitcher from './LanguageSwitcher';
+import PasswordInput from './PasswordInput';
 
 interface RegisterPageProps {
   onRegister: IAuthClient['register'];
@@ -97,18 +98,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
             autoComplete="email"
             />
         </div>
-        <div>
-            <label htmlFor="password-register" className="block text-sm font-medium text-white mb-2">{t('registerPage.passwordLabel')}</label>
-            <input
-            type="password"
+        <PasswordInput
+            label={t('registerPage.passwordLabel')}
             id="password-register"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
             required
             autoComplete="new-password"
-            />
-        </div>
+        />
         <div>
             <label htmlFor="fundCode" className="block text-sm font-medium text-white mb-2">{t('registerPage.fundCodeLabel')}</label>
             <input
