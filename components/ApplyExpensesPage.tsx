@@ -62,48 +62,47 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   const handleFileChange = async (type: Expense['type'], file: File | null) => {
     if (!file) return;
 
-    setUploading(prev => ({ ...prev, [type]: true }));
+    const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
+    setUploading(prev => ({ ...prev, [expenseIdKey]: true }));
     setUploadErrors(prev => {
         const newErrors = {...prev};
-        delete newErrors[type];
+        delete newErrors[expenseIdKey];
         return newErrors;
     });
 
     try {
       const newExpenses = [...formData.expenses];
       let expenseIndex = newExpenses.findIndex(exp => exp.type === type);
-      let expenseId: string;
 
       if (expenseIndex === -1) {
         const newExpense: Expense = {
-          id: `exp-${type.replace(/\s+/g, '-')}`,
+          id: expenseIdKey,
           type,
           amount: '',
           fileName: '',
           fileUrl: '',
         };
         newExpenses.push(newExpense);
-        expenseId = newExpense.id;
         expenseIndex = newExpenses.length - 1;
-      } else {
-        expenseId = newExpenses[expenseIndex].id;
       }
+      const expenseId = newExpenses[expenseIndex].id;
+
 
       const { downloadURL, fileName } = await storageRepo.uploadExpenseReceipt(file, userProfile.uid, expenseId);
 
       newExpenses[expenseIndex] = { ...newExpenses[expenseIndex], fileName, fileUrl: downloadURL };
       updateFormData({ expenses: newExpenses });
     } catch (error: any) {
-      console.error("File upload failed:", error);
+      console.error(`[ApplyExpensesPage] File upload failed for type '${type}':`, error);
       let errorMessage;
       if (error.code === 'storage/unauthorized') {
         errorMessage = t('applyExpensesPage.uploadFailedUnauthorized');
       } else {
         errorMessage = t('applyExpensesPage.uploadFailedGeneric', { message: error.message || t('common.unknownError') });
       }
-      setUploadErrors(prev => ({ ...prev, [type]: errorMessage }));
+      setUploadErrors(prev => ({ ...prev, [expenseIdKey]: errorMessage }));
     } finally {
-      setUploading(prev => ({ ...prev, [type]: false }));
+      setUploading(prev => ({ ...prev, [expenseIdKey]: false }));
     }
   };
 
@@ -133,9 +132,10 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
       <div className="space-y-6">
         {expenseTypes.map((type) => {
+          const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
           const expense = formData.expenses.find(e => e.type === type);
-          const isUploading = uploading[type];
-          const error = uploadErrors[type];
+          const isUploading = uploading[expenseIdKey];
+          const error = uploadErrors[expenseIdKey];
           const translationKey = `applyExpensesPage.expenseTypes.${type.replace(/\s+/g, '')}`;
 
           return (
