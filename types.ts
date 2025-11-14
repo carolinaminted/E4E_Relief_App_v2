@@ -233,6 +233,7 @@ export interface ModelPricing {
 export interface TokenEvent {
   id: string;
   sessionId: string;
+  uid: string;
   userId: string;
   timestamp: string;
   feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision';

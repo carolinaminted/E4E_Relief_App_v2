@@ -1,4 +1,4 @@
-import type { UserProfile, FundIdentity, Application } from '../types';
+import type { UserProfile, FundIdentity, Application, TokenEvent, TokenUsageFilters } from '../types';
 import type { Fund } from '../data/fundData';
 
 export interface IUsersRepo {
@@ -31,6 +31,12 @@ export interface IFundsRepo {
     getFund(code: string): Promise<Fund | null>;
     getAllFunds(): Promise<Fund[]>;
 }
+
+export interface ITokenEventsRepo {
+    add(event: Omit<TokenEvent, 'id'>): Promise<TokenEvent>;
+    getEventsForFund(options: { fundCode: string; filters: TokenUsageFilters; uid?: string; }): Promise<TokenEvent[]>;
+}
+
 
 export interface IStorageRepo {
     uploadExpenseReceipt(file: File, userId: string, expenseId: string): Promise<{ downloadURL: string; fileName: string }>;

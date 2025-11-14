@@ -13,10 +13,11 @@ import {
   onSnapshot,
   orderBy,
   increment,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { UserProfile, FundIdentity, Application } from '../types';
-import type { IUsersRepo, IIdentitiesRepo, IApplicationsRepo, IFundsRepo } from './dataRepo';
+import type { UserProfile, FundIdentity, Application, TokenEvent, TokenUsageFilters } from '../types';
+import type { IUsersRepo, IIdentitiesRepo, IApplicationsRepo, IFundsRepo, ITokenEventsRepo } from './dataRepo';
 import type { Fund } from '../data/fundData';
 
 
@@ -183,7 +184,60 @@ class FundsRepo implements IFundsRepo {
     }
 }
 
+class TokenEventsRepo implements ITokenEventsRepo {
+    private eventsCol = collection(db, 'tokenEvents');
+
+    async add(event: Omit<TokenEvent, 'id'>): Promise<TokenEvent> {
+        const docRef = await addDoc(this.eventsCol, event);
+        return { id: docRef.id, ...event };
+    }
+
+    async getEventsForFund(options: { fundCode: string; filters: TokenUsageFilters; uid?: string; }): Promise<TokenEvent[]> {
+        const { fundCode, filters, uid } = options;
+        const queryConstraints = [where('fundCode', '==', fundCode)];
+
+        if (uid) {
+            queryConstraints.push(where('uid', '==', uid));
+        }
+        if (filters.dateRange.start) {
+            queryConstraints.push(where('timestamp', '>=', filters.dateRange.start));
+        }
+        if (filters.dateRange.end) {
+            // Add one day to the end date to make the range inclusive
+            const endDate = new Date(filters.dateRange.end);
+            endDate.setDate(endDate.getDate() + 1);
+            queryConstraints.push(where('timestamp', '<', endDate.toISOString().split('T')[0]));
+        }
+        
+        const q = query(this.eventsCol, ...queryConstraints, orderBy('timestamp', 'desc'));
+
+        const snapshot = await getDocs(q);
+        let events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TokenEvent));
+
+        // Client-side filtering for non-indexed fields
+        if (filters.feature !== 'all') {
+            events = events.filter(e => e.feature === filters.feature);
+        }
+        if (filters.model !== 'all') {
+            events = events.filter(e => e.model === filters.model);
+        }
+        if (filters.environment !== 'all') {
+            events = events.filter(e => e.environment === filters.environment);
+        }
+        if (filters.user !== 'all') {
+            events = events.filter(e => e.userId === filters.user);
+        }
+        if (filters.account !== 'all') {
+            events = events.filter(e => e.account === filters.account);
+        }
+
+        return events;
+    }
+}
+
+
 export const usersRepo = new UsersRepo();
 export const identitiesRepo = new IdentitiesRepo();
 export const applicationsRepo = new ApplicationsRepo();
 export const fundsRepo = new FundsRepo();
+export const tokenEventsRepo = new TokenEventsRepo();
