@@ -33,6 +33,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   const { t } = useTranslation();
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const totalExpenses = useMemo(() => {
     return formData.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
@@ -57,6 +58,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
     }
 
     updateFormData({ expenses: newExpenses });
+    if (errors[type]) {
+      const newErrors = { ...errors };
+      delete newErrors[type];
+      setErrors(newErrors);
+    }
   };
 
   const handleFileChange = async (type: Expense['type'], file: File | null) => {
@@ -117,10 +123,29 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   };
 
   const handleNext = () => {
-    // Filter out expenses that don't have a valid amount before proceeding.
-    const finalExpenses = formData.expenses.filter(exp => exp.amount && Number(exp.amount) > 0);
-    updateFormData({ expenses: finalExpenses });
-    nextStep();
+    const validationErrors: Record<string, string> = {};
+    
+    expenseTypes.forEach(type => {
+        const expense = formData.expenses.find(e => e.type === type);
+        
+        if (expense) {
+            const hasInteraction = expense.amount !== '' || !!expense.fileName;
+
+            if (hasInteraction) {
+                if (!expense.amount || Number(expense.amount) <= 0) {
+                    validationErrors[type] = t('applyExpensesPage.errorAmount');
+                }
+            }
+        }
+    });
+
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+        const finalExpenses = formData.expenses.filter(exp => (exp.amount && Number(exp.amount) > 0) || !!exp.fileName);
+        updateFormData({ expenses: finalExpenses });
+        nextStep();
+    }
   };
 
   return (
@@ -147,6 +172,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                   min="0"
                   step="0.01"
                   disabled={isUploading}
+                  error={errors[type]}
                 />
                 <div>
                   <p className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</p>

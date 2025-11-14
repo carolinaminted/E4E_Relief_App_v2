@@ -132,6 +132,7 @@
     "removeReceipt": "Eliminar recibo",
     "uploadFailedError": "La subida falló. Por favor, inténtalo de nuevo.",
     "totalExpensesLabel": "Gastos Totales",
+    "errorAmount": "El monto debe ser mayor a cero.",
     "expenseTypes": {
       "BasicDisasterSupplies": "Suministros Básicos para Desastres",
       "FoodSpoilage": "Alimentos Echados a Perder",
@@ -439,7 +440,7 @@
       },
       {
         "question": "¿Qué pasa si quiero hacer donaciones recurrentes?",
-        "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, puede ver sus planes de donación y actualizar la información relacionada con su tarjeta de crédito y la frecuencia de los pagos. También puede desactivar cualquier donación recurrente aquí. Las donaciones recurrentes no se pueden realizar de forma anónima por razones regulatorias."
+        "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
       },
       {
         "question": "¿A quién puedo contactar si tengo preguntas adicionales?",

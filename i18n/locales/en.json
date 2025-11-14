@@ -135,6 +135,7 @@
     "uploadFailedUnauthorized": "Permission denied. Please check your Firebase Storage security rules.",
     "uploadFailedGeneric": "Upload failed: {{message}}",
     "totalExpensesLabel": "Total Expenses",
+    "errorAmount": "Amount must be greater than zero.",
     "expenseTypes": {
       "BasicDisasterSupplies": "Basic Disaster Supplies",
       "FoodSpoilage": "Food Spoilage",
