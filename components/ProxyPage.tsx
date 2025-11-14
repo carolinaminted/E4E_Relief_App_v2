@@ -13,9 +13,10 @@ interface ProxyApplyPageProps {
   navigate: (page: Page) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   proxyApplications: Application[];
-  userProfile: UserProfile;
+  userProfile: UserProfile; // This is the admin's profile
   onAddIdentity: (fundCode: string) => void;
   mainRef: React.RefObject<HTMLElement>;
+  // FIX: Added missing activeFund prop.
   activeFund: Fund | null;
 }
 
@@ -66,10 +67,17 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     </svg>
 );
 
-const ProxyApplyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications, userProfile, onAddIdentity, mainRef, activeFund }) => {
+const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications, userProfile, onAddIdentity, mainRef, activeFund }) => {
     const [step, setStep] = useState(1);
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+    const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(() => {
+        const saved = localStorage.getItem('proxyPage_isHistoryOpen');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('proxyPage_isHistoryOpen', JSON.stringify(isHistoryOpen));
+    }, [isHistoryOpen]);
 
     const [formData, setFormData] = useState<ApplicationFormData>(() => {
         const blankProfile: UserProfile = {
@@ -192,6 +200,7 @@ const ProxyApplyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, pro
                             onAIParsed={handleAIParsedData} 
                         />;
             case 2:
+                // FIX: Pass the required 'activeFund' prop to ApplyEventPage.
                 return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} activeFund={activeFund} />;
             case 3:
                 // FIX: Pass the required `userProfile` prop to ApplyExpensesPage.
@@ -272,4 +281,4 @@ const ProxyApplyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, pro
     );
 };
 
-export default ProxyApplyPage;
+export default ProxyPage;

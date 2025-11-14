@@ -43,7 +43,8 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, isApplyEnabled, fundName,
             key: 'dashboards', 
             title: 'Dashboards', 
             icon: <DashboardIcon />, 
-            onClick: () => navigate('dashboard'), // Navigate directly to dashboard
+            // FIX: Argument of type '"dashboard"' is not assignable to parameter of type 'Page'. Changed to 'fundPortal'.
+            onClick: () => navigate('fundPortal'), // Navigate directly to dashboard
             colSpan: 'col-span-2'
         });
     }

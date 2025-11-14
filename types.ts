@@ -8,7 +8,7 @@ import type { Fund } from './data/fundData';
 export interface Address {
   country: string;
   street1: string;
-  street2?: string;
+  street2?: string; // Optional field for apartment, suite, etc.
   city: string;
   state: string;
   zip: string;
@@ -41,28 +41,29 @@ export interface IdentityEligibility {
 
 /**
  * A unique identifier for a FundIdentity, typically a composite of user email and fund code.
+ * Example: `user-uid-DOM`
  */
 export type FundIdentityId = string;
 
 /**
  * Represents a user's relationship with a specific relief fund.
  * A single user (identified by `uid`) can have multiple identities if they are
- * eligible for more than one fund.
+ * eligible for more than one fund. Each identity is stored as a separate document in Firestore.
  */
 export interface FundIdentity {
   id: FundIdentityId;
-  uid: string;
+  uid: string; // The user's Firebase Auth UID.
   fundCode: string;
-  fundName: string;
+  fundName: string; // Denormalized for easy display in the UI.
   cvType: 'Domain' | 'Roster' | 'SSO' | 'Manual'; // The method used for class verification.
   eligibilityStatus: EligibilityStatus;
   classVerificationStatus: ClassVerificationStatus;
-  createdAt: string;
-  lastUsedAt?: string; // Tracks the last time this identity was the active one.
+  createdAt: string; // ISO 8601 timestamp string.
+  lastUsedAt?: string; // Tracks the last time this identity was the active one, used for sorting.
 }
 /**
  * A lightweight object representing the currently active fund identity for the logged-in user.
- * This determines which fund's applications and data are displayed.
+ * This is held in the main App state to determine which fund's applications and data are displayed.
  */
 export interface ActiveIdentity {
   id: FundIdentityId;
@@ -70,44 +71,50 @@ export interface ActiveIdentity {
 }
 
 // FIX: Add a centralized Page type for navigation.
+/**
+ * A centralized type for all possible page routes in the application.
+ * Using a single type ensures type-safe navigation and prevents magic strings.
+ */
 export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications' | 'myProxyApplications' | 'forgotPassword';
 
 
 /**
  * The main data model for a user's profile information.
  * This is a composite object that also reflects the state of their currently active FundIdentity
- * (e.g., fundCode, fundName, eligibilityStatus).
+ * (e.g., fundCode, fundName, eligibilityStatus), which are denormalized here for performance.
  */
 export interface UserProfile {
-  uid: string;
+  uid: string; // The user's Firebase Auth UID.
   identityId: string; // Corresponds to the user's primary identifier, usually their email.
   // FIX: Added 'activeIdentityId' to track the user's currently selected fund identity.
-  activeIdentityId: string | null;
+  activeIdentityId: string | null; // The ID of the currently active document in the `identities` collection.
   firstName: string;
   lastName:string;
   middleName?: string;
   suffix?: string;
-  email: string;
+  email: string; // Should be read-only after creation.
   mobileNumber: string;
   primaryAddress: Address;
   mailingAddress?: Address;
-  employmentStartDate: string;
+  employmentStartDate: string; // ISO 8601 date string (YYYY-MM-DD).
   eligibilityType: string;
-  householdIncome: number | '';
-  householdSize: number | '';
-  homeowner: 'Yes' | 'No' | '';
+  householdIncome: number | ''; // Empty string represents an unanswered field in the form.
+  householdSize: number | ''; // Empty string represents an unanswered field in the form.
+  homeowner: 'Yes' | 'No' | ''; // Empty string represents an unanswered field in the form.
   preferredLanguage?: string;
-  isMailingAddressSame: boolean | null;
+  isMailingAddressSame: boolean | null; // null represents "not yet answered".
   ackPolicies: boolean;
   commConsent: boolean;
   infoCorrect: boolean;
+  // --- Denormalized fields from the active FundIdentity for quick access ---
   fundCode: string; // The fund code of the *active* identity.
   fundName?: string; // The fund name of the *active* identity.
   classVerificationStatus: ClassVerificationStatus; // Status for the *active* identity.
   eligibilityStatus: EligibilityStatus; // Status for the *active* identity.
-  role: 'User' | 'Admin';
-  tokensUsedTotal?: number;
-  estimatedCostTotal?: number;
+  // --- Authorization and Analytics ---
+  role: 'User' | 'Admin'; // The source of truth for role is the Firebase Auth custom claim. This is a synchronized copy.
+  tokensUsedTotal?: number; // Aggregated total from all token events for this user.
+  estimatedCostTotal?: number; // Aggregated total cost from all token events.
 }
 
 /**
@@ -115,8 +122,8 @@ export interface UserProfile {
  */
 export interface Expense {
   id: string; // A unique identifier for the expense item.
-  type: 'Basic Disaster Supplies' | 'Food Spoilage' | 'Meals' | '';
-  amount: number | '';
+  type: 'Basic Disaster Supplies' | 'Food Spoilage' | 'Meals' | ''; // Empty string for new/unselected items.
+  amount: number | ''; // Empty string for empty form fields.
   fileName: string; // Name of the uploaded receipt file, if any.
   fileUrl?: string; // URL to the uploaded file in Firebase Storage.
 }
@@ -128,12 +135,12 @@ export interface EventData {
   event: string; // The primary type of event (e.g., 'Flood', 'Wildfire').
   eventName?: string; // The specific name of the event, e.g., "Hurricane Ian"
   otherEvent?: string; // Details if 'My disaster is not listed' is selected.
-  eventDate: string;
+  eventDate: string; // ISO 8601 date string (YYYY-MM-DD).
   evacuated: 'Yes' | 'No' | '';
   evacuatingFromPrimary?: 'Yes' | 'No' | '';
   evacuationReason?: string;
   stayedWithFamilyOrFriend?: 'Yes' | 'No' | '';
-  evacuationStartDate?: string;
+  evacuationStartDate?: string; // ISO 8601 date string (YYYY-MM-DD).
   evacuationNights?: number | '';
   powerLoss: 'Yes' | 'No' | '';
   powerLossDays?: number | '';
@@ -150,7 +157,7 @@ export interface ApplicationFormData {
   profileData: UserProfile;
   eventData: EventData;
   agreementData: {
-    shareStory: boolean | null;
+    shareStory: boolean | null; // null represents "not yet answered".
     receiveAdditionalInfo: boolean | null;
   };
 }
@@ -160,19 +167,19 @@ export interface ApplicationFormData {
  * This interface extends EventData with metadata about the submission and decision.
  */
 export interface Application extends EventData {
-  id: string;
-  uid: string;
-  profileSnapshot: UserProfile; // A snapshot of the user's profile at the time of submission.
-  submittedDate: string;
-  status: 'Submitted' | 'Awarded' | 'Declined';
+  id: string; // The Firestore document ID.
+  uid: string; // The Firebase Auth UID of the applicant.
+  profileSnapshot: UserProfile; // A snapshot of the user's profile at the time of submission for auditing.
+  submittedDate: string; // ISO 8601 timestamp string.
+  status: 'Submitted' | 'Awarded' | 'Declined'; // 'Submitted' implies Under Review.
   reasons: string[]; // Justification for the decision, can be from the rules engine or AI.
-  decisionedDate: string;
-  twelveMonthGrantRemaining: number;
-  lifetimeGrantRemaining: number;
+  decisionedDate: string; // ISO 8601 timestamp string.
+  twelveMonthGrantRemaining: number; // The user's 12-month balance *after* this application's award.
+  lifetimeGrantRemaining: number; // The user's lifetime balance *after* this application's award.
   shareStory: boolean;
   receiveAdditionalInfo: boolean;
   submittedBy: string; // UID of the user who submitted (can be applicant or admin proxy).
-  isProxy: boolean;
+  isProxy: boolean; // True if submitted by an admin on behalf of a user.
 }
 
 /**
@@ -180,12 +187,12 @@ export interface Application extends EventData {
  * This provides a structured breakdown of the decision-making process for auditing and review.
  */
 export interface EligibilityDecision {
-  decision: 'Approved' | 'Denied' | 'Review';
-  reasons: string[];
-  policy_hits: { rule_id: string; passed: boolean; detail: string; }[];
-  recommended_award: number;
-  remaining_12mo: number;
-  remaining_lifetime: number;
+  decision: 'Approved' | 'Denied' | 'Review'; // 'Review' means it requires manual intervention.
+  reasons: string[]; // Human-readable reasons for the decision.
+  policy_hits: { rule_id: string; passed: boolean; detail: string; }[]; // Audit trail of which rules passed or failed.
+  recommended_award: number; // The calculated award amount.
+  remaining_12mo: number; // The projected 12-month balance if approved.
+  remaining_lifetime: number; // The projected lifetime balance if approved.
   normalized: {
     event: string;
     eventDate: string;
@@ -228,27 +235,28 @@ export interface ModelPricing {
 
 /**
  * Represents a single logged event of a Gemini API call.
- * This is the raw data used for generating analytics.
+ * This is the raw data used for generating analytics, stored in the `tokenEvents` collection.
  */
 export interface TokenEvent {
-  id: string;
-  sessionId: string;
-  uid: string;
-  userId: string;
-  timestamp: string;
+  id: string; // The Firestore document ID.
+  sessionId: string; // Groups multiple calls within a single user interaction (e.g., one chat conversation).
+  uid: string; // The user's Firebase Auth UID.
+  userId: string; // The user's email, for easier filtering in analytics.
+  timestamp: string; // ISO 8601 timestamp string.
   feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision';
   model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
   inputTokens: number;
   cachedInputTokens: number;
   outputTokens: number;
   environment: 'Production' | 'Development';
-  account: string;
-  fundCode: string;
+  account: string; // The client account name (e.g., 'E4E-Relief-Inc').
+  fundCode: string; // The fund associated with this API call.
 }
 
 // FIX: Added missing type definitions for Token Usage Analytics.
 /**
  * Represents a single row in the token usage table, aggregated by user, session, and feature.
+ * This is a client-side derived type for display purposes.
  */
 export interface TokenUsageTableRow {
   user: string;
@@ -291,7 +299,7 @@ export interface TopSessionData {
  * Represents aggregated daily token usage for a specific feature (like AI Assistant).
  */
 export interface DailyUsageData {
-  date: string;
+  date: string; // YYYY-MM-DD
   totalTokens: number;
 }
 
@@ -299,6 +307,6 @@ export interface DailyUsageData {
  * Represents a single data point for real-time charts, like usage over the last hour.
  */
 export interface LastHourUsageDataPoint {
-  timestamp: string;
+  timestamp: string; // ISO 8601 timestamp string.
   totalTokens: number;
 }

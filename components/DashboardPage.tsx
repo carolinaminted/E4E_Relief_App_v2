@@ -1,5 +1,11 @@
 import React from 'react';
 
+// NOTE FOR DEVELOPERS: This component appears to be deprecated and is no longer
+// referenced in the main App.tsx router. The `LiveDashboardPage.tsx` component
+// has taken its place, which fetches real data from Firestore instead of using
+// mock data. This file is kept for historical reference but should likely be removed
+// in a future cleanup.
+
 type Page = 'fundPortal';
 
 interface DashboardPageProps {

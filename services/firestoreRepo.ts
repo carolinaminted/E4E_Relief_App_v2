@@ -58,9 +58,17 @@ class UsersRepo implements IUsersRepo {
         const identitiesCol = collection(db, 'identities');
         const identitiesQuery = query(identitiesCol, where('fundCode', '==', fundCode));
         const identitiesSnapshot = await getDocs(identitiesQuery);
-        // FIX: The type of `doc.data().uid` is `any`, which can cause `userIds` to be inferred as `unknown[]`.
-        // A type guard is used to filter for actual strings and ensure `userIds` is correctly typed as `string[]`.
-        const userIds = [...new Set(identitiesSnapshot.docs.map(doc => doc.data().uid).filter((uid): uid is string => typeof uid === 'string'))];
+        // FIX: The type of `doc.data().uid` is `any`. The original one-liner with a type guard
+        // can cause type inference issues in some TypeScript configurations, resulting in `unknown[]`.
+        // This more explicit approach ensures `userIds` is correctly typed as `string[]`.
+        const uids = new Set<string>();
+        identitiesSnapshot.docs.forEach(doc => {
+            const uid = doc.data().uid;
+            if (typeof uid === 'string' && uid) {
+                uids.add(uid);
+            }
+        });
+        const userIds = Array.from(uids);
 
         if (userIds.length === 0) {
             return [];

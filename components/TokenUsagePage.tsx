@@ -275,14 +275,14 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
-                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Cost (USD) - Filtered</h3>
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Cost (USD)</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#edda26] to-[#ff8400] text-center">
                         {isFetching ? '$0.0000' : `$${totalCost.toFixed(4)}`}
                     </p>
                     {isFetching && <CardLoader />}
                 </div>
                 <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
-                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Tokens Used - Filtered</h3>
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Tokens Used</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
                         {isFetching ? '0' : totalTokens.toLocaleString()}
                     </p>

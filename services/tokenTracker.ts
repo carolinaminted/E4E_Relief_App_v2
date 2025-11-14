@@ -2,11 +2,14 @@ import type { TokenEvent, ModelPricing, UserProfile } from '../types';
 import { usersRepo, tokenEventsRepo } from './firestoreRepo';
 
 // --- State ---
+// This module holds the currently authenticated user's profile in-memory
+// to avoid having to pass it into every `logEvent` call.
 let currentUser: UserProfile | null = null;
 const currentAccount: string = 'E4E-Relief-Inc';
-// In a real app, this might come from an environment variable
+// In a real app, this might come from an environment variable (e.g., process.env.NODE_ENV).
 const currentEnv: 'Production' | 'Development' = 'Production';
 
+// Pricing data for different Gemini models. Used to calculate the estimated cost of each API call.
 const MODEL_PRICING: ModelPricing = {
   'gemini-2.5-flash': {
     input: 0.00035, // Price per 1000 tokens
@@ -21,7 +24,9 @@ const MODEL_PRICING: ModelPricing = {
 // --- Core Functions ---
 
 /**
- * Initializes the tracker for a new user session or updates the user profile.
+ * Initializes the tracker with the authenticated user's profile.
+ * This should be called once on login or when the user profile is first loaded.
+ * @param user - The `UserProfile` object of the currently logged-in user.
  */
 export function init(user: UserProfile) {
   currentUser = user; 
@@ -29,7 +34,8 @@ export function init(user: UserProfile) {
 }
 
 /**
- * Resets the tracker on logout.
+ * Resets the tracker by clearing the current user.
+ * This should be called on logout to prevent logging events for a non-existent session.
  */
 export function reset() {
   currentUser = null;
@@ -37,8 +43,11 @@ export function reset() {
 }
 
 /**
- * A simple approximation for token counting since the SDK doesn't expose this.
- * A common rule of thumb is 1 token ~ 4 characters.
+ * A simple, client-side approximation for token counting.
+ * Since the client-side SDK doesn't expose a precise tokenizer, this uses a common
+ * rule of thumb where 1 token is roughly equivalent to 4 characters of text.
+ * @param text - The string to estimate the token count for.
+ * @returns The estimated number of tokens.
  */
 export function estimateTokens(text: string): number {
   if (!text) return 0;
@@ -46,8 +55,14 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Logs a new AI interaction event. It updates the user's aggregate totals and
- * creates a new document in the `tokenEvents` collection in Firestore.
+ * Logs a new AI interaction event to Firestore. This function performs two "fire-and-forget"
+ * operations, meaning it initiates the writes but doesn't wait for them to complete,
+ * allowing the UI to remain responsive.
+ * 
+ * 1.  It atomically increments the aggregate `tokensUsedTotal` and `estimatedCostTotal` on the user's profile document.
+ * 2.  It creates a new, detailed document in the `tokenEvents` collection for granular analytics.
+ * 
+ * @param data - An object containing details about the Gemini API call.
  */
 export async function logEvent(data: {
   feature: TokenEvent['feature'];
@@ -58,7 +73,7 @@ export async function logEvent(data: {
   sessionId: string;
 }) {
   if (!currentUser) {
-    console.warn('Token Tracker not initialized, skipping log.');
+    console.warn('Token Tracker not initialized, skipping log. User might be logged out.');
     return;
   }
 
@@ -66,8 +81,10 @@ export async function logEvent(data: {
   const pricing = MODEL_PRICING[data.model] || { input: 0, output: 0 };
   const cost = ((data.inputTokens / 1000) * pricing.input) + ((data.outputTokens / 1000) * pricing.output);
 
-  // Update aggregate totals on the user's profile document. Fire-and-forget.
+  // Update aggregate totals on the user's profile document. This is a "fire-and-forget"
+  // operation; we don't `await` it so the UI isn't blocked.
   usersRepo.incrementTokenUsage(currentUser.uid, totalTokens, cost).catch(error => {
+    // We log the error but don't re-throw, as failing to update analytics shouldn't break the user experience.
     console.error("Failed to update aggregate token usage in Firestore:", error);
   });
 
@@ -86,7 +103,7 @@ export async function logEvent(data: {
     fundCode: currentUser.fundCode,
   };
 
-  // Create a detailed log document in the tokenEvents collection. Fire-and-forget.
+  // Create a detailed log document in the tokenEvents collection. This is also fire-and-forget.
   tokenEventsRepo.add(newEvent).catch(error => {
       console.error("Failed to log token event to Firestore:", error);
   });
