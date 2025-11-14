@@ -38,10 +38,16 @@ export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof
         <CountrySelector id={`${prefix}Country`} required value={address.country} onUpdate={value => onUpdate('country', value)} variant="underline" error={errors.country}/>
         <FormInput label="Street 1" id={`${prefix}Street1`} required value={address.street1} onChange={e => onUpdate('street1', e.target.value)} error={errors.street1} />
         <FormInput label="Street 2" id={`${prefix}Street2`} value={address.street2 || ''} onChange={e => onUpdate('street2', e.target.value)} />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormInput label="City" id={`${prefix}City`} required value={address.city} onChange={e => onUpdate('city', e.target.value)} error={errors.city} />
-            <FormInput label="State or Province" id={`${prefix}State`} required value={address.state} onChange={e => onUpdate('state', e.target.value)} error={errors.state} />
-            <FormInput label="ZIP/Postal Code" id={`${prefix}Zip`} required value={address.zip} onChange={e => onUpdate('zip', e.target.value)} error={errors.zip} />
+        <div className="grid grid-cols-8 gap-x-4">
+            <div className="col-span-8 sm:col-span-4">
+                <FormInput label="City" id={`${prefix}City`} required value={address.city} onChange={e => onUpdate('city', e.target.value)} error={errors.city} />
+            </div>
+            <div className="col-span-4 sm:col-span-2">
+                <FormInput label="State / Province" id={`${prefix}State`} required value={address.state} onChange={e => onUpdate('state', e.target.value)} error={errors.state} />
+            </div>
+            <div className="col-span-4 sm:col-span-2">
+                <FormInput label="ZIP / Postal" id={`${prefix}Zip`} required value={address.zip} onChange={e => onUpdate('zip', e.target.value)} error={errors.zip} />
+            </div>
         </div>
     </>
 );

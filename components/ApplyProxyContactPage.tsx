@@ -239,11 +239,23 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                 <ChevronIcon isOpen={openSection === 'contact'} />
             </button>
             <div className={`transition-all duration-500 ease-in-out ${openSection === 'contact' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput label="First Name" id="firstName" required value={formData.firstName} disabled />
-                    <FormInput label="Middle Name(s)" id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
-                    <FormInput label="Last Name" id="lastName" required value={formData.lastName} disabled />
-                    <FormInput label="Suffix" id="suffix" value={formData.suffix || ''} onChange={e => handleFormUpdate({ suffix: e.target.value })} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 pt-4">
+                    <div className="grid grid-cols-5 gap-x-4">
+                        <div className="col-span-3">
+                            <FormInput label="First Name" id="firstName" required value={formData.firstName} disabled />
+                        </div>
+                        <div className="col-span-2">
+                             <FormInput label="Middle Name(s)" id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-x-4">
+                        <div className="col-span-3">
+                            <FormInput label="Last Name" id="lastName" required value={formData.lastName} disabled />
+                        </div>
+                        <div className="col-span-2">
+                            <FormInput label="Suffix" id="suffix" value={formData.suffix || ''} onChange={e => handleFormUpdate({ suffix: e.target.value })} />
+                        </div>
+                    </div>
                     <FormInput label="Email" id="email" required value={formData.email} disabled />
                     <FormInput label="Mobile Number" id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormUpdate({ mobileNumber: e.target.value })} error={errors.mobileNumber} placeholder="(555) 555-5555" />
                 </div>
