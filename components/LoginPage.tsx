@@ -77,15 +77,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, switch
             autoComplete="current-password"
           />
         </div>
-        <div className="text-right text-sm">
-            <button
-                type="button"
-                onClick={switchToForgotPassword}
-                className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 hover:underline"
-            >
-                {t('loginPage.forgotPasswordLink', 'Forgot password?')}
-            </button>
-        </div>
         <div className="h-6 text-center">
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
@@ -104,6 +95,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, switch
             {t('loginPage.signUpLink')}
           </button>
         </p>
+        <div className="text-center text-sm">
+            <button
+                type="button"
+                onClick={switchToForgotPassword}
+                className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 hover:underline"
+            >
+                {t('loginPage.forgotPasswordLink', 'Forgot password?')}
+            </button>
+        </div>
       </form>
     </div>
   );
