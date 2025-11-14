@@ -58,6 +58,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+  const [showAllIdentities, setShowAllIdentities] = useState(false);
   
   useEffect(() => {
     localStorage.setItem('profilePage_openSection', JSON.stringify(openSection));
@@ -131,6 +132,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const sortedIdentities = useMemo(() => {
     return [...identities].sort((a, b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime());
   }, [identities]);
+
+  const identitiesToDisplay = useMemo(() => {
+    return showAllIdentities ? sortedIdentities : sortedIdentities.slice(0, 2);
+  }, [sortedIdentities, showAllIdentities]);
 
   const sectionHasErrors = useMemo(() => {
     const contactHasBlanks = !formData.firstName || !formData.lastName || !formData.mobileNumber;
@@ -385,7 +390,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 {t('profilePage.fundIdentitiesDescription')}
             </p>
             <div className="space-y-4">
-                {sortedIdentities.map(identity => {
+                {identitiesToDisplay.map(identity => {
                     const isActive = activeIdentity?.id === identity.id;
                     return (
                         <div key={identity.id} className={`bg-[#004b8d] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[#ff8400]' : 'border-transparent'}`}>
@@ -432,27 +437,35 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         </div>
                     )
                 })}
-                {!isAddingIdentity ? (
-                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
+            </div>
+            
+            {!isAddingIdentity ? (
+                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                    {sortedIdentities.length > 2 && (
+                        <button onClick={() => setShowAllIdentities(prev => !prev)} className="flex-1 text-center bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
+                            {showAllIdentities ? t('profilePage.showLess', 'Show Less') : t('profilePage.seeAll', 'See All')}
+                        </button>
+                    )}
+                    <button onClick={() => setIsAddingIdentity(true)} className="flex-1 bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
                         {t('profilePage.addNewIdentity')}
                     </button>
-                ) : (
-                    <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
-                        <h4 className="text-md font-semibold text-white mb-2">{t('profilePage.enterNewFundCode')}</h4>
-                        <div className="flex items-center gap-2">
-                            <input 
-                                type="text"
-                                value={newFundCode}
-                                onChange={e => setNewFundCode(e.target.value)}
-                                className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
-                                placeholder="e.g., JHH"
-                            />
-                             <button onClick={() => { setIsAddingIdentity(false); setNewFundCode(''); }} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.cancel')}</button>
-                            <button onClick={handleAddIdentitySubmit} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.verify')}</button>
-                        </div>
+                </div>
+            ) : (
+                <div className="mt-4 bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+                    <h4 className="text-md font-semibold text-white mb-2">{t('profilePage.enterNewFundCode')}</h4>
+                    <div className="flex items-center gap-2">
+                        <input 
+                            type="text"
+                            value={newFundCode}
+                            onChange={e => setNewFundCode(e.target.value)}
+                            className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
+                            placeholder="e.g., JHH"
+                        />
+                         <button onClick={() => { setIsAddingIdentity(false); setNewFundCode(''); }} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.cancel')}</button>
+                        <button onClick={handleAddIdentitySubmit} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.verify')}</button>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
       </section>
 

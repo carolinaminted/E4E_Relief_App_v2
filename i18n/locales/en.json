@@ -182,6 +182,8 @@
     "setActive": "Active",
     "addNewIdentity": "+ Add New Identity",
     "enterNewFundCode": "Enter New Fund Code",
+    "seeAll": "See All",
+    "showLess": "Show Less",
     "contactInfoTitle": "Contact Information",
     "firstName": "First Name",
     "middleName": "Middle Name(s)",
