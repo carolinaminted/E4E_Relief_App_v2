@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UserProfile, Address, ApplicationFormData } from '../types';
 import CountrySelector from './CountrySelector';
@@ -37,8 +37,15 @@ type ApplySection = 'aiStarter' | 'contact' | 'primaryAddress' | 'additionalDeta
 const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
+  const [openSection, setOpenSection] = useState<ApplySection | null>(() => {
+    const saved = localStorage.getItem('applyContactPage_openSection');
+    return saved ? JSON.parse(saved) : 'aiStarter';
+  });
   const [isAIParsing, setIsAIParsing] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('applyContactPage_openSection', JSON.stringify(openSection));
+  }, [openSection]);
 
   const yes = t('common.yes');
   const no = t('common.no');

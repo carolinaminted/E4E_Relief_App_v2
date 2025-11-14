@@ -38,12 +38,20 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     environment: 'all',
   });
 
-  const [openSections, setOpenSections] = useState({
-    topSession: true,
-    lastHour: true,
-    last15: true,
-    lifetime: true,
+  const [openSections, setOpenSections] = useState(() => {
+    const saved = localStorage.getItem('tokenUsagePage_openSections');
+    const defaults = { topSession: true, lastHour: true, last15: true, lifetime: true };
+    try {
+        return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+    } catch (e) {
+        console.error("Failed to parse open sections from localStorage", e);
+        return defaults;
+    }
   });
+
+  useEffect(() => {
+    localStorage.setItem('tokenUsagePage_openSections', JSON.stringify(openSections));
+  }, [openSections]);
 
   const { totalCost, totalTokens } = useMemo(() => {
     return {

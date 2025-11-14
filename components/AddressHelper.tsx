@@ -13,6 +13,7 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
   const [addressInput, setAddressInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleParse = async () => {
     if (!addressInput.trim()) {
@@ -38,11 +39,34 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
     underline: "w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-[#ff8400]"
   };
 
+  if (!isExpanded) {
+    return (
+        <div className="mb-4">
+            <button
+                type="button"
+                onClick={() => setIsExpanded(true)}
+                className="w-full bg-transparent border-2 border-dashed border-[#005ca0] text-[#ff8400] font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200 flex items-center justify-center gap-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Let AI fill in the fields for you</span>
+            </button>
+        </div>
+    );
+  }
+
   return (
     <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0] mb-4">
-      <p className="text-xs text-white mb-2">
-        {t('formControls.addressHelper')}
-      </p>
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-xs text-white">
+          {t('formControls.addressHelper')}
+        </p>
+         <button type="button" onClick={() => setIsExpanded(false)} className="text-xs text-gray-400 hover:text-white transition-colors">
+          Collapse
+        </button>
+      </div>
       <div className="flex flex-col md:flex-row gap-2">
         <textarea
           id="address-helper-input"

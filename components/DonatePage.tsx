@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormInput } from './FormControls';
 
@@ -39,7 +39,14 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [openSection, setOpenSection] = useState<DonateSection | null>(null);
+  const [openSection, setOpenSection] = useState<DonateSection | null>(() => {
+    const saved = localStorage.getItem('donatePage_openSection');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('donatePage_openSection', JSON.stringify(openSection));
+  }, [openSection]);
 
   const sectionHasErrors = useMemo(() => {
     const donorHasBlanks = !formData.firstName || !formData.lastName || !formData.email || !/\S+@\S+\.\S+/.test(formData.email);

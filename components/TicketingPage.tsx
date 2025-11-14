@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Define the type for a ticket
 interface Ticket {
@@ -72,7 +72,14 @@ const statusStyles: Record<Ticket['status'], string> = {
 
 const TicketingPage: React.FC<TicketingPageProps> = ({ navigate }) => {
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
-  const [openSection, setOpenSection] = useState<'submit' | 'view' | null>(null);
+  const [openSection, setOpenSection] = useState<'submit' | 'view' | null>(() => {
+    const saved = localStorage.getItem('ticketingPage_openSection');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('ticketingPage_openSection', JSON.stringify(openSection));
+  }, [openSection]);
   
   const [newTicket, setNewTicket] = useState({ subject: '', description: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
