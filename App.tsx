@@ -704,8 +704,7 @@ function App() {
             canApply={canApply}
         />
         
-        {/* FIX: Pass setIsChatbotOpen to the setIsOpen prop. */}
-        {page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
+        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );

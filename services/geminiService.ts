@@ -104,9 +104,13 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 `;
 
 
-export function createChatSession(activeFund: Fund | null, applications?: Application[]): Chat {
+export function createChatSession(userProfile: UserProfile | null, activeFund: Fund | null, applications?: Application[]): Chat {
   let dynamicContext = applicationContext;
 
+  if (userProfile && userProfile.preferredLanguage && userProfile.preferredLanguage.toLowerCase() !== 'english') {
+    dynamicContext += `\n**User's Language Preference**: The user's preferred language is ${userProfile.preferredLanguage}. You MUST respond in ${userProfile.preferredLanguage}.`;
+  }
+  
   if (activeFund) {
     dynamicContext = dynamicContext.replace(
       "for the 'E4E Relief' application",
