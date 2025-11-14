@@ -126,6 +126,7 @@ export interface Expense {
  */
 export interface EventData {
   event: string; // The primary type of event (e.g., 'Flood', 'Wildfire').
+  eventName?: string; // The specific name of the event, e.g., "Hurricane Ian"
   otherEvent?: string; // Details if 'My disaster is not listed' is selected.
   eventDate: string;
   evacuated: 'Yes' | 'No' | '';

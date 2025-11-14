@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
+import type { Fund } from '../data/fundData';
 
 // Import step components
 import ApplyContactPage from './ApplyContactPage';
@@ -15,6 +16,7 @@ interface ApplyPageProps {
   applicationDraft: Partial<ApplicationFormData> | null;
   mainRef: React.RefObject<HTMLElement>;
   canApply: boolean;
+  activeFund: Fund | null;
 }
 
 const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
@@ -53,7 +55,7 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
     );
 };
 
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   
@@ -201,7 +203,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
                 onAIParsed={handleAIParsedData}
                 />;
           case 2:
-              return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
+              return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} activeFund={activeFund} />;
           case 3:
               return <ApplyExpensesPage userProfile={userProfile} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
           case 4:

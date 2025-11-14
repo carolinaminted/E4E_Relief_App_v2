@@ -56,6 +56,7 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
     type: Type.OBJECT,
     properties: {
       event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: allEventTypes },
+      eventName: { type: Type.STRING, description: "The official name of the hurricane or tropical storm, if applicable." },
       otherEvent: { type: Type.STRING, description: "The user-specified disaster if 'My disaster is not listed' is the event type." },
       eventDate: { type: Type.STRING, description: "The date the disaster occurred, in YYYY-MM-DD format." },
       evacuated: { type: Type.STRING, description: "Whether the user evacuated or plans to.", enum: ['Yes', 'No'] },
@@ -511,6 +512,7 @@ const applicationDetailsJsonSchema = {
             type: Type.OBJECT,
             properties: {
                 event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: allEventTypes },
+                eventName: { type: Type.STRING, description: "The official name of the hurricane or tropical storm, if applicable." },
                 otherEvent: { type: Type.STRING, description: "The user-specified disaster if 'My disaster is not listed' is the event type." },
                 eventDate: { type: Type.STRING, description: "The date the disaster occurred, in YYYY-MM-DD format." },
                 evacuated: { type: Type.STRING, description: "Whether the user evacuated or plans to.", enum: ['Yes', 'No'] },
@@ -546,9 +548,10 @@ export async function parseApplicationDetailsWithGemini(
 
     Rules for other fields:
     1. eventDate, employmentStartDate: Must be in YYYY-MM-DD format. Infer the year if not specified (assume current year).
-    2. householdIncome, powerLossDays: Extract as a number, ignoring currency symbols or commas.
-    3. homeowner, evacuated, powerLoss: Should be "Yes" or "No".
-    4. mobileNumber: Extract any phone number mentioned by the user.
+    2. eventName: If the event is a hurricane or tropical storm, extract its specific name (e.g., 'Hurricane Ian').
+    3. householdIncome, powerLossDays: Extract as a number, ignoring currency symbols or commas.
+    4. homeowner, evacuated, powerLoss: Should be "Yes" or "No".
+    5. mobileNumber: Extract any phone number mentioned by the user.
 
     User's description: "${description}"
   `;
