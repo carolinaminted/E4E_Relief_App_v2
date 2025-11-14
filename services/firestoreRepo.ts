@@ -53,6 +53,38 @@ class UsersRepo implements IUsersRepo {
         return snapshot.docs.map(doc => doc.data() as UserProfile);
     }
 
+    async getForFund(fundCode: string): Promise<UserProfile[]> {
+        const identitiesCol = collection(db, 'identities');
+        const identitiesQuery = query(identitiesCol, where('fundCode', '==', fundCode));
+        const identitiesSnapshot = await getDocs(identitiesQuery);
+        // FIX: Explicitly type the result of the map function to 'string' to ensure 'userIds' is correctly inferred as 'string[]' instead of 'unknown[]'.
+        const userIds = [...new Set(identitiesSnapshot.docs.map<string>(doc => doc.data().uid))];
+
+        if (userIds.length === 0) {
+            return [];
+        }
+
+        // Firestore 'in' query is limited to 30 items.
+        // For a larger number of users, this would require batching the queries.
+        const userBatches: string[][] = [];
+        for (let i = 0; i < userIds.length; i += 30) {
+            userBatches.push(userIds.slice(i, i + 30));
+        }
+
+        const userPromises = userBatches.map(batch => {
+            const usersQuery = query(this.usersCol, where(documentId(), 'in', batch));
+            return getDocs(usersQuery);
+        });
+
+        const userSnapshots = await Promise.all(userPromises);
+        const users: UserProfile[] = [];
+        userSnapshots.forEach(snapshot => {
+            snapshot.docs.forEach(doc => users.push(doc.data() as UserProfile));
+        });
+
+        return users;
+    }
+
     async add(user: Omit<UserProfile, 'role'>, uid: string): Promise<void> {
         const userWithRole = { ...user, role: 'User' };
         await setDoc(doc(this.usersCol, uid), userWithRole);
@@ -116,6 +148,12 @@ class ApplicationsRepo implements IApplicationsRepo {
 
     async getAll(): Promise<Application[]> {
         const snapshot = await getDocs(this.appsCol);
+        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+    }
+
+    async getForFund(fundCode: string): Promise<Application[]> {
+        const q = query(this.appsCol, where('profileSnapshot.fundCode', '==', fundCode));
+        const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
     }
 

@@ -625,7 +625,7 @@ function App() {
       case 'fundPortal':
         return <FundPortalPage navigate={navigate} user={currentUser} />;
       case 'liveDashboard':
-        return <LiveDashboardPage navigate={navigate} />;
+        return <LiveDashboardPage navigate={navigate} currentUser={currentUser} />;
       case 'ticketing':
         return <TicketingPage navigate={navigate} />;
       case 'programDetails':
@@ -704,6 +704,7 @@ function App() {
             canApply={canApply}
         />
         
+        {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
         {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>

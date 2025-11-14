@@ -7,6 +7,7 @@ type Page = 'fundPortal';
 
 interface LiveDashboardPageProps {
   navigate: (page: Page) => void;
+  currentUser: UserProfile;
 }
 
 // --- Reusable UI Components (from DashboardPage) ---
@@ -103,7 +104,7 @@ interface LiveStats {
 }
 
 
-const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
+const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, currentUser }) => {
     const [stats, setStats] = useState<LiveStats | null>(null);
     const [isFetching, setIsFetching] = useState(true);
     const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -113,10 +114,26 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
 
     const fetchData = useCallback(async () => {
         setIsFetching(true);
+
+        const emptyStats: LiveStats = {
+            totalAwarded: 0,
+            applicationStatusData: [],
+            userEngagementData: [],
+            topCountriesData: [],
+            topEventsData: [],
+            recentUsersData: []
+        };
+
         try {
+            const fundCode = currentUser.fundCode;
+            if (!fundCode) {
+                console.error("Admin user has no active fund code.");
+                setStats(emptyStats);
+                return;
+            }
             const [users, applications] = await Promise.all([
-                usersRepo.getAll(),
-                applicationsRepo.getAll(),
+                usersRepo.getForFund(fundCode),
+                applicationsRepo.getForFund(fundCode),
             ]);
 
             // --- Process Data for Stats ---
@@ -193,10 +210,11 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
 
         } catch (error) {
             console.error("Failed to fetch live dashboard data:", error);
+            setStats(emptyStats);
         } finally {
             setIsFetching(false);
         }
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         fetchData();
