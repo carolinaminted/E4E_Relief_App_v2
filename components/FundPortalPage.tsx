@@ -34,13 +34,6 @@ const DashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-1
   </svg>
 );
 
-const LiveDashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path stroke="url(#icon-gradient)" strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l3-3l3 3l3-3l3 3l3-3" />
-        <circle cx="20" cy="4" r="2" fill="#ff8400" stroke="none" />
-    </svg>
-);
-
 const TicketingIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h5.25m-5.25 0h5.25m-5.25 0h5.25M3 4.5h15a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H3a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 3 4.5Z" />
@@ -75,16 +68,10 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
    */
   const portalTiles: PortalTile[] = [
     {
-      key: 'dashboard',
-      title: 'Dashboard',
-      onClick: () => navigate('dashboard'),
-      icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />,
-    },
-    {
       key: 'liveDashboard',
-      title: 'Live Dashboard',
+      title: 'Dashboard',
       onClick: () => navigate('liveDashboard'),
-      icon: <LiveDashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />,
+      icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />,
     },
     {
       key: 'ticketing',

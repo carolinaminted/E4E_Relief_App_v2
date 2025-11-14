@@ -157,7 +157,7 @@ This process ensures decisions are fast, consistent, and transparent.
 ## Fund Portal (For Admins)
 If you are logged in as an admin, you have access to the Fund Portal, a central hub for managing the relief program.
 
--   **Dashboard**: A high-level overview of key metrics, including total grants awarded, application statuses, user engagement, and top event types.
+-   **Dashboard**: A real-time dashboard of key metrics pulling from the live database, including total grants awarded, application statuses, and top event types.
 -   **Ticketing**: A simple system for viewing and managing support tickets submitted by users.
 -   **Program Details**: A summary of the configuration for the selected fund, including grant limits and eligible event types.
 -   **Proxy Applications**: Submit an application on behalf of another employee. This is useful for users who may not have easy access to the app.
@@ -165,7 +165,6 @@ If you are logged in as an admin, you have access to the Fund Portal, a central 
 
 
 <img width="450" height="775" alt="Fund Portal" src="https://github.com/user-attachments/assets/3eec42d7-4114-411d-9851-96e32fbd3054" />
-<img width="450" height="775" alt="Dashboard Page" src="https://github.com/user-attachments/assets/b5bd6c6a-0921-43fa-9ced-84cb47a7baee" />
 <img width="450" height="775" alt="Ticketing" src="https://github.com/user-attachments/assets/d4abf595-9273-4bfb-9ad6-518efdca57ce" />
 <img width="450" height="775" alt="Program Details" src="https://github.com/user-attachments/assets/e8eb2b2b-44bd-4a18-ace5-492e4c409552" />
 
@@ -175,7 +174,6 @@ If you are logged in as an admin, you have access to the Fund Portal, a central 
 <img width="450" height="775" alt="Token Usage 2" src="https://github.com/user-attachments/assets/d8d6c707-63f4-4c15-85ef-bff96dd8bd60" />
 <img width="450" height="775" alt="Token Usage 3" src="https://github.com/user-attachments/assets/c4dcc90a-8c66-4498-9e62-c3d6c6d17a05" />
 
-<img width="1245" height="816" alt="Dashboard Page - Tablet" src="https://github.com/user-attachments/assets/4dece278-6b9c-4325-b17a-552076f5b2a7" />
 <img width="1606" height="840" alt="Token Usage - Tablet" src="https://github.com/user-attachments/assets/725b958f-4f3e-4faf-8892-4248c4996f87" />
 
 ---

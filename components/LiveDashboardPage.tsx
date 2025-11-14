@@ -225,7 +225,7 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                     </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Live Dashboard</h1>
+                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Dashboard</h1>
             </div>
             
              <div className="flex flex-col items-center justify-center mb-8 gap-2">

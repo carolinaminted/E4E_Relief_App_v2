@@ -68,7 +68,8 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
   }
 
   // If admin is on any portal page, highlight 'Fund Portal'
-  const adminDashboardPages: Page[] = ['dashboard', 'fundPortal', 'proxy', 'ticketing', 'tokenUsage', 'programDetails', 'liveDashboard'];
+  // FIX: Removed 'dashboard' as it is not a valid Page type.
+  const adminDashboardPages: Page[] = ['fundPortal', 'proxy', 'ticketing', 'tokenUsage', 'programDetails', 'liveDashboard'];
   const activePage = userRole === 'Admin' && adminDashboardPages.includes(currentPage) ? 'fundPortal' : currentPage;
 
 

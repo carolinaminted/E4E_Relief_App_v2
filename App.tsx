@@ -25,7 +25,6 @@ import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
 import EligibilityPage from './components/EligibilityPage';
 import FundPortalPage from './components/FundPortalPage';
-import DashboardPage from './components/DashboardPage';
 import TicketingPage from './components/TicketingPage';
 import ProgramDetailsPage from './components/ProgramDetailsPage';
 import ProxyApplyPage from './components/ProxyPage';
@@ -625,8 +624,6 @@ function App() {
         return <EligibilityPage navigate={navigate} user={currentUser} />;
       case 'fundPortal':
         return <FundPortalPage navigate={navigate} user={currentUser} />;
-      case 'dashboard':
-        return <DashboardPage navigate={navigate} />;
       case 'liveDashboard':
         return <LiveDashboardPage navigate={navigate} />;
       case 'ticketing':
