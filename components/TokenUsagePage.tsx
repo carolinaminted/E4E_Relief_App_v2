@@ -49,7 +49,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
   const [openSections, setOpenSections] = useState(() => {
     const saved = localStorage.getItem('tokenUsagePage_openSections');
-    const defaults = { topSession: true, lastHour: true, last15: true, lifetime: true };
+    const defaults = { lastHour: true, last15: true, lifetime: true };
     try {
         return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
     } catch (e) {
@@ -62,7 +62,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     localStorage.setItem('tokenUsagePage_openSections', JSON.stringify(openSections));
   }, [openSections]);
 
-  const toggleSection = (section: keyof typeof openSections) => {
+  const toggleSection = (section: 'lastHour' | 'last15' | 'lifetime') => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
   
@@ -273,7 +273,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         <div className="space-y-4">
             <TokenUsageFilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} filters={filters} setFilters={setFilters} filterOptions={filterOptions} />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
                     <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Cost (USD)</h3>
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#edda26] to-[#ff8400] text-center">
@@ -286,6 +286,17 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                     <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
                         {isFetching ? '0' : totalTokens.toLocaleString()}
                     </p>
+                    {isFetching && <CardLoader />}
+                </div>
+                 <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0] md:col-span-2 lg:col-span-1">
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Highest-Token Session</h3>
+                    <div className="pt-2">
+                        {isFetching ? (
+                            <div className="h-20" /> // Placeholder to prevent layout shift
+                        ) : (
+                            <TopSessionChart topSession={topSessionData} />
+                        )}
+                    </div>
                     {isFetching && <CardLoader />}
                 </div>
             </div>
@@ -312,18 +323,6 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                         <div className="pt-4">
                             <Last15MinutesUsageChart usage={last15MinutesUsage} />
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
-                <button type="button" onClick={() => toggleSection('topSession')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.topSession}>
-                    <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Highest-Token Session</h3>
-                    <ChevronIcon isOpen={openSections.topSession} />
-                </button>
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.topSession ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
-                    <div className="pt-4">
-                        <TopSessionChart topSession={topSessionData} />
                     </div>
                 </div>
             </div>
