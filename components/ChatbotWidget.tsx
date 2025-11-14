@@ -38,8 +38,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     setIsMounted(true);
 
     if (isOpen && userProfile) {
-        // FIX: Pass userProfile and activeFund to createChatSession
-        chatSessionRef.current = createChatSession(userProfile, activeFund, applications);
+        // Per user request, provide the last 3 user/AI message pairs (6 total messages) as context when creating a new session.
+        // This ensures the AI has recent context if the chat window was closed and reopened.
+        // We slice from the existing `messages` state in the UI. We skip the first message if it's the initial greeting.
+        const historyToSeed = messages.length > 1 ? messages.slice(-6) : [];
+
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed);
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
   }, [isOpen, applications, activeFund, userProfile]);
@@ -94,8 +98,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     const inputTokens = estimateTokens(userInput);
 
     if (!chatSessionRef.current && userProfile) {
-        // FIX: Pass userProfile and activeFund to createChatSession
-        chatSessionRef.current = createChatSession(userProfile, activeFund, applications);
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6));
     }
 
     try {
@@ -184,7 +187,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t]);
+  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages]);
 
   const toggleChat = () => setIsOpen(!isOpen);
   

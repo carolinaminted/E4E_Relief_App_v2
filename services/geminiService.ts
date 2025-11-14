@@ -1,5 +1,5 @@
-import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
-import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision } from '../types';
+import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
+import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes } from '../data/appData';
@@ -104,7 +104,7 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 `;
 
 
-export function createChatSession(userProfile: UserProfile | null, activeFund: Fund | null, applications?: Application[]): Chat {
+export function createChatSession(userProfile: UserProfile | null, activeFund: Fund | null, applications?: Application[], history?: ChatMessage[]): Chat {
   let dynamicContext = applicationContext;
 
   if (userProfile && userProfile.preferredLanguage && userProfile.preferredLanguage.toLowerCase() !== 'english') {
@@ -134,7 +134,17 @@ The ${activeFund.name} covers a variety of events, including:
 
   if (applications && applications.length > 0) {
     const applicationList = applications.map(app => {
-      let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nSubmitted: ${app.submittedDate}\nStatus: ${app.status}`;
+      const submittedDate = new Date(app.submittedDate);
+      const formattedDate = submittedDate.toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'America/New_York' // Standardize to a common timezone for consistent output
+      });
+      let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nSubmitted: ${formattedDate}\nStatus: ${app.status}`;
       if (app.reasons && (app.status === 'Declined' || app.status === 'Submitted')) {
         appDetails += `\nDecision Reasons: ${app.reasons.join(' ')}`;
       }
@@ -153,8 +163,15 @@ ${applicationList}
   
   // FIX: Use the latest recommended model 'gemini-2.5-flash'.
   const model = 'gemini-2.5-flash';
+
+  const mappedHistory: Content[] | undefined = history?.map(message => ({
+    role: message.role,
+    parts: [{ text: message.content }],
+  }));
+
   return ai.chats.create({
     model: model,
+    history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
       // FIX: The 'tools' property must be inside the 'config' object.

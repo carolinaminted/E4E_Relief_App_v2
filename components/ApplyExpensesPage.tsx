@@ -125,12 +125,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyExpensesPage.title')}</h2>
-        <p className="text-gray-300 mt-1">{t('applyExpensesPage.description')}</p>
-      </div>
-
-      <div className="space-y-6">
+      <div className="divide-y divide-[#005ca0]/50">
         {expenseTypes.map((type) => {
           const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
           const expense = formData.expenses.find(e => e.type === type);
@@ -139,9 +134,9 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
           const translationKey = `applyExpensesPage.expenseTypes.${type.replace(/\s+/g, '')}`;
 
           return (
-            <div key={type} className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0]">
-              <h4 className="font-semibold text-lg text-white mb-4">{t(translationKey, type)}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div key={type} className="py-4 first:pt-0 last:pb-0">
+              <h4 className="font-semibold text-lg text-white mb-2">{t(translationKey, type)}</h4>
+              <div className="grid grid-cols-2 gap-4 items-start">
                 <FormInput
                   label={t('applyExpensesPage.amountLabel')}
                   id={`amount-${type}`}
