@@ -552,7 +552,7 @@ function App() {
     });
   }, []);
   
-  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification'];
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {

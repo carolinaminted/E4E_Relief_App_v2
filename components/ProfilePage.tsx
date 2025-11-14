@@ -57,6 +57,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   });
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
   useEffect(() => {
     localStorage.setItem('profilePage_openSection', JSON.stringify(openSection));
@@ -620,13 +621,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </fieldset>
 
-        <div className="flex justify-center pt-8 flex-col items-center">
+        <div className="flex justify-center pt-4 flex-col items-center">
             {Object.keys(errors).length > 0 && (
                 <div className="bg-red-800/50 border border-red-600 text-red-200 p-4 rounded-md mb-4 w-full max-w-md text-sm">
                     <p className="font-bold">{t('profilePage.errorCorrection')}</p>
                 </div>
             )}
             <button type="submit" className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-8 rounded-md transition-colors duration-200">{t('profilePage.saveButton')}</button>
+            <button
+                type="button"
+                onClick={() => setIsPolicyModalOpen(true)}
+                className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200 mt-2"
+            >
+                {t('homePage.poweredBy')}
+            </button>
         </div>
       </form>
       
@@ -636,6 +644,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
           onClose={() => setSelectedApplication(null)} 
         />
       )}
+      {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}
     </div>
   );
 };
