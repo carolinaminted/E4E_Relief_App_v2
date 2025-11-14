@@ -214,6 +214,7 @@
     "householdSize": "Number of people in household",
     "homeowner": "Do you own your own home?",
     "preferredLanguage": "Preferred Language",
+    "consentTitle": "Consent & Acknowledgement",
     "ackPolicies": "I have read and agree to E4E Relief’s Privacy Policy and Cookie Policy.",
     "commConsent": "I consent to receive emails and text messages regarding my application.",
     "infoCorrect": "All information I have provided is accurate.",
