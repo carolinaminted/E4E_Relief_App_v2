@@ -638,6 +638,7 @@ function App() {
                     userProfile={currentUser}
                     onAddIdentity={handleStartAddIdentity}
                     mainRef={mainRef}
+                    activeFund={activeFund}
                 />;
       case 'home':
       default:

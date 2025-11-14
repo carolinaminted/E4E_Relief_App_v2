@@ -57,8 +57,8 @@ class UsersRepo implements IUsersRepo {
         const identitiesCol = collection(db, 'identities');
         const identitiesQuery = query(identitiesCol, where('fundCode', '==', fundCode));
         const identitiesSnapshot = await getDocs(identitiesQuery);
-        // FIX: Explicitly cast `doc.data().uid` to a string. This ensures `userIds` is correctly typed as `string[]`, resolving the error on line 71 where an `unknown[]` could not be assigned to a `string[]`.
-        const userIds = [...new Set(identitiesSnapshot.docs.map(doc => doc.data().uid as string))];
+        // FIX: Cast document data to FundIdentity to get the properly-typed 'uid' property.
+        const userIds = [...new Set(identitiesSnapshot.docs.map(doc => (doc.data() as FundIdentity).uid))];
 
         if (userIds.length === 0) {
             return [];
