@@ -554,13 +554,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
             <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput type="date" label={t('profilePage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormChange('employmentStartDate', e.target.value)} error={errors.employmentStartDate} />
-                    <SearchableSelector label={t('profilePage.eligibilityType')} id="eligibilityType" required value={formData.eligibilityType} options={employmentTypes} onUpdate={value => handleFormChange('eligibilityType', value)} variant="underline" error={errors.eligibilityType} />
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormInput type="date" label={t('profilePage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormChange('employmentStartDate', e.target.value)} error={errors.employmentStartDate} />
+                        <SearchableSelector label={t('profilePage.eligibilityType')} id="eligibilityType" required value={formData.eligibilityType} options={employmentTypes} onUpdate={value => handleFormChange('eligibilityType', value)} variant="underline" error={errors.eligibilityType} />
+                    </div>
+                    
                     <FormInput type="number" label={t('profilePage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormChange('householdIncome', parseFloat(e.target.value) || '')} error={errors.householdIncome} />
                     <FormInput type="number" label={t('profilePage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormChange('householdSize', parseInt(e.target.value, 10) || '')} error={errors.householdSize} />
-                    <FormRadioGroup legend={t('profilePage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormChange('homeowner', value === yes ? 'Yes' : 'No')} required error={errors.homeowner} />
-                    <SearchableSelector label={t('profilePage.preferredLanguage')} id="preferredLanguage" value={formData.preferredLanguage || ''} options={languages} onUpdate={value => handleFormChange('preferredLanguage', value)} variant="underline" />
+
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormRadioGroup legend={t('profilePage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormChange('homeowner', value === yes ? 'Yes' : 'No')} required error={errors.homeowner} />
+                        <SearchableSelector label={t('profilePage.preferredLanguage')} id="preferredLanguage" value={formData.preferredLanguage || ''} options={languages} onUpdate={value => handleFormChange('preferredLanguage', value)} variant="underline" />
+                    </div>
                 </div>
                 {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">

@@ -393,29 +393,33 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                 <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
             <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput type="date" label={t('applyContactPage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
-                    <SearchableSelector
-                        label={t('applyContactPage.eligibilityType')}
-                        id="eligibilityType"
-                        required
-                        value={formData.eligibilityType}
-                        options={employmentTypes}
-                        onUpdate={value => handleFormUpdate({ eligibilityType: value })}
-                        variant="underline"
-                        error={errors.eligibilityType}
-                    />
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormInput type="date" label={t('applyContactPage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
+                        <SearchableSelector
+                            label={t('applyContactPage.eligibilityType')}
+                            id="eligibilityType"
+                            required
+                            value={formData.eligibilityType}
+                            options={employmentTypes}
+                            onUpdate={value => handleFormUpdate({ eligibilityType: value })}
+                            variant="underline"
+                            error={errors.eligibilityType}
+                        />
+                    </div>
                     <FormInput type="number" label={t('applyContactPage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormUpdate({ householdIncome: parseFloat(e.target.value) || '' })} error={errors.householdIncome} />
                     <FormInput type="number" label={t('applyContactPage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormUpdate({ householdSize: parseInt(e.target.value, 10) || '' })} error={errors.householdSize} />
-                    <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormUpdate({ homeowner: value === yes ? 'Yes' : 'No' })} required error={errors.homeowner} />
-                    <SearchableSelector
-                        label={t('applyContactPage.preferredLanguage')}
-                        id="preferredLanguage"
-                        value={formData.preferredLanguage || ''}
-                        options={languages}
-                        onUpdate={value => handleFormUpdate({ preferredLanguage: value })}
-                        variant="underline"
-                    />
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormUpdate({ homeowner: value === yes ? 'Yes' : 'No' })} required error={errors.homeowner} />
+                        <SearchableSelector
+                            label={t('applyContactPage.preferredLanguage')}
+                            id="preferredLanguage"
+                            value={formData.preferredLanguage || ''}
+                            options={languages}
+                            onUpdate={value => handleFormUpdate({ preferredLanguage: value })}
+                            variant="underline"
+                        />
+                    </div>
                 </div>
                 {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">
