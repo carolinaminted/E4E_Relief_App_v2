@@ -142,7 +142,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
               <div 
                 key={tile.key}
                 onClick={tile.onClick}
-                className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/80 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center ${colSpanClass}`}
+                className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg md:hover:bg-[#005ca0]/80 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center ${colSpanClass}`}
               >
                 {tile.icon}
                 <h2 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{tile.title}</h2>

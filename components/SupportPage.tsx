@@ -12,7 +12,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
   
   const SubActionCard: React.FC<{ title: string; description: string; onClick: () => void; }> = ({ title, description, onClick }) => (
     <div 
-      className="bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
+      className="bg-[#004b8d] p-6 rounded-lg shadow-lg md:hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
       onClick={onClick}
     >
       <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-2">{title}</h2>

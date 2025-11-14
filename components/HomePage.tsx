@@ -119,7 +119,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, on
                     title={tile.disabled && tile.disabledTooltipKey ? t(tile.disabledTooltipKey) : ""}
                     aria-disabled={!!tile.disabled}
                     className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center justify-center text-center ${
-                        tile.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#005ca0]/80 cursor-pointer hover:scale-105'
+                        tile.disabled ? 'opacity-60 cursor-not-allowed' : 'md:hover:bg-[#005ca0]/80 cursor-pointer md:hover:scale-105'
                     } ${tile.colSpan || ''}`}
                 >
                     {tile.icon}
