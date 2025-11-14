@@ -226,7 +226,7 @@ export function evaluateApplicationEligibility(
      decision = 'Denied';
      reasons.push(`Requested amount must be greater than zero.`);
      policy_hits.push({ rule_id: 'R4/R5', passed: false, detail: `Requested amount of $${requestedAmount.toFixed(2)} is not greater than zero.` });
-  } else if (requestedAmount > singleRequestMax) {
+  } else if (typeof singleRequestMax === 'number' && requestedAmount > singleRequestMax) {
     decision = 'Denied';
     reasons.push(`Requested amount of $${requestedAmount.toFixed(2)} exceeds the maximum of $${singleRequestMax.toFixed(2)}.`);
     policy_hits.push({ rule_id: 'R5', passed: false, detail: `Requested amount $${requestedAmount.toFixed(2)} exceeds absolute cap of $${singleRequestMax.toFixed(2)}.` });
@@ -323,6 +323,12 @@ export async function getAIAssistedDecision(
     },
     preliminaryDecision: EligibilityDecision
 ): Promise<EligibilityDecision> {
+    if (preliminaryDecision.decision === 'Denied') {
+        // If the deterministic rules engine issued a definitive denial, trust it and return immediately.
+        // This prevents the AI from overriding a hard business rule like exceeding a grant limit.
+        return preliminaryDecision;
+    }
+
     const prompt = `
         You are a senior grant approver AI. Your task is to perform a final review of a relief application.
         An automated, deterministic rules engine has already processed the application and provided a preliminary decision. You have the final say.

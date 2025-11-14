@@ -45,7 +45,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         placeholder={t('chatbotWidget.placeholder')}
         rows={1}
         disabled={isLoading}
-        className="flex-1 bg-white text-black placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
+        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
       />
       <button
         onClick={handleSubmit}

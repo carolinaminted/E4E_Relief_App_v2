@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import type { Fund } from '../data/fundData';
@@ -51,10 +51,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
+  const [openSection, setOpenSection] = useState<ProfileSection | null>(() => {
+    const saved = localStorage.getItem('profilePage_openSection');
+    return saved ? JSON.parse(saved) : 'applications';
+  });
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
   
+  useEffect(() => {
+    localStorage.setItem('profilePage_openSection', JSON.stringify(openSection));
+  }, [openSection]);
+
   const yes = t('common.yes');
   const no = t('common.no');
 
@@ -430,7 +437,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                 onChange={e => setNewFundCode(e.target.value)}
                                 className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
                                 placeholder="e.g., JHH"
-                                autoFocus
                             />
                              <button onClick={() => { setIsAddingIdentity(false); setNewFundCode(''); }} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.cancel')}</button>
                             <button onClick={handleAddIdentitySubmit} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.verify')}</button>

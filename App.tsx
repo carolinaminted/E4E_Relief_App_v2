@@ -25,7 +25,6 @@ import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
 import EligibilityPage from './components/EligibilityPage';
 import FundPortalPage from './components/FundPortalPage';
-import DashboardPage from './components/DashboardPage';
 import TicketingPage from './components/TicketingPage';
 import ProgramDetailsPage from './components/ProgramDetailsPage';
 import ProxyApplyPage from './components/ProxyPage';
@@ -613,7 +612,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -625,8 +624,6 @@ function App() {
         return <EligibilityPage navigate={navigate} user={currentUser} />;
       case 'fundPortal':
         return <FundPortalPage navigate={navigate} user={currentUser} />;
-      case 'dashboard':
-        return <DashboardPage navigate={navigate} />;
       case 'liveDashboard':
         return <LiveDashboardPage navigate={navigate} />;
       case 'ticketing':
@@ -644,7 +641,7 @@ function App() {
                 />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
     }
   };
   

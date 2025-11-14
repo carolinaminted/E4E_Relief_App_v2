@@ -199,7 +199,14 @@ const FAQSection: React.FC<{ title: string, faqs: { question: string, answer: Re
 
 
 const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
-    const [openSection, setOpenSection] = useState<'applicant' | 'donor' | null>(null);
+    const [openSection, setOpenSection] = useState<'applicant' | 'donor' | null>(() => {
+        const saved = localStorage.getItem('faqPage_openSection');
+        return saved ? JSON.parse(saved) : null;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('faqPage_openSection', JSON.stringify(openSection));
+    }, [openSection]);
 
     const handleToggleSection = (section: 'applicant' | 'donor') => {
         setOpenSection(openSection === section ? null : section);

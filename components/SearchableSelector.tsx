@@ -72,7 +72,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
     };
   }, [wrapperRef, searchTerm, value, options, onUpdate]);
   
-  const baseInputClasses = "w-full text-white focus:outline-none focus:ring-0";
+  const baseInputClasses = "w-full text-base text-white focus:outline-none focus:ring-0";
   const variantClasses = {
       boxed: `bg-[#005ca0] border rounded-md p-2 ${error ? 'border-red-500' : 'border-[#005ca0]'}`,
       underline: `bg-transparent border-0 border-b p-2 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`

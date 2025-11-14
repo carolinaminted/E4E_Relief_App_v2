@@ -9,7 +9,7 @@ export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
         <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
             {label} <RequiredIndicator required={required} isMet={!!props.value} />
         </label>
-        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`} />
+        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`} />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
 );

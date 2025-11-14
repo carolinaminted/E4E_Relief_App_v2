@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBPKjOwyW7wFYTtMeksndcY2jYIXLqk5BU",
   authDomain: "e4e-relief-app.firebaseapp.com",
   projectId: "e4e-relief-app",
-  storageBucket: "e4e-relief-app.appspot.com",
+  storageBucket: "e4e-relief-app.firebasestorage.app",
   messagingSenderId: "792696379717",
   appId: "1:792696379717:web:33d4ba71ad931dc398462c",
   measurementId: "G-R60LTYQ98D"

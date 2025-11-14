@@ -108,7 +108,7 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder={t('myApplicationsPage.searchPlaceholder')}
-                className="w-full bg-[#004b8d]/50 border border-[#005ca0] rounded-md p-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#ff8400] focus:border-transparent"
+                className="w-full bg-[#004b8d]/50 border border-[#005ca0] rounded-md p-3 text-base text-white placeholder-gray-400 focus:ring-2 focus:ring-[#ff8400] focus:border-transparent"
             />
         </div>
 

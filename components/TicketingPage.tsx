@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Define the type for a ticket
 interface Ticket {
@@ -51,7 +51,7 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
 const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string, error?: string }> = ({ label, id, error, ...props }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-white mb-1">{label}</label>
-        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
+        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
 );
@@ -59,7 +59,7 @@ const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label:
 const FormTextarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string, error?: string }> = ({ label, id, error, ...props }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-white mb-1">{label}</label>
-        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
+        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
 );
@@ -72,7 +72,14 @@ const statusStyles: Record<Ticket['status'], string> = {
 
 const TicketingPage: React.FC<TicketingPageProps> = ({ navigate }) => {
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
-  const [openSection, setOpenSection] = useState<'submit' | 'view' | null>(null);
+  const [openSection, setOpenSection] = useState<'submit' | 'view' | null>(() => {
+    const saved = localStorage.getItem('ticketingPage_openSection');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('ticketingPage_openSection', JSON.stringify(openSection));
+  }, [openSection]);
   
   const [newTicket, setNewTicket] = useState({ subject: '', description: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});

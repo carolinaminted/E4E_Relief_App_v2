@@ -34,13 +34,6 @@ const DashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-1
   </svg>
 );
 
-const LiveDashboardIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path stroke="url(#icon-gradient)" strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l3-3l3 3l3-3l3 3l3-3" />
-        <circle cx="20" cy="4" r="2" fill="#ff8400" stroke="none" />
-    </svg>
-);
-
 const TicketingIcon: React.FC<{ className?: string }> = ({ className = "h-12 w-12 mb-4" }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="url(#icon-gradient)" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h5.25m-5.25 0h5.25m-5.25 0h5.25M3 4.5h15a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H3a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 3 4.5Z" />
@@ -75,16 +68,10 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
    */
   const portalTiles: PortalTile[] = [
     {
-      key: 'dashboard',
-      title: 'Dashboard',
-      onClick: () => navigate('dashboard'),
-      icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />,
-    },
-    {
       key: 'liveDashboard',
-      title: 'Live Dashboard',
+      title: 'Dashboard',
       onClick: () => navigate('liveDashboard'),
-      icon: <LiveDashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />,
+      icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />,
     },
     {
       key: 'ticketing',
@@ -142,7 +129,7 @@ const FundPortalPage: React.FC<FundPortalPageProps> = ({ navigate, user }) => {
               <div 
                 key={tile.key}
                 onClick={tile.onClick}
-                className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/80 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center ${colSpanClass}`}
+                className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg md:hover:bg-[#005ca0]/80 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center ${colSpanClass}`}
               >
                 {tile.icon}
                 <h2 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{tile.title}</h2>

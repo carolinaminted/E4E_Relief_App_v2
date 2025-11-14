@@ -67,7 +67,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
                     id="firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+                    className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
                     required
                     autoComplete="given-name"
                 />
@@ -79,7 +79,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
                     id="lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+                    className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
                     required
                     autoComplete="family-name"
                 />
@@ -92,7 +92,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
             id="email-register"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
             required
             autoComplete="email"
             />
@@ -104,7 +104,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
             id="password-register"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
             required
             autoComplete="new-password"
             />
@@ -116,7 +116,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
                 id="fundCode"
                 value={fundCode}
                 onChange={(e) => setFundCode(e.target.value)}
-                className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+                className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
                 required
                 autoComplete="off"
                 aria-describedby="fund-code-help"
