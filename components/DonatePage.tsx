@@ -194,7 +194,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                                 value={typeof amount === 'number' ? '' : amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 onFocus={() => handleAmountSelect('custom')}
-                                className={`py-2 px-3 rounded-md font-semibold text-sm text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 col-span-2 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
+                                className={`py-2 px-3 rounded-md font-semibold text-base text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 col-span-2 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
                             />
                         </div>
                         {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}

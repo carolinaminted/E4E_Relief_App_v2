@@ -63,7 +63,7 @@ const ProxyApplicantSearch: React.FC<ProxyApplicantSearchProps> = ({ allUsers, o
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         placeholder="applicant@example.com"
-                        className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
+                        className="flex-grow bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
                         aria-label="Applicant's email address"
                     />
                     <button type="submit" className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">

@@ -41,8 +41,8 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
   };
   
   const textareaClasses = {
-    boxed: "w-full bg-[#005ca0] border border-[#005ca0] rounded-md p-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#ff8400] focus:border-[#ff8400]",
-    underline: "w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+    boxed: "w-full bg-[#005ca0] border border-[#005ca0] rounded-md p-2 text-base text-white placeholder-gray-400 focus:ring-2 focus:ring-[#ff8400] focus:border-[#ff8400]",
+    underline: "w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-[#ff8400]"
   };
 
   return (

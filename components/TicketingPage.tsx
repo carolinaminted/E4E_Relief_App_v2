@@ -51,7 +51,7 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
 const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string, error?: string }> = ({ label, id, error, ...props }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-white mb-1">{label}</label>
-        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
+        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
 );
@@ -59,7 +59,7 @@ const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label:
 const FormTextarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string, error?: string }> = ({ label, id, error, ...props }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-white mb-1">{label}</label>
-        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
+        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
 );

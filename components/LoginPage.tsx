@@ -59,7 +59,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
             required
             autoComplete="email"
           />
@@ -71,7 +71,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister }) => {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+            className="w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white focus:outline-none focus:ring-0 focus:border-[#ff8400]"
             required
             autoComplete="current-password"
           />
