@@ -39,6 +39,7 @@ import Header from './components/Header';
 import LiveDashboardPage from './components/LiveDashboardPage';
 import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
+import ReliefQueuePage from './components/ReliefQueuePage';
 
 // FIX: Removed local Page type definition.
 // type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -131,11 +132,15 @@ function App() {
             initTokenTracker(hydratedProfile);
 
             // Navigation logic based on the hydrated profile state
-            if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
+            const isStuckInVerification = hydratedProfile.classVerificationStatus === 'failed' && hydratedProfile.role !== 'Admin';
+
+            if (isStuckInVerification) {
+                setPage('reliefQueue');
+            } else if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
               setPage('classVerification');
             } else {
               // Only navigate to home if not already on a specific page (prevents overriding navigation)
-              setPage(prevPage => (prevPage === 'login' || prevPage === 'register' || prevPage === 'classVerification' ? 'home' : prevPage));
+              setPage(prevPage => (['login', 'register', 'classVerification', 'reliefQueue'].includes(prevPage) ? 'home' : prevPage));
             }
           } else {
             // --- Profile not found ---
@@ -172,6 +177,9 @@ function App() {
     };
   }, []);
 
+  // FIX: Moved `currentUser` declaration before its usage in the `useEffect` hook below.
+  const currentUser = authState.profile;
+
   useEffect(() => {
     const fetchActiveFund = async () => {
       if (activeIdentity) {
@@ -182,12 +190,14 @@ function App() {
           console.error(`Could not load fund configuration for ${activeIdentity.fundCode}`);
           setActiveFund(null);
         }
+      } else if (currentUser?.fundCode) {
+        // Fallback for users stuck in queue who may not have an activeIdentity yet
+        const fundData = await fundsRepo.getFund(currentUser.fundCode);
+        setActiveFund(fundData);
       }
     };
     fetchActiveFund();
-  }, [activeIdentity]);
-
-  const currentUser = authState.profile;
+  }, [activeIdentity, currentUser?.fundCode]);
 
   const userIdentities = useMemo(() => {
     if (!currentUser) return [];
@@ -269,13 +279,18 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: GlobalPage) => {
+    if (page === 'reliefQueue' && targetPage !== 'classVerification') {
+        console.log("Gating navigation. User is in relief queue.");
+        return;
+    }
+
     if (targetPage === 'apply' && !isVerifiedAndEligible) {
         console.log("Gating 'apply' page. User not verified or not eligible.");
         setPage('classVerification');
     } else {
         setPage(targetPage);
     }
-  }, [isVerifiedAndEligible]);
+  }, [isVerifiedAndEligible, page]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
@@ -323,7 +338,9 @@ function App() {
     if (!fund) {
         console.error("Verification successful but could not find fund config for", fundCodeToVerify);
         setVerifyingFundCode(null);
-        setPage('profile');
+        // If coming from relief queue, they don't have a profile page to go to, home is better.
+        const destination = page === 'reliefQueue' ? 'home' : 'profile';
+        setPage(destination);
         return;
     }
     
@@ -361,8 +378,42 @@ function App() {
     await usersRepo.update(currentUser.uid, { activeIdentityId: newActiveIdentity.id });
     setVerifyingFundCode(null);
 
-  }, [currentUser, verifyingFundCode, allIdentities]);
+  }, [currentUser, verifyingFundCode, allIdentities, page]);
   
+    const handleVerificationFailed = useCallback(async (failedFundCode: string) => {
+        if (!currentUser) return;
+
+        const identityIdToUpdate = `${currentUser.uid}-${failedFundCode}`;
+        const identityToFail = allIdentities.find(id => id.id === identityIdToUpdate);
+
+        if (identityToFail) {
+            console.log(`[Telemetry] track('VerificationFailedMaxAttempts', { fundCode: ${failedFundCode} })`);
+            await identitiesRepo.update(identityIdToUpdate, { classVerificationStatus: 'failed' });
+        } else {
+            // New user failing for the first time. Create the identity document with a 'failed' status.
+            console.log(`[Telemetry] track('InitialVerificationFailedMaxAttempts', { fundCode: ${failedFundCode} })`);
+            const fund = await fundsRepo.getFund(failedFundCode);
+            if (!fund) {
+                console.error("Could not find fund config for failed verification:", failedFundCode);
+                return;
+            }
+
+            const newFailedIdentity: FundIdentity = {
+                id: identityIdToUpdate,
+                uid: currentUser.uid,
+                fundCode: fund.code,
+                fundName: fund.name,
+                cvType: fund.cvType,
+                eligibilityStatus: 'Not Eligible',
+                classVerificationStatus: 'failed',
+                createdAt: new Date().toISOString(),
+            };
+            await identitiesRepo.add(newFailedIdentity);
+            // Also set this new failed identity as the active one.
+            await usersRepo.update(currentUser.uid, { activeIdentityId: newFailedIdentity.id });
+        }
+    }, [currentUser, allIdentities]);
+
   const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile) => {
     if (!currentUser) return;
     // The onSnapshot listener will automatically update the UI state from this write.
@@ -550,7 +601,7 @@ function App() {
     });
   }, []);
   
-  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile', 'reliefQueue'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
@@ -577,8 +628,10 @@ function App() {
     if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
 
     switch (page) {
+      case 'reliefQueue':
+        return <ReliefQueuePage userProfile={currentUser} activeFund={activeFund} onUpdateProfile={handleProfileUpdate} onReattemptVerification={handleStartAddIdentity} onLogout={handleLogout} />;
       case 'classVerification':
-        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
+        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} onVerificationFailed={handleVerificationFailed} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
         return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} />;
       case 'profile':
@@ -657,6 +710,18 @@ function App() {
       );
   }
 
+  // Relief Queue view (special logged-in state without nav)
+  if (page === 'reliefQueue') {
+    return (
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+            <IconDefs />
+            <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
+                {renderPage()}
+            </main>
+        </div>
+    );
+  }
+
   return (
     <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
       <IconDefs />
@@ -706,7 +771,7 @@ function App() {
         />
         
         {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
-        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
+        {page !== 'classVerification' && page !== 'reliefQueue' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );
