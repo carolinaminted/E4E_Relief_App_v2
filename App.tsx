@@ -69,24 +69,34 @@ function App() {
 
   useEffect(() => {
     let profileUnsubscribe: (() => void) | null = null;
+    let applicationsUnsubscribe: (() => void) | null = null;
+    let proxyApplicationsUnsubscribe: (() => void) | null = null;
 
     const authUnsubscribe = authClient.onAuthStateChanged((user, token) => {
-      // Clean up any existing profile listener when auth state changes.
-      if (profileUnsubscribe) {
-        profileUnsubscribe();
-        profileUnsubscribe = null;
-      }
+      // Always clean up previous listeners when auth state changes.
+      if (profileUnsubscribe) { profileUnsubscribe(); profileUnsubscribe = null; }
+      if (applicationsUnsubscribe) { applicationsUnsubscribe(); applicationsUnsubscribe = null; }
+      if (proxyApplicationsUnsubscribe) { proxyApplicationsUnsubscribe(); proxyApplicationsUnsubscribe = null; }
+
 
       if (user && token) {
         const claims = (token.claims as { admin?: boolean }) || {};
         
-        // Set a listener on the user's profile document.
+        applicationsUnsubscribe = applicationsRepo.listenForUser(user.uid, (userApps) => {
+            setApplications(userApps);
+        });
+        
+        if (claims.admin) {
+            proxyApplicationsUnsubscribe = applicationsRepo.listenForProxySubmissions(user.uid, (proxyApps) => {
+                setProxyApplications(proxyApps);
+            });
+        }
+
         profileUnsubscribe = usersRepo.listen(user.uid, async (profile) => {
           if (profile) {
             // --- Profile found, hydrate the full application state ---
             const identities = await identitiesRepo.getForUser(user.uid);
-            const userApps = await applicationsRepo.getForUser(user.uid);
-
+            
             let activeId: FundIdentity | undefined = undefined;
             if (identities.length > 0) {
               activeId = identities.find(id => id.id === profile.activeIdentityId) ||
@@ -117,14 +127,8 @@ function App() {
             }
 
             setAllIdentities(identities);
-            setApplications(userApps);
             setAuthState({ status: 'signedIn', user, profile: hydratedProfile, claims });
             initTokenTracker(hydratedProfile);
-
-            if (claims.admin) {
-              const proxyApps = await applicationsRepo.getProxySubmissions(user.uid);
-              setProxyApplications(proxyApps);
-            }
 
             // Navigation logic based on the hydrated profile state
             if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
@@ -162,9 +166,9 @@ function App() {
 
     return () => {
       authUnsubscribe();
-      if (profileUnsubscribe) {
-        profileUnsubscribe();
-      }
+      if (profileUnsubscribe) profileUnsubscribe();
+      if (applicationsUnsubscribe) applicationsUnsubscribe();
+      if (proxyApplicationsUnsubscribe) proxyApplicationsUnsubscribe();
     };
   }, []);
 
@@ -210,7 +214,8 @@ function App() {
   }, [currentUser]);
 
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
-      const latestApp = userApplications.length > 0 ? userApplications[userApplications.length - 1] : null;
+      const sortedUserApps = [...userApplications].sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
+      const latestApp = sortedUserApps.length > 0 ? sortedUserApps[0] : null;
       
       const initialTwelveMonthMax = activeFund?.limits?.twelveMonthMax ?? 0;
       const initialLifetimeMax = activeFund?.limits?.lifetimeMax ?? 0;
@@ -371,27 +376,21 @@ function App() {
         return;
     }
     
-    const usersPastApplications = userApplications || [];
-    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
-    
-    const { twelveMonthMax: initialTwelveMonthMax, lifetimeMax: initialLifetimeMax, singleRequestMax } = activeFund.limits;
-
-    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
-    const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
+    const { singleRequestMax } = activeFund.limits;
     const allEligibleEvents = [...(activeFund.eligibleDisasters || []), ...(activeFund.eligibleHardships || [])];
     
     const preliminaryDecision = evaluateApplicationEligibility({
         id: 'temp',
         employmentStartDate: appFormData.profileData.employmentStartDate,
         eventData: appFormData.eventData,
-        currentTwelveMonthRemaining,
-        currentLifetimeRemaining,
+        currentTwelveMonthRemaining: twelveMonthRemaining,
+        currentLifetimeRemaining: lifetimeRemaining,
         singleRequestMax,
         eligibleEvents: allEligibleEvents,
     });
     
     const finalDecision = await getAIAssistedDecision(
-      { eventData: appFormData.eventData, currentTwelveMonthRemaining, currentLifetimeRemaining },
+      { eventData: appFormData.eventData, currentTwelveMonthRemaining: twelveMonthRemaining, currentLifetimeRemaining: lifetimeRemaining },
       preliminaryDecision
     );
 
@@ -427,8 +426,6 @@ function App() {
         console.error("Could not remove application draft from localStorage after submission:", error);
     }
     
-    setApplications(prev => [...prev, newApplication]);
-    
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
         await handleProfileUpdate(appFormData.profileData);
     }
@@ -437,7 +434,7 @@ function App() {
     setLastSubmittedApp(newApplication);
     setPage('submissionSuccess');
 
-  }, [currentUser, handleProfileUpdate, userApplications, activeFund]);
+  }, [currentUser, handleProfileUpdate, activeFund, twelveMonthRemaining, lifetimeRemaining]);
   
   const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
     if (!currentUser || authState.claims.admin !== true || !activeFund) {
@@ -517,8 +514,8 @@ function App() {
     } catch (error) {
         console.error("Could not remove proxy application draft from localStorage after submission:", error);
     }
-
-    setProxyApplications(prev => [...prev, newApplication]);
+    
+    // The real-time listener will handle updating the proxyApplications state.
     
     // Update profile if changed
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(applicantProfile)) {
