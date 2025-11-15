@@ -1086,6 +1086,132 @@ This document should be updated as the project evolves. Key architectural change
 
 ---
 
-**Document Version**: 1.0
+## Dataverse Migration (In Progress)
+
+### Overview
+
+The application is being migrated from **Firebase** to **Azure AD B2C + Dataverse** to integrate with existing Power Pages infrastructure.
+
+### Migration Documentation
+
+- **[DATAVERSE_MIGRATION_PLAN.md](DATAVERSE_MIGRATION_PLAN.md)** - Comprehensive 4-phase migration plan (12-hour timeline)
+- **[MIGRATION_QUICKSTART.md](MIGRATION_QUICKSTART.md)** - 30-minute quick start checklist
+
+### Migration Strategy
+
+**Approach**: Progressive enhancement with parallel workstreams
+
+1. **Phase 1** (2 hrs): Azure AD B2C authentication integration
+2. **Phase 2** (4 hrs): Profile feature (read/write Contact records)
+3. **Phase 3** (4 hrs): Grant applications (read/write Grant records)
+4. **Phase 4** (2 hrs): Azure deployment
+
+### Key Architectural Changes
+
+| Component | Before (Firebase) | After (Dataverse) |
+|-----------|------------------|-------------------|
+| Auth | Firebase Auth | Azure AD B2C |
+| User Data | Firestore `users` collection | Dataverse `contact` table |
+| Applications | Firestore `applications` collection | Dataverse `e4e_grantapplication` table |
+| Identities | Firestore `identities` collection | Dataverse (TBD) |
+| Token Tracking | Firestore `tokenEvents` collection | Firestore (kept) or Dataverse |
+| AI (Gemini) | ✅ No changes needed | ✅ No changes needed |
+
+### Repository Pattern
+
+The migration leverages the existing repository pattern:
+
+```typescript
+// services/dataRepo.ts - Abstract interface (unchanged)
+export interface UserProfileRepository {
+  getUserProfile(uid: string): Promise<UserProfile | null>;
+  updateUserProfile(uid: string, data: Partial<UserProfile>): Promise<void>;
+}
+
+// services/firestoreRepo.ts - Firebase implementation (kept for rollback)
+export class FirestoreUserProfileRepository implements UserProfileRepository { }
+
+// services/dataverseRepo.ts - NEW Dataverse implementation
+export class DataverseUserProfileRepository implements UserProfileRepository { }
+```
+
+### Feature Flags
+
+During migration, both backends coexist with feature flag toggle:
+
+```typescript
+// .env.local
+VITE_USE_DATAVERSE=true  # Switch to Dataverse
+VITE_USE_DATAVERSE=false # Rollback to Firebase
+
+// services/repoFactory.ts
+const USE_DATAVERSE = import.meta.env.VITE_USE_DATAVERSE === 'true';
+export const repo = USE_DATAVERSE ? dataverseRepo : firestoreRepo;
+```
+
+### Integration Points
+
+**Azure AD B2C**:
+- Same B2C tenant as Power Pages
+- Same user flows and custom policies
+- JWT claims include: `emailaddress1`, `firstname`, `lastname`, `e4e_fundid`
+- Token acquired via MSAL library (`@azure/msal-browser`)
+
+**Dataverse Web API**:
+- OData v4 endpoint: `https://[org].crm.dynamics.com/api/data/v9.2`
+- Authentication: Bearer token from B2C
+- Security: Same roles as Power Pages (Web Roles → Security Roles)
+
+**Key Dataverse Tables**:
+- `contact` - User profiles (linked via `emailaddress1`)
+- `e4e_grantapplication` - Grant applications
+- `e4e_fund` - Fund configurations
+- External identity linking handled by Power Pages infrastructure
+
+### Critical Configuration
+
+**Required Environment Variables**:
+```bash
+VITE_B2C_CLIENT_ID           # Azure AD B2C application ID
+VITE_B2C_TENANT_NAME         # B2C tenant (e.g., org.onmicrosoft.com)
+VITE_B2C_POLICY_NAME         # User flow name
+VITE_B2C_AUTHORITY           # Full authority URL
+VITE_DATAVERSE_URL           # Dataverse environment URL
+VITE_DATAVERSE_API_VERSION   # API version (v9.2)
+```
+
+### Testing Strategy
+
+**Parallel Testing**:
+1. Create test data in Dataverse via Power Pages
+2. Query same data via React app
+3. Verify bidirectional sync (edits in React visible in Power Pages)
+4. Test all CRUD operations
+
+**Rollback Plan**:
+- Keep Firebase implementation intact
+- Use feature flag to switch backends instantly
+- No data migration needed (both systems can coexist)
+
+### Deployment
+
+**Target**: Azure Static Web Apps
+
+Benefits:
+- Free SSL/custom domain support
+- GitHub Actions CI/CD
+- Environment variable management
+- Serverless API functions (if proxy needed)
+
+**Custom Domain**: e4erelief.org
+
+### Migration Status
+
+**Current Phase**: Planning & Documentation
+**Next Steps**: Gather B2C configuration values (see MIGRATION_QUICKSTART.md)
+
+---
+
+**Document Version**: 1.1
 **Last Updated**: 2025-11-15
 **Maintained By**: Development Team + AI Assistants
