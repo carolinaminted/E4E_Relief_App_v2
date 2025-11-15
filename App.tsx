@@ -338,9 +338,8 @@ function App() {
     if (!fund) {
         console.error("Verification successful but could not find fund config for", fundCodeToVerify);
         setVerifyingFundCode(null);
-        // If coming from relief queue, they don't have a profile page to go to, home is better.
-        const destination = page === 'reliefQueue' ? 'home' : 'profile';
-        setPage(destination);
+        // If coming from the relief queue or a new registration, 'home' is a safer destination than 'profile'.
+        setPage('home');
         return;
     }
     
@@ -374,11 +373,13 @@ function App() {
         await identitiesRepo.add(newActiveIdentity);
     }
     
-    // This update will trigger the onSnapshot listener to re-hydrate the app state and navigate.
+    // This update will trigger the onSnapshot listener to re-hydrate the app state.
     await usersRepo.update(currentUser.uid, { activeIdentityId: newActiveIdentity.id });
     setVerifyingFundCode(null);
+    // Explicitly navigate to home to provide immediate feedback to the user.
+    setPage('home');
 
-  }, [currentUser, verifyingFundCode, allIdentities, page]);
+  }, [currentUser, verifyingFundCode, allIdentities]);
   
     const handleVerificationFailed = useCallback(async (failedFundCode: string) => {
         if (!currentUser) return;

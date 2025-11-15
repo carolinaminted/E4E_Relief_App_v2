@@ -136,7 +136,7 @@ We will use **Firebase Authentication** with the Email/Password provider. Admin 
 ## 5. Firestore Security Rules & Indexes
 
 ### Security Rules
-The following rules provide a secure, function-based foundation that correctly handles user and admin roles.
+The following rules provide a secure, function-based foundation that correctly handles user and admin roles. In `rules_version = '2'`, any collection not explicitly matched is denied access by default.
 
 ```
 rules_version = '2';
@@ -147,10 +147,6 @@ service cloud.firestore {
     function isAdmin() { return isAuthed() && request.auth.token.admin == true; }
     function isSelf(uid) { return isAuthed() && request.auth.uid == uid; }
 
-    // Default deny
-    match /{document=**} { allow read, write: if false; }
-
-    // App needs fund params to function
     match /funds/{fundCode} {
       allow read: if isAuthed();
       allow write: if isAdmin();
@@ -165,7 +161,7 @@ service cloud.firestore {
     match /identities/{identityId} {
       allow read: if isAdmin() || (isAuthed() && resource.data.uid == request.auth.uid);
       allow create: if isSelf(request.resource.data.uid) || isAdmin();
-      allow update: if isAdmin() || (isSelf(resource.data.uid) && request.resource.data.diff(resource.data).changedKeys().hasOnly(['isActive']));
+      allow update: if isAdmin() || (isSelf(resource.data.uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'fundCode', 'fundName', 'cvType', 'createdAt']));
       allow delete: if isAdmin();
     }
 
