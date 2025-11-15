@@ -12,7 +12,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
         <thead className="border-b border-[#005ca0] text-xs text-gray-200 uppercase">
           <tr>
             <th scope="col" className="px-4 py-3 hidden md:table-cell">User</th>
-            <th scope="col" className="px-4 py-3 hidden md:table-cell">Session</th>
+            <th scope="col" className="px-4 py-3">Date</th>
             <th scope="col" className="px-4 py-3">Feature</th>
             <th scope="col" className="px-4 py-3 text-right">Input</th>
             <th scope="col" className="px-4 py-3 text-right hidden md:table-cell">Cached</th>
@@ -26,7 +26,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
               data.map((row, index) => (
                   <tr key={`${row.user}-${row.session}-${row.feature}-${index}`} className="border-b border-[#005ca0] hover:bg-[#004b8d]/50">
                       <td className="px-4 py-2 font-medium text-white truncate hidden md:table-cell">{row.user}</td>
-                      <td className="px-4 py-2 text-white font-mono hidden md:table-cell">{row.session}</td>
+                      <td className="px-4 py-2 text-white">{row.date}</td>
                       <td className="px-4 py-2 text-white">{row.feature}</td>
                       <td className="px-4 py-2 text-white text-right">{row.input.toLocaleString()}</td>
                       <td className="px-4 py-2 text-white text-right hidden md:table-cell">{row.cached.toLocaleString()}</td>
@@ -37,7 +37,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
               ))
           ) : (
               <tr>
-                  <td colSpan={4} className="text-center py-8 text-white md:hidden">
+                  <td colSpan={5} className="text-center py-8 text-white md:hidden">
                       No token usage data found for the selected filters.
                   </td>
                   <td colSpan={8} className="text-center py-8 text-white hidden md:table-cell">
