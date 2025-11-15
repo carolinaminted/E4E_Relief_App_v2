@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
 import type { Fund } from '../data/fundData';
 import ApplyProxyContactPage from './ApplyProxyContactPage';
@@ -150,26 +150,26 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
         setStep(prev => prev - 1);
     };
 
-    const updateProfileData = (newData: Partial<UserProfile>) => {
+    const updateProfileData = useCallback((newData: Partial<UserProfile>) => {
       setFormData(prev => ({ 
           ...prev, 
           profileData: { ...prev.profileData, ...newData } 
       }));
-    };
+    }, []);
     
-    const updateEventData = (newData: Partial<EventData>) => {
+    const updateEventData = useCallback((newData: Partial<EventData>) => {
       setFormData(prev => ({
           ...prev,
           eventData: { ...prev.eventData, ...newData }
       }));
-    };
+    }, []);
 
-    const updateAgreementData = (newData: Partial<ApplicationFormData['agreementData']>) => {
+    const updateAgreementData = useCallback((newData: Partial<ApplicationFormData['agreementData']>) => {
       setFormData(prev => ({
           ...prev,
           agreementData: { ...prev.agreementData, ...newData }
       }));
-    };
+    }, []);
     
     const handleAIParsedData = (parsedData: Partial<ApplicationFormData>) => {
         setFormData(prev => {

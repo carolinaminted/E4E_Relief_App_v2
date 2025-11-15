@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
 import type { Fund } from '../data/fundData';
@@ -140,26 +140,26 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
     setStep(prev => prev - 1);
   };
   
-  const updateProfileData = (newData: Partial<UserProfile>) => {
+  const updateProfileData = useCallback((newData: Partial<UserProfile>) => {
       setFormData(prev => ({ 
           ...prev, 
           profileData: { ...prev.profileData, ...newData } 
       }));
-  };
+  }, []);
   
-  const updateEventData = (newData: Partial<ApplicationFormData['eventData']>) => {
+  const updateEventData = useCallback((newData: Partial<ApplicationFormData['eventData']>) => {
       setFormData(prev => ({
           ...prev,
           eventData: { ...prev.eventData, ...newData }
       }));
-  };
+  }, []);
 
-  const updateAgreementData = (newData: Partial<ApplicationFormData['agreementData']>) => {
+  const updateAgreementData = useCallback((newData: Partial<ApplicationFormData['agreementData']>) => {
       setFormData(prev => ({
           ...prev,
           agreementData: { ...prev.agreementData, ...newData }
       }));
-  };
+  }, []);
   
   const handleAIParsedData = (parsedData: Partial<ApplicationFormData>) => {
     setFormData(prev => {
