@@ -31,6 +31,8 @@ if (typeof window !== 'undefined') {
       generatedEvents.push({
         id: `evt-${Math.random().toString(36).substr(2, 9)}`,
         sessionId: `sess-${user.split('@')[0]}-${Math.floor(Math.random() * 5)}`,
+        // FIX: Added missing 'uid' property to satisfy the TokenEvent type.
+        uid: `uid-${user.split('@')[0]}`,
         userId: user,
         timestamp: date.toISOString(),
         feature: MOCK_FEATURES[Math.floor(Math.random() * MOCK_FEATURES.length)],

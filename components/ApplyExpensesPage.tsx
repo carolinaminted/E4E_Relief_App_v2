@@ -33,6 +33,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   const { t } = useTranslation();
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const totalExpenses = useMemo(() => {
     return formData.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
@@ -57,6 +58,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
     }
 
     updateFormData({ expenses: newExpenses });
+    if (errors[type]) {
+      const newErrors = { ...errors };
+      delete newErrors[type];
+      setErrors(newErrors);
+    }
   };
 
   const handleFileChange = async (type: Expense['type'], file: File | null) => {
@@ -117,20 +123,27 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   };
 
   const handleNext = () => {
-    // Filter out expenses that don't have a valid amount before proceeding.
-    const finalExpenses = formData.expenses.filter(exp => exp.amount && Number(exp.amount) > 0);
-    updateFormData({ expenses: finalExpenses });
-    nextStep();
+    const validationErrors: Record<string, string> = {};
+    
+    // Per user feedback, ALL amount fields for the presented expense types are required.
+    expenseTypes.forEach(type => {
+        const expense = formData.expenses.find(e => e.type === type);
+        
+        if (!expense || expense.amount === '' || Number(expense.amount) <= 0) {
+            validationErrors[type] = t('applyExpensesPage.errorAmount');
+        }
+    });
+
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      nextStep();
+    }
   };
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyExpensesPage.title')}</h2>
-        <p className="text-gray-300 mt-1">{t('applyExpensesPage.description')}</p>
-      </div>
-
-      <div className="space-y-6">
+      <div className="divide-y divide-[#005ca0]/50">
         {expenseTypes.map((type) => {
           const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
           const expense = formData.expenses.find(e => e.type === type);
@@ -139,9 +152,9 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
           const translationKey = `applyExpensesPage.expenseTypes.${type.replace(/\s+/g, '')}`;
 
           return (
-            <div key={type} className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0]">
-              <h4 className="font-semibold text-lg text-white mb-4">{t(translationKey, type)}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div key={type} className="py-4 first:pt-0 last:pb-0">
+              <h4 className="font-semibold text-lg text-white mb-2">{t(translationKey, type)}</h4>
+              <div className="grid grid-cols-2 gap-4 items-start">
                 <FormInput
                   label={t('applyExpensesPage.amountLabel')}
                   id={`amount-${type}`}
@@ -152,6 +165,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                   min="0"
                   step="0.01"
                   disabled={isUploading}
+                  error={errors[type]}
                 />
                 <div>
                   <p className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</p>
@@ -191,9 +205,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           {t('common.back')}
         </button>
-        <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          {t('common.next')}
-        </button>
+        <div className="flex flex-col items-end">
+            <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+              {t('common.next')}
+            </button>
+        </div>
       </div>
     </div>
   );

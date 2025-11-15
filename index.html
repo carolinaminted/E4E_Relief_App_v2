@@ -8,9 +8,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html {
+        /* Prevents automatic text size adjustment on mobile browsers (like Safari on iOS), ensuring consistent layout. */
         -webkit-text-size-adjust: 100%;
       }
     </style>
+  <!-- 
+    The import map allows using bare module specifiers (e.g., "react") in the browser,
+    similar to how they are used in a Node.js environment. It maps these specifiers
+    to full URLs, enabling a modern, build-less development workflow where modules
+    are loaded directly from a CDN.
+  -->
   <script type="importmap">
 {
   "imports": {
@@ -34,6 +41,7 @@
 </head>
   <body class="bg-[#003a70]">
     <div id="root"></div>
+    <!-- A dedicated root for modals is a best practice to handle z-index and stacking contexts correctly. -->
     <div id="modal-root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

@@ -1,5 +1,11 @@
 import React from 'react';
 
+// NOTE FOR DEVELOPERS: This component appears to be deprecated and is no longer
+// referenced in the main App.tsx router. The `LiveDashboardPage.tsx` component
+// has taken its place, which fetches real data from Firestore instead of using
+// mock data. This file is kept for historical reference but should likely be removed
+// in a future cleanup.
+
 type Page = 'fundPortal';
 
 interface DashboardPageProps {
@@ -87,22 +93,21 @@ const HorizontalBarChartList: React.FC<{ data: { label: string; value: number }[
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ navigate }) => {
   // --- Official Color Palette ---
-  const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600', '#d4d756'];
-  const grayColor = '#898c8d';
+  const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600'];
 
   // --- Mock Data ---
   const applicationStatusData = [
     { label: 'Awarded', value: 125, color: chartColors[1] }, // yellow: #edda26
-    { label: 'Declined', value: 42, color: grayColor },      // gray: #898c8d
+    { label: 'Declined', value: 42, color: chartColors[2] }, // teal: #0091b3
     { label: 'In Review', value: 18, color: chartColors[0] }, // orange: #ff8400
   ];
 
   const totalAwarded = 789500;
 
   const userEngagementData = [
-    { label: 'Donated', value: 89, color: chartColors[2] }, // teal: #0091b3
+    { label: 'Donated', value: 89, color: chartColors[2] },   // teal: #0091b3
     { label: 'Applied', value: 215, color: chartColors[0] }, // orange: #ff8400
-    { label: 'Not Engaged', value: 450, color: grayColor }, // gray: #898c8d
+    { label: 'Not Engaged', value: 450, color: chartColors[3] }, // green: #94d600
   ];
 
   const topCountriesData = [

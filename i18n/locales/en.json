@@ -11,7 +11,8 @@
     "success": "Success",
     "yes": "Yes",
     "no": "No",
-    "unknownError": "An unknown error occurred."
+    "unknownError": "An unknown error occurred.",
+    "aiApplyingDetails": "We are applying your details to the application now."
   },
   "app": {
     "loading": "Loading...",
@@ -35,7 +36,17 @@
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign Up",
     "errorGeneric": "Please enter both email and password.",
-    "errorInvalid": "Invalid email or password. Please try again."
+    "errorInvalid": "Invalid email or password. Please try again.",
+    "forgotPasswordLink": "Forgot password?"
+  },
+  "forgotPasswordPage": {
+    "title": "Reset Password",
+    "instruction": "Enter your email address and we'll send you a link to reset your password.",
+    "sendButton": "Send Reset Link",
+    "backToLogin": "Back to Sign In",
+    "successMessage": "If an account with that email exists, a password reset link has been sent. Please check your inbox.",
+    "errorGeneric": "An unexpected error occurred. Please try again.",
+    "errorEmailRequired": "Please enter a valid email address."
   },
   "registerPage": {
     "firstNameLabel": "First Name",
@@ -46,7 +57,7 @@
     "fundCodeHelp": "Enter the code provided by your employer or program.",
     "signUpButton": "Sign Up",
     "hasAccount": "Already have an account?",
-    "signInLink": "Sign In",
+    "signInLink": "Inicia Sesión",
     "errorAllFields": "All fields are required.",
     "errorGeneric": "Registration failed. Please try again."
   },
@@ -135,6 +146,7 @@
     "uploadFailedUnauthorized": "Permission denied. Please check your Firebase Storage security rules.",
     "uploadFailedGeneric": "Upload failed: {{message}}",
     "totalExpensesLabel": "Total Expenses",
+    "errorAmount": "Amount must be greater than zero.",
     "expenseTypes": {
       "BasicDisasterSupplies": "Basic Disaster Supplies",
       "FoodSpoilage": "Food Spoilage",
@@ -178,10 +190,12 @@
     "noApplications": "You have not submitted any applications for this fund yet.",
     "fundIdentitiesTitle": "Fund Identities",
     "fundIdentitiesDescription": "Manage your fund identities. Add or remove additional fund codes if you’re eligible for more than one program.",
-    "active": "(Active)",
-    "setActive": "Set Active",
+    "active": "Active",
+    "setActive": "Active",
     "addNewIdentity": "+ Add New Identity",
     "enterNewFundCode": "Enter New Fund Code",
+    "seeAll": "See All",
+    "showLess": "Show Less",
     "contactInfoTitle": "Contact Information",
     "firstName": "First Name",
     "middleName": "Middle Name(s)",
@@ -303,7 +317,7 @@
   "chatbotWidget": {
     "greeting": "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation.",
     "title": "Relief Assistant",
-    "disclaimer": "*AI Agent preview using generative responses",
+    "disclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>.",
     "errorMessage": "Sorry, I encountered an error. Please try again.",
     "placeholder": "Type your message..."
   },
@@ -333,7 +347,8 @@
       "title": "Legal Information",
       "privacy": "Privacy Policy",
       "terms": "Terms of Use",
-      "cookies": "Cookie Policy"
+      "cookies": "Cookie Policy",
+      "ai": "AI Policy"
     }
   },
   "formControls": {
@@ -347,7 +362,8 @@
     "aiStarterPlaceholder": "e.g., I'm a homeowner affected by the recent tornado in Anytown, CA. My home was damaged and I need about $2500 for repairs. Our household of 4 makes about $60k/year. My phone is 555-123-4567 and I prefer to communicate in Spanish.",
     "submitDescription": "Submit Description",
     "aiParseError": "Could not extract details. Please try again or fill fields manually.",
-    "aiSuccess": "Success! We've pre-filled the form with any details we found."
+    "aiSuccess": "Success! We've pre-filled the form with any details we found.",
+    "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>."
   },
   "faqPage": {
     "title": "FAQ's",
@@ -365,7 +381,12 @@
       },
       {
         "question": "If my request is approved, how long should it take to receive my payment?",
-        "answer": "Grant award payment timing depends on selected payment type, geographical location, and banking information. Below are general timelines:\n- U.S. applicants who select a digital payment method can expect to have funds deposited within 1-3 business days.\n- U.S. applicants who select a mailed check typically receive funds within 7 business days. There is no tracking number and checks are mailed via USPS.\n- International payment timing varies by country. Please reference your award letter when the grant is processed for additional details."
+        "answer": [
+          "Grant award payment timing depends on selected payment type, geographical location, and banking information. Below are general timelines:",
+          "- U.S. applicants who select a digital payment method can expect to have funds deposited within 1-3 business days.",
+          "- U.S. applicants who select a mailed check typically receive funds within 7 business days. There is no tracking number and checks are mailed via USPS.",
+          "- International payment timing varies by country. Please reference your award letter when the grant is processed for additional details."
+        ]
       },
       {
         "question": "How much will I receive?",
@@ -373,7 +394,11 @@
       },
       {
         "question": "Do I have to repay the grant or pay taxes if I receive assistance?",
-        "answer": "Grants provided through the Relief Fund are not loans and do not have to be repaid.\n- For U.S. grant recipients, a grant generally will not result in taxable income (i.e., will not show up on your W2).\n- For recipients outside the U.S., please check with your local tax advisor for more information."
+        "answer": [
+          "Grants provided through the Relief Fund are not loans and do not have to be repaid.",
+          "- For U.S. grant recipients, a grant generally will not result in taxable income (i.e., will not show up on your W2).",
+          "- For recipients outside the U.S., please check with your local tax advisor for more information."
+        ]
       },
       {
         "question": "If not selected for a grant, will I receive a notification with the reason why?",
@@ -411,11 +436,16 @@
       },
       {
         "question": "When will I get a tax receipt for my donation of credit card, stock, crypto, or from my Donor Advised Fund?",
-        "answer": "Upon completion of your donation, you will receive a tax receipt for any crypto or credit card donations made through the donation form. An acknowledgement receipt is provided for the pledge of stock and DAF donations.\n\nFor stock donations, tax receipts for donors will be handled by our third-party partner - Renaissance Charitable Foundation (Ren).\n\nFor DAF donations, tax receipts are provided by the nonprofit handling the gift transaction."
-      },
-      {
-        "question": "How long does it take to process my donation?",
-        "answer": "**Credit Card**\nCredit Card donations take 3-5 business days to be received into the fund.\n\n**Crypto**\nCrypto donations take 2-5 business days for the transfer to be completed and received into the fund.\n\n**Stock**\nTiming to receive the funds on stock gifts will depend on how fast the donor's broker can process the transaction and move the shares, which can take up to 2-3 weeks for processing.\n\n**Donor Advised Funds (DAF)**\nDepending on the provider, we will receive the DAF donations anywhere between 1-3 weeks."
+        "answer": [
+          "#### Credit Card",
+          "Credit Card donations take 3-5 business days to be received into the fund.",
+          "#### Crypto",
+          "Crypto donations take 2-5 business days for the transfer to be completed and received into the fund.",
+          "#### Stock",
+          "Timing to receive the funds on stock gifts will depend on how fast the donor's broker can process the transaction and move the shares, which can take up to 2-3 weeks for processing.",
+          "#### Donor Advised Funds (DAF)",
+          "Depending on the provider, we will receive the DAF donations anywhere between 1-3 weeks."
+        ]
       },
       {
         "question": "How do I see my historical donations?",
@@ -426,7 +456,7 @@
         "answer": "Once you login to The Giving Block Donor Dashboard, you can access any receipts related to your previous donations."
       },
       {
-        "question": "What if I want to make recurring donations?",
+        "question": "How do I make recurring donations?",
         "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
       },
       {
@@ -443,7 +473,7 @@
     "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
     "intlApplicantsTitle": "Solicitantes Internacionales",
     "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
-    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <1>Haga clic aquí</1> para revisar la guía de adjudicación de subvenciones internacionales.",
+    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Haga clic aquí </a> para revisar la guía de adjudicación de subvenciones internacionales.",
     "intlPartnersTitle": "Información del Socio de Pago",
     "converaGuide": "Guía de Convera",
     "tipaltiGuide": "Guía de Tipalti"

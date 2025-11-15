@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EventData } from '../types';
+import type { Fund } from '../data/fundData';
 import SearchableSelector from './SearchableSelector';
-import { allEventTypes } from '../data/appData';
 import RequiredIndicator from './RequiredIndicator';
 
 interface ApplyEventPageProps {
@@ -10,6 +10,7 @@ interface ApplyEventPageProps {
   updateFormData: (data: Partial<EventData>) => void;
   nextStep: () => void;
   prevStep: () => void;
+  activeFund: Fund | null;
 }
 
 // --- Reusable Form Components ---
@@ -51,9 +52,24 @@ const FormRadioGroup: React.FC<{ legend: string, name: string, options: string[]
     </div>
 );
 
-const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormData, nextStep, prevStep }) => {
+const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormData, nextStep, prevStep, activeFund }) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const eligibleEventsForFund = useMemo(() => {
+    if (!activeFund) {
+      // Fallback to a minimal list if the fund configuration isn't loaded.
+      // The UI should ideally prevent reaching this state, but this is a safeguard.
+      return ['My disaster is not listed'];
+    }
+    const allEvents = [
+      ...(activeFund.eligibleDisasters || []),
+      ...(activeFund.eligibleHardships || []),
+      'My disaster is not listed'
+    ];
+    // Use a Set to remove any potential duplicates from the configuration.
+    return [...new Set(allEvents)];
+  }, [activeFund]);
   
   const yes = t('common.yes');
   const no = t('common.no');
@@ -103,11 +119,22 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 id="event"
                 required
                 value={formData.event || ''}
-                options={allEventTypes}
+                options={eligibleEventsForFund}
                 onUpdate={value => handleUpdate({ event: value })}
                 variant="underline"
                 error={errors.event}
             />
+            {formData.event === 'Tropical Storm/Hurricane' && activeFund?.eligibleStorms && activeFund.eligibleStorms.length > 0 && (
+                <SearchableSelector
+                    label="Select the storm name"
+                    id="eventName"
+                    value={formData.eventName || ''}
+                    options={activeFund.eligibleStorms}
+                    onUpdate={value => handleUpdate({ eventName: value })}
+                    variant="underline"
+                    error={errors.eventName}
+                />
+            )}
             {formData.event === 'My disaster is not listed' && (
                 <FormInput 
                     label={t('applyEventPage.otherDisasterLabel')}

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
+import type { Fund } from '../data/fundData';
 import ApplyProxyContactPage from './ApplyProxyContactPage';
 import ApplyEventPage from './ApplyEventPage';
 import ApplyExpensesPage from './ApplyExpensesPage';
@@ -12,9 +13,11 @@ interface ProxyApplyPageProps {
   navigate: (page: Page) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   proxyApplications: Application[];
-  userProfile: UserProfile;
+  userProfile: UserProfile; // This is the admin's profile
   onAddIdentity: (fundCode: string) => void;
   mainRef: React.RefObject<HTMLElement>;
+  // FIX: Added missing activeFund prop.
+  activeFund: Fund | null;
 }
 
 const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
@@ -64,10 +67,17 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     </svg>
 );
 
-const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications, userProfile, onAddIdentity, mainRef }) => {
+const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApplications, userProfile, onAddIdentity, mainRef, activeFund }) => {
     const [step, setStep] = useState(1);
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+    const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(() => {
+        const saved = localStorage.getItem('proxyPage_isHistoryOpen');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('proxyPage_isHistoryOpen', JSON.stringify(isHistoryOpen));
+    }, [isHistoryOpen]);
 
     const [formData, setFormData] = useState<ApplicationFormData>(() => {
         const blankProfile: UserProfile = {
@@ -190,7 +200,8 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                             onAIParsed={handleAIParsedData} 
                         />;
             case 2:
-                return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
+                // FIX: Pass the required 'activeFund' prop to ApplyEventPage.
+                return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} activeFund={activeFund} />;
             case 3:
                 // FIX: Pass the required `userProfile` prop to ApplyExpensesPage.
                 return <ApplyExpensesPage userProfile={formData.profileData} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;

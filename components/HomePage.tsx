@@ -90,7 +90,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, on
 
   return (
     <>
-      <div className="flex-1 flex flex-col items-center p-4 md:p-8 text-center">
+      <div className="h-full flex flex-col items-center p-4 md:p-8 text-center">
         <div className="w-full flex-grow flex flex-col items-center"> {/* Content wrapper */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">

@@ -39,7 +39,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
     { page: 'profile', labelKey: 'nav.profile', icon: <ProfileIcon className="h-6 w-6" /> },
     { page: 'apply', labelKey: 'nav.apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
     { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" /> },
-    { page: 'donate', labelKey: 'nav.donate', icon: <DonateIcon className="h-6 w-6" /> },
   ];
 
   const navItems = [...baseNavItems];

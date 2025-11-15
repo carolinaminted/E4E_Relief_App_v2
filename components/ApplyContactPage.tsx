@@ -226,7 +226,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
   return (
     <div className="space-y-4">
-        {isAIParsing && <LoadingOverlay message={t('common.loading')} />}
+        {isAIParsing && <LoadingOverlay message={t('common.aiApplyingDetails')} />}
 
         {/* AI Application Starter Section */}
         <fieldset className="border-b border-[#005ca0] pb-4">
@@ -273,11 +273,23 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                 <ChevronIcon isOpen={openSection === 'contact'} />
             </button>
             <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSection === 'contact' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput label={t('applyContactPage.firstName')} id="firstName" required value={formData.firstName} onChange={e => handleFormUpdate({ firstName: e.target.value })} error={errors.firstName} />
-                    <FormInput label={t('applyContactPage.middleName')} id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
-                    <FormInput label={t('applyContactPage.lastName')} id="lastName" required value={formData.lastName} onChange={e => handleFormUpdate({ lastName: e.target.value })} error={errors.lastName} />
-                    <FormInput label={t('applyContactPage.suffix')} id="suffix" value={formData.suffix || ''} onChange={e => handleFormUpdate({ suffix: e.target.value })} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 pt-4">
+                    <div className="grid grid-cols-5 gap-x-4">
+                        <div className="col-span-3">
+                            <FormInput label={t('applyContactPage.firstName')} id="firstName" required value={formData.firstName} onChange={e => handleFormUpdate({ firstName: e.target.value })} error={errors.firstName} />
+                        </div>
+                        <div className="col-span-2">
+                            <FormInput label={t('applyContactPage.middleName')} id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-x-4">
+                        <div className="col-span-3">
+                            <FormInput label={t('applyContactPage.lastName')} id="lastName" required value={formData.lastName} onChange={e => handleFormUpdate({ lastName: e.target.value })} error={errors.lastName} />
+                        </div>
+                        <div className="col-span-2">
+                            <FormInput label={t('applyContactPage.suffix')} id="suffix" value={formData.suffix || ''} onChange={e => handleFormUpdate({ suffix: e.target.value })} />
+                        </div>
+                    </div>
                     <FormInput label={t('applyContactPage.email')} id="email" required value={formData.email} disabled />
                     <FormInput label={t('applyContactPage.mobileNumber')} id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormUpdate({ mobileNumber: e.target.value })} error={errors.mobileNumber} placeholder={t('applyContactPage.mobileNumberPlaceholder')} />
                 </div>
@@ -381,29 +393,33 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                 <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
             <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput type="date" label={t('applyContactPage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
-                    <SearchableSelector
-                        label={t('applyContactPage.eligibilityType')}
-                        id="eligibilityType"
-                        required
-                        value={formData.eligibilityType}
-                        options={employmentTypes}
-                        onUpdate={value => handleFormUpdate({ eligibilityType: value })}
-                        variant="underline"
-                        error={errors.eligibilityType}
-                    />
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormInput type="date" label={t('applyContactPage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
+                        <SearchableSelector
+                            label={t('applyContactPage.eligibilityType')}
+                            id="eligibilityType"
+                            required
+                            value={formData.eligibilityType}
+                            options={employmentTypes}
+                            onUpdate={value => handleFormUpdate({ eligibilityType: value })}
+                            variant="underline"
+                            error={errors.eligibilityType}
+                        />
+                    </div>
                     <FormInput type="number" label={t('applyContactPage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormUpdate({ householdIncome: parseFloat(e.target.value) || '' })} error={errors.householdIncome} />
                     <FormInput type="number" label={t('applyContactPage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormUpdate({ householdSize: parseInt(e.target.value, 10) || '' })} error={errors.householdSize} />
-                    <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormUpdate({ homeowner: value === yes ? 'Yes' : 'No' })} required error={errors.homeowner} />
-                    <SearchableSelector
-                        label={t('applyContactPage.preferredLanguage')}
-                        id="preferredLanguage"
-                        value={formData.preferredLanguage || ''}
-                        options={languages}
-                        onUpdate={value => handleFormUpdate({ preferredLanguage: value })}
-                        variant="underline"
-                    />
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormUpdate({ homeowner: value === yes ? 'Yes' : 'No' })} required error={errors.homeowner} />
+                        <SearchableSelector
+                            label={t('applyContactPage.preferredLanguage')}
+                            id="preferredLanguage"
+                            value={formData.preferredLanguage || ''}
+                            options={languages}
+                            onUpdate={value => handleFormUpdate({ preferredLanguage: value })}
+                            variant="underline"
+                        />
+                    </div>
                 </div>
                 {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
-// FIX: Import the centralized Page type and alias it to avoid naming conflicts.
+// FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage } from './types';
 import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 // Page Components
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 import HomePage from './components/HomePage';
 import ApplyPage from './components/ApplyPage';
 import ProfilePage from './components/ProfilePage';
@@ -552,7 +553,7 @@ function App() {
     });
   }, []);
   
-  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification'];
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
@@ -565,8 +566,10 @@ function App() {
             <div className="w-full max-w-lg px-4 pt-8 sm:pt-12">
                 {page === 'register' ? (
                 <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
+                ) : page === 'forgotPassword' ? (
+                <ForgotPasswordPage onSendResetLink={authClient.sendPasswordResetEmail} switchToLogin={() => setPage('login')} />
                 ) : (
-                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
+                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} switchToForgotPassword={() => setPage('forgotPassword')} />
                 )}
             </div>
         </div>
@@ -580,7 +583,7 @@ function App() {
       case 'classVerification':
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
-        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} />;
+        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} />;
       case 'profile':
         return <ProfilePage 
                     navigate={navigate} 
@@ -625,7 +628,7 @@ function App() {
       case 'fundPortal':
         return <FundPortalPage navigate={navigate} user={currentUser} />;
       case 'liveDashboard':
-        return <LiveDashboardPage navigate={navigate} />;
+        return <LiveDashboardPage navigate={navigate} currentUser={currentUser} />;
       case 'ticketing':
         return <TicketingPage navigate={navigate} />;
       case 'programDetails':
@@ -638,6 +641,7 @@ function App() {
                     userProfile={currentUser}
                     onAddIdentity={handleStartAddIdentity}
                     mainRef={mainRef}
+                    activeFund={activeFund}
                 />;
       case 'home':
       default:
@@ -704,8 +708,8 @@ function App() {
             canApply={canApply}
         />
         
-        {/* FIX: Pass setIsChatbotOpen to the setIsOpen prop. */}
-        {page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
+        {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
+        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );

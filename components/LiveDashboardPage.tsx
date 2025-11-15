@@ -7,9 +7,10 @@ type Page = 'fundPortal';
 
 interface LiveDashboardPageProps {
   navigate: (page: Page) => void;
+  currentUser: UserProfile;
 }
 
-// --- Reusable UI Components (from DashboardPage) ---
+// --- Reusable UI Components ---
 
 const MetricCard: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
     <div className={`bg-[#003a70]/50 p-6 rounded-lg border border-[#005ca0] flex flex-col ${className}`}>
@@ -103,20 +104,35 @@ interface LiveStats {
 }
 
 
-const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
+const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, currentUser }) => {
     const [stats, setStats] = useState<LiveStats | null>(null);
     const [isFetching, setIsFetching] = useState(true);
     const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-    const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600', '#d4d756'];
-    const grayColor = '#898c8d';
+    const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600'];
 
     const fetchData = useCallback(async () => {
         setIsFetching(true);
+
+        const emptyStats: LiveStats = {
+            totalAwarded: 0,
+            applicationStatusData: [],
+            userEngagementData: [],
+            topCountriesData: [],
+            topEventsData: [],
+            recentUsersData: []
+        };
+
         try {
+            const fundCode = currentUser.fundCode;
+            if (!fundCode) {
+                console.error("Admin user has no active fund code.");
+                setStats(emptyStats);
+                return;
+            }
             const [users, applications] = await Promise.all([
-                usersRepo.getAll(),
-                applicationsRepo.getAll(),
+                usersRepo.getForFund(fundCode),
+                applicationsRepo.getForFund(fundCode),
             ]);
 
             // --- Process Data for Stats ---
@@ -134,8 +150,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
             }, {} as Record<string, number>);
             
             const applicationStatusData = [
-                { label: 'Awarded', value: statusCounts.Awarded || 0, color: chartColors[1] },
-                { label: 'Declined', value: statusCounts.Declined || 0, color: grayColor },
+                { label: 'Awarded', value: statusCounts.Awarded || 0, color: chartColors[1] }, // yellow
+                { label: 'Declined', value: statusCounts.Declined || 0, color: chartColors[2] }, // teal
                 { label: 'In Review', value: statusCounts['In Review'] || 0, color: chartColors[0] },
             ];
 
@@ -144,8 +160,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
             const notEngagedCount = totalUsers - appliedUsersCount;
 
             const userEngagementData = [
-                { label: 'Applied', value: appliedUsersCount, color: chartColors[0] },
-                { label: 'Not Engaged', value: notEngagedCount > 0 ? notEngagedCount : 0, color: grayColor },
+                { label: 'Applied', value: appliedUsersCount, color: chartColors[0] }, // orange
+                { label: 'Not Engaged', value: notEngagedCount > 0 ? notEngagedCount : 0, color: chartColors[3] }, // green
             ];
 
             const countryCounts = users.reduce((acc, user) => {
@@ -193,10 +209,11 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate }) => {
 
         } catch (error) {
             console.error("Failed to fetch live dashboard data:", error);
+            setStats(emptyStats);
         } finally {
             setIsFetching(false);
         }
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         fetchData();

@@ -10,7 +10,8 @@
     "error": "Error",
     "success": "Éxito",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora."
   },
   "app": {
     "loading": "Cargando...",
@@ -34,7 +35,17 @@
     "noAccount": "¿No tienes una cuenta?",
     "signUpLink": "Regístrate",
     "errorGeneric": "Por favor, ingresa el correo y la contraseña.",
-    "errorInvalid": "Correo o contraseña no válidos. Inténtalo de nuevo."
+    "errorInvalid": "Correo o contraseña no válidos. Inténtalo de nuevo.",
+    "forgotPasswordLink": "¿Olvidaste tu contraseña?"
+  },
+  "forgotPasswordPage": {
+    "title": "Restablecer Contraseña",
+    "instruction": "Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "sendButton": "Enviar Enlace de Restablecimiento",
+    "backToLogin": "Volver a Iniciar Sesión",
+    "successMessage": "Si existe una cuenta con ese correo electrónico, se ha enviado un enlace para restablecer la contraseña. Por favor, revisa tu bandeja de entrada.",
+    "errorGeneric": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+    "errorEmailRequired": "Por favor, ingresa una dirección de correo electrónico válida."
   },
   "registerPage": {
     "firstNameLabel": "Nombre",
@@ -132,6 +143,7 @@
     "removeReceipt": "Eliminar recibo",
     "uploadFailedError": "La subida falló. Por favor, inténtalo de nuevo.",
     "totalExpensesLabel": "Gastos Totales",
+    "errorAmount": "El monto debe ser mayor a cero.",
     "expenseTypes": {
       "BasicDisasterSupplies": "Suministros Básicos para Desastres",
       "FoodSpoilage": "Alimentos Echados a Perder",
@@ -175,10 +187,12 @@
     "noApplications": "Aún no has enviado ninguna solicitud para este fondo.",
     "fundIdentitiesTitle": "Identidades del Fondo",
     "fundIdentitiesDescription": "Gestiona tus identidades de fondo. Agrega o elimina códigos de fondo adicionales si eres elegible para más de un programa.",
-    "active": "(Activo)",
-    "setActive": "Establecer Activo",
+    "active": "Activo",
+    "setActive": "Activo",
     "addNewIdentity": "+ Agregar Nueva Identidad",
     "enterNewFundCode": "Ingresar Nuevo Código de Fondo",
+    "seeAll": "Ver Todos",
+    "showLess": "Mostrar Menos",
     "contactInfoTitle": "Información de Contacto",
     "firstName": "Nombre",
     "middleName": "Segundo(s) Nombre(s)",
@@ -300,7 +314,7 @@
   "chatbotWidget": {
     "greeting": "¡Hola! Soy el Asistente de Ayuda. ¿Cómo puedo ayudarte hoy? No dudes en contarme tu situación.",
     "title": "Asistente de Ayuda",
-    "disclaimer": "*Vista previa de Agente IA usando respuestas generativas",
+    "disclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>.",
     "errorMessage": "Lo siento, encontré un error. Por favor, inténtalo de nuevo.",
     "placeholder": "Escribe tu mensaje..."
   },
@@ -330,7 +344,8 @@
       "title": "Información Legal",
       "privacy": "Política de Privacidad",
       "terms": "Términos de Uso",
-      "cookies": "Política de Cookies"
+      "cookies": "Política de Cookies",
+      "ai": "Política de IA"
     }
   },
   "formControls": {
@@ -344,7 +359,8 @@
     "aiStarterPlaceholder": "ej., Soy propietario de una casa afectado por el reciente tornado en Anytown, CA. Mi casa sufrió daños y necesito unos $2500 para reparaciones. Nuestro hogar de 4 personas gana unos $60k/año. Mi teléfono es 555-123-4567 y prefiero comunicarme en español.",
     "submitDescription": "Enviar Descripción",
     "aiParseError": "No se pudieron extraer los detalles. Por favor, inténtalo de nuevo o llena los campos manualmente.",
-    "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos."
+    "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos.",
+    "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>."
   },
   "faqPage": {
     "title": "Preguntas Frecuentes",
@@ -362,7 +378,12 @@
       },
       {
         "question": "Si mi solicitud es aprobada, ¿cuánto tiempo tardaré en recibir mi pago?",
-        "answer": "El tiempo de pago de la subvención depende del tipo de pago seleccionado, la ubicación geográfica y la información bancaria. A continuación se presentan los plazos generales:\n- Los solicitantes de EE. UU. que seleccionen un método de pago digital pueden esperar que los fondos se depositen en un plazo de 1 a 3 días hábiles.\n- Los solicitantes de EE. UU. que seleccionen un cheque por correo suelen recibir los fondos en un plazo de 7 días hábiles. No hay número de seguimiento y los cheques se envían por USPS.\n- El tiempo de pago internacional varía según el país. Consulte su carta de adjudicación cuando se procese la subvención para obtener detalles adicionales."
+        "answer": [
+          "El tiempo de pago de la subvención depende del tipo de pago seleccionado, la ubicación geográfica y la información bancaria. A continuación se presentan los plazos generales:",
+          "- Los solicitantes de EE. UU. que seleccionen un método de pago digital pueden esperar que los fondos se depositen en un plazo de 1 a 3 días hábiles.",
+          "- Los solicitantes de EE. UU. que seleccionen un cheque por correo suelen recibir los fondos en un plazo de 7 días hábiles. No hay número de seguimiento y los cheques se envían por USPS.",
+          "- El tiempo de pago internacional varía según el país. Consulte su carta de adjudicación cuando se procese la subvención para obtener detalles adicionales."
+        ]
       },
       {
         "question": "¿Cuánto recibiré?",
@@ -370,7 +391,11 @@
       },
       {
         "question": "¿Tengo que devolver la subvención o pagar impuestos si recibo asistencia?",
-        "answer": "Las subvenciones proporcionadas a través del Fondo de Ayuda no son préstamos y no tienen que ser devueltas.\n- Para los beneficiarios de subvenciones de EE. UU., una subvención generalmente no generará ingresos imponibles (es decir, no aparecerá en su W2).\n- Para los beneficiarios fuera de los EE. UU., consulte a su asesor fiscal local para obtener más información."
+        "answer": [
+          "Las subvenciones proporcionadas a través del Fondo de Ayuda no son préstamos y no tienen que ser devueltas.",
+          "- Para los beneficiarios de subvenciones de EE. UU., una subvención generalmente no generará ingresos imponibles (es decir, no aparecerá en su W2).",
+          "- Para los beneficiarios fuera de los EE. UU., consulte a su asesor fiscal local para obtener más información."
+        ]
       },
       {
         "question": "Si no soy seleccionado para una subvención, ¿recibiré una notificación con el motivo?",
@@ -408,11 +433,16 @@
       },
       {
         "question": "¿Cuándo recibiré un recibo de impuestos por mi donación de tarjeta de crédito, acciones, criptomonedas o de mi Fondo Asesorado por Donantes?",
-        "answer": "Al completar su donación, recibirá un recibo de impuestos para cualquier donación de criptomonedas o tarjeta de crédito realizada a través del formulario de donación. Se proporciona un recibo de acuse de recibo para la promesa de acciones y donaciones de DAF.\n\nPara las donaciones de acciones, los recibos de impuestos para los donantes serán manejados por nuestro socio externo: Renaissance Charitable Foundation (Ren).\n\nPara las donaciones de DAF, los recibos de impuestos los proporciona la organización sin fines de lucro que maneja la transacción del regalo."
-      },
-      {
-        "question": "¿Cuánto tiempo se tarda en procesar mi donación?",
-        "answer": "**Tarjeta de Crédito**\nLas donaciones con tarjeta de crédito tardan de 3 a 5 días hábiles en recibirse en el fondo.\n\n**Cripto**\nLas donaciones de criptomonedas tardan de 2 a 5 días hábiles en completarse y recibirse en el fondo.\n\n**Acciones**\nEl tiempo para recibir los fondos de los obsequios de acciones dependerá de la rapidez con que el corredor del donante pueda procesar la transacción y mover las acciones, lo que puede tardar hasta 2-3 semanas en procesarse.\n\n**Fondos Asesorados por Donantes (DAF)**\nDependiendo del proveedor, recibiremos las donaciones de DAF entre 1 y 3 semanas."
+        "answer": [
+          "#### Tarjeta de Crédito",
+          "Las donaciones con tarjeta de crédito tardan de 3 a 5 días hábiles en recibirse en el fondo.",
+          "#### Cripto",
+          "Las donaciones de criptomonedas tardan de 2 a 5 días hábiles en completarse y recibirse en el fondo.",
+          "#### Acciones",
+          "El tiempo para recibir los fondos de los obsequios de acciones dependerá de la rapidez con que el corredor del donante pueda procesar la transacción y mover las acciones, lo que puede tardar hasta 2-3 semanas en procesarse.",
+          "#### Fondos Asesorados por Donantes (DAF)",
+          "Dependiendo del proveedor, recibiremos las donaciones de DAF entre 1 y 3 semanas."
+        ]
       },
       {
         "question": "¿Cómo veo mis donaciones históricas?",
@@ -424,7 +454,7 @@
       },
       {
         "question": "¿Qué pasa si quiero hacer donaciones recurrentes?",
-        "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, puede ver sus planes de donación y actualizar la información relacionada con su tarjeta de crédito y la frecuencia de los pagos. También puede desactivar cualquier donación recurrente aquí. Las donaciones recurrentes no se pueden realizar de forma anónima por razones regulatorias."
+        "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
       },
       {
         "question": "¿A quién puedo contactar si tengo preguntas adicionales?",
@@ -440,7 +470,7 @@
     "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
     "intlApplicantsTitle": "Solicitantes Internacionales",
     "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
-    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <1>Haga clic aquí</1> para revisar la guía de adjudicación de subvenciones internacionales.",
+    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Haga clic aquí </a> para revisar la guía de adjudicación de subvenciones internacionales.",
     "intlPartnersTitle": "Información del Socio de Pago",
     "converaGuide": "Guía de Convera",
     "tipaltiGuide": "Guía de Tipalti"

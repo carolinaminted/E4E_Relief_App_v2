@@ -15,6 +15,7 @@ const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
     { name: t('modals.policy.privacy'), url: 'https://www.e4erelief.org/privacy-policy' },
     { name: t('modals.policy.terms'), url: 'https://www.e4erelief.org/terms-of-use' },
     { name: t('modals.policy.cookies'), url: 'https://www.e4erelief.org/cookies-policy' },
+    { name: t('modals.policy.ai'), url: 'https://www.e4erelief.org/ai-policy' },
   ];
 
   return createPortal(

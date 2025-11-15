@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { parseAddressWithGemini } from '../services/geminiService';
 import type { Address } from '../types';
 
@@ -94,6 +94,15 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
         </button>
       </div>
       {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
+       <p className="text-xs text-gray-400 italic mt-2 text-center">
+            <Trans
+              i18nKey="formControls.aiDisclaimer"
+              components={{
+                1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+              }}
+            />
+        </p>
     </div>
   );
 };

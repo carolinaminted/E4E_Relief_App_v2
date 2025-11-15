@@ -5,8 +5,7 @@ const Bar: React.FC<{ value: number, total: number, color: string, label: string
     if (value === 0 || total === 0) return null;
     const percentage = (value / total) * 100;
     return (
-        <div style={{ width: `${percentage}%`, backgroundColor: color }} className="h-full flex items-center justify-center text-xs font-bold text-white text-shadow-sm transition-all duration-300" title={`${label}: ${value.toLocaleString()}`}>
-            <span className="truncate px-1">{value.toLocaleString()}</span>
+        <div style={{ width: `${percentage}%`, backgroundColor: color }} className="h-full transition-all duration-300" title={`${label}: ${value.toLocaleString()}`}>
         </div>
     );
 };
@@ -18,7 +17,10 @@ export const TopSessionChart: React.FC<{ topSession: TopSessionData | null }> = 
     
     return (
         <>
-            <p className="text-sm text-gray-200 mb-1">Session ID: <span className="font-mono text-white">{topSession.sessionId}</span></p>
+            <div className="flex justify-between items-baseline mb-1">
+                 <p className="text-sm text-gray-200 truncate pr-2">Session ID: <span className="font-mono text-white">{topSession.sessionId}</span></p>
+                 <p className="text-lg font-bold text-white">{topSession.totalTokens.toLocaleString()} <span className="text-xs font-normal text-gray-400">tokens</span></p>
+            </div>
             <div className="w-full h-8 bg-[#003a70] rounded-md flex overflow-hidden border border-[#005ca0]">
                 <Bar value={topSession.inputTokens} total={topSession.totalTokens} color="#005ca0" label="Input" />
                 <Bar value={topSession.cachedInputTokens} total={topSession.totalTokens} color="#007bff" label="Cached Input" />

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation();
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
   return (
@@ -11,7 +13,7 @@ const Footer: React.FC = () => {
           onClick={() => setIsPolicyModalOpen(true)}
           className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200"
         >
-          Powered by E4E Relief
+          {t('homePage.poweredBy')}
         </button>
       </footer>
       {isPolicyModalOpen && <PolicyModal onClose={() => setIsPolicyModalOpen(false)} />}

@@ -32,4 +32,5 @@ export interface Fund {
   eligibleEmploymentTypes: string[];
   domainConfig?: FundDomainConfig;
   rosterConfig?: FundRosterConfig;
+  eligibleStorms?: string[];
 }

@@ -11,7 +11,7 @@ import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import SearchableSelector from './SearchableSelector';
 
 interface ApplyProxyContactPageProps {
-  formData: UserProfile;
+  formData: UserProfile; // This holds the data for the *applicant* being filled out by the admin.
   updateFormData: (data: Partial<UserProfile>) => void;
   nextStep: () => void;
   onAIParsed: (data: Partial<ApplicationFormData>) => void;
@@ -33,12 +33,18 @@ const NotificationIcon: React.FC = () => (
 
 type ApplySection = 'aiStarter' | 'applicantDetails' |'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
+/**
+ * The first step of the proxy application flow. This component is very similar to the regular
+ * ApplyContactPage, but it includes an initial section to identify the applicant by their name and email.
+ * It also features the AI Application Starter to pre-fill the form from a text description.
+ */
 const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
   const [isAIParsing, setIsAIParsing] = useState(false);
 
+  // Checks which collapsible sections have validation errors to display a notification icon.
   const sectionHasErrors = useMemo(() => {
     const applicantDetailsHasBlanks = !formData.firstName || !formData.lastName || !formData.email;
     const contactHasBlanks = !formData.mobileNumber;
@@ -71,7 +77,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     if ('mobileNumber' in data && typeof data.mobileNumber === 'string') {
         finalData.mobileNumber = formatPhoneNumber(data.mobileNumber);
     }
-    // When email changes, identityId must also change
+    // When email changes, identityId must also change to keep them in sync.
     if('email' in data) {
         finalData.identityId = data.email;
     }
@@ -119,11 +125,13 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
   const handleAIParse = async (description: string) => {
     setIsAIParsing(true);
     try {
+      // The `isProxy=true` flag tells the Gemini service to use a specific prompt
+      // tailored for extracting the applicant's details from a third-person description.
       const parsedDetails = await parseApplicationDetailsWithGemini(description, true);
       onAIParsed(parsedDetails);
     } catch (e) {
       console.error("AI Parsing failed in parent component:", e);
-      throw e;
+      throw e; // Re-throw to let the child AIApplicationStarter component handle displaying the error.
     } finally {
       setIsAIParsing(false);
     }
@@ -176,6 +184,8 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     if (!formData.infoCorrect) newErrors.infoCorrect = 'You must confirm your information is correct.';
 
     setErrors(newErrors);
+    
+    // If validation fails, automatically open the first section that contains an error.
     if (Object.keys(newErrors).length > 0) {
         let firstErrorSection: ApplySection | null = null;
         if (newErrors.firstName || newErrors.lastName || newErrors.email) firstErrorSection = 'applicantDetails';

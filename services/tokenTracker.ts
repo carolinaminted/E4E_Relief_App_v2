@@ -1,13 +1,15 @@
-import type { TokenEvent, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, ModelPricing, TokenUsageFilters, UserProfile } from '../types';
-import { usersRepo } from './firestoreRepo';
+import type { TokenEvent, ModelPricing, UserProfile } from '../types';
+import { usersRepo, tokenEventsRepo } from './firestoreRepo';
 
 // --- State ---
-let sessionTokenEvents: TokenEvent[] = [];
+// This module holds the currently authenticated user's profile in-memory
+// to avoid having to pass it into every `logEvent` call.
 let currentUser: UserProfile | null = null;
 const currentAccount: string = 'E4E-Relief-Inc';
-// In a real app, this might come from an environment variable
+// In a real app, this might come from an environment variable (e.g., process.env.NODE_ENV).
 const currentEnv: 'Production' | 'Development' = 'Production';
 
+// Pricing data for different Gemini models. Used to calculate the estimated cost of each API call.
 const MODEL_PRICING: ModelPricing = {
   'gemini-2.5-flash': {
     input: 0.00035, // Price per 1000 tokens
@@ -22,35 +24,30 @@ const MODEL_PRICING: ModelPricing = {
 // --- Core Functions ---
 
 /**
- * Initializes the tracker for a new user session or updates the user profile.
+ * Initializes the tracker with the authenticated user's profile.
+ * This should be called once on login or when the user profile is first loaded.
+ * @param user - The `UserProfile` object of the currently logged-in user.
  */
 export function init(user: UserProfile) {
-  // If the tracker is already initialized for the same user, this is just an update.
-  // Don't wipe the session events, just update the user profile reference.
-  const isUpdate = currentUser && currentUser.uid === user.uid;
-  
-  currentUser = user; // Always update to the latest profile.
-
-  if (!isUpdate) {
-    sessionTokenEvents = []; // Only reset on the first init for a user session.
-    console.log('Token Tracker Initialized for user:', user.email);
-  } else {
-    console.log('Token Tracker user profile updated for:', user.email);
-  }
+  currentUser = user; 
+  console.log('Token Tracker Initialized/Updated for user:', user.email);
 }
 
 /**
- * Resets the tracker on logout.
+ * Resets the tracker by clearing the current user.
+ * This should be called on logout to prevent logging events for a non-existent session.
  */
 export function reset() {
   currentUser = null;
-  sessionTokenEvents = [];
   console.log('Token Tracker Reset.');
 }
 
 /**
- * A simple approximation for token counting since the SDK doesn't expose this.
- * A common rule of thumb is 1 token ~ 4 characters.
+ * A simple, client-side approximation for token counting.
+ * Since the client-side SDK doesn't expose a precise tokenizer, this uses a common
+ * rule of thumb where 1 token is roughly equivalent to 4 characters of text.
+ * @param text - The string to estimate the token count for.
+ * @returns The estimated number of tokens.
  */
 export function estimateTokens(text: string): number {
   if (!text) return 0;
@@ -58,9 +55,16 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Logs a new AI interaction event to the in-memory session store.
+ * Logs a new AI interaction event to Firestore. This function performs two "fire-and-forget"
+ * operations, meaning it initiates the writes but doesn't wait for them to complete,
+ * allowing the UI to remain responsive.
+ * 
+ * 1.  It atomically increments the aggregate `tokensUsedTotal` and `estimatedCostTotal` on the user's profile document.
+ * 2.  It creates a new, detailed document in the `tokenEvents` collection for granular analytics.
+ * 
+ * @param data - An object containing details about the Gemini API call.
  */
-export function logEvent(data: {
+export async function logEvent(data: {
   feature: TokenEvent['feature'];
   model: TokenEvent['model'];
   inputTokens: number;
@@ -69,7 +73,7 @@ export function logEvent(data: {
   sessionId: string;
 }) {
   if (!currentUser) {
-    console.warn('Token Tracker not initialized, skipping log.');
+    console.warn('Token Tracker not initialized, skipping log. User might be logged out.');
     return;
   }
 
@@ -77,12 +81,15 @@ export function logEvent(data: {
   const pricing = MODEL_PRICING[data.model] || { input: 0, output: 0 };
   const cost = ((data.inputTokens / 1000) * pricing.input) + ((data.outputTokens / 1000) * pricing.output);
 
+  // Update aggregate totals on the user's profile document. This is a "fire-and-forget"
+  // operation; we don't `await` it so the UI isn't blocked.
   usersRepo.incrementTokenUsage(currentUser.uid, totalTokens, cost).catch(error => {
-    console.error("Failed to update token usage in Firestore:", error);
+    // We log the error but don't re-throw, as failing to update analytics shouldn't break the user experience.
+    console.error("Failed to update aggregate token usage in Firestore:", error);
   });
 
-  const newEvent: TokenEvent = {
-    id: `evt-${Math.random().toString(36).substr(2, 9)}`,
+  const newEvent: Omit<TokenEvent, 'id'> = {
+    uid: currentUser.uid,
     sessionId: data.sessionId,
     userId: currentUser.email,
     timestamp: new Date().toISOString(),
@@ -96,170 +103,8 @@ export function logEvent(data: {
     fundCode: currentUser.fundCode,
   };
 
-  sessionTokenEvents.push(newEvent);
-  console.log('Logged Token Event:', newEvent);
-}
-
-// --- Data Retrieval Functions (for TokenUsagePage) ---
-
-export function getTokenUsageTableData(filters: TokenUsageFilters, fundCode: string): TokenUsageTableRow[] {
-    const filteredEvents = sessionTokenEvents.filter(event => 
-        event.fundCode === fundCode &&
-        (filters.account === 'all' || event.account === filters.account) &&
-        (filters.user === 'all' || event.userId === filters.user) &&
-        (filters.feature === 'all' || event.feature === filters.feature) &&
-        (filters.model === 'all' || event.model === filters.model) &&
-        (filters.environment === 'all' || event.environment === filters.environment)
-    );
-
-    const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
-
-    for (const event of filteredEvents) {
-        const key = `${event.userId}|${event.sessionId}|${event.feature}`;
-        if (!usageByFeatureInSession[key]) {
-            usageByFeatureInSession[key] = { input: 0, cached: 0, output: 0, total: 0, cost: 0 };
-        }
-        const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
-        const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);
-
-        usageByFeatureInSession[key].input += event.inputTokens;
-        usageByFeatureInSession[key].cached += event.cachedInputTokens;
-        usageByFeatureInSession[key].output += event.outputTokens;
-        usageByFeatureInSession[key].total += event.inputTokens + event.cachedInputTokens + event.outputTokens;
-        usageByFeatureInSession[key].cost += eventCost;
-    }
-
-    return Object.entries(usageByFeatureInSession).map(([key, data]) => {
-        const [user, session, feature] = key.split('|');
-        return { user, session, feature, ...data };
-    });
-}
-
-
-export function getTopSessionData(filters: TokenUsageFilters, fundCode: string): TopSessionData | null {
-    const tableData = getTokenUsageTableData(filters, fundCode);
-    if (tableData.length === 0) return null;
-
-    // Re-aggregate by session to find the true top session, as tableData is now granular by feature
-    const usageBySession: { [sessionId: string]: TopSessionData } = {};
-    for (const row of tableData) {
-        if (!usageBySession[row.session]) {
-            usageBySession[row.session] = {
-                sessionId: row.session,
-                inputTokens: 0,
-                cachedInputTokens: 0,
-                outputTokens: 0,
-                totalTokens: 0,
-            };
-        }
-        usageBySession[row.session].inputTokens += row.input;
-        usageBySession[row.session].cachedInputTokens += row.cached;
-        usageBySession[row.session].outputTokens += row.output;
-        usageBySession[row.session].totalTokens += row.total;
-    }
-
-    const allSessions = Object.values(usageBySession);
-    if (allSessions.length === 0) return null;
-
-    // Find the session with the highest total token count
-    const topSession = allSessions.reduce((max, current) => current.totalTokens > max.totalTokens ? current : max, allSessions[0]);
-    
-    return topSession;
-}
-
-
-export function getUsageLastHour(filters: TokenUsageFilters, fundCode: string): LastHourUsageDataPoint[] {
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-
-    const filteredEvents = sessionTokenEvents.filter(event => {
-        const eventDate = new Date(event.timestamp);
-        return eventDate >= oneHourAgo &&
-            event.fundCode === fundCode &&
-            (filters.account === 'all' || event.account === filters.account) &&
-            (filters.user === 'all' || event.userId === filters.user) &&
-            (filters.feature === 'all' || event.feature === filters.feature) &&
-            (filters.model === 'all' || event.model === filters.model) &&
-            (filters.environment === 'all' || event.environment === filters.environment)
-    });
-
-    // Create a map of usage per minute
-    const usageByMinute: Map<string, number> = new Map();
-    for (const event of filteredEvents) {
-        const eventDate = new Date(event.timestamp);
-        eventDate.setSeconds(0, 0); // Normalize to the start of the minute
-        const minuteKey = eventDate.toISOString();
-        const totalTokens = event.inputTokens + event.cachedInputTokens + event.outputTokens;
-        usageByMinute.set(minuteKey, (usageByMinute.get(minuteKey) || 0) + totalTokens);
-    }
-    
-    // Create a full 61-point array for every minute in the last hour for the chart
-    const fullHourData: LastHourUsageDataPoint[] = [];
-    for (let i = 0; i <= 60; i++) {
-        const minuteTimestamp = new Date(oneHourAgo.getTime() + i * 60 * 1000);
-        minuteTimestamp.setSeconds(0, 0);
-        const minuteKey = minuteTimestamp.toISOString();
-        
-        fullHourData.push({
-            timestamp: minuteKey,
-            totalTokens: usageByMinute.get(minuteKey) || 0
-        });
-    }
-
-    return fullHourData;
-}
-
-export function getUsageLast15Minutes(filters: TokenUsageFilters, fundCode: string): LastHourUsageDataPoint[] {
-    const now = new Date();
-    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
-
-    const filteredEvents = sessionTokenEvents.filter(event => {
-        const eventDate = new Date(event.timestamp);
-        return eventDate >= fifteenMinutesAgo &&
-            event.fundCode === fundCode &&
-            (filters.account === 'all' || event.account === filters.account) &&
-            (filters.user === 'all' || event.userId === filters.user) &&
-            (filters.feature === 'all' || event.feature === filters.feature) &&
-            (filters.model === 'all' || event.model === filters.model) &&
-            (filters.environment === 'all' || event.environment === filters.environment)
-    });
-
-    // Create a map of usage per minute
-    const usageByMinute: Map<string, number> = new Map();
-    for (const event of filteredEvents) {
-        const eventDate = new Date(event.timestamp);
-        eventDate.setSeconds(0, 0); // Normalize to the start of the minute
-        const minuteKey = eventDate.toISOString();
-        const totalTokens = event.inputTokens + event.cachedInputTokens + event.outputTokens;
-        usageByMinute.set(minuteKey, (usageByMinute.get(minuteKey) || 0) + totalTokens);
-    }
-    
-    // Create a full 16-point array for every minute in the last 15 minutes for the chart
-    const full15MinutesData: LastHourUsageDataPoint[] = [];
-    for (let i = 0; i <= 15; i++) {
-        const minuteTimestamp = new Date(fifteenMinutesAgo.getTime() + i * 60 * 1000);
-        minuteTimestamp.setSeconds(0, 0);
-        const minuteKey = minuteTimestamp.toISOString();
-        
-        full15MinutesData.push({
-            timestamp: minuteKey,
-            totalTokens: usageByMinute.get(minuteKey) || 0
-        });
-    }
-
-    return full15MinutesData;
-}
-
-
-export function getFilterOptions(fundCode: string) {
-    if (!currentUser) return { features: [], models: [], environments: [], users: [], accounts: [] };
-    
-    const userEvents = sessionTokenEvents.filter(e => e.fundCode === fundCode);
-    const features = [...new Set(userEvents.map(e => e.feature))];
-    const models = [...new Set(userEvents.map(e => e.model))];
-    const environments = [...new Set(userEvents.map(e => e.environment))];
-    const users = [...new Set(userEvents.map(e => e.userId))];
-    const accounts = [...new Set(userEvents.map(e => e.account))];
-
-    return { features, models, environments, users, accounts };
+  // Create a detailed log document in the tokenEvents collection. This is also fire-and-forget.
+  tokenEventsRepo.add(newEvent).catch(error => {
+      console.error("Failed to log token event to Firestore:", error);
+  });
 }

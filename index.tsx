@@ -11,6 +11,11 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
+    {/* 
+      React.Suspense is used here to provide a fallback UI (a loading message) 
+      while the main App component and its children are being loaded. This is especially
+      useful for code-splitting or if the i18n translations are loaded asynchronously.
+    */}
     <React.Suspense fallback={<div className="bg-[#003a70] h-screen w-screen flex items-center justify-center text-white">Loading...</div>}>
       <App />
     </React.Suspense>

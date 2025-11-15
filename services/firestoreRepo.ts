@@ -13,10 +13,11 @@ import {
   onSnapshot,
   orderBy,
   increment,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { UserProfile, FundIdentity, Application } from '../types';
-import type { IUsersRepo, IIdentitiesRepo, IApplicationsRepo, IFundsRepo } from './dataRepo';
+import type { UserProfile, FundIdentity, Application, TokenEvent, TokenUsageFilters } from '../types';
+import type { IUsersRepo, IIdentitiesRepo, IApplicationsRepo, IFundsRepo, ITokenEventsRepo } from './dataRepo';
 import type { Fund } from '../data/fundData';
 
 
@@ -51,6 +52,47 @@ class UsersRepo implements IUsersRepo {
         const q = query(this.usersCol);
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => doc.data() as UserProfile);
+    }
+
+    async getForFund(fundCode: string): Promise<UserProfile[]> {
+        const identitiesCol = collection(db, 'identities');
+        const identitiesQuery = query(identitiesCol, where('fundCode', '==', fundCode));
+        const identitiesSnapshot = await getDocs(identitiesQuery);
+        // FIX: The type of `doc.data().uid` is `any`. The original one-liner with a type guard
+        // can cause type inference issues in some TypeScript configurations, resulting in `unknown[]`.
+        // This more explicit approach ensures `userIds` is correctly typed as `string[]`.
+        const uids = new Set<string>();
+        identitiesSnapshot.docs.forEach(doc => {
+            const uid = doc.data().uid;
+            if (typeof uid === 'string' && uid) {
+                uids.add(uid);
+            }
+        });
+        const userIds = Array.from(uids);
+
+        if (userIds.length === 0) {
+            return [];
+        }
+
+        // Firestore 'in' query is limited to 30 items.
+        // For a larger number of users, this would require batching the queries.
+        const userBatches: string[][] = [];
+        for (let i = 0; i < userIds.length; i += 30) {
+            userBatches.push(userIds.slice(i, i + 30));
+        }
+
+        const userPromises = userBatches.map(batch => {
+            const usersQuery = query(this.usersCol, where(documentId(), 'in', batch));
+            return getDocs(usersQuery);
+        });
+
+        const userSnapshots = await Promise.all(userPromises);
+        const users: UserProfile[] = [];
+        userSnapshots.forEach(snapshot => {
+            snapshot.docs.forEach(doc => users.push(doc.data() as UserProfile));
+        });
+
+        return users;
     }
 
     async add(user: Omit<UserProfile, 'role'>, uid: string): Promise<void> {
@@ -119,6 +161,12 @@ class ApplicationsRepo implements IApplicationsRepo {
         return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
     }
 
+    async getForFund(fundCode: string): Promise<Application[]> {
+        const q = query(this.appsCol, where('profileSnapshot.fundCode', '==', fundCode));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+    }
+
     async add(application: Omit<Application, 'id'>): Promise<Application> {
         const docRef = await addDoc(this.appsCol, application);
         return { id: docRef.id, ...application } as Application;
@@ -144,7 +192,60 @@ class FundsRepo implements IFundsRepo {
     }
 }
 
+class TokenEventsRepo implements ITokenEventsRepo {
+    private eventsCol = collection(db, 'tokenEvents');
+
+    async add(event: Omit<TokenEvent, 'id'>): Promise<TokenEvent> {
+        const docRef = await addDoc(this.eventsCol, event);
+        return { id: docRef.id, ...event };
+    }
+
+    async getEventsForFund(options: { fundCode: string; filters: TokenUsageFilters; uid?: string; }): Promise<TokenEvent[]> {
+        const { fundCode, filters, uid } = options;
+        const queryConstraints = [where('fundCode', '==', fundCode)];
+
+        if (uid) {
+            queryConstraints.push(where('uid', '==', uid));
+        }
+        if (filters.dateRange.start) {
+            queryConstraints.push(where('timestamp', '>=', filters.dateRange.start));
+        }
+        if (filters.dateRange.end) {
+            // Add one day to the end date to make the range inclusive
+            const endDate = new Date(filters.dateRange.end);
+            endDate.setDate(endDate.getDate() + 1);
+            queryConstraints.push(where('timestamp', '<', endDate.toISOString().split('T')[0]));
+        }
+        
+        const q = query(this.eventsCol, ...queryConstraints, orderBy('timestamp', 'desc'));
+
+        const snapshot = await getDocs(q);
+        let events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TokenEvent));
+
+        // Client-side filtering for non-indexed fields
+        if (filters.feature !== 'all') {
+            events = events.filter(e => e.feature === filters.feature);
+        }
+        if (filters.model !== 'all') {
+            events = events.filter(e => e.model === filters.model);
+        }
+        if (filters.environment !== 'all') {
+            events = events.filter(e => e.environment === filters.environment);
+        }
+        if (filters.user !== 'all') {
+            events = events.filter(e => e.userId === filters.user);
+        }
+        if (filters.account !== 'all') {
+            events = events.filter(e => e.account === filters.account);
+        }
+
+        return events;
+    }
+}
+
+
 export const usersRepo = new UsersRepo();
 export const identitiesRepo = new IdentitiesRepo();
 export const applicationsRepo = new ApplicationsRepo();
 export const fundsRepo = new FundsRepo();
+export const tokenEventsRepo = new TokenEventsRepo();

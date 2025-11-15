@@ -15,10 +15,15 @@ const firebaseConfig = {
   measurementId: "G-R60LTYQ98D"
 };
 
-// Initialize Firebase safely for hot-reloading environments
+// Initialize Firebase.
+// The `!getApps().length` check prevents re-initializing the app on every hot-reload
+// in a development environment, which would otherwise cause errors.
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+// Get instances of the Firebase services we'll use throughout the app.
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// Export the initialized services for use in other parts of the application.
 export { auth, db, storage };
