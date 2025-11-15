@@ -3,6 +3,7 @@ import {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
+    sendPasswordResetEmail,
     type User
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -91,6 +92,19 @@ class FirebaseAuthClient implements IAuthClient {
             await signOut(auth);
         } catch (error) {
             console.error("Sign out error:", error);
+        }
+    }
+
+    async sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            return { success: true };
+        } catch (error: any) {
+            console.error("Password reset error:", error);
+            // Don't expose specific errors to the client to prevent user enumeration.
+            // Firebase itself already handles the non-enumeration part by not throwing for non-existent emails.
+            // This generic message is for other potential network or configuration errors.
+            return { success: false, error: "An unexpected error occurred. Please try again." };
         }
     }
 }

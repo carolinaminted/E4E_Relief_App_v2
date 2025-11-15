@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -18,6 +19,7 @@ const SendIcon: React.FC<{ disabled: boolean }> = ({ disabled }) => (
 
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
 
   const handleSubmit = () => {
@@ -40,10 +42,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyPress}
-        placeholder="Type your message..."
+        placeholder={t('chatbotWidget.placeholder')}
         rows={1}
         disabled={isLoading}
-        className="flex-1 bg-white text-black placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
+        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
       />
       <button
         onClick={handleSubmit}

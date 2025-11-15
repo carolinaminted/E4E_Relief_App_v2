@@ -13,7 +13,7 @@ interface ProxyApplyPageProps {
   navigate: (page: Page) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   proxyApplications: Application[];
-  userProfile: UserProfile; // This is the admin's profile
+  userProfile: UserProfile;
   onAddIdentity: (fundCode: string) => void;
   mainRef: React.RefObject<HTMLElement>;
   // FIX: Added missing activeFund prop.

@@ -3,9 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>Gemini Chat Bot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html {
+        /* Prevents automatic text size adjustment on mobile browsers (like Safari on iOS), ensuring consistent layout. */
+        -webkit-text-size-adjust: 100%;
+      }
+    </style>
+  <!-- 
+    The import map allows using bare module specifiers (e.g., "react") in the browser,
+    similar to how they are used in a Node.js environment. It maps these specifiers
+    to full URLs, enabling a modern, build-less development workflow where modules
+    are loaded directly from a CDN.
+  -->
   <script type="importmap">
 {
   "imports": {
@@ -18,13 +30,18 @@
     "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
     "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
     "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.5.0/"
+    "firebase/": "https://aistudiocdn.com/firebase@^12.5.0/",
+    "i18next": "https://aistudiocdn.com/i18next@^23.11.5",
+    "react-i18next": "https://aistudiocdn.com/react-i18next@^14.1.2",
+    "i18next-browser-languagedetector": "https://aistudiocdn.com/i18next-browser-languagedetector@^8.0.0",
+    "i18next-http-backend": "https://aistudiocdn.com/i18next-http-backend@^2.5.2"
   }
 }
 </script>
 </head>
   <body class="bg-[#003a70]">
     <div id="root"></div>
+    <!-- A dedicated root for modals is a best practice to handle z-index and stacking contexts correctly. -->
     <div id="modal-root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

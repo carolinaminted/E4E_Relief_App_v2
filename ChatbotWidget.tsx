@@ -4,13 +4,16 @@ import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 // FIX: Added missing import for Fund type.
 import type { Fund } from '../data/fundData';
-import type { ChatMessage, Application } from '../types';
+// FIX: Added UserProfile to type import
+import type { ChatMessage, Application, UserProfile } from '../types';
 import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
 
 interface ChatbotWidgetProps {
+  // FIX: Added missing userProfile prop.
+  userProfile: UserProfile | null;
   applications: Application[];
   onChatbotAction: (functionName: string, args: any) => void;
   isOpen: boolean;
@@ -20,7 +23,7 @@ interface ChatbotWidgetProps {
   activeFund: Fund | null;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation." }
   ]);
@@ -36,12 +39,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
     setIsMounted(true);
 
-    if (isOpen) {
-        // FIX: Pass activeFund to createChatSession as the first argument.
-        chatSessionRef.current = createChatSession(activeFund, applications);
+    if (isOpen && userProfile) {
+        // FIX: Pass userProfile as the first argument to createChatSession.
+        const historyToSeed = messages.length > 1 ? messages.slice(-6) : [];
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed);
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
-  }, [isOpen, applications, activeFund]);
+  }, [isOpen, applications, activeFund, userProfile]);
   
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {
@@ -92,12 +96,15 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     setMessages(prev => [...prev, userMessage]);
     const inputTokens = estimateTokens(userInput);
 
-    if (!chatSessionRef.current) {
-        // FIX: Pass activeFund to createChatSession as the first argument.
-        chatSessionRef.current = createChatSession(activeFund, applications);
+    if (!chatSessionRef.current && userProfile) {
+        // FIX: Pass userProfile as the first argument to createChatSession.
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6));
     }
 
     try {
+      if (!chatSessionRef.current) {
+        throw new Error("Chat session not initialized.");
+      }
       const stream = await chatSessionRef.current.sendMessageStream({ message: userInput });
       
       let modelResponseText = '';
@@ -180,7 +187,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ applications, onChatbotAc
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund]);
+  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, messages]);
 
   const toggleChat = () => setIsOpen(!isOpen);
   

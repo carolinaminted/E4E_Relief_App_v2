@@ -1,18 +1,21 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 interface PolicyModalProps {
   onClose: () => void;
 }
 
 const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot) return null;
 
   const links = [
-    { name: 'Privacy Policy', url: 'https://www.e4erelief.org/privacy-policy' },
-    { name: 'Terms of Use', url: 'https://www.e4erelief.org/terms-of-use' },
-    { name: 'Cookie Policy', url: 'https://www.e4erelief.org/cookies-policy' },
+    { name: t('modals.policy.privacy'), url: 'https://www.e4erelief.org/privacy-policy' },
+    { name: t('modals.policy.terms'), url: 'https://www.e4erelief.org/terms-of-use' },
+    { name: t('modals.policy.cookies'), url: 'https://www.e4erelief.org/cookies-policy' },
+    { name: t('modals.policy.ai'), url: 'https://www.e4erelief.org/ai-policy' },
   ];
 
   return createPortal(
@@ -37,7 +40,7 @@ const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
           </svg>
         </button>
         <h2 id="policy-modal-title" className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
-          Legal Information
+          {t('modals.policy.title')}
         </h2>
         <div className="space-y-4">
           {links.map(link => (

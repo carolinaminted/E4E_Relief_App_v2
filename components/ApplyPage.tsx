@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
+import type { Fund } from '../data/fundData';
 
 // Import step components
 import ApplyContactPage from './ApplyContactPage';
@@ -14,9 +16,11 @@ interface ApplyPageProps {
   applicationDraft: Partial<ApplicationFormData> | null;
   mainRef: React.RefObject<HTMLElement>;
   canApply: boolean;
+  activeFund: Fund | null;
 }
 
 const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
+    const { t } = useTranslation();
     const hasPassedCV = cvStatus === 'passed';
 
     const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
@@ -30,7 +34,7 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
         }
     };
 
-    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
+    const text = hasPassedCV ? t('applyPage.eligibility') : t('applyPage.verificationNeeded');
     
     return (
         <button
@@ -51,7 +55,8 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
     );
 };
 
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   
   const [formData, setFormData] = useState<ApplicationFormData>(() => {
@@ -198,7 +203,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
                 onAIParsed={handleAIParsedData}
                 />;
           case 2:
-              return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
+              return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} activeFund={activeFund} />;
           case 3:
               return <ApplyExpensesPage userProfile={userProfile} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
           case 4:
@@ -214,9 +219,14 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto w-full text-center flex-1 flex flex-col items-center justify-center">
         <div className="bg-[#004b8d]/50 p-10 rounded-lg shadow-lg border border-[#005ca0]">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Grant Limits Reached</h1>
-            <p className="text-white mt-4 max-w-md">You are not eligible to apply at this time because your 12-month or lifetime grant limits have been reached.</p>
-            <p className="text-white mt-4">Please check your <button onClick={() => navigate('profile')} className="font-semibold text-[#ff8400] hover:underline">Profile</button> for more details.</p>
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyPage.limitsReachedTitle')}</h1>
+            <p className="text-white mt-4 max-w-md">{t('applyPage.limitsReachedBody')}</p>
+            <p className="text-white mt-4">
+                {t('applyPage.limitsReachedCta', {
+                    profileLink: ''
+                })}
+                <button onClick={() => navigate('profile')} className="font-semibold text-[#ff8400] hover:underline">{t('applyPage.profileLink')}</button>
+            </p>
         </div>
       </div>
     );
@@ -226,7 +236,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
       <div className="relative flex justify-center items-center mb-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Apply for Relief</h1>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyPage.title')}</h1>
           {userProfile ? (
             <div className="mt-2 flex flex-col items-center gap-2">
                 {userProfile.fundName && userProfile.fundCode ? (
@@ -238,7 +248,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
                 />
             </div>
           ) : (
-            <p className="text-lg text-gray-400 mt-2 italic">No active fund selected.</p>
+            <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>
           )}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import TermsModal from './TermsModal';
 // FIX: Corrected the import path for ApplicationFormData. It should be imported from '../types' instead of a component file.
 import type { ApplicationFormData } from '../types';
@@ -12,11 +13,15 @@ interface ApplyTermsPageProps {
 }
 
 const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormData, prevStep, onSubmit }) => {
+  const { t } = useTranslation();
   const [termsViewed, setTermsViewed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const yes = t('common.yes');
+  const no = t('common.no');
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -34,15 +39,15 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
   
   const handleFinalSubmit = async () => {
     if (formData.shareStory === null) {
-      setError('Please indicate if you are willing to share your story.');
+      setError(t('applyTermsPage.errorShareStory'));
       return;
     }
     if (formData.receiveAdditionalInfo === null) {
-      setError('Please indicate if you are interested in receiving additional information.');
+      setError(t('applyTermsPage.errorAdditionalInfo'));
       return;
     }
     if (!termsAgreed) {
-      setError('You must agree to the Terms of Acceptance to submit your application.');
+      setError(t('applyTermsPage.errorTermsAgreed'));
       return;
     }
     setError('');
@@ -53,41 +58,41 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
 
   return (
     <div className="space-y-8 p-8">
-      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">Agreements &amp; Submission</h2>
+      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">{t('applyTermsPage.title')}</h2>
       
       {/* Share Your Story Section */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Share Your Story</h3>
+        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyTermsPage.shareStoryTitle')}</h3>
         <div>
           <label className="flex items-center text-white mb-2">
-            Would you be willing to share your story with your employer?
+            {t('applyTermsPage.shareStoryQuestion')}
             <RequiredIndicator required isMet={formData.shareStory !== null} />
             </label>
-          <p className="text-xs text-gray-400 mb-2 italic">*If yes, we will share your name and email address and your employer may contact you for additional information.</p>
+          <p className="text-xs text-gray-400 mb-2 italic">{t('applyTermsPage.shareStoryDisclaimer')}</p>
           <div className="flex gap-4">
             <label className="flex items-center cursor-pointer">
               <input type="radio" name="shareStory" checked={formData.shareStory === true} onChange={() => handleUpdate({ shareStory: true })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
-              <span className="ml-2 text-white">Yes</span>
+              <span className="ml-2 text-white">{yes}</span>
             </label>
             <label className="flex items-center cursor-pointer">
               <input type="radio" name="shareStory" checked={formData.shareStory === false} onChange={() => handleUpdate({ shareStory: false })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
-              <span className="ml-2 text-white">No</span>
+              <span className="ml-2 text-white">{no}</span>
             </label>
           </div>
         </div>
         <div>
           <label className="flex items-center text-white mb-2">
-            Are you interested in receiving additional information on assistance beyond financial support?
+            {t('applyTermsPage.additionalInfoQuestion')}
             <RequiredIndicator required isMet={formData.receiveAdditionalInfo !== null} />
           </label>
           <div className="flex gap-4">
             <label className="flex items-center cursor-pointer">
               <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === true} onChange={() => handleUpdate({ receiveAdditionalInfo: true })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
-              <span className="ml-2 text-white">Yes</span>
+              <span className="ml-2 text-white">{yes}</span>
             </label>
             <label className="flex items-center cursor-pointer">
               <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === false} onChange={() => handleUpdate({ receiveAdditionalInfo: false })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
-              <span className="ml-2 text-white">No</span>
+              <span className="ml-2 text-white">{no}</span>
             </label>
           </div>
         </div>
@@ -95,7 +100,7 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
 
       {/* Terms of Acceptance Section */}
       <section className="space-y-2">
-        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Terms of Acceptance</h3>
+        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyTermsPage.termsTitle')}</h3>
         <div className="flex items-start">
           <input 
             id="terms" 
@@ -110,16 +115,16 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
           />
           <div className="ml-3 text-sm">
             <label htmlFor="terms" className={`text-white ${!termsViewed ? 'opacity-60': ''}`}>
-              I acknowledge and agree that checking this box serves as my electronic signature and confirms that I have read, understand, and agree to the
+              {t('applyTermsPage.termsCheckboxLabel')}
             </label>
             <div className="mt-1 flex items-center">
               <button type="button" onClick={handleOpenModal} className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#004b8d] focus:ring-[#ff8400] rounded">
-                Terms of Acceptance
+                {t('applyTermsPage.termsLink')}
               </button>
               <span className="text-white">.</span>
               <RequiredIndicator required isMet={termsAgreed} />
             </div>
-            {!termsViewed && <p className="text-xs text-yellow-400 mt-1 italic">Please view the terms before agreeing.</p>}
+            {!termsViewed && <p className="text-xs text-yellow-400 mt-1 italic">{t('applyTermsPage.termsViewNotice')}</p>}
           </div>
         </div>
       </section>
@@ -128,12 +133,12 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
       
       <div className="flex justify-between pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-200">
-          Back
+          {t('common.back')}
         </button>
         <button 
           onClick={handleFinalSubmit}
           disabled={!termsAgreed || isSubmitting}
-          className="w-40 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200 flex justify-center items-center h-12 disabled:bg-[#898c8d] disabled:cursor-wait"
+          className="w-48 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200 flex justify-center items-center h-12 disabled:bg-[#898c8d] disabled:cursor-wait"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">
@@ -142,7 +147,7 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             </div>
           ) : (
-            'Submit Application'
+            t('applyTermsPage.submitButton')
           )}
         </button>
       </div>

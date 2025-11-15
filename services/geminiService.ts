@@ -1,21 +1,31 @@
-import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
-import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision } from '../types';
+import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
+import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes } from '../data/appData';
 
+// Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
 
 if (!API_KEY) {
   throw new Error("API_KEY environment variable not set");
 }
 
+// Initialize the Google Gemini AI client.
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+/**
+ * Generates a unique session ID for tracking a series of related AI interactions,
+ * such as a single chat conversation or an application parsing event.
+ * @param prefix - A string to prepend to the session ID for context (e.g., 'ai-chat').
+ * @returns A unique session ID string.
+ */
 const generateSessionId = (prefix: string): string => {
     return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// Define the JSON schema for an address object. This is used by Gemini for function calling
+// and for generating structured JSON output when parsing addresses.
 const addressSchema = {
     type: Type.OBJECT,
     properties: {
@@ -28,6 +38,11 @@ const addressSchema = {
     }
 };
 
+/**
+ * Defines the `updateUserProfile` tool for the Gemini model. This allows the AI
+ * to request an update to the user's profile based on the conversation. The schema
+ * tells the model what fields it can update and what type of data is expected.
+ */
 const updateUserProfileTool: FunctionDeclaration = {
   name: 'updateUserProfile',
   description: 'Updates the user profile information based on details provided in the conversation. Can be used for one or more fields at a time.',
@@ -49,6 +64,11 @@ const updateUserProfileTool: FunctionDeclaration = {
   },
 };
 
+/**
+ * Defines the `startOrUpdateApplicationDraft` tool for the Gemini model. This allows the AI
+ * to proactively create or modify a draft application with event details mentioned by the user
+ * in the chat.
+ */
 const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
   name: 'startOrUpdateApplicationDraft',
   description: 'Creates or updates a draft for a relief application with event-specific details.',
@@ -56,6 +76,7 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
     type: Type.OBJECT,
     properties: {
       event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: allEventTypes },
+      eventName: { type: Type.STRING, description: "The official name of the hurricane or tropical storm, if applicable." },
       otherEvent: { type: Type.STRING, description: "The user-specified disaster if 'My disaster is not listed' is the event type." },
       eventDate: { type: Type.STRING, description: "The date the disaster occurred, in YYYY-MM-DD format." },
       evacuated: { type: Type.STRING, description: "Whether the user evacuated or plans to.", enum: ['Yes', 'No'] },
@@ -73,6 +94,11 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
 };
 
 
+/**
+ * The base system instruction (or "meta-prompt") for the AI Relief Assistant.
+ * This prompt defines the AI's persona, capabilities, goals, and conversational flow.
+ * It's a critical piece of prompt engineering that governs the chatbot's behavior.
+ */
 const applicationContext = `
 You are the Relief Assistant, an expert AI chatbot for the 'E4E Relief' application.
 
@@ -104,9 +130,26 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 `;
 
 
-export function createChatSession(activeFund: Fund | null, applications?: Application[]): Chat {
+/**
+ * Creates a new chat session with the Gemini model.
+ * It dynamically constructs the system instruction by injecting user-specific context,
+ * such as their active fund's details, application history, and language preference.
+ * @param userProfile - The current user's profile.
+ * @param activeFund - The configuration for the user's currently active fund.
+ * @param applications - The user's past applications.
+ * @param history - The recent chat history to seed the new session with.
+ * @returns A `Chat` session object from the @google/genai SDK.
+ */
+export function createChatSession(userProfile: UserProfile | null, activeFund: Fund | null, applications?: Application[], history?: ChatMessage[]): Chat {
   let dynamicContext = applicationContext;
 
+  // Personalize the chat experience by instructing the model to respond in the user's preferred language.
+  if (userProfile && userProfile.preferredLanguage && userProfile.preferredLanguage.toLowerCase() !== 'english') {
+    dynamicContext += `\n**User's Language Preference**: The user's preferred language is ${userProfile.preferredLanguage}. You MUST respond in ${userProfile.preferredLanguage}.`;
+  }
+  
+  // If an active fund is available, inject its specific details (name, limits, covered events) into the prompt.
+  // This grounds the model in the correct data and prevents it from hallucinating or using general knowledge.
   if (activeFund) {
     dynamicContext = dynamicContext.replace(
       "for the 'E4E Relief' application",
@@ -128,9 +171,20 @@ The ${activeFund.name} covers a variety of events, including:
     dynamicContext += fundDetails;
   }
 
+  // Provide the user's application history so the AI can answer questions about past submissions.
   if (applications && applications.length > 0) {
     const applicationList = applications.map(app => {
-      let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nSubmitted: ${app.submittedDate}\nStatus: ${app.status}`;
+      const submittedDate = new Date(app.submittedDate);
+      const formattedDate = submittedDate.toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'America/New_York' // Standardize to a common timezone for consistent output
+      });
+      let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nStatus: ${app.status}`;
       if (app.reasons && (app.status === 'Declined' || app.status === 'Submitted')) {
         appDetails += `\nDecision Reasons: ${app.reasons.join(' ')}`;
       }
@@ -149,8 +203,16 @@ ${applicationList}
   
   // FIX: Use the latest recommended model 'gemini-2.5-flash'.
   const model = 'gemini-2.5-flash';
+
+  // Map the application's ChatMessage format to the format required by the Gemini SDK.
+  const mappedHistory: Content[] | undefined = history?.map(message => ({
+    role: message.role,
+    parts: [{ text: message.content }],
+  }));
+
   return ai.chats.create({
     model: model,
+    history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
       // FIX: The 'tools' property must be inside the 'config' object.
@@ -159,6 +221,13 @@ ${applicationList}
   });
 }
 
+/**
+ * A deterministic rules engine that performs a preliminary evaluation of an application.
+ * This function checks for hard failures (e.g., exceeding grant limits, invalid dates)
+ * before any AI processing is done. This ensures that core business rules are always enforced.
+ * @param appData - The application data and current grant balances.
+ * @returns An `EligibilityDecision` object with a decision of 'Approved', 'Denied', or 'Review'.
+ */
 export function evaluateApplicationEligibility(
   appData: {
     id: string;
@@ -191,6 +260,7 @@ export function evaluateApplicationEligibility(
   const requestedAmount = Number(eventData.requestedAmount) || 0;
   const normalizedEvent = eventData.event === 'My disaster is not listed' ? (eventData.otherEvent || '').trim() : (eventData.event || '').trim();
   
+  // Rule R1: Event must be specified and eligible.
   if (!normalizedEvent) {
     decision = 'Denied';
     reasons.push("An event type must be selected. If 'My disaster is not listed' is chosen, the specific event must be provided.");
@@ -204,6 +274,7 @@ export function evaluateApplicationEligibility(
     policy_hits.push({ rule_id: 'R1A', passed: true, detail: `Event '${normalizedEvent}' is an eligible event.` });
   }
 
+  // Rule R2: Event date must be within the last 90 days.
   if (!eventDate || isNaN(eventDate.getTime()) || eventDate < ninetyDaysAgo || eventDate > today) {
     decision = 'Denied';
     reasons.push(`Event date is older than 90 days or invalid. Event must be between ${ninetyDaysAgoStr} and today.`);
@@ -212,6 +283,7 @@ export function evaluateApplicationEligibility(
     policy_hits.push({ rule_id: 'R2', passed: true, detail: `Event date '${eventDateStr}' is recent.` });
   }
 
+  // Rule R3: Employment must have started before the event.
   const empStartDate = employmentStartDate ? new Date(employmentStartDate) : null;
   if (empStartDate) empStartDate.setHours(0,0,0,0);
   if (!empStartDate || isNaN(empStartDate.getTime()) || (eventDate && empStartDate > eventDate)) {
@@ -222,11 +294,12 @@ export function evaluateApplicationEligibility(
     policy_hits.push({ rule_id: 'R3', passed: true, detail: 'Employment start date is valid.' });
   }
 
+  // Rule R4/R5: Requested amount must be within all grant limits.
   if (requestedAmount <= 0) {
      decision = 'Denied';
      reasons.push(`Requested amount must be greater than zero.`);
      policy_hits.push({ rule_id: 'R4/R5', passed: false, detail: `Requested amount of $${requestedAmount.toFixed(2)} is not greater than zero.` });
-  } else if (requestedAmount > singleRequestMax) {
+  } else if (typeof singleRequestMax === 'number' && requestedAmount > singleRequestMax) {
     decision = 'Denied';
     reasons.push(`Requested amount of $${requestedAmount.toFixed(2)} exceeds the maximum of $${singleRequestMax.toFixed(2)}.`);
     policy_hits.push({ rule_id: 'R5', passed: false, detail: `Requested amount $${requestedAmount.toFixed(2)} exceeds absolute cap of $${singleRequestMax.toFixed(2)}.` });
@@ -243,7 +316,9 @@ export function evaluateApplicationEligibility(
     policy_hits.push({ rule_id: 'R5', passed: true, detail: `Requested amount $${requestedAmount.toFixed(2)} is within absolute cap.` });
   }
 
+  // If not denied, check for missing details that would require manual review.
   if (decision !== 'Denied') {
+    // Rule R6: If evacuation or power loss is claimed, supporting details must be provided.
     if (eventData.evacuated === 'Yes') {
       const missingEvacFields = !eventData.evacuatingFromPrimary || !eventData.stayedWithFamilyOrFriend || !eventData.evacuationStartDate || !eventData.evacuationNights || eventData.evacuationNights <= 0;
       if (missingEvacFields) {
@@ -266,6 +341,7 @@ export function evaluateApplicationEligibility(
     }
   }
 
+  // Rule R7: Normalize data for consistency (e.g., if power loss is 'No', days must be 0).
   let normalizedPowerLossDays = Number(eventData.powerLossDays) || 0;
   if (eventData.powerLoss === 'No' && normalizedPowerLossDays > 0) {
     const originalDays = normalizedPowerLossDays;
@@ -277,6 +353,7 @@ export function evaluateApplicationEligibility(
     reasons.push("Application meets all automatic approval criteria.");
   }
   
+  // Calculate final award and remaining balances.
   let recommended_award = 0;
   let remaining_12mo = currentTwelveMonthRemaining;
   let remaining_lifetime = currentLifetimeRemaining;
@@ -304,6 +381,8 @@ export function evaluateApplicationEligibility(
   };
 }
 
+// Defines the JSON schema for the AI's final decision output. This ensures the model
+// responds in a predictable, structured format that the application can parse.
 const finalDecisionSchema = {
     type: Type.OBJECT,
     properties: {
@@ -315,6 +394,14 @@ const finalDecisionSchema = {
 };
 
 
+/**
+ * Uses Gemini to make a final, AI-assisted decision on an application.
+ * This function is called after the deterministic rules engine. It provides the AI with all
+ * application data and the preliminary decision, asking it to act as a final reviewer.
+ * @param appData - The raw application data.
+ * @param preliminaryDecision - The output from the `evaluateApplicationEligibility` function.
+ * @returns A final `EligibilityDecision` object, either from the AI or falling back to the preliminary one on error.
+ */
 export async function getAIAssistedDecision(
     appData: {
         eventData: EventData,
@@ -323,6 +410,14 @@ export async function getAIAssistedDecision(
     },
     preliminaryDecision: EligibilityDecision
 ): Promise<EligibilityDecision> {
+    // Critical safeguard: If the rules engine issued a hard denial, do not let the AI override it.
+    // This prevents AI from approving an application that definitively breaks a core business rule.
+    if (preliminaryDecision.decision === 'Denied') {
+        return preliminaryDecision;
+    }
+
+    // This prompt engineers the AI to act as a "senior grant approver," giving it context and instructions
+    // for making a final, holistic review. It is provided with all data and the preliminary findings.
     const prompt = `
         You are a senior grant approver AI. Your task is to perform a final review of a relief application.
         An automated, deterministic rules engine has already processed the application and provided a preliminary decision. You have the final say.
@@ -370,6 +465,7 @@ export async function getAIAssistedDecision(
         const jsonString = response.text.trim();
         const aiResponse = JSON.parse(jsonString) as { finalDecision: 'Approved' | 'Denied', finalReason: string, finalAward: number };
 
+        // Recalculate remaining balances based on the AI's final award amount.
         const finalRecommendedAward = aiResponse.finalAward;
         let finalRemaining12mo = appData.currentTwelveMonthRemaining;
         let finalRemainingLifetime = appData.currentLifetimeRemaining;
@@ -379,6 +475,7 @@ export async function getAIAssistedDecision(
             finalRemainingLifetime -= finalRecommendedAward;
         }
 
+        // Return a new decision object, carrying over audit data but using the AI's final judgment.
         return {
             ...preliminaryDecision, // Carry over normalized data and policy hits for audit
             decision: aiResponse.finalDecision,
@@ -390,7 +487,8 @@ export async function getAIAssistedDecision(
 
     } catch (error) {
         console.error("Gemini final decision failed:", error);
-        // Fallback: If AI fails, trust the preliminary decision to avoid halting the process
+        // Fallback: If the AI call fails, trust the preliminary decision. This ensures the application
+        // process isn't halted by an AI service interruption.
         return {
             ...preliminaryDecision,
             reasons: [...preliminaryDecision.reasons, "AI final review failed; this decision is based on the automated rules engine only."],
@@ -412,6 +510,12 @@ const addressJsonSchema = {
     required: ["street1", "city", "state", "zip", "country"]
 };
 
+/**
+ * Uses Gemini to parse an unstructured address string into a structured JSON object.
+ * The prompt includes rules for standardization (e.g., casing, state abbreviations).
+ * @param addressString - The unstructured address string provided by the user.
+ * @returns A promise that resolves to a partial `Address` object.
+ */
 export async function parseAddressWithGemini(addressString: string): Promise<Partial<Address>> {
   if (!addressString) return {};
 
@@ -447,7 +551,7 @@ export async function parseAddressWithGemini(addressString: string): Promise<Par
     const jsonString = response.text.trim();
     if (jsonString) {
       const parsed = JSON.parse(jsonString);
-      // Filter out null values before returning
+      // Clean up the response by removing any fields the model returned as null.
       Object.keys(parsed).forEach(key => {
         if (parsed[key] === null) {
           delete parsed[key];
@@ -462,6 +566,8 @@ export async function parseAddressWithGemini(addressString: string): Promise<Par
   }
 }
 
+// Defines the comprehensive JSON schema for parsing a user's free-text description of their situation.
+// This allows the "AI Application Starter" to extract a wide range of details into a structured format.
 const applicationDetailsJsonSchema = {
     type: Type.OBJECT,
     properties: {
@@ -484,6 +590,7 @@ const applicationDetailsJsonSchema = {
             type: Type.OBJECT,
             properties: {
                 event: { type: Type.STRING, description: "The type of event the user is applying for relief from.", enum: allEventTypes },
+                eventName: { type: Type.STRING, description: "The official name of the hurricane or tropical storm, if applicable." },
                 otherEvent: { type: Type.STRING, description: "The user-specified disaster if 'My disaster is not listed' is the event type." },
                 eventDate: { type: Type.STRING, description: "The date the disaster occurred, in YYYY-MM-DD format." },
                 evacuated: { type: Type.STRING, description: "Whether the user evacuated or plans to.", enum: ['Yes', 'No'] },
@@ -496,6 +603,13 @@ const applicationDetailsJsonSchema = {
     }
 };
 
+/**
+ * Uses Gemini to parse a free-text description of a user's situation and extract
+ * structured data to pre-fill an application form.
+ * @param description - The user's unstructured text description.
+ * @param isProxy - A boolean indicating if the submission is from an admin on behalf of a user.
+ * @returns A promise that resolves to a partial `ApplicationFormData` object.
+ */
 export async function parseApplicationDetailsWithGemini(
   description: string,
   isProxy: boolean = false
@@ -519,9 +633,10 @@ export async function parseApplicationDetailsWithGemini(
 
     Rules for other fields:
     1. eventDate, employmentStartDate: Must be in YYYY-MM-DD format. Infer the year if not specified (assume current year).
-    2. householdIncome, powerLossDays: Extract as a number, ignoring currency symbols or commas.
-    3. homeowner, evacuated, powerLoss: Should be "Yes" or "No".
-    4. mobileNumber: Extract any phone number mentioned by the user.
+    2. eventName: If the event is a hurricane or tropical storm, extract its specific name (e.g., 'Hurricane Ian').
+    3. householdIncome, powerLossDays: Extract as a number, ignoring currency symbols or commas.
+    4. homeowner, evacuated, powerLoss: Should be "Yes" or "No".
+    5. mobileNumber: Extract any phone number mentioned by the user.
 
     User's description: "${description}"
   `;
@@ -546,7 +661,7 @@ export async function parseApplicationDetailsWithGemini(
     const jsonString = response.text.trim();
     if (jsonString) {
       const parsed = JSON.parse(jsonString);
-      // Clean up nulls
+      // Recursively clean up any null values from the nested JSON response.
       if (parsed.profileData) {
         Object.keys(parsed.profileData).forEach(key => {
             if (parsed.profileData[key] === null) delete parsed.profileData[key];

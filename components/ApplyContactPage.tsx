@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { UserProfile, Address, ApplicationFormData } from '../types';
 import CountrySelector from './CountrySelector';
 import SearchableSelector from './SearchableSelector';
@@ -34,9 +35,20 @@ const NotificationIcon: React.FC = () => (
 type ApplySection = 'aiStarter' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
+  const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
+  const [openSection, setOpenSection] = useState<ApplySection | null>(() => {
+    const saved = localStorage.getItem('applyContactPage_openSection');
+    return saved ? JSON.parse(saved) : 'aiStarter';
+  });
   const [isAIParsing, setIsAIParsing] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('applyContactPage_openSection', JSON.stringify(openSection));
+  }, [openSection]);
+
+  const yes = t('common.yes');
+  const no = t('common.no');
 
   const sectionHasErrors = useMemo(() => {
     // Contact
@@ -214,13 +226,13 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
 
   return (
     <div className="space-y-4">
-        {isAIParsing && <LoadingOverlay message="We are applying your details to the application now..." />}
+        {isAIParsing && <LoadingOverlay message={t('common.aiApplyingDetails')} />}
 
         {/* AI Application Starter Section */}
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('aiStarter')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'aiStarter'} aria-controls="ai-starter-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Let's Get Started</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.getStartedTitle')}</h2>
                 </div>
                 <ChevronIcon isOpen={openSection === 'aiStarter'} />
             </button>
@@ -241,7 +253,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                             aria-controls="ai-starter-section"
                             aria-expanded="true"
                         >
-                            Collapse
+                            {t('applyContactPage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
@@ -255,19 +267,31 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'contact'} aria-controls="contact-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Contact Information</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.contactInfoTitle')}</h2>
                     {sectionHasErrors.contact && openSection !== 'contact' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'contact'} />
             </button>
             <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSection === 'contact' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput label="First Name" id="firstName" required value={formData.firstName} onChange={e => handleFormUpdate({ firstName: e.target.value })} error={errors.firstName} />
-                    <FormInput label="Middle Name(s)" id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
-                    <FormInput label="Last Name" id="lastName" required value={formData.lastName} onChange={e => handleFormUpdate({ lastName: e.target.value })} error={errors.lastName} />
-                    <FormInput label="Suffix" id="suffix" value={formData.suffix || ''} onChange={e => handleFormUpdate({ suffix: e.target.value })} />
-                    <FormInput label="Email" id="email" required value={formData.email} disabled />
-                    <FormInput label="Mobile Number" id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormUpdate({ mobileNumber: e.target.value })} error={errors.mobileNumber} placeholder="(555) 555-5555" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 pt-4">
+                    <div className="grid grid-cols-5 gap-x-4">
+                        <div className="col-span-3">
+                            <FormInput label={t('applyContactPage.firstName')} id="firstName" required value={formData.firstName} onChange={e => handleFormUpdate({ firstName: e.target.value })} error={errors.firstName} />
+                        </div>
+                        <div className="col-span-2">
+                            <FormInput label={t('applyContactPage.middleName')} id="middleName" value={formData.middleName || ''} onChange={e => handleFormUpdate({ middleName: e.target.value })} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-x-4">
+                        <div className="col-span-3">
+                            <FormInput label={t('applyContactPage.lastName')} id="lastName" required value={formData.lastName} onChange={e => handleFormUpdate({ lastName: e.target.value })} error={errors.lastName} />
+                        </div>
+                        <div className="col-span-2">
+                            <FormInput label={t('applyContactPage.suffix')} id="suffix" value={formData.suffix || ''} onChange={e => handleFormUpdate({ suffix: e.target.value })} />
+                        </div>
+                    </div>
+                    <FormInput label={t('applyContactPage.email')} id="email" required value={formData.email} disabled />
+                    <FormInput label={t('applyContactPage.mobileNumber')} id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormUpdate({ mobileNumber: e.target.value })} error={errors.mobileNumber} placeholder={t('applyContactPage.mobileNumberPlaceholder')} />
                 </div>
                 {openSection === 'contact' && (
                     <div className="flex justify-end pt-4">
@@ -275,10 +299,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                             type="button"
                             onClick={() => toggleSection('contact')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="contact-section"
-                            aria-expanded="true"
                         >
-                            Collapse
+                            {t('applyContactPage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
@@ -292,7 +314,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Primary Address</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.primaryAddressTitle')}</h2>
                     {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'primaryAddress'} />
@@ -307,10 +329,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                             type="button"
                             onClick={() => toggleSection('primaryAddress')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="address-section"
-                            aria-expanded="true"
                         >
-                            Collapse
+                            {t('applyContactPage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
@@ -324,7 +344,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Mailing Address</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.mailingAddressTitle')}</h2>
                     {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'mailingAddress'} />
@@ -332,11 +352,11 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
              <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-4 pt-4">
                     <FormRadioGroup 
-                        legend="Mailing Address Same as Primary?" 
+                        legend={t('applyContactPage.mailingAddressSame')}
                         name="isMailingAddressSame" 
-                        options={['Yes', 'No']} 
-                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? 'Yes' : 'No')} 
-                        onChange={value => handleFormUpdate({ isMailingAddressSame: value === 'Yes' })} 
+                        options={[yes, no]} 
+                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} 
+                        onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} 
                         required
                         error={errors.isMailingAddressSame}
                     />
@@ -352,10 +372,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                             type="button"
                             onClick={() => toggleSection('mailingAddress')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="mailing-section"
-                            aria-expanded="true"
                         >
-                            Collapse
+                            {t('applyContactPage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
@@ -369,35 +387,39 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Additional Details</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.additionalDetailsTitle')}</h2>
                     {sectionHasErrors.additionalDetails && openSection !== 'additionalDetails' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
             <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <FormInput type="date" label="Employment Start Date" id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
-                    <SearchableSelector
-                        label="Eligibility Type"
-                        id="eligibilityType"
-                        required
-                        value={formData.eligibilityType}
-                        options={employmentTypes}
-                        onUpdate={value => handleFormUpdate({ eligibilityType: value })}
-                        variant="underline"
-                        error={errors.eligibilityType}
-                    />
-                    <FormInput type="number" label="Estimated Annual Household Income" id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormUpdate({ householdIncome: parseFloat(e.target.value) || '' })} error={errors.householdIncome} />
-                    <FormInput type="number" label="Number of people in household" id="householdSize" required value={formData.householdSize} onChange={e => handleFormUpdate({ householdSize: parseInt(e.target.value, 10) || '' })} error={errors.householdSize} />
-                    <FormRadioGroup legend="Do you own your own home?" name="homeowner" options={['Yes', 'No']} value={formData.homeowner} onChange={value => handleFormUpdate({ homeowner: value as 'Yes' | 'No' })} required error={errors.homeowner} />
-                    <SearchableSelector
-                        label="Preferred Language"
-                        id="preferredLanguage"
-                        value={formData.preferredLanguage || ''}
-                        options={languages}
-                        onUpdate={value => handleFormUpdate({ preferredLanguage: value })}
-                        variant="underline"
-                    />
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormInput type="date" label={t('applyContactPage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
+                        <SearchableSelector
+                            label={t('applyContactPage.eligibilityType')}
+                            id="eligibilityType"
+                            required
+                            value={formData.eligibilityType}
+                            options={employmentTypes}
+                            onUpdate={value => handleFormUpdate({ eligibilityType: value })}
+                            variant="underline"
+                            error={errors.eligibilityType}
+                        />
+                    </div>
+                    <FormInput type="number" label={t('applyContactPage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormUpdate({ householdIncome: parseFloat(e.target.value) || '' })} error={errors.householdIncome} />
+                    <FormInput type="number" label={t('applyContactPage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormUpdate({ householdSize: parseInt(e.target.value, 10) || '' })} error={errors.householdSize} />
+                    <div className="grid grid-cols-2 gap-6">
+                        <FormRadioGroup legend={t('applyContactPage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormUpdate({ homeowner: value === yes ? 'Yes' : 'No' })} required error={errors.homeowner} />
+                        <SearchableSelector
+                            label={t('applyContactPage.preferredLanguage')}
+                            id="preferredLanguage"
+                            value={formData.preferredLanguage || ''}
+                            options={languages}
+                            onUpdate={value => handleFormUpdate({ preferredLanguage: value })}
+                            variant="underline"
+                        />
+                    </div>
                 </div>
                 {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">
@@ -405,10 +427,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                             type="button"
                             onClick={() => toggleSection('additionalDetails')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="details-section"
-                            aria-expanded="true"
                         >
-                            Collapse
+                            {t('applyContactPage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
@@ -422,7 +442,7 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         <fieldset className="pb-4">
             <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'consent'} aria-controls="consent-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Consent & Acknowledgement</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.consentTitle')}</h2>
                     {sectionHasErrors.consent && openSection !== 'consent' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'consent'} />
@@ -432,17 +452,17 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                     {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="ackPolicies" required checked={formData.ackPolicies} onChange={e => handleFormUpdate({ ackPolicies: e.target.checked })} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
-                        <label htmlFor="ackPolicies" className="flex items-center ml-3 text-sm text-white">I have read and agree to E4E Relief’s Privacy Policy and Cookie Policy. <RequiredIndicator required isMet={formData.ackPolicies} /></label>
+                        <label htmlFor="ackPolicies" className="flex items-center ml-3 text-sm text-white">{t('applyContactPage.ackPolicies')} <RequiredIndicator required isMet={formData.ackPolicies} /></label>
                     </div>
                     {errors.commConsent && <p className="text-red-400 text-xs">{errors.commConsent}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="commConsent" required checked={formData.commConsent} onChange={e => handleFormUpdate({ commConsent: e.target.checked })} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
-                        <label htmlFor="commConsent" className="flex items-center ml-3 text-sm text-white">I consent to receive emails and text messages regarding my application. <RequiredIndicator required isMet={formData.commConsent} /></label>
+                        <label htmlFor="commConsent" className="flex items-center ml-3 text-sm text-white">{t('applyContactPage.commConsent')} <RequiredIndicator required isMet={formData.commConsent} /></label>
                     </div>
                     {errors.infoCorrect && <p className="text-red-400 text-xs">{errors.infoCorrect}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="infoCorrect" required checked={formData.infoCorrect} onChange={e => handleFormUpdate({ infoCorrect: e.target.checked })} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
-                        <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">All information I have provided is accurate. <RequiredIndicator required isMet={formData.infoCorrect} /></label>
+                        <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">{t('applyContactPage.infoCorrect')} <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
                 </div>
                 {openSection === 'consent' && (
@@ -451,10 +471,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
                             type="button"
                             onClick={() => toggleSection('consent')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="consent-section"
-                            aria-expanded="true"
                         >
-                            Collapse
+                            {t('applyContactPage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
@@ -467,11 +485,11 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
       <div className="flex justify-end pt-8 flex-col items-end">
         {Object.keys(errors).length > 0 && (
             <div className="bg-red-800/50 border border-red-600 text-red-200 p-3 rounded-md mb-4 w-full max-w-sm text-sm" role="alert">
-                <p className="font-bold text-center">Please correct the highlighted errors to continue.</p>
+                <p className="font-bold text-center">{t('applyContactPage.errorCorrection')}</p>
             </div>
         )}
         <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Next
+          {t('common.next')}
         </button>
       </div>
     </div>

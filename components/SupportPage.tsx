@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Page } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface SupportPageProps {
   navigate: (page: Page) => void;
@@ -7,10 +8,11 @@ interface SupportPageProps {
 }
 
 const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
+  const { t } = useTranslation();
   
   const SubActionCard: React.FC<{ title: string; description: string; onClick: () => void; }> = ({ title, description, onClick }) => (
     <div 
-      className="bg-[#004b8d] p-6 rounded-lg shadow-lg hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
+      className="bg-[#004b8d] p-6 rounded-lg shadow-lg md:hover:bg-[#005ca0]/50 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
       onClick={onClick}
     >
       <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-2">{title}</h2>
@@ -28,7 +30,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
             </svg>
           </button>
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-            Support Center
+            {t('supportPage.title')}
           </h1>
         </div>
         
@@ -36,11 +38,11 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
         <div className="p-4 md:p-8 max-w-2xl mx-auto">
           <div className="space-y-6 text-center">
             <div>
-              <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Email</h3>
+              <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">{t('supportPage.emailLabel')}</h3>
               <a href="mailto:support@e4erelief.example" className="font-semibold text-white hover:underline text-lg">support@e4erelief.example</a>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Phone</h3>
+              <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">{t('supportPage.phoneLabel')}</h3>
               <a href="tel:800-555-0199" className="font-semibold text-white hover:underline text-lg">(800) 555-0199</a>
             </div>
             <div>
@@ -48,23 +50,23 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
                 onClick={openChatbot}
                 className="bg-transparent border border-[#ff8400] text-[#ff8400] hover:bg-[#ff8400]/20 font-semibold py-2 px-6 rounded-md transition-colors duration-200"
               >
-                Talk to Relief Assistant
+                {t('supportPage.chatbotButton')}
               </button>
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-4 text-center">Relief Assistant uses AI. Call or email us with any additional questions.</p>
+          <p className="text-xs text-gray-400 mt-4 text-center">{t('supportPage.chatbotDisclaimer')}</p>
         </div>
 
         {/* Secondary Tiles */}
         <div className="grid grid-cols-2 gap-6 w-full mt-8 md:mt-12 max-w-2xl mx-auto">
           <SubActionCard 
-            title="FAQs" 
-            description="Find answers to common questions." 
+            title={t('supportPage.faqTitle')}
+            description={t('supportPage.faqDescription')} 
             onClick={() => navigate('faq')} 
           />
           <SubActionCard 
-            title="Payments" 
-            description="Learn how grants are disbursed." 
+            title={t('supportPage.paymentsTitle')} 
+            description={t('supportPage.paymentsDescription')}
             onClick={() => navigate('paymentOptions')} 
           />
         </div>

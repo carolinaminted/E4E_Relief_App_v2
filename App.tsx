@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
-// FIX: Import the centralized Page type and alias it to avoid naming conflicts.
+// FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
 import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage } from './types';
 import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
@@ -8,10 +8,12 @@ import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
 import { authClient } from './services/firebaseAuthClient';
 import { usersRepo, identitiesRepo, applicationsRepo, fundsRepo } from './services/firestoreRepo';
+import { useTranslation } from 'react-i18next';
 
 // Page Components
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 import HomePage from './components/HomePage';
 import ApplyPage from './components/ApplyPage';
 import ProfilePage from './components/ProfilePage';
@@ -24,7 +26,6 @@ import PaymentOptionsPage from './components/PaymentOptionsPage';
 import DonatePage from './components/DonatePage';
 import EligibilityPage from './components/EligibilityPage';
 import FundPortalPage from './components/FundPortalPage';
-import DashboardPage from './components/DashboardPage';
 import TicketingPage from './components/TicketingPage';
 import ProgramDetailsPage from './components/ProgramDetailsPage';
 import ProxyApplyPage from './components/ProxyPage';
@@ -50,6 +51,7 @@ type AuthState = {
 };
 
 function App() {
+  const { t } = useTranslation();
   const [page, setPage] = useState<GlobalPage>('login');
   const [authState, setAuthState] = useState<AuthState>({ status: 'loading', user: null, profile: null, claims: {} });
   
@@ -295,16 +297,16 @@ function App() {
     if (!identityToRemove) return;
 
     if (activeIdentity?.id === identityId) {
-        alert("You cannot remove your active identity.");
+        alert(t('profilePage.cannotRemoveActive'));
         return;
     }
 
-    if (window.confirm(`Are you sure you want to remove the identity for ${identityToRemove.fundName}?`)) {
+    if (window.confirm(t('profilePage.removeIdentityConfirm', { fundName: identityToRemove.fundName }))) {
         console.log(`[Telemetry] track('IdentityRemove', { fundCode: ${identityToRemove.fundCode} })`);
         await identitiesRepo.remove(identityId);
         setAllIdentities(prev => prev.filter(id => id.id !== identityId));
     }
-  }, [currentUser, allIdentities, activeIdentity]);
+  }, [currentUser, allIdentities, activeIdentity, t]);
 
   const handleVerificationSuccess = useCallback(async () => {
     if (!currentUser) return;
@@ -360,8 +362,8 @@ function App() {
     if (!currentUser) return;
     // The onSnapshot listener will automatically update the UI state from this write.
     await usersRepo.update(currentUser.uid, updatedProfile);
-    alert('Profile saved!');
-  }, [currentUser]);
+    alert(t('profilePage.saveSuccess', 'Profile saved!')); // Using a default value
+  }, [currentUser, t]);
 
   const handleApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
     if (!currentUser || !activeFund) {
@@ -551,11 +553,11 @@ function App() {
     });
   }, []);
   
-  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification'];
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
-      return <LoadingOverlay message="Authenticating..." />;
+      return <LoadingOverlay message={t('app.authenticating')} />;
     }
     
     if (authState.status === 'signedOut') {
@@ -564,8 +566,10 @@ function App() {
             <div className="w-full max-w-lg px-4 pt-8 sm:pt-12">
                 {page === 'register' ? (
                 <RegisterPage onRegister={authClient.register} switchToLogin={() => setPage('login')} />
+                ) : page === 'forgotPassword' ? (
+                <ForgotPasswordPage onSendResetLink={authClient.sendPasswordResetEmail} switchToLogin={() => setPage('login')} />
                 ) : (
-                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} />
+                <LoginPage onLogin={authClient.signIn} switchToRegister={() => setPage('register')} switchToForgotPassword={() => setPage('forgotPassword')} />
                 )}
             </div>
         </div>
@@ -573,13 +577,13 @@ function App() {
     }
     
     // This case should now be covered by the loading overlay above, but as a fallback:
-    if (!currentUser) return <LoadingOverlay message="Loading Profile..." />;
+    if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
 
     switch (page) {
       case 'classVerification':
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
-        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} />;
+        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} />;
       case 'profile':
         return <ProfilePage 
                     navigate={navigate} 
@@ -611,7 +615,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -623,10 +627,8 @@ function App() {
         return <EligibilityPage navigate={navigate} user={currentUser} />;
       case 'fundPortal':
         return <FundPortalPage navigate={navigate} user={currentUser} />;
-      case 'dashboard':
-        return <DashboardPage navigate={navigate} />;
       case 'liveDashboard':
-        return <LiveDashboardPage navigate={navigate} />;
+        return <LiveDashboardPage navigate={navigate} currentUser={currentUser} />;
       case 'ticketing':
         return <TicketingPage navigate={navigate} />;
       case 'programDetails':
@@ -639,10 +641,11 @@ function App() {
                     userProfile={currentUser}
                     onAddIdentity={handleStartAddIdentity}
                     mainRef={mainRef}
+                    activeFund={activeFund}
                 />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} isVerifiedAndEligible={isVerifiedAndEligible} canApply={canApply} fundName={currentUser.fundName} userRole={currentUser.role} />;
+        return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
     }
   };
   
@@ -671,7 +674,6 @@ function App() {
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header 
-            navigate={navigate}
             userName={currentUser.firstName}
             onLogout={handleLogout}
         />
@@ -681,13 +683,13 @@ function App() {
                <div className="relative flex justify-center items-center my-8">
                   <div className="text-center">
                       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        Profile
+                        {t('profilePage.title')}
                       </h1>
                       {activeIdentity && (
                         <div className="mt-2 flex flex-col items-center gap-2">
                           <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
                            <span className="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors bg-green-800/50 text-green-300">
-                              Eligible to apply
+                              {t('applyPage.eligibility')}
                           </span>
                         </div>
                       )}
@@ -706,8 +708,8 @@ function App() {
             canApply={canApply}
         />
         
-        {/* FIX: Pass setIsChatbotOpen to the setIsOpen prop. */}
-        {page !== 'classVerification' && <ChatbotWidget applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
+        {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
+        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon } from './Icons';
-// FIX: Use the centralized Page type from types.ts to ensure all navigation values are covered, including 'login' and 'register'.
 import type { Page } from '../types';
 
 interface BottomNavBarProps {
@@ -12,7 +12,7 @@ interface BottomNavBarProps {
 
 interface NavItemType {
   page: Page;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   disabled?: boolean;
 }
@@ -32,21 +32,24 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
 );
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, userRole, canApply }) => {
+  const { t } = useTranslation();
+
   const baseNavItems: NavItemType[] = [
-    { page: 'home', label: 'Home', icon: <HomeIcon className="h-6 w-6" /> },
-    { page: 'profile', label: 'Profile', icon: <ProfileIcon className="h-6 w-6" /> },
-    { page: 'apply', label: 'Apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
-    { page: 'support', label: 'Support', icon: <SupportIcon className="h-6 w-6" /> },
-    { page: 'donate', label: 'Donate', icon: <DonateIcon className="h-6 w-6" /> },
+    { page: 'home', labelKey: 'nav.home', icon: <HomeIcon className="h-6 w-6" /> },
+    { page: 'profile', labelKey: 'nav.profile', icon: <ProfileIcon className="h-6 w-6" /> },
+    { page: 'apply', labelKey: 'nav.apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
+    { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" /> },
   ];
 
   const navItems = [...baseNavItems];
   if (userRole === 'Admin') {
-    navItems.push({ page: 'fundPortal', label: 'Fund', icon: <DashboardIcon className="h-6 w-6" /> });
+    // A shorter label for the bottom nav
+    navItems.push({ page: 'fundPortal', labelKey: 'nav.fundPortal', icon: <DashboardIcon className="h-6 w-6" /> });
   }
 
   // If admin is on any portal page, highlight 'Fund Portal'
-  const adminDashboardPages: Page[] = ['dashboard', 'fundPortal', 'proxy', 'ticketing', 'tokenUsage', 'programDetails', 'liveDashboard'];
+  // FIX: Removed 'dashboard' as it is not a valid Page type.
+  const adminDashboardPages: Page[] = ['fundPortal', 'proxy', 'ticketing', 'tokenUsage', 'programDetails', 'liveDashboard'];
   const activePage = userRole === 'Admin' && adminDashboardPages.includes(currentPage) ? 'fundPortal' : currentPage;
 
   return (
@@ -54,7 +57,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
       {navItems.map(item => (
         <NavItem
           key={item.page}
-          label={item.label}
+          label={t(item.labelKey)}
           icon={item.icon}
           onClick={() => navigate(item.page as Page)}
           isActive={activePage === item.page}

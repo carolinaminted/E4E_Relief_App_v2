@@ -29,8 +29,9 @@ The proposed data model is designed to be efficient, scalable, and easy to secur
       "lastName": "Raichu",
       "role": "User", // 'User' | 'Admin' - managed via Custom Claims
       "activeIdentityId": "some_uid_DOM", // Reference to the active doc in /identities
+      "tokensUsedTotal": 10500, // Aggregate count
+      "estimatedCostTotal": 0.045, // Aggregate cost
       "createdAt": "2023-10-27T10:00:00Z",
-      "updatedAt": "2023-10-27T10:00:00Z",
       // ... other fields from UserProfile
     }
     ```
@@ -76,7 +77,23 @@ The proposed data model is designed to be efficient, scalable, and easy to secur
       // ... other fields from Application
     }
     ```
--   **Optional Optimization:** For simpler security rules on the client, a Cloud Function can mirror user-specific applications to a sub-collection: `/users/{uid}/applications/{applicationId}`.
+
+#### `/tokenEvents/{eventId}`
+- **Purpose:** Stores a detailed record of every individual AI API call for analytics and auditing.
+- **Schema:**
+    ```json
+    {
+        "uid": "firebase-auth-uid",
+        "userId": "user@example.com",
+        "fundCode": "DOM",
+        "feature": "AI Assistant",
+        "model": "gemini-2.5-flash",
+        "inputTokens": 500,
+        "outputTokens": 250,
+        "timestamp": "2023-10-28T12:00:00Z"
+        // ... other fields from TokenEvent
+    }
+    ```
 
 #### `/users/{uid}/chatSessions/{sessionId}/messages/{messageId}`
 - **Purpose:** Stores the chat history for the AI Relief Assistant for each user. This nested structure ensures chat data is private and secure.
@@ -148,7 +165,6 @@ service cloud.firestore {
     match /identities/{identityId} {
       allow read: if isAdmin() || (isAuthed() && resource.data.uid == request.auth.uid);
       allow create: if isSelf(request.resource.data.uid) || isAdmin();
-      // Users can update limited fields; Admins can update verification status.
       allow update: if isAdmin() || (isSelf(resource.data.uid) && request.resource.data.diff(resource.data).changedKeys().hasOnly(['isActive']));
       allow delete: if isAdmin();
     }
@@ -156,13 +172,15 @@ service cloud.firestore {
     match /applications/{appId} {
       allow read: if isAdmin() || (isAuthed() && resource.data.uid == request.auth.uid);
       allow create: if isAdmin() || (isSelf(request.resource.data.uid));
-      allow update, delete: if isAdmin(); // Allow admin corrections/deletions
+      allow update, delete: if isAdmin();
     }
     
-    // Rules for optional mirrored user application data
-    match /users/{uid}/applications/{appId} {
-      allow read: if isSelf(uid) || isAdmin();
-      allow write: if isAdmin(); // Should only be written by a Cloud Function
+    match /tokenEvents/{eventId} {
+      allow create: if isSelf(request.resource.data.uid);
+      allow read: if isAdmin() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.fundCode == resource.data.fundCode
+      );
+      allow update, delete: if false;
     }
 
     match /users/{uid}/chatSessions/{sid}/messages/{mid} {
@@ -184,7 +202,7 @@ The following composite indexes must be created in Firestore to support admin qu
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+        { "fieldPath": "submittedDate", "order": "DESCENDING" }
       ]
     },
     {
@@ -201,6 +219,23 @@ The following composite indexes must be created in Firestore to support admin qu
       "fields": [
         { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "fundCode", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "tokenEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "fundCode", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
+      ]
+    },
+     {
+      "collectionGroup": "tokenEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "fundCode", "order": "ASCENDING" },
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
       ]
     }
   ]

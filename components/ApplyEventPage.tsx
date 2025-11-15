@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { EventData } from '../types';
+import type { Fund } from '../data/fundData';
 import SearchableSelector from './SearchableSelector';
-import { allEventTypes } from '../data/appData';
 import RequiredIndicator from './RequiredIndicator';
 
 interface ApplyEventPageProps {
@@ -9,6 +10,7 @@ interface ApplyEventPageProps {
   updateFormData: (data: Partial<EventData>) => void;
   nextStep: () => void;
   prevStep: () => void;
+  activeFund: Fund | null;
 }
 
 // --- Reusable Form Components ---
@@ -50,33 +52,41 @@ const FormRadioGroup: React.FC<{ legend: string, name: string, options: string[]
     </div>
 );
 
-const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormData, nextStep, prevStep }) => {
+const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormData, nextStep, prevStep, activeFund }) => {
+  const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const eligibleEventsForFund = useMemo(() => {
+    if (!activeFund) {
+      // Fallback to a minimal list if the fund configuration isn't loaded.
+      // The UI should ideally prevent reaching this state, but this is a safeguard.
+      return ['My disaster is not listed'];
+    }
+    const allEvents = [
+      ...(activeFund.eligibleDisasters || []),
+      ...(activeFund.eligibleHardships || []),
+      'My disaster is not listed'
+    ];
+    // Use a Set to remove any potential duplicates from the configuration.
+    return [...new Set(allEvents)];
+  }, [activeFund]);
   
+  const yes = t('common.yes');
+  const no = t('common.no');
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    // 201
-    if (!formData.event) newErrors.event = 'Please select the disaster you experienced.';
-    // 202
-    if (formData.event === 'My disaster is not listed' && !formData.otherEvent) newErrors.otherEvent = 'Please specify the disaster.';
-    // 203
-    if (!formData.eventDate) newErrors.eventDate = 'Please enter the date of the event.';
-    // 204
-    if (!formData.evacuated) newErrors.evacuated = 'Please answer if you have evacuated.';
-    // 205
-    if (formData.evacuated === 'Yes' && !formData.evacuatingFromPrimary) newErrors.evacuatingFromPrimary = 'Please answer if you are evacuating from your primary residence.';
-    // 207
-    if (formData.evacuated === 'Yes' && !formData.stayedWithFamilyOrFriend) newErrors.stayedWithFamilyOrFriend = 'Please answer if you stayed with family or a friend.';
-    // 208
-    if (formData.evacuated === 'Yes' && !formData.evacuationStartDate) newErrors.evacuationStartDate = 'Please enter your evacuation start date.';
-    // 209
-    if (formData.evacuated === 'Yes' && (!formData.evacuationNights || formData.evacuationNights <= 0)) newErrors.evacuationNights = 'Please enter a valid number of nights.';
-    // 210
-    if (!formData.powerLoss) newErrors.powerLoss = 'Please answer if you lost power.';
-    // 211
-    if (formData.powerLoss === 'Yes' && (!formData.powerLossDays || formData.powerLossDays <= 0)) newErrors.powerLossDays = 'Please enter a valid number of days.';
-    // requestedAmount
-    if (!formData.requestedAmount || formData.requestedAmount <= 0) newErrors.requestedAmount = 'Requested amount must be greater than zero.';
+    if (!formData.event) newErrors.event = t('applyEventPage.errorEvent');
+    if (formData.event === 'My disaster is not listed' && !formData.otherEvent) newErrors.otherEvent = t('applyEventPage.errorOtherEvent');
+    if (!formData.eventDate) newErrors.eventDate = t('applyEventPage.errorEventDate');
+    if (!formData.evacuated) newErrors.evacuated = t('applyEventPage.errorEvacuated');
+    if (formData.evacuated === 'Yes' && !formData.evacuatingFromPrimary) newErrors.evacuatingFromPrimary = t('applyEventPage.errorEvacuatingFromPrimary');
+    if (formData.evacuated === 'Yes' && !formData.stayedWithFamilyOrFriend) newErrors.stayedWithFamilyOrFriend = t('applyEventPage.errorStayedWithFamily');
+    if (formData.evacuated === 'Yes' && !formData.evacuationStartDate) newErrors.evacuationStartDate = t('applyEventPage.errorEvacuationStartDate');
+    if (formData.evacuated === 'Yes' && (!formData.evacuationNights || formData.evacuationNights <= 0)) newErrors.evacuationNights = t('applyEventPage.errorEvacuationNights');
+    if (!formData.powerLoss) newErrors.powerLoss = t('applyEventPage.errorPowerLoss');
+    if (formData.powerLoss === 'Yes' && (!formData.powerLossDays || formData.powerLossDays <= 0)) newErrors.powerLossDays = t('applyEventPage.errorPowerLossDays');
+    if (!formData.requestedAmount || formData.requestedAmount <= 0) newErrors.requestedAmount = t('applyEventPage.errorRequestedAmount');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -102,23 +112,32 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
 
   return (
     <div className="space-y-8 p-4 md:p-8">
-      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">Event Details</h2>
+      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">{t('applyEventPage.title')}</h2>
         <div className="space-y-6">
-            {/* 201 */}
             <SearchableSelector
-                label="Select the disaster experienced"
+                label={t('applyEventPage.disasterLabel')}
                 id="event"
                 required
                 value={formData.event || ''}
-                options={allEventTypes}
+                options={eligibleEventsForFund}
                 onUpdate={value => handleUpdate({ event: value })}
                 variant="underline"
                 error={errors.event}
             />
-            {/* 202 */}
+            {formData.event === 'Tropical Storm/Hurricane' && activeFund?.eligibleStorms && activeFund.eligibleStorms.length > 0 && (
+                <SearchableSelector
+                    label="Select the storm name"
+                    id="eventName"
+                    value={formData.eventName || ''}
+                    options={activeFund.eligibleStorms}
+                    onUpdate={value => handleUpdate({ eventName: value })}
+                    variant="underline"
+                    error={errors.eventName}
+                />
+            )}
             {formData.event === 'My disaster is not listed' && (
                 <FormInput 
-                    label="Choose the disaster that affected you"
+                    label={t('applyEventPage.otherDisasterLabel')}
                     id="otherEvent"
                     required
                     value={formData.otherEvent || ''}
@@ -126,9 +145,8 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                     error={errors.otherEvent}
                 />
             )}
-             {/* 203 */}
             <FormInput
-                label="What was the date of your event?"
+                label={t('applyEventPage.eventDateLabel')}
                 id="eventDate"
                 type="date"
                 required
@@ -136,20 +154,18 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 onChange={e => handleUpdate({ eventDate: e.target.value })}
                 error={errors.eventDate}
             />
-            {/* 210 */}
             <FormRadioGroup
-                legend="Did this event cause you to lose power at your primary residence for more than 4 hours?"
+                legend={t('applyEventPage.powerLossLabel')}
                 name="powerLoss"
                 required
-                options={['Yes', 'No']}
-                value={formData.powerLoss}
-                onChange={value => handleUpdate({ powerLoss: value })}
+                options={[yes, no]}
+                value={formData.powerLoss === 'Yes' ? yes : formData.powerLoss === 'No' ? no : ''}
+                onChange={value => handleUpdate({ powerLoss: value === yes ? 'Yes' : 'No' })}
                 error={errors.powerLoss}
             />
-            {/* 211 */}
             {formData.powerLoss === 'Yes' && (
                 <FormInput
-                    label="How many day(s) were you without power?"
+                    label={t('applyEventPage.powerLossDaysLabel')}
                     id="powerLossDays"
                     type="number"
                     min="1"
@@ -159,51 +175,45 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                     error={errors.powerLossDays}
                 />
             )}
-            {/* 204 */}
             <FormRadioGroup
-                legend="Have you evacuated, or are you planning to evacuate?"
+                legend={t('applyEventPage.evacuatedLabel')}
                 name="evacuated"
                 required
-                options={['Yes', 'No']}
-                value={formData.evacuated}
-                onChange={value => handleUpdate({ evacuated: value })}
+                options={[yes, no]}
+                value={formData.evacuated === 'Yes' ? yes : formData.evacuated === 'No' ? no : ''}
+                onChange={value => handleUpdate({ evacuated: value === yes ? 'Yes' : 'No' })}
                 error={errors.evacuated}
             />
-            {/* Evacuation Section */}
             {formData.evacuated === 'Yes' && (
                 <div className="space-y-6 pl-4 border-l-2 border-[#ff8400]/50">
-                    {/* 205 */}
                     <FormRadioGroup
-                        legend="Are you evacuating from your primary residence?"
+                        legend={t('applyEventPage.evacuatingFromPrimaryLabel')}
                         name="evacuatingFromPrimary"
                         required
-                        options={['Yes', 'No']}
-                        value={formData.evacuatingFromPrimary}
-                        onChange={value => handleUpdate({ evacuatingFromPrimary: value })}
+                        options={[yes, no]}
+                        value={formData.evacuatingFromPrimary === 'Yes' ? yes : formData.evacuatingFromPrimary === 'No' ? no : ''}
+                        onChange={value => handleUpdate({ evacuatingFromPrimary: value === yes ? 'Yes' : 'No' })}
                         error={errors.evacuatingFromPrimary}
                     />
-                    {/* 206 */}
                     {formData.evacuatingFromPrimary === 'No' && (
                          <FormInput
-                            label="Select why evacuation is required from the Alternate Evacuation Address"
+                            label={t('applyEventPage.evacuationReasonLabel')}
                             id="evacuationReason"
                             value={formData.evacuationReason || ''}
                             onChange={e => handleUpdate({ evacuationReason: e.target.value })}
                         />
                     )}
-                    {/* 207 */}
                      <FormRadioGroup
-                        legend="Did you stay, or do you plan to stay with a family member or friend?"
+                        legend={t('applyEventPage.stayedWithFamilyLabel')}
                         name="stayedWithFamilyOrFriend"
                         required
-                        options={['Yes', 'No']}
-                        value={formData.stayedWithFamilyOrFriend}
-                        onChange={value => handleUpdate({ stayedWithFamilyOrFriend: value })}
+                        options={[yes, no]}
+                        value={formData.stayedWithFamilyOrFriend === 'Yes' ? yes : formData.stayedWithFamilyOrFriend === 'No' ? no : ''}
+                        onChange={value => handleUpdate({ stayedWithFamilyOrFriend: value === yes ? 'Yes' : 'No' })}
                         error={errors.stayedWithFamilyOrFriend}
                     />
-                    {/* 208 */}
                     <FormInput
-                        label="When did you start or when do you plan to start your evacuation?"
+                        label={t('applyEventPage.evacuationStartDateLabel')}
                         id="evacuationStartDate"
                         type="date"
                         required
@@ -211,9 +221,8 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                         onChange={e => handleUpdate({ evacuationStartDate: e.target.value })}
                         error={errors.evacuationStartDate}
                     />
-                    {/* 209 */}
                     <FormInput
-                        label="How many nights were you evacuated, or plan to evacuate?"
+                        label={t('applyEventPage.evacuationNightsLabel')}
                         id="evacuationNights"
                         type="number"
                         min="1"
@@ -224,23 +233,21 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                     />
                 </div>
             )}
-             {/* 212 */}
             <FormTextarea
-                label="Provide additional details that support your relief request and expense needs"
+                label={t('applyEventPage.additionalDetailsLabel')}
                 id="additionalDetails"
                 rows={4}
                 value={formData.additionalDetails || ''}
                 onChange={e => handleUpdate({ additionalDetails: e.target.value })}
-                placeholder="Describe any other relevant information here..."
+                placeholder={t('applyEventPage.additionalDetailsPlaceholder')}
             />
-            {/* Amount */}
             <FormInput
-                label="Requested Relief Payment ($)"
+                label={t('applyEventPage.requestedAmountLabel')}
                 id="amount"
                 type="number"
                 value={formData.requestedAmount || ''}
                 onChange={(e) => handleUpdate({ requestedAmount: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
+                placeholder={t('applyEventPage.requestedAmountPlaceholder')}
                 min="0.01"
                 step="0.01"
                 required
@@ -249,10 +256,10 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
         </div>
       <div className="flex justify-between pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Back
+          {t('common.back')}
         </button>
         <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Next
+          {t('common.next')}
         </button>
       </div>
     </div>

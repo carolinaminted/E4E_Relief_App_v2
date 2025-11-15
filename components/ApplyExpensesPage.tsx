@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { EventData, Expense, UserProfile } from '../types';
 import { expenseTypes } from '../data/appData';
 import { FormInput } from './FormControls';
@@ -29,8 +30,10 @@ const UploadSpinner: React.FC = () => (
 
 
 const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userProfile, updateFormData, nextStep, prevStep }) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const totalExpenses = useMemo(() => {
     return formData.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
@@ -55,47 +58,57 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
     }
 
     updateFormData({ expenses: newExpenses });
+    if (errors[type]) {
+      const newErrors = { ...errors };
+      delete newErrors[type];
+      setErrors(newErrors);
+    }
   };
 
   const handleFileChange = async (type: Expense['type'], file: File | null) => {
     if (!file) return;
 
-    setUploading(prev => ({ ...prev, [type]: true }));
+    const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
+    setUploading(prev => ({ ...prev, [expenseIdKey]: true }));
     setUploadErrors(prev => {
         const newErrors = {...prev};
-        delete newErrors[type];
+        delete newErrors[expenseIdKey];
         return newErrors;
     });
 
     try {
       const newExpenses = [...formData.expenses];
       let expenseIndex = newExpenses.findIndex(exp => exp.type === type);
-      let expenseId: string;
 
       if (expenseIndex === -1) {
         const newExpense: Expense = {
-          id: `exp-${type.replace(/\s+/g, '-')}`,
+          id: expenseIdKey,
           type,
           amount: '',
           fileName: '',
           fileUrl: '',
         };
         newExpenses.push(newExpense);
-        expenseId = newExpense.id;
         expenseIndex = newExpenses.length - 1;
-      } else {
-        expenseId = newExpenses[expenseIndex].id;
       }
+      const expenseId = newExpenses[expenseIndex].id;
+
 
       const { downloadURL, fileName } = await storageRepo.uploadExpenseReceipt(file, userProfile.uid, expenseId);
 
       newExpenses[expenseIndex] = { ...newExpenses[expenseIndex], fileName, fileUrl: downloadURL };
       updateFormData({ expenses: newExpenses });
-    } catch (error) {
-      console.error("File upload failed:", error);
-      setUploadErrors(prev => ({ ...prev, [type]: "Upload failed. Please try again." }));
+    } catch (error: any) {
+      console.error(`[ApplyExpensesPage] File upload failed for type '${type}':`, error);
+      let errorMessage;
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = t('applyExpensesPage.uploadFailedUnauthorized');
+      } else {
+        errorMessage = t('applyExpensesPage.uploadFailedGeneric', { message: error.message || t('common.unknownError') });
+      }
+      setUploadErrors(prev => ({ ...prev, [expenseIdKey]: errorMessage }));
     } finally {
-      setUploading(prev => ({ ...prev, [type]: false }));
+      setUploading(prev => ({ ...prev, [expenseIdKey]: false }));
     }
   };
 
@@ -110,31 +123,40 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   };
 
   const handleNext = () => {
-    // Filter out expenses that don't have a valid amount before proceeding.
-    const finalExpenses = formData.expenses.filter(exp => exp.amount && Number(exp.amount) > 0);
-    updateFormData({ expenses: finalExpenses });
-    nextStep();
+    const validationErrors: Record<string, string> = {};
+    
+    // Per user feedback, ALL amount fields for the presented expense types are required.
+    expenseTypes.forEach(type => {
+        const expense = formData.expenses.find(e => e.type === type);
+        
+        if (!expense || expense.amount === '' || Number(expense.amount) <= 0) {
+            validationErrors[type] = t('applyExpensesPage.errorAmount');
+        }
+    });
+
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      nextStep();
+    }
   };
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Expenses</h2>
-        <p className="text-gray-300 mt-1">Add amounts and receipts for any applicable categories below. A receipt is not required for any expense.</p>
-      </div>
-
-      <div className="space-y-6">
+      <div className="divide-y divide-[#005ca0]/50">
         {expenseTypes.map((type) => {
+          const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
           const expense = formData.expenses.find(e => e.type === type);
-          const isUploading = uploading[type];
-          const error = uploadErrors[type];
+          const isUploading = uploading[expenseIdKey];
+          const error = uploadErrors[expenseIdKey];
+          const translationKey = `applyExpensesPage.expenseTypes.${type.replace(/\s+/g, '')}`;
 
           return (
-            <div key={type} className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0]">
-              <h4 className="font-semibold text-lg text-white mb-4">{type}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div key={type} className="py-4 first:pt-0 last:pb-0">
+              <h4 className="font-semibold text-lg text-white mb-2">{t(translationKey, type)}</h4>
+              <div className="grid grid-cols-2 gap-4 items-start">
                 <FormInput
-                  label="Amount (USD)"
+                  label={t('applyExpensesPage.amountLabel')}
                   id={`amount-${type}`}
                   type="number"
                   value={expense?.amount || ''}
@@ -143,21 +165,22 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                   min="0"
                   step="0.01"
                   disabled={isUploading}
+                  error={errors[type]}
                 />
                 <div>
-                  <label htmlFor={`receipt-${type}`} className="block text-sm font-medium text-white mb-1">Receipt</label>
+                  <p className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</p>
                   <div className="flex items-center gap-2">
                     <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                      <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
+                      <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>
                       <input id={`receipt-${type}`} type="file" className="hidden" onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)} disabled={isUploading} accept="image/jpeg,image/png,application/pdf" />
                     </label>
                     {expense?.fileName ? (
                       <div className="flex items-center gap-2 text-sm text-gray-300 truncate">
                         <span title={expense.fileName}>{expense.fileName}</span>
-                        <button onClick={() => handleDeleteFile(type)} disabled={isUploading} className="text-red-400 hover:text-red-300" title="Remove receipt"><DeleteIcon /></button>
+                        <button onClick={() => handleDeleteFile(type)} disabled={isUploading} className="text-red-400 hover:text-red-300" title={t('applyExpensesPage.removeReceipt')}><DeleteIcon /></button>
                       </div>
                     ) : (
-                      !isUploading && <span className="text-gray-400 text-sm">No file chosen</span>
+                      !isUploading && <span className="text-gray-400 text-sm">{t('applyExpensesPage.noFileChosen')}</span>
                     )}
                     {isUploading && <UploadSpinner />}
                   </div>
@@ -171,7 +194,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
       <div className="mt-8 pt-4 border-t border-[#005ca0] flex justify-center items-center">
           <div className="text-center">
-              <p className="text-sm text-white uppercase tracking-wider">Total Expenses</p>
+              <p className="text-sm text-white uppercase tracking-wider">{t('applyExpensesPage.totalExpensesLabel')}</p>
               <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
                   ${totalExpenses.toFixed(2)}
               </p>
@@ -180,11 +203,13 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
       <div className="flex justify-between items-start pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Back
+          {t('common.back')}
         </button>
-        <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
-          Next
-        </button>
+        <div className="flex flex-col items-end">
+            <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+              {t('common.next')}
+            </button>
+        </div>
       </div>
     </div>
   );

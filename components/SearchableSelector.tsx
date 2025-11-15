@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import RequiredIndicator from './RequiredIndicator';
 
 interface SearchableSelectorProps {
@@ -14,6 +15,7 @@ interface SearchableSelectorProps {
 }
 
 const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, value, options, onUpdate, required, variant = 'boxed', error, disabled }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -70,7 +72,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
     };
   }, [wrapperRef, searchTerm, value, options, onUpdate]);
   
-  const baseInputClasses = "w-full text-white focus:outline-none focus:ring-0";
+  const baseInputClasses = "w-full text-base text-white focus:outline-none focus:ring-0";
   const variantClasses = {
       boxed: `bg-[#005ca0] border rounded-md p-2 ${error ? 'border-red-500' : 'border-[#005ca0]'}`,
       underline: `bg-transparent border-0 border-b p-2 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`
@@ -105,7 +107,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
               </li>
             ))
           ) : (
-            <li className="px-4 py-2 text-gray-400">No options found</li>
+            <li className="px-4 py-2 text-gray-400">{t('formControls.noOptionsFound')}</li>
           )}
         </ul>
       )}

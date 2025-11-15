@@ -28,7 +28,12 @@
           "example.com",
           "fakemail.example"
         ]
-      }
+      },
+      "eligibleStorms": [
+        "Hurricane Alpha",
+        "Tropical Storm Beta",
+        "Hurricane Gamma"
+      ]
     },
     "ROST": {
       "name": "Charizard Relief Fund",
