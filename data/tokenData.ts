@@ -72,7 +72,15 @@ export async function getTokenUsageTableData(filters: TokenUsageFilters, current
     for (const event of filteredEvents) {
         const key = `${event.userId}|${event.sessionId}|${event.feature}`;
         if (!usageByFeatureInSession[key]) {
-            usageByFeatureInSession[key] = { input: 0, cached: 0, output: 0, total: 0, cost: 0 };
+            // FIX: The 'date' property was missing, which is required by the TokenUsageTableRow type.
+            // Added logic to extract and format the date from the event timestamp.
+            const eventDate = new Date(event.timestamp);
+            const formattedDate = eventDate.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0 };
         }
         const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
         const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);

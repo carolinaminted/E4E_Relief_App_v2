@@ -81,7 +81,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         }
     };
 
-    const text = hasPassedCV ? t('profilePage.eligibility') : t('profilePage.verificationNeeded');
+    const text = hasPassedCV ? t('applyPage.eligibility') : t('profilePage.verificationNeeded');
     
     return (
         <button
