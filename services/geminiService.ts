@@ -2,7 +2,7 @@ import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/g
 import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
-import { allEventTypes, employmentTypes } from '../data/appData';
+import { allEventTypes, employmentTypes, languages } from '../data/appData';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -60,6 +60,7 @@ const updateUserProfileTool: FunctionDeclaration = {
       householdIncome: { type: Type.NUMBER, description: 'The user\'s estimated annual household income as a number.' },
       householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
       homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
+      preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication.", enum: languages },
     },
   },
 };
