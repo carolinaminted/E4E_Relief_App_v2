@@ -258,15 +258,16 @@ function App() {
         await identitiesRepo.update(identityId, { lastUsedAt: new Date().toISOString() });
         await usersRepo.update(currentUser.uid, { activeIdentityId: identityId });
 
-        setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
-
-        setCurrentUser({
-            ...currentUser,
-            fundCode: identityToActivate.fundCode,
-            fundName: identityToActivate.fundName,
-            classVerificationStatus: identityToActivate.classVerificationStatus,
-            eligibilityStatus: identityToActivate.eligibilityStatus,
-        });
+        setAuthState(prev => ({
+            ...prev,
+            profile: prev.profile ? {
+                ...prev.profile,
+                fundCode: identityToActivate.fundCode,
+                fundName: identityToActivate.fundName,
+                classVerificationStatus: identityToActivate.classVerificationStatus,
+                eligibilityStatus: identityToActivate.eligibilityStatus,
+            } : null
+        }));
         
         // Refresh identities list to reflect lastUsedAt change for sorting
         const updatedIdentities = await identitiesRepo.getForUser(currentUser.uid);
@@ -375,6 +376,23 @@ function App() {
     
     // This update will trigger the onSnapshot listener to re-hydrate the app state.
     await usersRepo.update(currentUser.uid, { activeIdentityId: newActiveIdentity.id });
+    
+    // FIX: Add an immediate local state update to prevent UI flicker and race conditions.
+    // This ensures the UI has the correct "Eligible" status before navigating away.
+    setAuthState(prev => {
+        if (!prev.profile) return prev;
+        return {
+            ...prev,
+            profile: {
+                ...prev.profile,
+                fundCode: newActiveIdentity.fundCode,
+                fundName: newActiveIdentity.fundName,
+                classVerificationStatus: newActiveIdentity.classVerificationStatus,
+                eligibilityStatus: newActiveIdentity.eligibilityStatus,
+            }
+        };
+    });
+
     setVerifyingFundCode(null);
     // Explicitly navigate to home to provide immediate feedback to the user.
     setPage('home');
@@ -602,7 +620,8 @@ function App() {
     });
   }, []);
   
-  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile', 'reliefQueue'];
+  // FIX: Removed 'reliefQueue' from this array. That page is rendered via a separate return that does not include the footer, so it does not need to be in this list. This resolves the type error.
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {

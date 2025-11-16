@@ -69,7 +69,7 @@
   },
   "applyPage": {
     "title": "Apply for Relief",
-    "eligibility": "Eligible to apply",
+    "eligibility": "Eligible to apply for relief",
     "verificationNeeded": "Verification needed",
     "noActiveFund": "No active fund selected.",
     "limitsReachedTitle": "Grant Limits Reached",
@@ -178,7 +178,7 @@
   },
   "profilePage": {
     "title": "Profile",
-    "eligibility": "Eligible to apply",
+    "eligibility": "Eligible to apply for relief",
     "verificationNeeded": "Verification needed",
     "myApplicationsTitle": "My Applications",
     "twelveMonthRemaining": "12-Month Remaining",
@@ -191,7 +191,7 @@
     "fundIdentitiesTitle": "Fund Identities",
     "fundIdentitiesDescription": "Manage your fund identities. Add or remove additional fund codes if you’re eligible for more than one program.",
     "active": "Active",
-    "setActive": "Active",
+    "setActive": "Set Active",
     "addNewIdentity": "+ Add New Identity",
     "enterNewFundCode": "Enter New Fund Code",
     "seeAll": "See All",
