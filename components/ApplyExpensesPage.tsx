@@ -49,7 +49,11 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   }, [totalExpenses, updateFormData, formData.requestedAmount]);
 
   const handleAmountChange = (type: Expense['type'], amountStr: string) => {
-    const amount = amountStr === '' ? '' : parseFloat(amountStr) || 0;
+    let amount: number | '' = amountStr === '' ? '' : parseFloat(amountStr) || 0;
+
+    if (typeof amount === 'number' && amount > 10000) {
+      amount = 10000;
+    }
 
     const newExpenses = [...formData.expenses];
     const expenseIndex = newExpenses.findIndex(exp => exp.type === type);
@@ -180,6 +184,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                   onChange={(e) => handleAmountChange(type, e.target.value)}
                   placeholder={t('applyExpensesPage.amountLabel')}
                   min="0"
+                  max="10000"
                   step="0.01"
                   disabled={isUploading}
                   error={errors[type]}

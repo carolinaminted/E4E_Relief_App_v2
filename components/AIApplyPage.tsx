@@ -111,7 +111,7 @@ export const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | nul
 const CompletionView: React.FC<{ onNext: () => void }> = ({ onNext }) => {
     const { t } = useTranslation();
     return (
-        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-8 h-full justify-center items-center text-center">
+        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-8 flex-1 justify-center items-center text-center">
             <CompletionCheckmarkIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
                 Application Almost Complete!
@@ -304,7 +304,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
   return (
     <>
-    <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col">
+    <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:flex-1">
         <div className="flex-1 flex flex-col p-4 md:p-8 md:pb-4 min-h-0">
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
                 <header className="relative flex justify-center items-center mb-4 md:mb-8 flex-shrink-0">
