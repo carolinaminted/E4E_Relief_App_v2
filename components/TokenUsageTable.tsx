@@ -14,9 +14,9 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
             <th scope="col" className="px-4 py-3 hidden md:table-cell">User</th>
             <th scope="col" className="px-4 py-3">Date</th>
             <th scope="col" className="px-4 py-3">Feature</th>
-            <th scope="col" className="px-4 py-3 text-right">Input</th>
+            <th scope="col" className="px-4 py-3 text-right hidden md:table-cell">Input</th>
             <th scope="col" className="px-4 py-3 text-right hidden md:table-cell">Cached</th>
-            <th scope="col" className="px-4 py-3 text-right">Output</th>
+            <th scope="col" className="px-4 py-3 text-right hidden md:table-cell">Output</th>
             <th scope="col" className="px-4 py-3 text-right hidden md:table-cell">Total</th>
             <th scope="col" className="px-4 py-3 text-right">Cost (USD)</th>
           </tr>
@@ -28,16 +28,16 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
                       <td className="px-4 py-2 font-medium text-white truncate hidden md:table-cell">{row.user}</td>
                       <td className="px-4 py-2 text-white">{row.date}</td>
                       <td className="px-4 py-2 text-white">{row.feature}</td>
-                      <td className="px-4 py-2 text-white text-right">{row.input.toLocaleString()}</td>
+                      <td className="px-4 py-2 text-white text-right hidden md:table-cell">{row.input.toLocaleString()}</td>
                       <td className="px-4 py-2 text-white text-right hidden md:table-cell">{row.cached.toLocaleString()}</td>
-                      <td className="px-4 py-2 text-white text-right">{row.output.toLocaleString()}</td>
+                      <td className="px-4 py-2 text-white text-right hidden md:table-cell">{row.output.toLocaleString()}</td>
                       <td className="px-4 py-2 text-white font-semibold text-right hidden md:table-cell">{row.total.toLocaleString()}</td>
                       <td className="px-4 py-2 text-[#edda26] font-semibold text-right">${row.cost.toFixed(4)}</td>
                   </tr>
               ))
           ) : (
               <tr>
-                  <td colSpan={5} className="text-center py-8 text-white md:hidden">
+                  <td colSpan={3} className="text-center py-8 text-white md:hidden">
                       No token usage data found for the selected filters.
                   </td>
                   <td colSpan={8} className="text-center py-8 text-white hidden md:table-cell">

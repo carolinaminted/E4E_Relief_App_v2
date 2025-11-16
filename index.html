@@ -11,6 +11,36 @@
         /* Prevents automatic text size adjustment on mobile browsers (like Safari on iOS), ensuring consistent layout. */
         -webkit-text-size-adjust: 100%;
       }
+      /* Styles for the 3D flip card animation */
+      .flip-container {
+        perspective: 1000px;
+      }
+      .flipper {
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s ease-in-out;
+      }
+      .flipper.is-flipped {
+        transform: rotateY(180deg);
+      }
+      .flip-front,
+      .flip-back {
+        width: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+      .flip-back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: rotateY(180deg);
+      }
+      /* Respect user preference for reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .flipper {
+          transition: none;
+        }
+      }
     </style>
   <!-- 
     The import map allows using bare module specifiers (e.g., "react") in the browser,
