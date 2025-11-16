@@ -64,7 +64,7 @@ const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, prof
                 Additional Details Preview
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4">As you answer the assistant, this list will update.</p>
-            <div className="flex-grow space-y-3 overflow-y-auto pr-2">
+            <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                 {checklistItems.map(item => (
                     <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
                         <div className="flex-shrink-0 w-5 h-5">
@@ -95,7 +95,7 @@ const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | und
                 Event Details Preview
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4">This list updates as you answer the assistant.</p>
-            <div className="flex-grow space-y-3 overflow-y-auto pr-2">
+            <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                 {visibleItems.map(item => (
                     <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
                         <div className="flex-shrink-0 w-5 h-5">
@@ -184,84 +184,61 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     setIsLoading(true);
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
     setMessages(prev => [...prev, userMessage]);
-    const inputTokens = estimateTokens(userInput);
-
+    
     if (!chatSessionRef.current && userProfile) {
         chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6), 'aiApply');
     }
 
     try {
-      if (!chatSessionRef.current) {
-        throw new Error("Chat session not initialized.");
-      }
-      const stream = await chatSessionRef.current.sendMessageStream({ message: userInput });
-      
-      let modelResponseText = '';
-      let functionCalls: any[] = [];
-      let modelResponseHasStarted = false;
+      if (!chatSessionRef.current) throw new Error("Chat session not initialized.");
 
-      for await (const chunk of stream) {
-        if (chunk.text) {
-          modelResponseText += chunk.text;
-          if (!modelResponseHasStarted) {
-            setMessages(prev => [...prev, { role: MessageRole.MODEL, content: '' }]);
-            modelResponseHasStarted = true;
+      let fullModelResponse = ""; // Accumulates all text for logging
+
+      const processStream = async (stream: AsyncGenerator<any>) => {
+          let functionCalls: any[] = [];
+          for await (const chunk of stream) {
+              if (chunk.text) {
+                  fullModelResponse += chunk.text;
+                  setMessages(prev => {
+                      const newMessages = [...prev];
+                      const lastMessage = newMessages[newMessages.length - 1];
+                      if (lastMessage?.role === MessageRole.MODEL) {
+                          lastMessage.content += chunk.text!;
+                      } else {
+                          newMessages.push({ role: MessageRole.MODEL, content: chunk.text! });
+                      }
+                      return newMessages;
+                  });
+              }
+              if (chunk.functionCalls) {
+                  functionCalls.push(...chunk.functionCalls);
+              }
           }
-          setMessages(prev => {
-            const newMessages = [...prev];
-            if(newMessages.length > 0) {
-               newMessages[newMessages.length - 1].content = modelResponseText;
-            }
-            return newMessages;
-          });
-        }
-        
-        if(chunk.functionCalls) {
-            functionCalls.push(...chunk.functionCalls);
-        }
-      }
+          return functionCalls;
+      };
+      
+      const stream1 = await chatSessionRef.current.sendMessageStream({ message: userInput });
+      const functionCalls = await processStream(stream1);
 
       if (functionCalls.length > 0) {
-         if (!modelResponseHasStarted) {
-            setMessages(prev => [...prev, { role: MessageRole.MODEL, content: '' }]);
-          }
-
-        const functionResponses = [];
-        for(const call of functionCalls) {
-            onChatbotAction(call.name, call.args);
-            functionResponses.push({ 
-                functionResponse: {
-                    name: call.name, 
-                    response: { result: 'ok' } 
-                }
-            });
-        }
-
-        const toolResponseStream = await chatSessionRef.current.sendMessageStream({ message: functionResponses });
-
-        for await (const chunk of toolResponseStream) {
-            if (chunk.text) {
-                modelResponseText += chunk.text;
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    if(newMessages.length > 0) {
-                        newMessages[newMessages.length - 1].content = modelResponseText;
-                    }
-                    return newMessages;
-                });
-            }
-        }
+          const functionResponses = functionCalls.map(call => {
+              onChatbotAction(call.name, call.args);
+              return { functionResponse: { name: call.name, response: { result: 'ok' } } };
+          });
+          const stream2 = await chatSessionRef.current.sendMessageStream({ message: functionResponses });
+          await processStream(stream2);
       }
-      
-      const outputTokens = estimateTokens(modelResponseText);
+
+      const inputTokens = estimateTokens(userInput);
+      const outputTokens = estimateTokens(fullModelResponse);
       if (chatTokenSessionIdRef.current) {
-        logTokenEvent({
-            feature: 'AI Assistant',
-            model: 'gemini-2.5-flash',
-            inputTokens,
-            outputTokens,
-            sessionId: chatTokenSessionIdRef.current,
-        });
+          logTokenEvent({
+              feature: 'AI Assistant',
+              model: 'gemini-2.5-flash',
+              inputTokens,
+              outputTokens,
+              sessionId: chatTokenSessionIdRef.current,
+          });
       }
 
     } catch (error) {

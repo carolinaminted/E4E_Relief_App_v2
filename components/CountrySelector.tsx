@@ -89,7 +89,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({ id, value, onUpdate, 
         required={required}
       />
       {isOpen && (
-        <ul className="absolute z-10 w-full bg-[#003a70] border border-[#005ca0] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+        <ul className="absolute z-10 w-full bg-[#003a70] border border-[#005ca0] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg custom-scrollbar">
           {filteredCountries.length > 0 ? (
             filteredCountries.map(country => (
               <li

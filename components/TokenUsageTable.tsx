@@ -7,7 +7,7 @@ interface TokenUsageTableProps {
 
 const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto custom-scrollbar">
       <table className="min-w-full text-sm text-left">
         <thead className="border-b border-[#005ca0] text-xs text-gray-200 uppercase">
           <tr>

@@ -774,7 +774,7 @@ function App() {
             userName={currentUser.firstName}
             onLogout={handleLogout}
         />
-        <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
+        <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
           <div className="hidden md:block">
             {page === 'profile' && (
                <div className="relative flex justify-center items-center my-8">
