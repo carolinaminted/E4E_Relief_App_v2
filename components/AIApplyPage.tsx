@@ -187,50 +187,41 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     
     if (!chatSessionRef.current && userProfile) {
         chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6), 'aiApply');
+        if (!chatTokenSessionIdRef.current) {
+            chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
+        }
     }
 
     try {
       if (!chatSessionRef.current) throw new Error("Chat session not initialized.");
-
-      let fullModelResponse = ""; // Accumulates all text for logging
-
-      const processStream = async (stream: AsyncGenerator<any>) => {
-          let functionCalls: any[] = [];
-          for await (const chunk of stream) {
-              if (chunk.text) {
-                  fullModelResponse += chunk.text;
-                  setMessages(prev => {
-                      const newMessages = [...prev];
-                      const lastMessage = newMessages[newMessages.length - 1];
-                      if (lastMessage?.role === MessageRole.MODEL) {
-                          lastMessage.content += chunk.text!;
-                      } else {
-                          newMessages.push({ role: MessageRole.MODEL, content: chunk.text! });
-                      }
-                      return newMessages;
-                  });
-              }
-              if (chunk.functionCalls) {
-                  functionCalls.push(...chunk.functionCalls);
-              }
-          }
-          return functionCalls;
-      };
       
-      const stream1 = await chatSessionRef.current.sendMessageStream({ message: userInput });
-      const functionCalls = await processStream(stream1);
+      const inputTokens = estimateTokens(userInput);
 
-      if (functionCalls.length > 0) {
+      // Use non-streaming sendMessage to wait for the full response
+      let response = await chatSessionRef.current.sendMessage({ message: userInput });
+
+      let modelResponseText = response.text;
+      const functionCalls = response.functionCalls;
+
+      // If the model returns function calls, execute them and send back the results
+      if (functionCalls && functionCalls.length > 0) {
           const functionResponses = functionCalls.map(call => {
+              // This action updates the UI preview panes via state changes in the parent component
               onChatbotAction(call.name, call.args);
               return { functionResponse: { name: call.name, response: { result: 'ok' } } };
           });
-          const stream2 = await chatSessionRef.current.sendMessageStream({ message: functionResponses });
-          await processStream(stream2);
+          
+          // Send the function responses back to the model and wait for its final text response
+          response = await chatSessionRef.current.sendMessage({ message: functionResponses });
+          modelResponseText = response.text;
       }
 
-      const inputTokens = estimateTokens(userInput);
-      const outputTokens = estimateTokens(fullModelResponse);
+      // Only add the final model message to the chat history after all actions are complete
+      if (modelResponseText) {
+          setMessages(prev => [...prev, { role: MessageRole.MODEL, content: modelResponseText }]);
+      }
+
+      const outputTokens = estimateTokens(modelResponseText); // Estimate tokens from the final response
       if (chatTokenSessionIdRef.current) {
           logTokenEvent({
               feature: 'AI Assistant',

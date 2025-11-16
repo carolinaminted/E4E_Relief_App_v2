@@ -39,6 +39,7 @@ import LiveDashboardPage from './components/LiveDashboardPage';
 import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
 import ReliefQueuePage from './components/ReliefQueuePage';
+import ChatbotWidget from './components/ChatbotWidget';
 
 type AuthState = {
     status: 'loading' | 'signedIn' | 'signedOut';
@@ -61,6 +62,7 @@ function App() {
   const [verifyingFundCode, setVerifyingFundCode] = useState<string | null>(null);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -627,6 +629,7 @@ function App() {
   }, []);
   
   const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile', 'aiApply', 'applyExpenses'];
+  const pagesWithoutChatbot: GlobalPage[] = ['login', 'register', 'forgotPassword', 'classVerification', 'reliefQueue', 'aiApply'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
@@ -804,6 +807,18 @@ function App() {
             userRole={currentUser.role}
             canApply={canApply}
         />
+
+        {!pagesWithoutChatbot.includes(page) && (
+          <ChatbotWidget
+            userProfile={currentUser}
+            applications={userApplications}
+            onChatbotAction={handleChatbotAction}
+            isOpen={isChatbotOpen}
+            setIsOpen={setIsChatbotOpen}
+            scrollContainerRef={mainRef}
+            activeFund={activeFund}
+          />
+        )}
       </div>
     </div>
   );
