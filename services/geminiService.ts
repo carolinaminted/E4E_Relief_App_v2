@@ -130,28 +130,64 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 ---
 `;
 
-const aiApplyContext = `
+const getAIApplyContext = (userProfile: UserProfile | null): string => {
+    let dynamicContext = `
 You are the E4E Relief AI assistant, with a special focus for this page.
 
-Your **ONLY GOAL** is to help the user fill out the 'Additional Details' section of their profile by having a natural, one-question-at-a-time conversation.
+Your GOAL is to help the user complete their application by asking questions one at a time.
 
 **Your Process**:
-1.  Greet the user and tell them you're here to help with a few questions to pre-fill their application.
-2.  Ask for **one** piece of information at a time from the list below.
-3.  Once the user provides an answer, use the \`updateUserProfile\` tool to save it.
-4.  After using the tool, confirm what you saved and then ask the next question. Do not ask another question until you have successfully used the tool.
-5.  If a user asks a question outside of this scope, gently guide them back by saying something like, "I can help with that on other pages, but for now, let's focus on these last few questions. What is your [Next Question]?"
+1. Greet the user and tell them you're here to help with a few questions to pre-fill their application.
+2. First, ask for the missing 'Additional Details' information listed below, one question at a time.
+3. After a user provides an answer, use the \`updateUserProfile\` tool to save it.
+4. Once all 'Additional Details' are collected, move on to the 'Event Details' questions below, one at a time.
+5. For event details, use the \`startOrUpdateApplicationDraft\` tool to save the information.
+6. After using any tool, you MUST confirm what you saved and then ask the next question. Do not ask another question until you have successfully used a tool.
+7. If a user asks a question outside of this scope, gently guide them back by saying something like, "I can help with that on other pages, but for now, let's focus on these last few questions. What is your [Next Question]?"
 
-**Information to Collect**:
-- Employment Start Date (must be YYYY-MM-DD format)
-- Eligibility Type (must be one of: ${employmentTypes.join(', ')})
-- Estimated Annual Household Income (as a number)
-- Number of people in the household (as a number)
-- Homeowner status ('Yes' or 'No')
-- Preferred Language
-
-You ONLY have access to the \`updateUserProfile\` tool. Do not try to use any other tools.
+You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft\` tools.
+---
 `;
+
+    const missingProfileFields: string[] = [];
+    if (!userProfile?.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
+    if (!userProfile?.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
+    if (userProfile?.householdIncome === '' || userProfile?.householdIncome === undefined || userProfile?.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
+    if (userProfile?.householdSize === '' || userProfile?.householdSize === undefined || userProfile?.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
+    if (!userProfile?.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
+    if (!userProfile?.preferredLanguage) missingProfileFields.push('Preferred Language');
+
+    if (missingProfileFields.length > 0) {
+        dynamicContext += `
+**Missing Additional Details to Collect**:
+- ${missingProfileFields.join('\n- ')}
+---
+`;
+    } else {
+        dynamicContext += `
+**Missing Additional Details to Collect**:
+- All additional profile details are already complete. You can proceed directly to Event Details.
+---
+`;
+    }
+
+    dynamicContext += `
+**Event Details to Collect (ask after Additional Details are complete)**:
+- The type of disaster experienced (event)
+- The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*
+- Date of the event (eventDate)
+- If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')
+- How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*
+- If they evacuated or plan to (evacuated: 'Yes' or 'No')
+- If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*
+- Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*
+- Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*
+- How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*
+- Any other additional details about their situation (additionalDetails), *this is an optional final question*.
+`;
+
+    return dynamicContext;
+};
 
 
 /**
@@ -176,8 +212,8 @@ export function createChatSession(
   let tools;
 
   if (context === 'aiApply') {
-    dynamicContext = aiApplyContext;
-    tools = [{ functionDeclarations: [updateUserProfileTool] }];
+    dynamicContext = getAIApplyContext(userProfile);
+    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
   } else {
     dynamicContext = applicationContext;
     tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];

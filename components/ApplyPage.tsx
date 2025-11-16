@@ -18,11 +18,12 @@ interface ApplyPageProps {
   mainRef: React.RefObject<HTMLElement>;
   canApply: boolean;
   activeFund: Fund | null;
+  initialStep?: number;
 }
 
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund, initialStep }) => {
   const { t } = useTranslation();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(initialStep || 1);
   
   const [formData, setFormData] = useState<ApplicationFormData>(() => {
     const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
