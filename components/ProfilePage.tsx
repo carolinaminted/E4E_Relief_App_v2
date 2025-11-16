@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
+import type { Application, UserProfile, Address, FundIdentity, ActiveIdentity } from '../types';
 import type { Fund } from '../data/fundData';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
@@ -10,6 +10,7 @@ import { formatPhoneNumber } from '../utils/formatting';
 import RequiredIndicator from './RequiredIndicator';
 import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import PolicyModal from './PolicyModal';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface ProfilePageProps {
   navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
@@ -93,41 +94,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   const yes = t('common.yes');
   const no = t('common.no');
-
-  const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
-    const hasPassedCV = cvStatus === 'passed';
-
-    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const passedClasses = "bg-green-800/50 text-green-300";
-    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
-
-    const handleClick = () => {
-        if (!hasPassedCV) {
-             console.log("[Telemetry] verification_needed_cta_clicked");
-             onClick();
-        }
-    };
-
-    const text = hasPassedCV ? t('applyPage.eligibility') : t('profilePage.verificationNeeded');
-    
-    return (
-        <button
-            onClick={handleClick}
-            disabled={hasPassedCV}
-            role={hasPassedCV ? 'status' : 'button'}
-            aria-label={text}
-            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
-        >
-            {!hasPassedCV && (
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-            )}
-            <span>{text}</span>
-        </button>
-    );
-  };
 
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
@@ -253,46 +219,46 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const validate = () => {
     const newErrors: Record<string, any> = {};
 
-    if (!formData.firstName) newErrors.firstName = t('profilePage.errorCorrection');
-    if (!formData.lastName) newErrors.lastName = t('profilePage.errorCorrection');
+    if (!formData.firstName) newErrors.firstName = t('validation.firstNameRequired');
+    if (!formData.lastName) newErrors.lastName = t('validation.lastNameRequired');
     if (!formData.mobileNumber) {
-        newErrors.mobileNumber = t('profilePage.errorCorrection');
+        newErrors.mobileNumber = t('validation.mobileNumberRequired');
     } else {
         const digitCount = formData.mobileNumber.replace(/[^\d]/g, '').length;
         if (digitCount < 7) {
-            newErrors.mobileNumber = t('profilePage.errorCorrection');
+            newErrors.mobileNumber = t('validation.mobileNumberInvalid');
         }
     }
 
     const primaryAddrErrors: Record<string, string> = {};
-    if (!formData.primaryAddress.country) primaryAddrErrors.country = 't(profilePage.errorCorrection)';
-    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = t('profilePage.errorCorrection');
-    if (!formData.primaryAddress.city) primaryAddrErrors.city = t('profilePage.errorCorrection');
-    if (!formData.primaryAddress.state) primaryAddrErrors.state = t('profilePage.errorCorrection');
-    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = t('profilePage.errorCorrection');
+    if (!formData.primaryAddress.country) primaryAddrErrors.country = t('validation.countryRequired');
+    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = t('validation.street1Required');
+    if (!formData.primaryAddress.city) primaryAddrErrors.city = t('validation.cityRequired');
+    if (!formData.primaryAddress.state) primaryAddrErrors.state = t('validation.stateRequired');
+    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = t('validation.zipRequired');
     if (Object.keys(primaryAddrErrors).length > 0) newErrors.primaryAddress = primaryAddrErrors;
 
-    if (!formData.employmentStartDate) newErrors.employmentStartDate = t('profilePage.errorCorrection');
-    if (!formData.eligibilityType) newErrors.eligibilityType = t('profilePage.errorCorrection');
-    if (formData.householdIncome === '') newErrors.householdIncome = t('profilePage.errorCorrection');
-    if (formData.householdSize === '') newErrors.householdSize = t('profilePage.errorCorrection');
-    if (!formData.homeowner) newErrors.homeowner = t('profilePage.errorCorrection');
+    if (!formData.employmentStartDate) newErrors.employmentStartDate = t('validation.employmentStartDateRequired');
+    if (!formData.eligibilityType) newErrors.eligibilityType = t('validation.eligibilityTypeRequired');
+    if (formData.householdIncome === '') newErrors.householdIncome = t('validation.householdIncomeRequired');
+    if (formData.householdSize === '') newErrors.householdSize = t('validation.householdSizeRequired');
+    if (!formData.homeowner) newErrors.homeowner = t('validation.homeownerRequired');
     
     if (formData.isMailingAddressSame === null) {
-        newErrors.isMailingAddressSame = t('profilePage.errorCorrection');
+        newErrors.isMailingAddressSame = t('validation.mailingAddressSameRequired');
     } else if (!formData.isMailingAddressSame) {
         const mailingAddrErrors: Record<string, string> = {};
-        if (!formData.mailingAddress?.country) mailingAddrErrors.country = t('profilePage.errorCorrection');
-        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = t('profilePage.errorCorrection');
-        if (!formData.mailingAddress?.city) mailingAddrErrors.city = t('profilePage.errorCorrection');
-        if (!formData.mailingAddress?.state) mailingAddrErrors.state = t('profilePage.errorCorrection');
-        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = t('profilePage.errorCorrection');
+        if (!formData.mailingAddress?.country) mailingAddrErrors.country = t('validation.countryRequired');
+        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = t('validation.street1Required');
+        if (!formData.mailingAddress?.city) mailingAddrErrors.city = t('validation.cityRequired');
+        if (!formData.mailingAddress?.state) mailingAddrErrors.state = t('validation.stateRequired');
+        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = t('validation.zipRequired');
         if (Object.keys(mailingAddrErrors).length > 0) newErrors.mailingAddress = mailingAddrErrors;
     }
 
-    if (!formData.ackPolicies) newErrors.ackPolicies = t('profilePage.errorCorrection');
-    if (!formData.commConsent) newErrors.commConsent = t('profilePage.errorCorrection');
-    if (!formData.infoCorrect) newErrors.infoCorrect = t('profilePage.errorCorrection');
+    if (!formData.ackPolicies) newErrors.ackPolicies = t('validation.ackPoliciesRequired');
+    if (!formData.commConsent) newErrors.commConsent = t('validation.commConsentRequired');
+    if (!formData.infoCorrect) newErrors.infoCorrect = t('validation.infoCorrectRequired');
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -337,7 +303,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
                 <EligibilityIndicator 
                   cvStatus={currentActiveFullIdentity.classVerificationStatus} 
-                  onClick={() => onAddIdentity(currentActiveFullIdentity.fundCode)} 
                 />
               </div>
             )}
@@ -433,7 +398,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
-                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} onClick={() => onAddIdentity(identity.fundCode)} />
+                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} />
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
@@ -501,7 +466,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </div>
       </section>
 
-      <form onSubmit={handleSave} className="space-y-4">
+      <form onSubmit={handleSave} noValidate className="space-y-4">
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'contact'} aria-controls="contact-section">
                 <div className="flex items-center gap-3">

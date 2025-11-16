@@ -12,7 +12,12 @@
     "yes": "Yes",
     "no": "No",
     "unknownError": "An unknown error occurred.",
-    "aiApplyingDetails": "We are applying your details to the application now."
+    "aiApplyingDetails": "We are applying your details to the application now.",
+    "close": "Close"
+  },
+  "eligibilityIndicator": {
+    "eligibleMessage": "You are verified for this relief funds program. Applying for relief does not guarantee a payment will be disbursed.",
+    "verificationNeededMessage": "Visit 'Fund Identities' in your Profile page to verify yourself to be eligible for relief."
   },
   "app": {
     "loading": "Loading...",
@@ -481,5 +486,29 @@
     "intlPartnersTitle": "Payment Partner Information",
     "converaGuide": "Convera Guide",
     "tipaltiGuide": "Tipalti Guide"
+  },
+  "validation": {
+    "required": "Por favor, rellena este campo.",
+    "firstNameRequired": "El nombre es obligatorio.",
+    "lastNameRequired": "El apellido es obligatorio.",
+    "mobileNumberRequired": "El número de móvil es obligatorio.",
+    "mobileNumberInvalid": "Por favor, introduce un número de teléfono válido (al menos 7 dígitos).",
+    "countryRequired": "El país es obligatorio.",
+    "street1Required": "La calle 1 es obligatoria.",
+    "cityRequired": "La ciudad es obligatoria.",
+    "stateRequired": "El estado es obligatorio.",
+    "zipRequired": "El código postal es obligatorio.",
+    "employmentStartDateRequired": "La fecha de inicio del empleo es obligatoria.",
+    "eligibilityTypeRequired": "El tipo de elegibilidad es obligatorio.",
+    "householdIncomeRequired": "El ingreso del hogar es obligatorio.",
+    "householdSizeRequired": "El tamaño del hogar es obligatorio.",
+    "homeownerRequired": "El estado de propietario es obligatorio.",
+    "mailingAddressSameRequired": "Por favor, selecciona una opción para la dirección postal.",
+    "ackPoliciesRequired": "Debes aceptar las políticas.",
+    "commConsentRequired": "Debes dar tu consentimiento para las comunicaciones.",
+    "infoCorrectRequired": "Debes confirmar que tu información es correcta.",
+    "applicantFirstNameRequired": "El nombre del solicitante es obligatorio.",
+    "applicantLastNameRequired": "El apellido del solicitante es obligatorio.",
+    "applicantEmailRequired": "Se requiere un correo electrónico válido del solicitante."
   }
 }

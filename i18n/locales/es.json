@@ -11,7 +11,12 @@
     "success": "Éxito",
     "yes": "Sí",
     "no": "No",
-    "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora."
+    "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora.",
+    "close": "Cerrar"
+  },
+  "eligibilityIndicator": {
+    "eligibleMessage": "Estás verificado para este programa de fondos de ayuda. Solicitar ayuda no garantiza que se desembolsará un pago.",
+    "verificationNeededMessage": "Visita 'Identidades del Fondo' en tu página de Perfil para verificarte y ser elegible para la ayuda."
   },
   "app": {
     "loading": "Cargando...",
@@ -213,7 +218,6 @@
     "householdSize": "Número de personas en el hogar",
     "homeowner": "¿Eres propietario de tu vivienda?",
     "preferredLanguage": "Idioma de Preferencia",
-    "consentTitle": "Consentimiento y Reconocimiento",
     "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
     "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
     "infoCorrect": "Toda la información que he proporcionado es precisa.",
@@ -478,5 +482,29 @@
     "intlPartnersTitle": "Información del Socio de Pago",
     "converaGuide": "Guía de Convera",
     "tipaltiGuide": "Guía de Tipalti"
+  },
+  "validation": {
+    "required": "Por favor, rellena este campo.",
+    "firstNameRequired": "El nombre es obligatorio.",
+    "lastNameRequired": "El apellido es obligatorio.",
+    "mobileNumberRequired": "El número de móvil es obligatorio.",
+    "mobileNumberInvalid": "Por favor, introduce un número de teléfono válido (al menos 7 dígitos).",
+    "countryRequired": "El país es obligatorio.",
+    "street1Required": "La calle 1 es obligatoria.",
+    "cityRequired": "La ciudad es obligatoria.",
+    "stateRequired": "El estado es obligatorio.",
+    "zipRequired": "El código postal es obligatorio.",
+    "employmentStartDateRequired": "La fecha de inicio del empleo es obligatoria.",
+    "eligibilityTypeRequired": "El tipo de elegibilidad es obligatorio.",
+    "householdIncomeRequired": "El ingreso del hogar es obligatorio.",
+    "householdSizeRequired": "El tamaño del hogar es obligatorio.",
+    "homeownerRequired": "El estado de propietario es obligatorio.",
+    "mailingAddressSameRequired": "Por favor, selecciona una opción para la dirección postal.",
+    "ackPoliciesRequired": "Debes aceptar las políticas.",
+    "commConsentRequired": "Debes dar tu consentimiento para las comunicaciones.",
+    "infoCorrectRequired": "Debes confirmar que tu información es correcta.",
+    "applicantFirstNameRequired": "El nombre del solicitante es obligatorio.",
+    "applicantLastNameRequired": "El apellido del solicitante es obligatorio.",
+    "applicantEmailRequired": "Se requiere un correo electrónico válido del solicitante."
   }
 }

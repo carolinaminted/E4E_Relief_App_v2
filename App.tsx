@@ -696,7 +696,7 @@ function App() {
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
-        if (!lastSubmittedApp) return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
+        if (!lastSubmittedApp) return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} />;
         return <SubmissionSuccessPage application={lastSubmittedApp} onGoToProfile={() => setPage('profile')} />;
       case 'faq':
         return <FAQPage navigate={navigate} />;
@@ -726,7 +726,7 @@ function App() {
                 />;
       case 'home':
       default:
-        return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} onAddIdentity={handleStartAddIdentity} />;
+        return <HomePage navigate={navigate} canApply={canApply} userProfile={currentUser} />;
     }
   };
   

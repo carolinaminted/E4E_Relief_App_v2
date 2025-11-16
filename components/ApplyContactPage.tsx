@@ -173,50 +173,50 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
     const newErrors: Record<string, any> = {};
 
     // Contact Info
-    if (!formData.firstName) newErrors.firstName = 'First name is required.';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required.';
+    if (!formData.firstName) newErrors.firstName = t('validation.firstNameRequired');
+    if (!formData.lastName) newErrors.lastName = t('validation.lastNameRequired');
     if (!formData.mobileNumber) {
-        newErrors.mobileNumber = 'Mobile number is required.';
+        newErrors.mobileNumber = t('validation.mobileNumberRequired');
     } else {
         const digitCount = formData.mobileNumber.replace(/[^\d]/g, '').length;
         if (digitCount < 7) {
-            newErrors.mobileNumber = 'Please enter a valid phone number (at least 7 digits).';
+            newErrors.mobileNumber = t('validation.mobileNumberInvalid');
         }
     }
 
     // Primary Address
     const primaryAddrErrors: Record<string, string> = {};
-    if (!formData.primaryAddress.country) primaryAddrErrors.country = 'Country is required.';
-    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = 'Street 1 is required.';
-    if (!formData.primaryAddress.city) primaryAddrErrors.city = 'City is required.';
-    if (!formData.primaryAddress.state) primaryAddrErrors.state = 'State is required.';
-    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = 'ZIP code is required.';
+    if (!formData.primaryAddress.country) primaryAddrErrors.country = t('validation.countryRequired');
+    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = t('validation.street1Required');
+    if (!formData.primaryAddress.city) primaryAddrErrors.city = t('validation.cityRequired');
+    if (!formData.primaryAddress.state) primaryAddrErrors.state = t('validation.stateRequired');
+    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = t('validation.zipRequired');
     if (Object.keys(primaryAddrErrors).length > 0) newErrors.primaryAddress = primaryAddrErrors;
 
     // Additional Details
-    if (!formData.employmentStartDate) newErrors.employmentStartDate = 'Employment start date is required.';
-    if (!formData.eligibilityType) newErrors.eligibilityType = 'Eligibility type is required.';
-    if (formData.householdIncome === '') newErrors.householdIncome = 'Household income is required.';
-    if (formData.householdSize === '') newErrors.householdSize = 'Household size is required.';
-    if (!formData.homeowner) newErrors.homeowner = 'Homeowner status is required.';
+    if (!formData.employmentStartDate) newErrors.employmentStartDate = t('validation.employmentStartDateRequired');
+    if (!formData.eligibilityType) newErrors.eligibilityType = t('validation.eligibilityTypeRequired');
+    if (formData.householdIncome === '') newErrors.householdIncome = t('validation.householdIncomeRequired');
+    if (formData.householdSize === '') newErrors.householdSize = t('validation.householdSizeRequired');
+    if (!formData.homeowner) newErrors.homeowner = t('validation.homeownerRequired');
     
     // Mailing Address (if applicable)
     if (formData.isMailingAddressSame === null) {
-        newErrors.isMailingAddressSame = 'Please select an option for the mailing address.';
+        newErrors.isMailingAddressSame = t('validation.mailingAddressSameRequired');
     } else if (!formData.isMailingAddressSame) {
         const mailingAddrErrors: Record<string, string> = {};
-        if (!formData.mailingAddress?.country) mailingAddrErrors.country = 'Country is required.';
-        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = 'Street 1 is required.';
-        if (!formData.mailingAddress?.city) mailingAddrErrors.city = 'City is required.';
-        if (!formData.mailingAddress?.state) mailingAddrErrors.state = 'State is required.';
-        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = 'ZIP code is required.';
+        if (!formData.mailingAddress?.country) mailingAddrErrors.country = t('validation.countryRequired');
+        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = t('validation.street1Required');
+        if (!formData.mailingAddress?.city) mailingAddrErrors.city = t('validation.cityRequired');
+        if (!formData.mailingAddress?.state) mailingAddrErrors.state = t('validation.stateRequired');
+        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = t('validation.zipRequired');
         if (Object.keys(mailingAddrErrors).length > 0) newErrors.mailingAddress = mailingAddrErrors;
     }
 
     // Consent
-    if (!formData.ackPolicies) newErrors.ackPolicies = 'You must agree to the policies.';
-    if (!formData.commConsent) newErrors.commConsent = 'You must consent to communications.';
-    if (!formData.infoCorrect) newErrors.infoCorrect = 'You must confirm your information is correct.';
+    if (!formData.ackPolicies) newErrors.ackPolicies = t('validation.ackPoliciesRequired');
+    if (!formData.commConsent) newErrors.commConsent = t('validation.commConsentRequired');
+    if (!formData.infoCorrect) newErrors.infoCorrect = t('validation.infoCorrectRequired');
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {

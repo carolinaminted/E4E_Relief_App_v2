@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UserProfile, Address, ApplicationFormData } from '../types';
 import { employmentTypes, languages } from '../data/appData';
@@ -11,7 +11,7 @@ import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import SearchableSelector from './SearchableSelector';
 
 interface ApplyProxyContactPageProps {
-  formData: UserProfile;
+  formData: UserProfile; // This holds the data for the *applicant* being filled out by the admin.
   updateFormData: (data: Partial<UserProfile>) => void;
   nextStep: () => void;
   onAIParsed: (data: Partial<ApplicationFormData>) => void;
@@ -31,33 +31,66 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-type ApplySection = 'aiStarter' | 'applicantDetails' |'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
+type ApplySection = 'aiStarter' | 'applicantDetails' |'contact' | 'addresses' | 'additionalDetails' | 'consent';
 
+/**
+ * The first step of the proxy application flow. This component is very similar to the regular
+ * ApplyContactPage, but it includes an initial section to identify the applicant by their name and email.
+ * It also features the AI Application Starter to pre-fill the form from a text description.
+ */
 const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [openSection, setOpenSection] = useState<ApplySection | null>('aiStarter');
   const [isAIParsing, setIsAIParsing] = useState(false);
+  
+  const [showMailingAddress, setShowMailingAddress] = useState(false);
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
 
+  useLayoutEffect(() => {
+    const calculateHeight = () => {
+        if (openSection === 'addresses') {
+            const frontHeight = frontRef.current?.scrollHeight ?? 0;
+            const backHeight = backRef.current?.scrollHeight ?? 0;
+            if (formData.isMailingAddressSame) {
+                setCardHeight(frontHeight > 0 ? frontHeight : undefined);
+            } else {
+                setCardHeight(Math.max(frontHeight, backHeight) > 0 ? Math.max(frontHeight, backHeight) : undefined);
+            }
+        }
+    };
+    calculateHeight();
+    const timer = setTimeout(calculateHeight, 100); // Recalculate after render
+    window.addEventListener('resize', calculateHeight);
+    return () => {
+        window.removeEventListener('resize', calculateHeight);
+        clearTimeout(timer);
+    };
+  }, [openSection, formData.isMailingAddressSame, showMailingAddress]);
+
+  // Checks which collapsible sections have validation errors to display a notification icon.
   const sectionHasErrors = useMemo(() => {
     const applicantDetailsHasBlanks = !formData.firstName || !formData.lastName || !formData.email;
     const contactHasBlanks = !formData.mobileNumber;
+    
     const primaryAddressHasBlanks = !formData.primaryAddress.country || !formData.primaryAddress.street1 || !formData.primaryAddress.city || !formData.primaryAddress.state || !formData.primaryAddress.zip;
-    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
     let mailingAddressHasBlanks = false;
     if (formData.isMailingAddressSame === null) {
         mailingAddressHasBlanks = true;
     } else if (!formData.isMailingAddressSame) {
         mailingAddressHasBlanks = !formData.mailingAddress?.country || !formData.mailingAddress?.street1 || !formData.mailingAddress?.city || !formData.mailingAddress?.state || !formData.mailingAddress?.zip;
     }
+
+    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
     const consentHasBlanks = !formData.ackPolicies || !formData.commConsent || !formData.infoCorrect;
 
     return {
         applicantDetails: applicantDetailsHasBlanks,
         contact: contactHasBlanks,
-        primaryAddress: primaryAddressHasBlanks,
+        addresses: primaryAddressHasBlanks || mailingAddressHasBlanks,
         additionalDetails: additionalDetailsHasBlanks,
-        mailingAddress: mailingAddressHasBlanks,
         consent: consentHasBlanks,
     };
   }, [formData]);
@@ -71,9 +104,13 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     if ('mobileNumber' in data && typeof data.mobileNumber === 'string') {
         finalData.mobileNumber = formatPhoneNumber(data.mobileNumber);
     }
-    // When email changes, identityId must also change
+    // When email changes, identityId must also change to keep them in sync.
     if('email' in data) {
         finalData.identityId = data.email;
+    }
+
+    if('isMailingAddressSame' in data) {
+      setShowMailingAddress(!data.isMailingAddressSame);
     }
 
     updateFormData(finalData);
@@ -119,11 +156,13 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
   const handleAIParse = async (description: string) => {
     setIsAIParsing(true);
     try {
+      // The `isProxy=true` flag tells the Gemini service to use a specific prompt
+      // tailored for extracting the applicant's details from a third-person description.
       const parsedDetails = await parseApplicationDetailsWithGemini(description, true);
       onAIParsed(parsedDetails);
     } catch (e) {
       console.error("AI Parsing failed in parent component:", e);
-      throw e;
+      throw e; // Re-throw to let the child AIApplicationStarter component handle displaying the error.
     } finally {
       setIsAIParsing(false);
     }
@@ -132,56 +171,57 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
   const validate = (): boolean => {
     const newErrors: Record<string, any> = {};
 
-    if (!formData.firstName) newErrors.firstName = "Applicant's first name is required.";
-    if (!formData.lastName) newErrors.lastName = "Applicant's last name is required.";
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "A valid applicant email is required.";
+    if (!formData.firstName) newErrors.firstName = t('validation.applicantFirstNameRequired');
+    if (!formData.lastName) newErrors.lastName = t('validation.applicantLastNameRequired');
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t('validation.applicantEmailRequired');
     
     if (!formData.mobileNumber) {
-        newErrors.mobileNumber = 'Mobile number is required.';
+        newErrors.mobileNumber = t('validation.mobileNumberRequired');
     } else {
         const digitCount = formData.mobileNumber.replace(/[^\d]/g, '').length;
         if (digitCount < 7) {
-            newErrors.mobileNumber = 'Please enter a valid phone number (at least 7 digits).';
+            newErrors.mobileNumber = t('validation.mobileNumberInvalid');
         }
     }
 
     const primaryAddrErrors: Record<string, string> = {};
-    if (!formData.primaryAddress.country) primaryAddrErrors.country = 'Country is required.';
-    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = 'Street 1 is required.';
-    if (!formData.primaryAddress.city) primaryAddrErrors.city = 'City is required.';
-    if (!formData.primaryAddress.state) primaryAddrErrors.state = 'State is required.';
-    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = 'ZIP code is required.';
+    if (!formData.primaryAddress.country) primaryAddrErrors.country = t('validation.countryRequired');
+    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = t('validation.street1Required');
+    if (!formData.primaryAddress.city) primaryAddrErrors.city = t('validation.cityRequired');
+    if (!formData.primaryAddress.state) primaryAddrErrors.state = t('validation.stateRequired');
+    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = t('validation.zipRequired');
     if (Object.keys(primaryAddrErrors).length > 0) newErrors.primaryAddress = primaryAddrErrors;
 
-    if (!formData.employmentStartDate) newErrors.employmentStartDate = 'Employment start date is required.';
-    if (!formData.eligibilityType) newErrors.eligibilityType = 'Eligibility type is required.';
-    if (formData.householdIncome === '') newErrors.householdIncome = 'Household income is required.';
-    if (formData.householdSize === '') newErrors.householdSize = 'Household size is required.';
-    if (!formData.homeowner) newErrors.homeowner = 'Homeowner status is required.';
+    if (!formData.employmentStartDate) newErrors.employmentStartDate = t('validation.employmentStartDateRequired');
+    if (!formData.eligibilityType) newErrors.eligibilityType = t('validation.eligibilityTypeRequired');
+    if (formData.householdIncome === '') newErrors.householdIncome = t('validation.householdIncomeRequired');
+    if (formData.householdSize === '') newErrors.householdSize = t('validation.householdSizeRequired');
+    if (!formData.homeowner) newErrors.homeowner = t('validation.homeownerRequired');
     
     if (formData.isMailingAddressSame === null) {
-        newErrors.isMailingAddressSame = 'Please select an option for the mailing address.';
+        newErrors.isMailingAddressSame = t('validation.mailingAddressSameRequired');
     } else if (!formData.isMailingAddressSame) {
         const mailingAddrErrors: Record<string, string> = {};
-        if (!formData.mailingAddress?.country) mailingAddrErrors.country = 'Country is required.';
-        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = 'Street 1 is required.';
-        if (!formData.mailingAddress?.city) mailingAddrErrors.city = 'City is required.';
-        if (!formData.mailingAddress?.state) mailingAddrErrors.state = 'State is required.';
-        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = 'ZIP code is required.';
+        if (!formData.mailingAddress?.country) mailingAddrErrors.country = t('validation.countryRequired');
+        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = t('validation.street1Required');
+        if (!formData.mailingAddress?.city) mailingAddrErrors.city = t('validation.cityRequired');
+        if (!formData.mailingAddress?.state) mailingAddrErrors.state = t('validation.stateRequired');
+        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = t('validation.zipRequired');
         if (Object.keys(mailingAddrErrors).length > 0) newErrors.mailingAddress = mailingAddrErrors;
     }
 
-    if (!formData.ackPolicies) newErrors.ackPolicies = 'You must agree to the policies.';
-    if (!formData.commConsent) newErrors.commConsent = 'You must consent to communications.';
-    if (!formData.infoCorrect) newErrors.infoCorrect = 'You must confirm your information is correct.';
+    if (!formData.ackPolicies) newErrors.ackPolicies = t('validation.ackPoliciesRequired');
+    if (!formData.commConsent) newErrors.commConsent = t('validation.commConsentRequired');
+    if (!formData.infoCorrect) newErrors.infoCorrect = t('validation.infoCorrectRequired');
 
     setErrors(newErrors);
+    
+    // If validation fails, automatically open the first section that contains an error.
     if (Object.keys(newErrors).length > 0) {
         let firstErrorSection: ApplySection | null = null;
         if (newErrors.firstName || newErrors.lastName || newErrors.email) firstErrorSection = 'applicantDetails';
         else if (newErrors.mobileNumber) firstErrorSection = 'contact';
-        else if (newErrors.primaryAddress) firstErrorSection = 'primaryAddress';
-        else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) firstErrorSection = 'mailingAddress';
+        else if (newErrors.primaryAddress || newErrors.mailingAddress || newErrors.isMailingAddressSame) firstErrorSection = 'addresses';
         else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) firstErrorSection = 'additionalDetails';
         else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) firstErrorSection = 'consent';
         
@@ -198,6 +238,9 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
       nextStep();
     }
   };
+
+  const yes = t('common.yes');
+  const no = t('common.no');
 
   return (
     <div className="space-y-4">
@@ -265,36 +308,46 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
         </fieldset>
 
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'}>
+            <button type="button" onClick={() => toggleSection('addresses')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'addresses'}>
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Primary Address</h2>
-                    {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.addresses')}</h2>
+                    {sectionHasErrors.addresses && openSection !== 'addresses' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSection === 'primaryAddress'} />
+                <ChevronIcon isOpen={openSection === 'addresses'} />
             </button>
-            <div className={`transition-all duration-500 ease-in-out ${openSection === 'primaryAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-6 pt-4">
-                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
-                </div>
-            </div>
-        </fieldset>
-        
-        <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'}>
-                <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Mailing Address</h2>
-                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
-                </div>
-                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
-            </button>
-             <div className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-4 pt-4">
-                    <FormRadioGroup legend="Mailing Address Same as Primary?" name="isMailingAddressSame" options={['Yes', 'No']} value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? 'Yes' : 'No')} onChange={value => handleFormUpdate({ isMailingAddressSame: value === 'Yes' })} required error={errors.isMailingAddressSame}/>
-                    {!formData.isMailingAddressSame && (
-                        <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
-                        <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}}/>
+            <div className={`transition-all duration-500 ease-in-out ${openSection === 'addresses' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="pt-4" aria-live="polite">
+                    <div className="mb-6">
+                        <FormRadioGroup legend={t('profilePage.mailingAddressSame')} name="isMailingAddressSame" options={[yes, no]} value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} required error={errors.isMailingAddressSame} />
+                    </div>
+                    <div className="flip-container">
+                        <div className={`flipper ${!formData.isMailingAddressSame && showMailingAddress ? 'is-flipped' : ''}`} style={{ height: cardHeight ? `${cardHeight}px` : 'auto' }}>
+                            <div className="flip-front" ref={frontRef}>
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.primaryAddressTitle')}</h3>
+                                        {!formData.isMailingAddressSame && (
+                                            <button type="button" onClick={() => setShowMailingAddress(true)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                                                {t('profilePage.viewMailingAddress')}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
+                                </div>
+                            </div>
+                            <div className="flip-back" ref={backRef}>
+                                 <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.mailingAddressTitle')}</h3>
+                                        <button type="button" onClick={() => setShowMailingAddress(false)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                                            {t('profilePage.viewPrimaryAddress')}
+                                        </button>
+                                    </div>
+                                    <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
+                                </div>
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </fieldset>
