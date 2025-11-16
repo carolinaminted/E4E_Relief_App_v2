@@ -86,7 +86,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
     if (formData.evacuated === 'Yes' && (!formData.evacuationNights || formData.evacuationNights <= 0)) newErrors.evacuationNights = t('applyEventPage.errorEvacuationNights');
     if (!formData.powerLoss) newErrors.powerLoss = t('applyEventPage.errorPowerLoss');
     if (formData.powerLoss === 'Yes' && (!formData.powerLossDays || formData.powerLossDays <= 0)) newErrors.powerLossDays = t('applyEventPage.errorPowerLossDays');
-    if (!formData.requestedAmount || formData.requestedAmount <= 0) newErrors.requestedAmount = t('applyEventPage.errorRequestedAmount');
+    // requestedAmount is now calculated from expenses
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -240,18 +240,6 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 value={formData.additionalDetails || ''}
                 onChange={e => handleUpdate({ additionalDetails: e.target.value })}
                 placeholder={t('applyEventPage.additionalDetailsPlaceholder')}
-            />
-            <FormInput
-                label={t('applyEventPage.requestedAmountLabel')}
-                id="amount"
-                type="number"
-                value={formData.requestedAmount || ''}
-                onChange={(e) => handleUpdate({ requestedAmount: parseFloat(e.target.value) || 0 })}
-                placeholder={t('applyEventPage.requestedAmountPlaceholder')}
-                min="0.01"
-                step="0.01"
-                required
-                error={errors.requestedAmount}
             />
         </div>
       <div className="flex justify-between pt-4">

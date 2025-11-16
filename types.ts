@@ -75,7 +75,7 @@ export interface ActiveIdentity {
  * A centralized type for all possible page routes in the application.
  * Using a single type ensures type-safe navigation and prevents magic strings.
  */
-export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications' | 'myProxyApplications' | 'forgotPassword';
+export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications' | 'myProxyApplications' | 'forgotPassword' | 'reliefQueue';
 
 
 /**
@@ -112,7 +112,7 @@ export interface UserProfile {
   classVerificationStatus: ClassVerificationStatus; // Status for the *active* identity.
   eligibilityStatus: EligibilityStatus; // Status for the *active* identity.
   // --- Authorization and Analytics ---
-  role: 'User' | 'Admin'; // The source of truth for role is the Firebase Auth custom claim. This is a synchronized copy.
+  role: 'User' | 'Admin'; // The source of truth for the Firebase Auth custom claim. This is a synchronized copy.
   tokensUsedTotal?: number; // Aggregated total from all token events for this user.
   estimatedCostTotal?: number; // Aggregated total cost from all token events.
 }
@@ -260,6 +260,7 @@ export interface TokenEvent {
  */
 export interface TokenUsageTableRow {
   user: string;
+  date: string;
   session: string;
   feature: string;
   input: number;

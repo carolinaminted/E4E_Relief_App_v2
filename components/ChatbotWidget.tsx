@@ -22,31 +22,59 @@ interface ChatbotWidgetProps {
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
   const { t } = useTranslation();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatSessionRef = useRef<Chat | null>(null);
   const chatTokenSessionIdRef = useRef<string | null>(null);
+  const initDoneForUser = useRef<string | null>(null);
 
   const [isButtonVisible, setIsButtonVisible] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const lastScrollY = useRef(0);
+
+  const sessionKey = userProfile ? `chatHistory-${userProfile.uid}` : null;
+
+  useEffect(() => {
+    if (isOpen && sessionKey && userProfile && initDoneForUser.current !== userProfile.uid) {
+      try {
+        const savedMessages = sessionStorage.getItem(sessionKey);
+        if (savedMessages) {
+          setMessages(JSON.parse(savedMessages));
+        } else {
+          setMessages([{ role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }]);
+        }
+      } catch (error) {
+        console.error('Could not load chat history from session storage', error);
+        setMessages([{ role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }]);
+      }
+      initDoneForUser.current = userProfile.uid;
+    }
+  }, [isOpen, sessionKey, t, userProfile]);
+
+  useEffect(() => {
+    // Persist messages to session storage whenever they change.
+    if (sessionKey && messages.length > 0) {
+      try {
+        sessionStorage.setItem(sessionKey, JSON.stringify(messages));
+      } catch (error) {
+        console.error('Could not save chat history to session storage', error);
+      }
+    }
+  }, [sessionKey, messages]);
 
   useEffect(() => {
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
     setIsMounted(true);
 
     if (isOpen && userProfile) {
-        // Per user request, provide the last 3 user/AI message pairs (6 total messages) as context when creating a new session.
+        // Provide the last 3 user/AI message pairs (6 total messages) as context when creating a new session.
         // This ensures the AI has recent context if the chat window was closed and reopened.
-        // We slice from the existing `messages` state in the UI. We skip the first message if it's the initial greeting.
-        const historyToSeed = messages.length > 1 ? messages.slice(-6) : [];
+        const historyToSeed = messages.length > 0 ? messages.slice(-6) : [];
 
         chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed);
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
-  }, [isOpen, applications, activeFund, userProfile]);
+  }, [isOpen, applications, activeFund, userProfile, messages]);
   
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {

@@ -136,55 +136,104 @@ We will use **Firebase Authentication** with the Email/Password provider. Admin 
 ## 5. Firestore Security Rules & Indexes
 
 ### Security Rules
-The following rules provide a secure, function-based foundation that correctly handles user and admin roles.
+The following rules provide a secure, function-based foundation that correctly handles user and admin roles. In `rules_version = '2'`, any collection not explicitly matched is denied access by default.
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthed() { return request.auth != null; }
-    function isAdmin() { return isAuthed() && request.auth.token.admin == true; }
-    function isSelf(uid) { return isAuthed() && request.auth.uid == uid; }
+    // --- Helper Functions ---
+    // These functions make rules more readable and reusable.
 
-    // Default deny
-    match /{document=**} { allow read, write: if false; }
+    // Returns true if the user making the request is signed in.
+    function isAuthed() {
+      return request.auth != null;
+    }
 
-    // App needs fund params to function
+    // Returns true if the signed-in user has an `admin: true` custom claim.
+    // This is the source of truth for admin privileges.
+    function isAdmin() {
+      return isAuthed() && request.auth.token.admin == true;
+    }
+
+    // Returns true if the signed-in user's UID matches the UID passed as an argument.
+    // This is used to check if a user is accessing their own documents.
+    function isSelf(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    // --- Global Rule ---
+    // This is a default-deny rule. If no other rule matches, access is denied.
+    // This is a security best practice to prevent accidental exposure of data.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Collection: funds ---
+    // Stores public configuration for each relief fund.
     match /funds/{fundCode} {
+      // Any authenticated user can read fund configurations (e.g., to see fund names, eligibility rules).
       allow read: if isAuthed();
+      // Only admins can create, update, or delete fund configurations.
       allow write: if isAdmin();
     }
 
+    // --- Collection: users ---
+    // Stores the main profile for each user.
     match /users/{uid} {
+      // A user can read or update their own profile. An admin can also read/update any user's profile.
       allow read, update: if isSelf(uid) || isAdmin();
+      // A user can only create their own profile document, which happens once during registration.
       allow create: if isSelf(uid);
+      // No one is allowed to delete a user profile to maintain data integrity.
       allow delete: if false;
     }
 
+    // --- Collection: identities ---
+    // Links a user to a specific fund and tracks their verification/eligibility status for that fund.
     match /identities/{identityId} {
+      // An admin can read any identity. A user can only read identities where the `uid` field matches their own auth UID.
       allow read: if isAdmin() || (isAuthed() && resource.data.uid == request.auth.uid);
+      // A user can create their own identity (during registration or adding a new fund). An admin can also create one.
       allow create: if isSelf(request.resource.data.uid) || isAdmin();
-      allow update: if isAdmin() || (isSelf(resource.data.uid) && request.resource.data.diff(resource.data).changedKeys().hasOnly(['isActive']));
+      // An admin can update any field. A user can update their own identity document (e.g., to change status from 'failed' to 'passed')
+      // as long as they do not attempt to change the core immutable fields: `uid` and `fundCode`. This prevents a user from reassigning an identity.
+      allow update: if isAdmin() || (isSelf(resource.data.uid) && request.resource.data.uid == resource.data.uid && request.resource.data.fundCode == resource.data.fundCode);
+      // Only admins can delete identities.
       allow delete: if isAdmin();
     }
 
+    // --- Collection: applications ---
+    // Stores all submitted relief applications.
     match /applications/{appId} {
+      // An admin can read any application. A user can only read applications they submitted.
       allow read: if isAdmin() || (isAuthed() && resource.data.uid == request.auth.uid);
+      // A user can create their own application. An admin can also create one (for proxy applications).
       allow create: if isAdmin() || (isSelf(request.resource.data.uid));
+      // Only admins can modify or delete submitted applications to ensure audit trail integrity.
       allow update, delete: if isAdmin();
     }
     
+    // --- Collection: tokenEvents ---
+    // Stores detailed logs of every AI API call for analytics.
     match /tokenEvents/{eventId} {
+      // A user can only create a token event log for themselves, preventing them from logging events on behalf of others.
       allow create: if isSelf(request.resource.data.uid);
+      // Only admins can read token events, and only for the fund they are associated with. This scopes admin data access.
       allow read: if isAdmin() && (
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.fundCode == resource.data.fundCode
       );
+      // No one can modify or delete event logs once created, ensuring data integrity for auditing.
       allow update, delete: if false;
     }
 
+    // --- Subcollection: chat messages ---
+    // Stores messages for the AI Relief Assistant.
     match /users/{uid}/chatSessions/{sid}/messages/{mid} {
+      // A user can read and create messages in their own chat sessions. An admin can also access them for support/review.
       allow read, create: if isSelf(uid) || isAdmin();
+      // Chat messages are immutable and cannot be changed or deleted.
       allow update, delete: if false;
     }
   }
@@ -202,7 +251,17 @@ The following composite indexes must be created in Firestore to support admin qu
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "submittedDate", "order": "DESCENDING" }
+        { "fieldPath": "isProxy", "order": "ASCENDING" },
+        { "fieldPath": "submittedDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "submittedBy", "order": "ASCENDING" },
+        { "fieldPath": "isProxy", "order": "ASCENDING" },
+        { "fieldPath": "submittedDate", "order": "ASCENDING" }
       ]
     },
     {
