@@ -25,23 +25,19 @@ const CheckmarkIcon: React.FC = () => (
     </svg>
 );
 
+const CompletionCheckmarkIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+);
+
+
 const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
 );
 
-const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, profileData: Partial<UserProfile> | null | undefined }> = ({ userProfile, profileData }) => {
-    const { t } = useTranslation();
+const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, profileData: Partial<UserProfile> | null | undefined, baseChecklistItems: { key: string, label: string }[] }> = ({ userProfile, profileData, baseChecklistItems }) => {
     
-    // The master list of what this component can show
-    const baseChecklistItems = useMemo(() => [
-        { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
-        { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
-        { key: 'householdIncome', label: t('applyContactPage.householdIncome') },
-        { key: 'householdSize', label: t('applyContactPage.householdSize') },
-        { key: 'homeowner', label: t('applyContactPage.homeowner') },
-        { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
-    ], [t]);
-
     // Filter to only show items that are incomplete in the user's base profile
     const checklistItems = useMemo(() => {
         if (!userProfile) return baseChecklistItems; // Show all if profile isn't loaded
@@ -55,11 +51,9 @@ const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, prof
     const isCompleteInDraft = (key: string) => {
         if (!profileData) return false;
         const value = profileData[key as keyof UserProfile];
-        // Check for non-empty strings, non-empty numbers (0 is valid for income, but not size), and boolean-like strings
         return value !== undefined && value !== null && value !== '';
     };
     
-    // If all details are already complete in the user's profile, don't render this component.
     if (checklistItems.length === 0) {
         return null;
     }
@@ -86,31 +80,14 @@ const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, prof
     );
 };
 
-const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | undefined }> = ({ eventData }) => {
-    const { t } = useTranslation();
-
+const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | undefined, eventChecklistItems: any[] }> = ({ eventData, eventChecklistItems }) => {
     const isComplete = (key: keyof EventData) => {
         if (!eventData) return false;
         const value = eventData[key];
         return value !== undefined && value !== null && value !== '';
     };
 
-    const checklistItems = [
-        { key: 'event', label: t('applyEventPage.disasterLabel') },
-        { key: 'eventName', label: t('applyEventPage.errorEventName', 'What is the name of the event?'), condition: (data?: Partial<EventData>) => data?.event === 'Tropical Storm/Hurricane' },
-        { key: 'eventDate', label: t('applyEventPage.eventDateLabel') },
-        { key: 'powerLoss', label: t('applyEventPage.powerLossLabel') },
-        { key: 'powerLossDays', label: t('applyEventPage.powerLossDaysLabel'), condition: (data?: Partial<EventData>) => data?.powerLoss === 'Yes' },
-        { key: 'evacuated', label: t('applyEventPage.evacuatedLabel') },
-        { key: 'evacuatingFromPrimary', label: t('applyEventPage.evacuatingFromPrimaryLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-        { key: 'evacuationReason', label: t('applyEventPage.evacuationReasonLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' && data?.evacuatingFromPrimary === 'No' },
-        { key: 'stayedWithFamilyOrFriend', label: t('applyEventPage.stayedWithFamilyLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-        { key: 'evacuationStartDate', label: t('applyEventPage.evacuationStartDateLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-        { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-        { key: 'additionalDetails', label: t('applyEventPage.additionalDetailsLabel') },
-    ];
-
-    const visibleItems = checklistItems.filter(item => !item.condition || item.condition(eventData || {}));
+    const visibleItems = eventChecklistItems.filter(item => !item.condition || item.condition(eventData || {}));
 
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
@@ -130,6 +107,27 @@ const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | und
                     </div>
                 ))}
             </div>
+        </div>
+    );
+};
+
+const CompletionView: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-8 flex-1 justify-center items-center text-center">
+            <CompletionCheckmarkIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
+                Application Almost Complete!
+            </h2>
+            <p className="text-gray-300 mb-6">
+                You have answered all the initial questions. Please proceed to the next step to add your expenses.
+            </p>
+            <button
+                onClick={onNext}
+                className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
+            >
+                {t('common.next')}: Add Expenses
+            </button>
         </div>
     );
 };
@@ -278,58 +276,132 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     }
   }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages]);
 
+  const baseProfileChecklistItems = useMemo(() => [
+      { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
+      { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
+      { key: 'householdIncome', label: t('applyContactPage.householdIncome') },
+      { key: 'householdSize', label: t('applyContactPage.householdSize') },
+      { key: 'homeowner', label: t('applyContactPage.homeowner') },
+      { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
+  ], [t]);
+
+  const eventChecklistItems = useMemo(() => [
+      { key: 'event', label: t('applyEventPage.disasterLabel') },
+      { key: 'eventName', label: t('applyEventPage.errorEventName', 'What is the name of the event?'), condition: (data?: Partial<EventData>) => data?.event === 'Tropical Storm/Hurricane' },
+      { key: 'eventDate', label: t('applyEventPage.eventDateLabel') },
+      { key: 'powerLoss', label: t('applyEventPage.powerLossLabel') },
+      { key: 'powerLossDays', label: t('applyEventPage.powerLossDaysLabel'), condition: (data?: Partial<EventData>) => data?.powerLoss === 'Yes' },
+      { key: 'evacuated', label: t('applyEventPage.evacuatedLabel') },
+      { key: 'evacuatingFromPrimary', label: t('applyEventPage.evacuatingFromPrimaryLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+      { key: 'evacuationReason', label: t('applyEventPage.evacuationReasonLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' && data?.evacuatingFromPrimary === 'No' },
+      { key: 'stayedWithFamilyOrFriend', label: t('applyEventPage.stayedWithFamilyLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+      { key: 'evacuationStartDate', label: t('applyEventPage.evacuationStartDateLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+      { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+      { key: 'additionalDetails', label: t('applyEventPage.additionalDetailsLabel') },
+  ], [t]);
+  
+  const isApplicationReadyForExpenses = useMemo(() => {
+    if (!userProfile) return false;
+
+    // 1. Check if all required profile fields are filled (in original profile or draft)
+    const allProfileFieldsComplete = baseProfileChecklistItems.every(item => {
+        const key = item.key as keyof UserProfile;
+        const draftValue = applicationDraft?.profileData?.[key];
+        if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
+        
+        const profileValue = userProfile?.[key];
+        return profileValue !== undefined && profileValue !== null && profileValue !== '';
+    });
+
+    if (!allProfileFieldsComplete) return false;
+
+    // 2. Check if all required and visible event fields are filled in the draft
+    const eventData = applicationDraft?.eventData;
+    if (!eventData) return false;
+
+    const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(eventData));
+
+    const allEventFieldsComplete = visibleEventItems.every(item => {
+        const key = item.key as keyof EventData;
+        const value = eventData[key];
+
+        if (key === 'powerLossDays' || key === 'evacuationNights') {
+            return typeof value === 'number' && value > 0;
+        }
+        return value !== undefined && value !== null && value !== '';
+    });
+    
+    return allEventFieldsComplete;
+  }, [userProfile, applicationDraft, baseProfileChecklistItems, eventChecklistItems]);
+
+  const handleNext = () => navigate('applyExpenses');
+
   return (
-    <div className="flex-1 flex flex-col p-4 md:p-8">
-      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
-        <div className="relative flex justify-center items-center mb-4 md:mb-8">
-            <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('aiApplyPage.backToHome')}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-                </svg>
-            </button>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                {t('aiApplyPage.title')}
-            </h1>
-        </div>
-
-        <div className="flex-1 flex flex-col md:flex-row gap-8 min-h-0">
-            {/* Main Chat Area */}
-            <main className="w-full md:w-3/5 flex-1 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
-                <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
-                    <div>
-                        <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {t('chatbotWidget.title')}
-                        </h2>
-                        <p className="text-xs text-gray-400 italic mt-1">
-                            <Trans
-                            i18nKey="chatbotWidget.disclaimer"
-                            components={{
-                                1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
-                                2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
-                            }}
-                            />
-                        </p>
-                    </div>
+    <div className="flex-1 md:absolute md:inset-0 flex flex-col">
+        <div className="flex-1 flex flex-col p-4 md:p-8 md:pb-4 min-h-0">
+            <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
+                <header className="relative flex justify-center items-center mb-4 md:mb-8 flex-shrink-0">
+                    <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('aiApplyPage.backToHome')}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                        </svg>
+                    </button>
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                        {t('aiApplyPage.title')}
+                    </h1>
                 </header>
-                <div className="flex-1 overflow-hidden flex flex-col">
-                    <ChatWindow messages={messages} isLoading={isLoading} />
-                </div>
-                <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-                </footer>
-            </main>
 
-            {/* Details Preview Panel */}
-            <aside className="hidden md:flex md:w-2/5 flex-col gap-8">
-                <AdditionalDetailsPreview 
-                    userProfile={userProfile} 
-                    profileData={applicationDraft?.profileData} 
-                />
-                <EventDetailsPreview eventData={applicationDraft?.eventData} />
-            </aside>
+                <div className="flex-1 flex flex-col md:flex-row gap-8 min-h-0">
+                    {/* Main Chat Area */}
+                    <main className="w-full md:w-3/5 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] min-h-[50vh] md:min-h-0">
+                        <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                            <div>
+                                <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                                {t('chatbotWidget.title')}
+                                </h2>
+                                <p className="text-xs text-gray-400 italic mt-1">
+                                    <Trans
+                                    i18nKey="chatbotWidget.disclaimer"
+                                    components={{
+                                        1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                                        2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                                    }}
+                                    />
+                                </p>
+                            </div>
+                        </header>
+                        <div className="flex-1 overflow-hidden flex flex-col">
+                            <ChatWindow messages={messages} isLoading={isLoading} />
+                        </div>
+                        <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                            <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+                        </footer>
+                    </main>
+
+                    {/* Details Preview Panel */}
+                    <aside className="w-full md:w-2/5 flex-col gap-8 hidden md:flex">
+                        {isApplicationReadyForExpenses ? (
+                            <CompletionView onNext={handleNext} />
+                        ) : (
+                            <>
+                                <AdditionalDetailsPreview 
+                                    userProfile={userProfile} 
+                                    profileData={applicationDraft?.profileData}
+                                    baseChecklistItems={baseProfileChecklistItems} 
+                                />
+                                <EventDetailsPreview 
+                                    eventData={applicationDraft?.eventData} 
+                                    eventChecklistItems={eventChecklistItems}
+                                />
+                            </>
+                        )}
+                    </aside>
+                </div>
+            </div>
         </div>
+      <div className="flex-shrink-0">
+        <Footer />
       </div>
-      <Footer />
     </div>
   );
 };
