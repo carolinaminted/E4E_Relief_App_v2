@@ -39,39 +39,34 @@ const CircleIcon: React.FC = () => (
 
 export const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, profileData: Partial<UserProfile> | null | undefined, baseChecklistItems: { key: string, label: string }[] }> = ({ userProfile, profileData, baseChecklistItems }) => {
     
-    // Filter to only show items that are incomplete in the user's base profile
-    const checklistItems = useMemo(() => {
-        if (!userProfile) return baseChecklistItems; // Show all if profile isn't loaded
-        return baseChecklistItems.filter(item => {
-            const value = userProfile[item.key as keyof UserProfile];
-            return value === undefined || value === null || value === '';
-        });
-    }, [userProfile, baseChecklistItems]);
+    const checklistItems = baseChecklistItems;
 
-    // This function checks if the item has been filled *during this session* by the AI
-    const isCompleteInDraft = (key: string) => {
-        if (!profileData) return false;
-        const value = profileData[key as keyof UserProfile];
-        return value !== undefined && value !== null && value !== '';
+    // This function checks if the item has been filled, either in the base profile OR during this session by the AI
+    const isComplete = (key: string) => {
+        // Check draft first, as it's the most up-to-date
+        const draftValue = profileData?.[key as keyof UserProfile];
+        if (draftValue !== undefined && draftValue !== null && draftValue !== '') {
+            return true;
+        }
+
+        // Then check base profile for pre-existing data
+        const profileValue = userProfile?.[key as keyof UserProfile];
+        return profileValue !== undefined && profileValue !== null && profileValue !== '';
     };
-    
-    if (checklistItems.length === 0) {
-        return null;
-    }
     
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
             <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
                 Additional Details Preview
             </h2>
-            <p className="text-xs text-gray-400 text-center mb-4">As you answer the assistant, this list will update.</p>
+            <p className="text-xs text-gray-400 text-center mb-4">This list updates as you answer the assistant.</p>
             <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                 {checklistItems.map(item => (
                     <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
                         <div className="flex-shrink-0 w-5 h-5">
-                            {isCompleteInDraft(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                            {isComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
                         </div>
-                        <span className={`text-sm ${isCompleteInDraft(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                        <span className={`text-sm ${isComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
                             {item.label}
                         </span>
                     </div>
@@ -322,11 +317,12 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                     </h1>
                 </header>
 
-                <div className="flex-1 flex flex-col md:flex-row gap-8 min-h-0">
-                    {/* --- MOBILE LAYOUT --- */}
+                <div className="flex-1 flex flex-col min-h-0">
+                
+                    {/* --- MOBILE VIEW --- */}
                     <div className="md:hidden flex-1 flex flex-col min-h-0 flip-container">
                         <div className={`flipper w-full h-full ${isApplicationReadyForExpenses ? 'is-flipped' : ''}`}>
-                             <main className="flip-front w-full h-full flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
+                            <main className="flip-front w-full h-full flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
                                 <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
                                     <div>
                                         <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
@@ -346,31 +342,33 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                         </div>
                     </div>
 
-                    {/* --- DESKTOP LAYOUT --- */}
-                    <main className="w-full md:w-3/5 flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] min-h-0 hidden md:flex">
-                        <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
-                            <div>
-                                <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
-                                <p className="text-xs text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
+                    {/* --- DESKTOP VIEW --- */}
+                    <div className="hidden md:flex flex-1 flex-row gap-8 min-h-0">
+                        <main className="w-3/5 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] min-h-0">
+                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                                <div>
+                                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
+                                    <p className="text-xs text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
+                                </div>
+                            </header>
+                            <div className="flex-1 overflow-hidden flex flex-col">
+                                <ChatWindow messages={messages} isLoading={isLoading} />
                             </div>
-                        </header>
-                        <div className="flex-1 overflow-hidden flex flex-col">
-                            <ChatWindow messages={messages} isLoading={isLoading} />
-                        </div>
-                        <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                            <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-                        </footer>
-                    </main>
-                    <aside className="w-full md:w-2/5 flex-col gap-8 hidden md:flex">
-                        {isApplicationReadyForExpenses ? (
-                            <CompletionView onNext={handleNext} />
-                        ) : (
-                            <>
-                                <AdditionalDetailsPreview userProfile={userProfile} profileData={applicationDraft?.profileData} baseChecklistItems={baseProfileChecklistItems} />
-                                <EventDetailsPreview eventData={applicationDraft?.eventData} eventChecklistItems={eventChecklistItems} />
-                            </>
-                        )}
-                    </aside>
+                            <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                                <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+                            </footer>
+                        </main>
+                        <aside className="w-2/5 flex flex-col gap-8">
+                             {isApplicationReadyForExpenses ? (
+                                <CompletionView onNext={handleNext} />
+                            ) : (
+                                <>
+                                    <AdditionalDetailsPreview userProfile={userProfile} profileData={applicationDraft?.profileData} baseChecklistItems={baseProfileChecklistItems} />
+                                    <EventDetailsPreview eventData={applicationDraft?.eventData} eventChecklistItems={eventChecklistItems} />
+                                </>
+                            )}
+                        </aside>
+                    </div>
                 </div>
             </div>
         </div>

@@ -134,16 +134,15 @@ const getAIApplyContext = (userProfile: UserProfile | null, applicationDraft: Pa
     let dynamicContext = `
 You are the E4E Relief AI assistant, with a special focus for this page.
 
-Your GOAL is to help the user complete their application by asking questions one at a time from the 'Missing' lists below.
+Your GOAL is to help the user complete their application by having a natural conversation to fill in the 'Missing Information' below.
 
 **Your Process**:
-1. Review the lists of missing 'Additional Details' and 'Event Details' provided below.
-2. First, ask for the missing 'Additional Details' information, one question at a time.
-3. After a user provides an answer, use the \`updateUserProfile\` tool to save it.
-4. Once all 'Additional Details' are collected, move on to the 'Event Details' questions.
-5. For event details, use the \`startOrUpdateApplicationDraft\` tool to save the information.
-6. After using any tool, you MUST confirm what you saved and then ask the next question from the list. Do not ask another question until you have successfully used a tool.
-7. If a user asks a question outside of this scope, gently guide them back by saying something like, "I can help with that on other pages, but for now, let's focus on these last few questions. What is your [Next Question]?"
+1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
+2.  **Act**: Use your tools (\`updateUserProfile\` or \`startOrUpdateApplicationDraft\`) to save ALL the information you can gather from the user's message in a single turn.
+3.  **Confirm**: After a successful tool call, briefly confirm what you saved.
+4.  **Ask**: Look at the 'Current Information' and 'Missing Information' lists. Ask for the single NEXT item that is still missing. Do NOT ask for information that is already known.
+5.  **Guide**: If a user asks a question outside of this scope, gently guide them back to completing the application.
+6.  **Complete**: Once all information is gathered, inform the user they are ready for the next step.
 
 You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft\` tools.
 ---
@@ -152,6 +151,36 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
     const combinedProfile = { ...userProfile, ...(applicationDraft?.profileData || {}) };
     const combinedEvent = { ...(applicationDraft?.eventData || {}) };
 
+    const currentProfileInfo: string[] = [];
+    if (combinedProfile.employmentStartDate) currentProfileInfo.push(`Employment Start Date: ${combinedProfile.employmentStartDate}`);
+    if (combinedProfile.eligibilityType) currentProfileInfo.push(`Eligibility Type: ${combinedProfile.eligibilityType}`);
+    if (combinedProfile.householdIncome) currentProfileInfo.push(`Household Income: ${combinedProfile.householdIncome}`);
+    if (combinedProfile.householdSize) currentProfileInfo.push(`Household Size: ${combinedProfile.householdSize}`);
+    if (combinedProfile.homeowner) currentProfileInfo.push(`Homeowner: ${combinedProfile.homeowner}`);
+    if (combinedProfile.preferredLanguage) currentProfileInfo.push(`Preferred Language: ${combinedProfile.preferredLanguage}`);
+    
+    const currentEventInfo: string[] = [];
+    if (combinedEvent.event) currentEventInfo.push(`Event Type: ${combinedEvent.event}`);
+    if (combinedEvent.eventName) currentEventInfo.push(`Event Name: ${combinedEvent.eventName}`);
+    if (combinedEvent.eventDate) currentEventInfo.push(`Event Date: ${combinedEvent.eventDate}`);
+    if (combinedEvent.powerLoss) currentEventInfo.push(`Power Loss: ${combinedEvent.powerLoss}`);
+    if (combinedEvent.powerLossDays) currentEventInfo.push(`Power Loss Days: ${combinedEvent.powerLossDays}`);
+    if (combinedEvent.evacuated) currentEventInfo.push(`Evacuated: ${combinedEvent.evacuated}`);
+    if (combinedEvent.evacuatingFromPrimary) currentEventInfo.push(`Evacuating From Primary: ${combinedEvent.evacuatingFromPrimary}`);
+    if (combinedEvent.evacuationReason) currentEventInfo.push(`Evacuation Reason: Provided`);
+    if (combinedEvent.stayedWithFamilyOrFriend) currentEventInfo.push(`Stayed with Family/Friend: ${combinedEvent.stayedWithFamilyOrFriend}`);
+    if (combinedEvent.evacuationStartDate) currentEventInfo.push(`Evacuation Start Date: ${combinedEvent.evacuationStartDate}`);
+    if (combinedEvent.evacuationNights) currentEventInfo.push(`Evacuation Nights: ${combinedEvent.evacuationNights}`);
+
+    if ([...currentProfileInfo, ...currentEventInfo].length > 0) {
+        dynamicContext += `
+**Current Information Known**:
+${currentProfileInfo.length > 0 ? `\n*Profile Details*\n- ` + currentProfileInfo.join('\n- ') : ''}
+${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join('\n- ') : ''}
+---
+`;
+    }
+
     const missingProfileFields: string[] = [];
     if (!combinedProfile.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
     if (!combinedProfile.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
@@ -159,21 +188,7 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
     if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
     if (!combinedProfile.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
     if (!combinedProfile.preferredLanguage) missingProfileFields.push('Preferred Language');
-
-    if (missingProfileFields.length > 0) {
-        dynamicContext += `
-**Missing Additional Details to Collect**:
-- ${missingProfileFields.join('\n- ')}
----
-`;
-    } else {
-        dynamicContext += `
-**Missing Additional Details to Collect**:
-- All additional profile details are already complete. You can proceed directly to Event Details.
----
-`;
-    }
-
+    
     const missingEventFields: string[] = [];
     if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
     if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
@@ -189,15 +204,16 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
         if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
     }
 
-    if (missingEventFields.length > 0) {
-      dynamicContext += `
-**Missing Event Details to Collect (ask after Additional Details are complete)**:
-- ${missingEventFields.join('\n- ')}
+    if ([...missingProfileFields, ...missingEventFields].length > 0) {
+        dynamicContext += `
+**Missing Information to Collect**:
+${missingProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingProfileFields.join('\n- ') : ''}
+${missingEventFields.length > 0 ? `\n*Event Details*\n- ` + missingEventFields.join('\n- ') : ''}
 `;
     } else {
-      dynamicContext += `
-**Missing Event Details to Collect (ask after Additional Details are complete)**:
-- All event details are already complete.
+        dynamicContext += `
+**Missing Information to Collect**:
+- All details are complete.
 `;
     }
 
