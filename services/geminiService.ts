@@ -183,7 +183,7 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
 - Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*
 - Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*
 - How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*
-- The final question is to ask for any other additional details (additionalDetails). It is optional for the user to answer, but if they provide details, you MUST use the \`startOrUpdateApplicationDraft\` tool to save them.
+- The final question is to ask for any other additional details (additionalDetails). It is optional for the user to answer. If they provide details, you MUST use the \`startOrUpdateApplicationDraft\` tool to save them. If they decline to provide details, you MUST also use the \`startOrUpdateApplicationDraft\` tool and set the \`additionalDetails\` field to the exact string "None provided".
 `;
 
     return dynamicContext;
