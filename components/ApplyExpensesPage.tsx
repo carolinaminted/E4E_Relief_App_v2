@@ -152,6 +152,15 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
   return (
     <div className="space-y-8">
+       <div className="border-b border-[#005ca0] pb-8 flex justify-center items-center">
+          <div className="text-center">
+              <p className="text-sm text-white uppercase tracking-wider">{t('applyExpensesPage.totalExpensesLabel')}</p>
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                  ${totalExpenses.toFixed(2)}
+              </p>
+          </div>
+      </div>
+
       <div className="divide-y divide-[#005ca0]/50">
         {expenseTypes.map((type) => {
           const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
@@ -165,19 +174,17 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
               <h4 className="font-semibold text-lg text-white mb-2">{t(translationKey, type)}</h4>
               <div className="grid grid-cols-2 gap-4 items-start">
                 <FormInput
-                  label={t('applyExpensesPage.amountLabel')}
                   id={`amount-${type}`}
                   type="number"
                   value={expense?.amount || ''}
                   onChange={(e) => handleAmountChange(type, e.target.value)}
-                  placeholder="0.00"
+                  placeholder={t('applyExpensesPage.amountLabel')}
                   min="0"
                   step="0.01"
                   disabled={isUploading}
                   error={errors[type]}
                 />
                 <div>
-                  <p className="block text-sm font-medium text-white mb-1">{t('applyExpensesPage.receiptLabel')}</p>
                   <div className="flex items-center gap-2">
                     <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>
@@ -199,15 +206,6 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
             </div>
           );
         })}
-      </div>
-
-      <div className="mt-8 pt-4 border-t border-[#005ca0] flex justify-center items-center">
-          <div className="text-center">
-              <p className="text-sm text-white uppercase tracking-wider">{t('applyExpensesPage.totalExpensesLabel')}</p>
-              <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                  ${totalExpenses.toFixed(2)}
-              </p>
-          </div>
       </div>
 
       <div className="flex justify-between items-start pt-4">
