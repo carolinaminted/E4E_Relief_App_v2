@@ -1,19 +1,17 @@
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  addDoc,
-  deleteDoc,
-  query,
-  where,
-  documentId,
-  onSnapshot,
-  orderBy,
-  increment,
-  Timestamp,
+    collection,
+    doc,
+    getDoc,
+    onSnapshot,
+    query,
+    where,
+    getDocs,
+    addDoc,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    increment,
+    documentId
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { UserProfile, FundIdentity, Application, TokenEvent, TokenUsageFilters } from '../types';
@@ -35,6 +33,9 @@ class UsersRepo implements IUsersRepo {
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             const profile = docSnap.exists() ? (docSnap.data() as UserProfile) : null;
             callback(profile);
+        },
+        (error) => {
+            console.error(`[FirestoreRepo] Error listening to user profile ${uid}:`, error);
         });
         return unsubscribe;
     }
@@ -49,8 +50,7 @@ class UsersRepo implements IUsersRepo {
     }
 
     async getAll(): Promise<UserProfile[]> {
-        const q = query(this.usersCol);
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(this.usersCol);
         return snapshot.docs.map(doc => doc.data() as UserProfile);
     }
 
@@ -58,9 +58,7 @@ class UsersRepo implements IUsersRepo {
         const identitiesCol = collection(db, 'identities');
         const identitiesQuery = query(identitiesCol, where('fundCode', '==', fundCode));
         const identitiesSnapshot = await getDocs(identitiesQuery);
-        // FIX: The type of `doc.data().uid` is `any`. The original one-liner with a type guard
-        // can cause type inference issues in some TypeScript configurations, resulting in `unknown[]`.
-        // This more explicit approach ensures `userIds` is correctly typed as `string[]`.
+        
         const uids = new Set<string>();
         identitiesSnapshot.docs.forEach(doc => {
             const uid = doc.data().uid;
@@ -96,7 +94,7 @@ class UsersRepo implements IUsersRepo {
     }
 
     async add(user: Omit<UserProfile, 'role'>, uid: string): Promise<void> {
-        const userWithRole = { ...user, role: 'User' };
+        const userWithRole = { ...user, role: 'User' as const };
         await setDoc(doc(this.usersCol, uid), userWithRole);
     }
 
@@ -143,16 +141,19 @@ class ApplicationsRepo implements IApplicationsRepo {
     async getForUser(uid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('uid', '==', uid), where('isProxy', '==', false));
         const snapshot = await getDocs(q);
-        const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         // Sort on the client to avoid needing a composite index in Firestore
         return applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime());
     }
 
     listenForUser(uid: string, callback: (apps: Application[]) => void): () => void {
-        const q = query(this.appsCol, where('uid', '==', uid), where('isProxy', '==', false), orderBy('submittedDate', 'asc'));
+        const q = query(this.appsCol, where('uid', '==', uid), where('isProxy', '==', false));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
-            callback(applications);
+            callback(applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime()));
+        },
+        (error) => {
+            console.error("[FirestoreRepo] Error in listenForUser snapshot listener:", error);
         });
         return unsubscribe;
     }
@@ -160,34 +161,36 @@ class ApplicationsRepo implements IApplicationsRepo {
     async getProxySubmissions(adminUid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('submittedBy', '==', adminUid), where('isProxy', '==', true));
         const snapshot = await getDocs(q);
-        const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
-        // Sort on the client to avoid needing a composite index in Firestore
+        const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         return applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime());
     }
 
     listenForProxySubmissions(adminUid: string, callback: (apps: Application[]) => void): () => void {
-        const q = query(this.appsCol, where('submittedBy', '==', adminUid), where('isProxy', '==', true), orderBy('submittedDate', 'asc'));
+        const q = query(this.appsCol, where('submittedBy', '==', adminUid), where('isProxy', '==', true));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
-            callback(applications);
+            callback(applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime()));
+        },
+        (error) => {
+            console.error("[FirestoreRepo] Error in listenForProxySubmissions snapshot listener:", error);
         });
         return unsubscribe;
     }
 
     async getAll(): Promise<Application[]> {
         const snapshot = await getDocs(this.appsCol);
-        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
     }
 
     async getForFund(fundCode: string): Promise<Application[]> {
         const q = query(this.appsCol, where('profileSnapshot.fundCode', '==', fundCode));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
     }
 
     async add(application: Omit<Application, 'id'>): Promise<Application> {
         const docRef = await addDoc(this.appsCol, application);
-        return { id: docRef.id, ...application } as Application;
+        return { id: docRef.id, ...application };
     }
 }
 
@@ -196,17 +199,14 @@ class FundsRepo implements IFundsRepo {
     private fundsCol = collection(db, 'funds');
 
     async getFund(code: string): Promise<Fund | null> {
-        // In Firestore, document IDs are case-sensitive. Assuming codes are stored uppercase.
         const docRef = doc(this.fundsCol, code.toUpperCase());
         const docSnap = await getDoc(docRef);
-        // FIX: Replaced spread operator with Object.assign to avoid type inference issues within the ternary operator.
-        return docSnap.exists() ? (Object.assign({ code: docSnap.id }, docSnap.data()) as Fund) : null;
+        return docSnap.exists() ? ({ code: docSnap.id, ...docSnap.data() } as Fund) : null;
     }
 
     async getAllFunds(): Promise<Fund[]> {
         const snapshot = await getDocs(this.fundsCol);
-        // FIX: Replaced spread operator with Object.assign to avoid type inference issues.
-        return snapshot.docs.map(doc => Object.assign({ code: doc.id }, doc.data()) as Fund);
+        return snapshot.docs.map(doc => ({ code: doc.id, ...doc.data() } as Fund));
     }
 }
 
@@ -220,6 +220,7 @@ class TokenEventsRepo implements ITokenEventsRepo {
 
     async getEventsForFund(options: { fundCode: string; filters: TokenUsageFilters; uid?: string; }): Promise<TokenEvent[]> {
         const { fundCode, filters, uid } = options;
+        
         const queryConstraints = [where('fundCode', '==', fundCode)];
 
         if (uid) {
@@ -229,15 +230,14 @@ class TokenEventsRepo implements ITokenEventsRepo {
             queryConstraints.push(where('timestamp', '>=', filters.dateRange.start));
         }
         if (filters.dateRange.end) {
-            // Add one day to the end date to make the range inclusive
             const endDate = new Date(filters.dateRange.end);
             endDate.setDate(endDate.getDate() + 1);
             queryConstraints.push(where('timestamp', '<', endDate.toISOString().split('T')[0]));
         }
         
-        const q = query(this.eventsCol, ...queryConstraints, orderBy('timestamp', 'desc'));
-
+        const q = query(this.eventsCol, ...queryConstraints);
         const snapshot = await getDocs(q);
+
         let events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TokenEvent));
 
         // Client-side filtering for non-indexed fields
@@ -256,8 +256,9 @@ class TokenEventsRepo implements ITokenEventsRepo {
         if (filters.account !== 'all') {
             events = events.filter(e => e.account === filters.account);
         }
-
-        return events;
+        
+        // Sort client-side
+        return events.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }
 }
 

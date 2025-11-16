@@ -251,7 +251,17 @@ The following composite indexes must be created in Firestore to support admin qu
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "submittedDate", "order": "DESCENDING" }
+        { "fieldPath": "isProxy", "order": "ASCENDING" },
+        { "fieldPath": "submittedDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "submittedBy", "order": "ASCENDING" },
+        { "fieldPath": "isProxy", "order": "ASCENDING" },
+        { "fieldPath": "submittedDate", "order": "ASCENDING" }
       ]
     },
     {

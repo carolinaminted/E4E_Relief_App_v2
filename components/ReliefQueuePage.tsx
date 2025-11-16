@@ -111,7 +111,6 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
         </div>
 
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-center">
-            <h2 className="text-xl font-semibold text-white mb-2">Re-attempt Verification</h2>
             {!isReattempting ? (
                 <button onClick={() => setIsReattempting(true)} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200">
                     Re-attempt Verification

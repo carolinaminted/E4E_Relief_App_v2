@@ -1,18 +1,19 @@
-import { 
+import {
+    onAuthStateChanged,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged,
     sendPasswordResetEmail,
-    type User
+    type User,
+    type IdTokenResult
 } from 'firebase/auth';
 import { auth } from './firebase';
 import type { IAuthClient } from './authClient';
-import { usersRepo, fundsRepo } from './firestoreRepo';
+import { usersRepo } from './firestoreRepo';
 
 class FirebaseAuthClient implements IAuthClient {
 
-    onAuthStateChanged(callback: (user: User | null, token: any | null) => void) {
+    onAuthStateChanged(callback: (user: User | null, token: IdTokenResult | null) => void) {
         return onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const token = await user.getIdTokenResult();
@@ -27,6 +28,10 @@ class FirebaseAuthClient implements IAuthClient {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            
+            if (!user) {
+                throw new Error("User could not be created.");
+            }
             
             // DEFERRED: The fund name is no longer fetched here to avoid a permissions race condition.
             // It will be hydrated in App.tsx after the user's auth state is stable (e.g., after verification).
@@ -68,6 +73,9 @@ class FirebaseAuthClient implements IAuthClient {
             // This is a simplified example. In a real app, this would be handled by a secure backend function
             // to avoid creating users on the client side without proper authorization.
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            if (!userCredential.user) {
+                throw new Error("Proxy user could not be created.");
+            }
             return { success: true, user: userCredential.user };
         } catch (error: any) {
             console.error("Proxy user creation error:", error);
