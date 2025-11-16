@@ -19,25 +19,14 @@ interface ApplyPageProps {
   canApply: boolean;
   activeFund: Fund | null;
   initialStep?: number;
+  onDraftUpdate: (draft: ApplicationFormData) => void;
 }
 
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund, initialStep }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund, initialStep, onDraftUpdate }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(initialStep || 1);
   
   const [formData, setFormData] = useState<ApplicationFormData>(() => {
-    const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
-    try {
-        const savedDraft = localStorage.getItem(draftKey);
-        if (savedDraft) {
-            console.log("Loading saved application draft from localStorage.");
-            return JSON.parse(savedDraft);
-        }
-    } catch (error) {
-        console.error("Could not parse saved application draft:", error);
-        localStorage.removeItem(draftKey); // Clear corrupted data
-    }
-
     const draftProfile: Partial<UserProfile> = applicationDraft?.profileData || {};
     const draftEvent: Partial<EventData> = applicationDraft?.eventData || {};
 
@@ -78,20 +67,14 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
         agreementData: {
             shareStory: null,
             receiveAdditionalInfo: null,
+            ...(applicationDraft?.agreementData || {}),
         },
     };
   });
 
   useEffect(() => {
-    if (userProfile.uid && userProfile.fundCode) {
-        const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
-        try {
-            localStorage.setItem(draftKey, JSON.stringify(formData));
-        } catch (error) {
-            console.error("Could not save application draft to localStorage:", error);
-        }
-    }
-  }, [formData, userProfile.uid, userProfile.fundCode]);
+    onDraftUpdate(formData);
+  }, [formData, onDraftUpdate]);
 
   useEffect(() => {
     if (mainRef.current) {

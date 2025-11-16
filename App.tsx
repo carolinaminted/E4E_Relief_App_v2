@@ -131,6 +131,16 @@ function App() {
             } else {
                 hydratedProfile.role = 'User';
             }
+            
+            const draftKey = `applicationDraft-${hydratedProfile.uid}-${hydratedProfile.fundCode}`;
+            try {
+                const savedDraft = localStorage.getItem(draftKey);
+                if (savedDraft) {
+                    setApplicationDraft(JSON.parse(savedDraft));
+                }
+            } catch (error) {
+                console.error("Could not load application draft from localStorage:", error);
+            }
 
             setAllIdentities(identities);
             setAuthState({ status: 'signedIn', user, profile: hydratedProfile, claims });
@@ -605,28 +615,41 @@ function App() {
     setPage('submissionSuccess');
   }, [currentUser, authState.claims.admin, activeFund]);
 
+  const handleDraftUpdate = useCallback((draft: Partial<ApplicationFormData>) => {
+    if (!currentUser) return;
+    const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
+    try {
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+        setApplicationDraft(draft);
+    } catch (error) {
+        console.error("Could not save application draft:", error);
+    }
+  }, [currentUser]);
+
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
+    if (!currentUser) return;
     console.log(`Executing tool: ${functionName}`, args);
-    setApplicationDraft(prevDraft => {
-        const newDraft = { ...prevDraft };
 
-        if (functionName === 'updateUserProfile') {
-            const prevProfile: Partial<UserProfile> = prevDraft?.profileData || {};
-            const newProfile = { ...prevProfile, ...args };
+    const currentDraft = applicationDraft || {};
+    const newDraft = { ...currentDraft };
 
-            if (args.primaryAddress) {
-                newProfile.primaryAddress = { ...(prevProfile.primaryAddress || {}), ...args.primaryAddress };
-            }
-            newDraft.profileData = newProfile as UserProfile;
+    if (functionName === 'updateUserProfile') {
+        const prevProfile: Partial<UserProfile> = newDraft.profileData || {};
+        const newProfile = { ...prevProfile, ...args };
+        if (args.primaryAddress) {
+            newProfile.primaryAddress = { ...(prevProfile.primaryAddress || {}), ...args.primaryAddress };
         }
+        newDraft.profileData = newProfile as UserProfile;
+    }
 
-        if (functionName === 'startOrUpdateApplicationDraft') {
-            const prevEventData: Partial<EventData> = prevDraft?.eventData || {};
-            newDraft.eventData = { ...prevEventData, ...args };
-        }
-        return newDraft;
-    });
-  }, []);
+    if (functionName === 'startOrUpdateApplicationDraft') {
+        const prevEventData: Partial<EventData> = newDraft.eventData || {};
+        newDraft.eventData = { ...prevEventData, ...args };
+    }
+    
+    handleDraftUpdate(newDraft);
+
+  }, [currentUser, applicationDraft, handleDraftUpdate]);
   
   const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile', 'aiApply', 'applyExpenses'];
   const pagesWithoutChatbot: GlobalPage[] = ['login', 'register', 'forgotPassword', 'classVerification', 'reliefQueue', 'aiApply'];
@@ -660,9 +683,9 @@ function App() {
       case 'classVerification':
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} onVerificationFailed={handleVerificationFailed} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
-        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} />;
+        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} onDraftUpdate={handleDraftUpdate} />;
       case 'applyExpenses':
-        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} initialStep={3} />;
+        return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} initialStep={3} onDraftUpdate={handleDraftUpdate} />;
       case 'aiApply':
         return <AIApplyPage 
                     navigate={navigate}
