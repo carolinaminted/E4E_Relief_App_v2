@@ -620,7 +620,7 @@ function App() {
     });
   }, []);
   
-  // FIX: Removed 'reliefQueue' from this array. That page is rendered via a separate return that does not include the footer, so it does not need to be in this list. This resolves the type error.
+  // FIX: The 'reliefQueue' page is rendered in a separate block that doesn't include the main footer. Removing it from this array resolves a TypeScript error caused by type narrowing where `page` is checked with `.includes()`.
   const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
