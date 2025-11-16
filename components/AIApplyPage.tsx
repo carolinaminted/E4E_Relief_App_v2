@@ -8,6 +8,7 @@ import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
 import { useTranslation, Trans } from 'react-i18next';
+import Footer from './Footer';
 
 interface AIApplyPageProps {
   userProfile: UserProfile | null;
@@ -213,7 +214,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages]);
 
   return (
-    <div className="flex-1 flex flex-col p-4 md:p-8 h-full">
+    <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
         <div className="relative flex justify-center items-center mb-4 md:mb-8">
             <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('aiApplyPage.backToHome')}>
@@ -228,7 +229,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
         <div className="flex-1 flex flex-col md:flex-row gap-8 min-h-0">
             {/* Main Chat Area */}
-            <main className="w-full md:w-3/5 h-full flex-1 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
+            <main className="w-full md:w-3/5 flex-1 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
                 <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
                     <div>
                         <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
@@ -254,11 +255,12 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             </main>
 
             {/* Details Preview Panel */}
-            <aside className="hidden md:flex md:w-2/5 h-full">
+            <aside className="hidden md:flex md:w-2/5">
                 <AdditionalDetailsPreview profileData={applicationDraft?.profileData} />
             </aside>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
