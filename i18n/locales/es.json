@@ -68,7 +68,7 @@
   },
   "applyPage": {
     "title": "Solicitar Ayuda",
-    "eligibility": "Elegible para solicitar",
+    "eligibility": "Elegible para solicitar ayuda",
     "verificationNeeded": "Verificación necesaria",
     "noActiveFund": "No hay fondo activo seleccionado.",
     "limitsReachedTitle": "Límites de Subvención Alcanzados",
@@ -175,7 +175,7 @@
   },
   "profilePage": {
     "title": "Perfil",
-    "eligibility": "Elegible para solicitar",
+    "eligibility": "Elegible para solicitar ayuda",
     "verificationNeeded": "Verificación necesaria",
     "myApplicationsTitle": "Mis Solicitudes",
     "twelveMonthRemaining": "Restante de 12 Meses",
@@ -188,7 +188,7 @@
     "fundIdentitiesTitle": "Identidades del Fondo",
     "fundIdentitiesDescription": "Gestiona tus identidades de fondo. Agrega o elimina códigos de fondo adicionales si eres elegible para más de un programa.",
     "active": "Activo",
-    "setActive": "Activo",
+    "setActive": "Activar",
     "addNewIdentity": "+ Agregar Nueva Identidad",
     "enterNewFundCode": "Ingresar Nuevo Código de Fondo",
     "seeAll": "Ver Todos",

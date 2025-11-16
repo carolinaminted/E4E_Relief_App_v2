@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EventData, Expense, UserProfile } from '../types';
 import { expenseTypes } from '../data/appData';
@@ -38,6 +38,15 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
   const totalExpenses = useMemo(() => {
     return formData.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   }, [formData.expenses]);
+
+  // Automatically update the requestedAmount in the parent form data whenever totalExpenses changes.
+  // This is the core of the new logic.
+  useEffect(() => {
+    // Avoid sending an update if the value hasn't changed.
+    if (formData.requestedAmount !== totalExpenses) {
+        updateFormData({ requestedAmount: totalExpenses });
+    }
+  }, [totalExpenses, updateFormData, formData.requestedAmount]);
 
   const handleAmountChange = (type: Expense['type'], amountStr: string) => {
     const amount = amountStr === '' ? '' : parseFloat(amountStr) || 0;

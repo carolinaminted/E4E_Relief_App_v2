@@ -9,6 +9,7 @@ import type { CVType } from '../data/fundData';
 interface ClassVerificationPageProps {
   user: UserProfile;
   onVerificationSuccess: () => void;
+  onVerificationFailed: (fundCode: string) => void;
   navigate: (page: Page) => void;
   verifyingFundCode: string | null;
 }
@@ -20,28 +21,6 @@ const LoadingSpinner: React.FC = () => (
         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
     </div>
 );
-
-const MaxAttemptsView: React.FC<{ navigate: (page: Page) => void, verifyingFundCode: string | null }> = ({ navigate, verifyingFundCode }) => (
-    <div className="text-center space-y-4">
-        <p className="text-red-400 bg-red-900/50 p-3 rounded-md">
-            The details provided do not match our records.
-        </p>
-        <p className="text-gray-300 text-sm">
-            Too many failed attempts. Please contact support if you believe this is an error.
-        </p>
-        <button
-            onClick={() => {
-                // If adding a new identity, go to profile. Otherwise, there's nowhere to go, but 'home' is a safe default.
-                const destination = verifyingFundCode ? 'profile' : 'home';
-                navigate(destination);
-            }}
-            className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
-        >
-            {verifyingFundCode ? 'Back to Profile' : 'Back to Home'}
-        </button>
-    </div>
-);
-
 
 // --- Sub-components for each verification method ---
 
@@ -218,7 +197,7 @@ const SSOVerificationView: React.FC<{ onVerified: () => void, onVerificationFail
 };
 
 
-const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onVerificationSuccess, navigate, verifyingFundCode }) => {
+const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onVerificationSuccess, onVerificationFailed, navigate, verifyingFundCode }) => {
     const [cvType, setCvType] = useState<CVType | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isVerified, setIsVerified] = useState(false);
@@ -238,6 +217,15 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
         };
         fetchFundData();
     }, [fundCodeToVerify]);
+
+    useEffect(() => {
+        if (attempts >= MAX_ATTEMPTS) {
+            console.log("Max verification attempts reached. Setting status to failed.");
+            onVerificationFailed(fundCodeToVerify);
+            // The parent component (App.tsx) will now handle the navigation to the relief queue page
+            // after the state update has been processed. We don't need to do anything else here.
+        }
+    }, [attempts, MAX_ATTEMPTS, onVerificationFailed, fundCodeToVerify]);
 
     const handleVerificationFailure = () => {
         setAttempts(prev => prev + 1);
@@ -272,10 +260,6 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
                     </div>
                 </div>
             );
-        }
-
-        if (attempts >= MAX_ATTEMPTS) {
-            return <MaxAttemptsView navigate={navigate} verifyingFundCode={verifyingFundCode} />;
         }
 
         switch (cvType) {

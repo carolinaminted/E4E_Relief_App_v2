@@ -21,7 +21,9 @@ export interface IIdentitiesRepo {
 
 export interface IApplicationsRepo {
     getForUser(uid: string): Promise<Application[]>;
+    listenForUser(uid: string, callback: (apps: Application[]) => void): () => void;
     getProxySubmissions(adminUid: string): Promise<Application[]>;
+    listenForProxySubmissions(adminUid: string, callback: (apps: Application[]) => void): () => void;
     getAll(): Promise<Application[]>;
     getForFund(fundCode: string): Promise<Application[]>;
     add(application: Omit<Application, 'id'>): Promise<Application>;

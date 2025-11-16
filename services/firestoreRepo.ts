@@ -147,6 +147,15 @@ class ApplicationsRepo implements IApplicationsRepo {
         // Sort on the client to avoid needing a composite index in Firestore
         return applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime());
     }
+
+    listenForUser(uid: string, callback: (apps: Application[]) => void): () => void {
+        const q = query(this.appsCol, where('uid', '==', uid), where('isProxy', '==', false), orderBy('submittedDate', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+            callback(applications);
+        });
+        return unsubscribe;
+    }
     
     async getProxySubmissions(adminUid: string): Promise<Application[]> {
         const q = query(this.appsCol, where('submittedBy', '==', adminUid), where('isProxy', '==', true));
@@ -154,6 +163,15 @@ class ApplicationsRepo implements IApplicationsRepo {
         const applications = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()) as Application);
         // Sort on the client to avoid needing a composite index in Firestore
         return applications.sort((a, b) => new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime());
+    }
+
+    listenForProxySubmissions(adminUid: string, callback: (apps: Application[]) => void): () => void {
+        const q = query(this.appsCol, where('submittedBy', '==', adminUid), where('isProxy', '==', true), orderBy('submittedDate', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+            callback(applications);
+        });
+        return unsubscribe;
     }
 
     async getAll(): Promise<Application[]> {

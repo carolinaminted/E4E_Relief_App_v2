@@ -86,7 +86,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
     if (formData.evacuated === 'Yes' && (!formData.evacuationNights || formData.evacuationNights <= 0)) newErrors.evacuationNights = t('applyEventPage.errorEvacuationNights');
     if (!formData.powerLoss) newErrors.powerLoss = t('applyEventPage.errorPowerLoss');
     if (formData.powerLoss === 'Yes' && (!formData.powerLossDays || formData.powerLossDays <= 0)) newErrors.powerLossDays = t('applyEventPage.errorPowerLossDays');
-    if (!formData.requestedAmount || formData.requestedAmount <= 0) newErrors.requestedAmount = t('applyEventPage.errorRequestedAmount');
+    // requestedAmount is now calculated from expenses
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -241,18 +241,14 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 onChange={e => handleUpdate({ additionalDetails: e.target.value })}
                 placeholder={t('applyEventPage.additionalDetailsPlaceholder')}
             />
-            <FormInput
-                label={t('applyEventPage.requestedAmountLabel')}
-                id="amount"
-                type="number"
-                value={formData.requestedAmount || ''}
-                onChange={(e) => handleUpdate({ requestedAmount: parseFloat(e.target.value) || 0 })}
-                placeholder={t('applyEventPage.requestedAmountPlaceholder')}
-                min="0.01"
-                step="0.01"
-                required
-                error={errors.requestedAmount}
-            />
+            <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0] text-center">
+                <p className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                💡 Your relief amount is calculated automatically
+                </p>
+                <p className="text-xs text-gray-300 mt-1">
+                After providing event details, you'll itemize your expenses on the next page. The total of all expenses becomes your requested relief amount.
+                </p>
+            </div>
         </div>
       <div className="flex justify-between pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">

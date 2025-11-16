@@ -39,6 +39,7 @@ import Header from './components/Header';
 import LiveDashboardPage from './components/LiveDashboardPage';
 import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
+import ReliefQueuePage from './components/ReliefQueuePage';
 
 // FIX: Removed local Page type definition.
 // type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
@@ -69,24 +70,34 @@ function App() {
 
   useEffect(() => {
     let profileUnsubscribe: (() => void) | null = null;
+    let applicationsUnsubscribe: (() => void) | null = null;
+    let proxyApplicationsUnsubscribe: (() => void) | null = null;
 
     const authUnsubscribe = authClient.onAuthStateChanged((user, token) => {
-      // Clean up any existing profile listener when auth state changes.
-      if (profileUnsubscribe) {
-        profileUnsubscribe();
-        profileUnsubscribe = null;
-      }
+      // Always clean up previous listeners when auth state changes.
+      if (profileUnsubscribe) { profileUnsubscribe(); profileUnsubscribe = null; }
+      if (applicationsUnsubscribe) { applicationsUnsubscribe(); applicationsUnsubscribe = null; }
+      if (proxyApplicationsUnsubscribe) { proxyApplicationsUnsubscribe(); proxyApplicationsUnsubscribe = null; }
+
 
       if (user && token) {
         const claims = (token.claims as { admin?: boolean }) || {};
         
-        // Set a listener on the user's profile document.
+        applicationsUnsubscribe = applicationsRepo.listenForUser(user.uid, (userApps) => {
+            setApplications(userApps);
+        });
+        
+        if (claims.admin) {
+            proxyApplicationsUnsubscribe = applicationsRepo.listenForProxySubmissions(user.uid, (proxyApps) => {
+                setProxyApplications(proxyApps);
+            });
+        }
+
         profileUnsubscribe = usersRepo.listen(user.uid, async (profile) => {
           if (profile) {
             // --- Profile found, hydrate the full application state ---
             const identities = await identitiesRepo.getForUser(user.uid);
-            const userApps = await applicationsRepo.getForUser(user.uid);
-
+            
             let activeId: FundIdentity | undefined = undefined;
             if (identities.length > 0) {
               activeId = identities.find(id => id.id === profile.activeIdentityId) ||
@@ -117,21 +128,19 @@ function App() {
             }
 
             setAllIdentities(identities);
-            setApplications(userApps);
             setAuthState({ status: 'signedIn', user, profile: hydratedProfile, claims });
             initTokenTracker(hydratedProfile);
 
-            if (claims.admin) {
-              const proxyApps = await applicationsRepo.getProxySubmissions(user.uid);
-              setProxyApplications(proxyApps);
-            }
-
             // Navigation logic based on the hydrated profile state
-            if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
+            const isStuckInVerification = hydratedProfile.classVerificationStatus === 'failed' && hydratedProfile.role !== 'Admin';
+
+            if (isStuckInVerification) {
+                setPage('reliefQueue');
+            } else if (hydratedProfile.classVerificationStatus !== 'passed' || hydratedProfile.eligibilityStatus !== 'Eligible') {
               setPage('classVerification');
             } else {
               // Only navigate to home if not already on a specific page (prevents overriding navigation)
-              setPage(prevPage => (prevPage === 'login' || prevPage === 'register' || prevPage === 'classVerification' ? 'home' : prevPage));
+              setPage(prevPage => (['login', 'register', 'classVerification', 'reliefQueue'].includes(prevPage) ? 'home' : prevPage));
             }
           } else {
             // --- Profile not found ---
@@ -162,11 +171,14 @@ function App() {
 
     return () => {
       authUnsubscribe();
-      if (profileUnsubscribe) {
-        profileUnsubscribe();
-      }
+      if (profileUnsubscribe) profileUnsubscribe();
+      if (applicationsUnsubscribe) applicationsUnsubscribe();
+      if (proxyApplicationsUnsubscribe) proxyApplicationsUnsubscribe();
     };
   }, []);
+
+  // FIX: Moved `currentUser` declaration before its usage in the `useEffect` hook below.
+  const currentUser = authState.profile;
 
   useEffect(() => {
     const fetchActiveFund = async () => {
@@ -178,12 +190,14 @@ function App() {
           console.error(`Could not load fund configuration for ${activeIdentity.fundCode}`);
           setActiveFund(null);
         }
+      } else if (currentUser?.fundCode) {
+        // Fallback for users stuck in queue who may not have an activeIdentity yet
+        const fundData = await fundsRepo.getFund(currentUser.fundCode);
+        setActiveFund(fundData);
       }
     };
     fetchActiveFund();
-  }, [activeIdentity]);
-
-  const currentUser = authState.profile;
+  }, [activeIdentity, currentUser?.fundCode]);
 
   const userIdentities = useMemo(() => {
     if (!currentUser) return [];
@@ -210,7 +224,8 @@ function App() {
   }, [currentUser]);
 
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
-      const latestApp = userApplications.length > 0 ? userApplications[userApplications.length - 1] : null;
+      const sortedUserApps = [...userApplications].sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
+      const latestApp = sortedUserApps.length > 0 ? sortedUserApps[0] : null;
       
       const initialTwelveMonthMax = activeFund?.limits?.twelveMonthMax ?? 0;
       const initialLifetimeMax = activeFund?.limits?.lifetimeMax ?? 0;
@@ -243,15 +258,16 @@ function App() {
         await identitiesRepo.update(identityId, { lastUsedAt: new Date().toISOString() });
         await usersRepo.update(currentUser.uid, { activeIdentityId: identityId });
 
-        setActiveIdentity({ id: identityToActivate.id, fundCode: identityToActivate.fundCode });
-
-        setCurrentUser({
-            ...currentUser,
-            fundCode: identityToActivate.fundCode,
-            fundName: identityToActivate.fundName,
-            classVerificationStatus: identityToActivate.classVerificationStatus,
-            eligibilityStatus: identityToActivate.eligibilityStatus,
-        });
+        setAuthState(prev => ({
+            ...prev,
+            profile: prev.profile ? {
+                ...prev.profile,
+                fundCode: identityToActivate.fundCode,
+                fundName: identityToActivate.fundName,
+                classVerificationStatus: identityToActivate.classVerificationStatus,
+                eligibilityStatus: identityToActivate.eligibilityStatus,
+            } : null
+        }));
         
         // Refresh identities list to reflect lastUsedAt change for sorting
         const updatedIdentities = await identitiesRepo.getForUser(currentUser.uid);
@@ -264,13 +280,18 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: GlobalPage) => {
+    if (page === 'reliefQueue' && targetPage !== 'classVerification') {
+        console.log("Gating navigation. User is in relief queue.");
+        return;
+    }
+
     if (targetPage === 'apply' && !isVerifiedAndEligible) {
         console.log("Gating 'apply' page. User not verified or not eligible.");
         setPage('classVerification');
     } else {
         setPage(targetPage);
     }
-  }, [isVerifiedAndEligible]);
+  }, [isVerifiedAndEligible, page]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
@@ -318,7 +339,8 @@ function App() {
     if (!fund) {
         console.error("Verification successful but could not find fund config for", fundCodeToVerify);
         setVerifyingFundCode(null);
-        setPage('profile');
+        // If coming from the relief queue or a new registration, 'home' is a safer destination than 'profile'.
+        setPage('home');
         return;
     }
     
@@ -352,12 +374,65 @@ function App() {
         await identitiesRepo.add(newActiveIdentity);
     }
     
-    // This update will trigger the onSnapshot listener to re-hydrate the app state and navigate.
+    // This update will trigger the onSnapshot listener to re-hydrate the app state.
     await usersRepo.update(currentUser.uid, { activeIdentityId: newActiveIdentity.id });
+    
+    // FIX: Add an immediate local state update to prevent UI flicker and race conditions.
+    // This ensures the UI has the correct "Eligible" status before navigating away.
+    setAuthState(prev => {
+        if (!prev.profile) return prev;
+        return {
+            ...prev,
+            profile: {
+                ...prev.profile,
+                fundCode: newActiveIdentity.fundCode,
+                fundName: newActiveIdentity.fundName,
+                classVerificationStatus: newActiveIdentity.classVerificationStatus,
+                eligibilityStatus: newActiveIdentity.eligibilityStatus,
+            }
+        };
+    });
+
     setVerifyingFundCode(null);
+    // Explicitly navigate to home to provide immediate feedback to the user.
+    setPage('home');
 
   }, [currentUser, verifyingFundCode, allIdentities]);
   
+    const handleVerificationFailed = useCallback(async (failedFundCode: string) => {
+        if (!currentUser) return;
+
+        const identityIdToUpdate = `${currentUser.uid}-${failedFundCode}`;
+        const identityToFail = allIdentities.find(id => id.id === identityIdToUpdate);
+
+        if (identityToFail) {
+            console.log(`[Telemetry] track('VerificationFailedMaxAttempts', { fundCode: ${failedFundCode} })`);
+            await identitiesRepo.update(identityIdToUpdate, { classVerificationStatus: 'failed' });
+        } else {
+            // New user failing for the first time. Create the identity document with a 'failed' status.
+            console.log(`[Telemetry] track('InitialVerificationFailedMaxAttempts', { fundCode: ${failedFundCode} })`);
+            const fund = await fundsRepo.getFund(failedFundCode);
+            if (!fund) {
+                console.error("Could not find fund config for failed verification:", failedFundCode);
+                return;
+            }
+
+            const newFailedIdentity: FundIdentity = {
+                id: identityIdToUpdate,
+                uid: currentUser.uid,
+                fundCode: fund.code,
+                fundName: fund.name,
+                cvType: fund.cvType,
+                eligibilityStatus: 'Not Eligible',
+                classVerificationStatus: 'failed',
+                createdAt: new Date().toISOString(),
+            };
+            await identitiesRepo.add(newFailedIdentity);
+            // Also set this new failed identity as the active one.
+            await usersRepo.update(currentUser.uid, { activeIdentityId: newFailedIdentity.id });
+        }
+    }, [currentUser, allIdentities]);
+
   const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile) => {
     if (!currentUser) return;
     // The onSnapshot listener will automatically update the UI state from this write.
@@ -371,27 +446,21 @@ function App() {
         return;
     }
     
-    const usersPastApplications = userApplications || [];
-    const lastApplication = usersPastApplications.length > 0 ? usersPastApplications.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())[0] : null;
-    
-    const { twelveMonthMax: initialTwelveMonthMax, lifetimeMax: initialLifetimeMax, singleRequestMax } = activeFund.limits;
-
-    const currentTwelveMonthRemaining = lastApplication ? lastApplication.twelveMonthGrantRemaining : initialTwelveMonthMax;
-    const currentLifetimeRemaining = lastApplication ? lastApplication.lifetimeGrantRemaining : initialLifetimeMax;
+    const { singleRequestMax } = activeFund.limits;
     const allEligibleEvents = [...(activeFund.eligibleDisasters || []), ...(activeFund.eligibleHardships || [])];
     
     const preliminaryDecision = evaluateApplicationEligibility({
         id: 'temp',
         employmentStartDate: appFormData.profileData.employmentStartDate,
         eventData: appFormData.eventData,
-        currentTwelveMonthRemaining,
-        currentLifetimeRemaining,
+        currentTwelveMonthRemaining: twelveMonthRemaining,
+        currentLifetimeRemaining: lifetimeRemaining,
         singleRequestMax,
         eligibleEvents: allEligibleEvents,
     });
     
     const finalDecision = await getAIAssistedDecision(
-      { eventData: appFormData.eventData, currentTwelveMonthRemaining, currentLifetimeRemaining },
+      { eventData: appFormData.eventData, currentTwelveMonthRemaining: twelveMonthRemaining, currentLifetimeRemaining: lifetimeRemaining },
       preliminaryDecision
     );
 
@@ -427,8 +496,6 @@ function App() {
         console.error("Could not remove application draft from localStorage after submission:", error);
     }
     
-    setApplications(prev => [...prev, newApplication]);
-    
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
         await handleProfileUpdate(appFormData.profileData);
     }
@@ -437,7 +504,7 @@ function App() {
     setLastSubmittedApp(newApplication);
     setPage('submissionSuccess');
 
-  }, [currentUser, handleProfileUpdate, userApplications, activeFund]);
+  }, [currentUser, handleProfileUpdate, activeFund, twelveMonthRemaining, lifetimeRemaining]);
   
   const handleProxyApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
     if (!currentUser || authState.claims.admin !== true || !activeFund) {
@@ -517,8 +584,8 @@ function App() {
     } catch (error) {
         console.error("Could not remove proxy application draft from localStorage after submission:", error);
     }
-
-    setProxyApplications(prev => [...prev, newApplication]);
+    
+    // The real-time listener will handle updating the proxyApplications state.
     
     // Update profile if changed
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(applicantProfile)) {
@@ -553,6 +620,7 @@ function App() {
     });
   }, []);
   
+  // FIX: Removed 'reliefQueue' from this array. That page is rendered via a separate return that does not include the footer, so it does not need to be in this list. This resolves the type error.
   const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
@@ -580,8 +648,10 @@ function App() {
     if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
 
     switch (page) {
+      case 'reliefQueue':
+        return <ReliefQueuePage userProfile={currentUser} activeFund={activeFund} onUpdateProfile={handleProfileUpdate} onReattemptVerification={handleStartAddIdentity} onLogout={handleLogout} />;
       case 'classVerification':
-        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
+        return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} onVerificationFailed={handleVerificationFailed} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
         return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} />;
       case 'profile':
@@ -660,6 +730,18 @@ function App() {
       );
   }
 
+  // Relief Queue view (special logged-in state without nav)
+  if (page === 'reliefQueue') {
+    return (
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+            <IconDefs />
+            <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
+                {renderPage()}
+            </main>
+        </div>
+    );
+  }
+
   return (
     <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
       <IconDefs />
@@ -709,7 +791,7 @@ function App() {
         />
         
         {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
-        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
+        {page !== 'classVerification' && page !== 'reliefQueue' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );

@@ -100,10 +100,19 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   const tableData = useMemo((): TokenUsageTableRow[] => {
     const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
 
-    for (const event of allEvents) {
+    // Sort events by timestamp so we can grab the date from the first event in a group
+    const sortedEvents = [...allEvents].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    for (const event of sortedEvents) {
         const key = `${event.userId}|${event.sessionId}|${event.feature}`;
         if (!usageByFeatureInSession[key]) {
-            usageByFeatureInSession[key] = { input: 0, cached: 0, output: 0, total: 0, cost: 0 };
+            const eventDate = new Date(event.timestamp);
+            const formattedDate = eventDate.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0 };
         }
         const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
         const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);
@@ -115,10 +124,13 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         usageByFeatureInSession[key].cost += eventCost;
     }
 
-    return Object.entries(usageByFeatureInSession).map(([key, data]) => {
+    const result = Object.entries(usageByFeatureInSession).map(([key, data]) => {
         const [user, session, feature] = key.split('|');
         return { user, session, feature, ...data };
     });
+    
+    // Sort by date, newest first as is common in tables.
+    return result.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allEvents]);
 
   const topSessionData = useMemo((): TopSessionData | null => {
@@ -196,10 +208,11 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
   const handleExportCSV = () => {
     if (tableData.length === 0) return;
-    const headers = ['User', 'Session ID', 'Feature', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
+    const headers = ['User', 'Date', 'Session ID', 'Feature', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
     const rows = tableData.map(row => 
       [
         row.user,
+        row.date,
         row.session,
         row.feature,
         row.input,
