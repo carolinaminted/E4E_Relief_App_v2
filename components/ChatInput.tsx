@@ -50,7 +50,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
       <button
         onClick={handleSubmit}
         disabled={isLoading || !input.trim()}
-        className="bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold p-2 rounded-md transition-colors duration-200"
+        className="bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold rounded-md transition-colors duration-200 w-[50px] h-10 flex items-center justify-center"
       >
         <SendIcon disabled={isLoading || !input.trim()} />
       </button>

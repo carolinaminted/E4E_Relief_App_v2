@@ -1,60 +1,36 @@
-# E4E Relief Mobile App — Business Overview
+# Welcome to the E4E Relief App!
 
-## Purpose
-The **E4E Relief Mobile Application** streamlines the disaster relief grant application process for employees affected by qualifying events. It leverages AI-driven automation, decisioning, and conversational support to simplify eligibility, reduce processing time, and improve accessibility for applicants and case managers.
-
----
-
-## Business Use Case
-
-### Objective
-To provide a **fast, secure, and guided experience** for employees applying for financial relief following disasters or hardships.  
-The app integrates with **AI-powered systems** that help applicants understand eligibility, submit complete applications, and receive faster decisions — all while maintaining E4E Relief’s compliance, audit, and data integrity standards.
+This application is designed to provide you with fast, simple, and secure access to financial assistance when you need it most. We're here to help you navigate the relief process with ease and confidence.
 
 ---
 
-## Core Features
+## A Fluid, AI-Powered Application Experience
 
-### 1. Fund-Code-Driven Class Verification
-- A mandatory verification step for new users that routes them to the correct verification method based on their employer's fund code.
-- **Domain Verification:** Automatically verifies users if their email domain is on an approved list.
-- **Roster Verification:** Requires users to provide information (e.g., Employee ID, Date of Birth) that is matched against a secure employee roster.
-- **SSO Verification:** Allows users to verify their status by logging in with their company's Single Sign-On credentials.
+Applying for relief has never been easier. We've integrated powerful AI to create a seamless and supportive journey, allowing you to get help faster.
 
-### 2. AI Relief Assistant
-- Interactive chatbot that guides users through application steps.
-- Answers questions about eligibility, required documentation, and event types.
-- Uses natural language processing to interpret user intent and provide contextual help.
+### 1. Start with a Simple Conversation
+Not sure where to begin? Just talk to our **AI Relief Assistant**. You can find it via the chat icon in the corner of your screen. 
+- **Ask anything:** Get instant answers to questions about your eligibility, what events are covered, or how the process works.
+- **Start your application:** Simply tell the assistant about your situation. For example, *"I was affected by the recent hurricane and need help with food and temporary lodging."* The assistant will understand and start filling out an application draft for you!
 
-### 3. AI-Powered Decisioning
-- Evaluates applications against configurable, **fund-specific eligibility rules** (event type, timing, employment date, financial thresholds).
-- Uses AI models to generate preliminary decisions and calculate remaining grant balances based on the specific fund's limits.
-- Returns consistent and explainable outcomes with transparent rule enforcement.
+### 2. Describe Your Situation, We'll Handle the Details
+At the beginning of the application, you'll see our **AI Application Starter**. Instead of manually filling out every field, you can simply write a paragraph describing what happened. 
+Our AI will read your story, intelligently extract key details—like your name, location, the type of event, and the amount of assistance you need—and automatically pre-fill the application form for you. It's a fast and intuitive way to get started.
 
-### 4. Smart Application Prefill
-- Automatically fills form fields using:
-  - Prior user data (e.g., employment records, location).
-  - AI-generated summaries of disaster descriptions.
-  - Event metadata (e.g., hurricane name, fire date, region impact).
-- Reduces applicant effort and submission errors.
+### 3. Get Instant, Fair Decisions
+Waiting for a decision can be stressful. That's why we've built an AI-powered decisioning system to give you an answer in moments, not days. When you submit your application:
+1.  **Automated Rule Check:** Our system first checks your application against the specific eligibility rules for your fund (like event dates and grant limits).
+2.  **AI Final Review:** The application is then reviewed by an AI that acts as a final approver, ensuring a holistic and fair assessment of your situation.
 
-### 5. Streamlined Workflow
-- Applicants: Guided intake forms with eligibility checks and progress tracking.
-- Reviewers: Access to structured data, AI explanations, and recommendation summaries.
-- Admins: Monitoring dashboards for AI activity, token usage, and decision outcomes.
+This two-step process provides a fast, consistent, and transparent outcome, so you know where you stand right away.
 
 ---
 
-## Integration Points
+## Other Key Features
 
-- **Azure AD B2C**: Authentication and user management.
-- **Dynamics 365**: Stores applicant, case, and grant award data.
-- **Azure AI Foundry**: Hosts AI decisioning models and Relief Assistant agent.
-- **Power Platform APIs**: Connect mobile inputs to backend workflow automation.
-- **Application Insights**: Tracks AI response accuracy and system performance.
+- **Manage Your Profile:** Easily update your personal information, contact details, and communication preferences.
+- **Track Your Applications:** Visit your profile to see a complete history of your past applications, check their status (Awarded, Declined, or In Review), and review your remaining grant balances.
+- **Secure and Confidential:** Your privacy is our priority. All your data is securely stored and handled with the utmost confidentiality.
+- **Support Center:** Have more questions? The Support section provides contact information, FAQs, and details about payment options.
 
----
-
-## Summary
-The **E4E Relief Mobile App** transforms the traditional relief process into a **personalized, AI-assisted experience**.  
-By automating repetitive tasks, interpreting disaster context, and enforcing eligibility with transparency, E4E achieves faster decisions, higher applicant satisfaction, and scalable relief distribution across programs and geographies.
+We're committed to making this process as smooth as possible. Welcome to E4E Relief.

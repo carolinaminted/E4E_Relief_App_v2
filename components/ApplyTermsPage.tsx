@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TermsModal from './TermsModal';
-// FIX: Corrected the import path for ApplicationFormData. It should be imported from '../types' instead of a component file.
 import type { ApplicationFormData } from '../types';
 import RequiredIndicator from './RequiredIndicator';
 

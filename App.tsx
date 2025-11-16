@@ -52,7 +52,7 @@ type AuthState = {
 };
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState<GlobalPage>('login');
   const [authState, setAuthState] = useState<AuthState>({ status: 'loading', user: null, profile: null, claims: {} });
   
@@ -95,6 +95,14 @@ function App() {
 
         profileUnsubscribe = usersRepo.listen(user.uid, async (profile) => {
           if (profile) {
+            // Set language based on user profile preference
+            if (profile.preferredLanguage) {
+              const langCode = profile.preferredLanguage.toLowerCase().slice(0, 2);
+              if ((langCode === 'en' || langCode === 'es') && i18n.language !== langCode) {
+                i18n.changeLanguage(langCode);
+              }
+            }
+            
             // --- Profile found, hydrate the full application state ---
             const identities = await identitiesRepo.getForUser(user.uid);
             
@@ -144,7 +152,7 @@ function App() {
             }
           } else {
             // --- Profile not found ---
-            const creationTime = new Date(user.metadata.creationTime || 0).getTime();
+            const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : 0;
             // Check if the user was created within the last 10 seconds.
             const isNewUser = (Date.now() - creationTime) < 10000;
 
@@ -175,7 +183,7 @@ function App() {
       if (applicationsUnsubscribe) applicationsUnsubscribe();
       if (proxyApplicationsUnsubscribe) proxyApplicationsUnsubscribe();
     };
-  }, []);
+  }, [i18n]);
 
   // FIX: Moved `currentUser` declaration before its usage in the `useEffect` hook below.
   const currentUser = authState.profile;
@@ -276,6 +284,9 @@ function App() {
   }, [currentUser, allIdentities, activeIdentity]);
   
   const handleLogout = () => {
+    if (currentUser) {
+      sessionStorage.removeItem(`chatHistory-${currentUser.uid}`);
+    }
     authClient.signOut();
   };
   
@@ -620,7 +631,7 @@ function App() {
     });
   }, []);
   
-  // FIX: Removed 'reliefQueue' from this array. That page is rendered via a separate return that does not include the footer, so it does not need to be in this list. This resolves the type error.
+  // FIX: The 'reliefQueue' page is rendered in a separate block that doesn't include the main footer. Removing it from this array resolves a TypeScript error caused by type narrowing where `page` is checked with `.includes()`.
   const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
 
   const renderPage = () => {
@@ -791,7 +802,8 @@ function App() {
         />
         
         {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
-        {page !== 'classVerification' && page !== 'reliefQueue' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
+        {/* FIX: Removed redundant `page !== 'reliefQueue'` check. The parent `if (page === 'reliefQueue')` block already handles this case, and TypeScript's type narrowing causes an error here. */}
+        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );

@@ -4,15 +4,49 @@ import RequiredIndicator from './RequiredIndicator';
 import CountrySelector from './CountrySelector';
 import AddressHelper from './AddressHelper';
 
-export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => (
-    <div>
-        <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
-            {label} <RequiredIndicator required={required} isMet={!!props.value} />
-        </label>
-        <input id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`} />
-        {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
-    </div>
-);
+export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => {
+    const isDateInput = props.type === 'date';
+
+    const eventHandlers = isDateInput ? {
+        onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+            if (typeof e.target.showPicker === 'function') {
+                try {
+                    e.target.showPicker();
+                } catch (error) {
+                    console.error("Couldn't show date picker:", error);
+                }
+            }
+            props.onFocus?.(e);
+        },
+        onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+            if (typeof (e.target as HTMLInputElement).showPicker === 'function') {
+                try {
+                    (e.target as HTMLInputElement).showPicker();
+                } catch (error) {
+                    console.error("Couldn't show date picker:", error);
+                }
+            }
+            props.onClick?.(e);
+        }
+    } : {};
+    
+    return (
+        <div>
+            {label && (
+                <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
+                    {label} <RequiredIndicator required={required} isMet={!!props.value} />
+                </label>
+            )}
+            <input
+                id={id}
+                {...props}
+                {...eventHandlers}
+                className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`}
+            />
+            {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+        </div>
+    );
+};
 
 
 export const FormRadioGroup: React.FC<{ legend: string, name: string, options: string[], value: string, onChange: (value: any) => void, required?: boolean, error?: string }> = ({ legend, name, options, value, onChange, required, error }) => (
