@@ -141,7 +141,9 @@
     "errorEvacuationNights": "Por favor, ingresa un número válido de noches.",
     "errorPowerLoss": "Por favor, responde si perdiste la electricidad.",
     "errorPowerLossDays": "Por favor, ingresa un número válido de días.",
-    "errorRequestedAmount": "La cantidad solicitada debe ser mayor que cero."
+    "errorRequestedAmount": "La cantidad solicitada debe ser mayor que cero.",
+    "errorEventName": "Por favor, selecciona el nombre de la tormenta.",
+    "errorEvacuationReason": "Por favor, proporciona un motivo para la evacuación."
   },
   "applyExpensesPage": {
     "title": "Gastos",

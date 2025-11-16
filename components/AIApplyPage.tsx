@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
-import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData } from '../types';
+import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData, EventData } from '../types';
 import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
@@ -49,7 +49,7 @@ const AdditionalDetailsPreview: React.FC<{ profileData: Partial<UserProfile> | n
     };
     
     return (
-        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] h-full flex flex-col p-4">
+        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
             <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
                 Additional Details Preview
             </h2>
@@ -69,6 +69,55 @@ const AdditionalDetailsPreview: React.FC<{ profileData: Partial<UserProfile> | n
         </div>
     );
 };
+
+const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | undefined }> = ({ eventData }) => {
+    const { t } = useTranslation();
+
+    const isComplete = (key: keyof EventData) => {
+        if (!eventData) return false;
+        const value = eventData[key];
+        return value !== undefined && value !== null && value !== '';
+    };
+
+    const checklistItems = [
+        { key: 'event', label: t('applyEventPage.disasterLabel') },
+        { key: 'eventName', label: t('applyEventPage.errorEventName', 'What is the name of the event?'), condition: (data?: Partial<EventData>) => data?.event === 'Tropical Storm/Hurricane' },
+        { key: 'eventDate', label: t('applyEventPage.eventDateLabel') },
+        { key: 'powerLoss', label: t('applyEventPage.powerLossLabel') },
+        { key: 'powerLossDays', label: t('applyEventPage.powerLossDaysLabel'), condition: (data?: Partial<EventData>) => data?.powerLoss === 'Yes' },
+        { key: 'evacuated', label: t('applyEventPage.evacuatedLabel') },
+        { key: 'evacuatingFromPrimary', label: t('applyEventPage.evacuatingFromPrimaryLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'evacuationReason', label: t('applyEventPage.evacuationReasonLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' && data?.evacuatingFromPrimary === 'No' },
+        { key: 'stayedWithFamilyOrFriend', label: t('applyEventPage.stayedWithFamilyLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'evacuationStartDate', label: t('applyEventPage.evacuationStartDateLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'additionalDetails', label: t('applyEventPage.additionalDetailsLabel') },
+    ];
+
+    const visibleItems = checklistItems.filter(item => !item.condition || item.condition(eventData || {}));
+
+    return (
+        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
+            <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
+                Event Details Preview
+            </h2>
+            <p className="text-xs text-gray-400 text-center mb-4">This list updates as you answer the assistant.</p>
+            <div className="flex-grow space-y-3 overflow-y-auto pr-2">
+                {visibleItems.map(item => (
+                    <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
+                        <div className="flex-shrink-0 w-5 h-5">
+                            {isComplete(item.key as keyof EventData) ? <CheckmarkIcon /> : <CircleIcon />}
+                        </div>
+                        <span className={`text-sm ${isComplete(item.key as keyof EventData) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                            {item.label}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 
 const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft }) => {
   const { t } = useTranslation();
@@ -192,6 +241,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       
       const outputTokens = estimateTokens(modelResponseText);
       if (chatTokenSessionIdRef.current) {
+        // FIX: The function was imported as `logTokenEvent`, not `logEvent`.
         logTokenEvent({
             feature: 'AI Assistant',
             model: 'gemini-2.5-flash',
@@ -255,8 +305,9 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             </main>
 
             {/* Details Preview Panel */}
-            <aside className="hidden md:flex md:w-2/5">
+            <aside className="hidden md:flex md:w-2/5 flex-col gap-8">
                 <AdditionalDetailsPreview profileData={applicationDraft?.profileData} />
+                <EventDetailsPreview eventData={applicationDraft?.eventData} />
             </aside>
         </div>
       </div>

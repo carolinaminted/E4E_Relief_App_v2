@@ -104,17 +104,27 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.event) newErrors.event = t('applyEventPage.errorEvent');
+    
+    // Conditional validation based on event type
     if (formData.event === 'My disaster is not listed' && !formData.otherEvent) newErrors.otherEvent = t('applyEventPage.errorOtherEvent');
+    if (formData.event === 'Tropical Storm/Hurricane' && !formData.eventName) newErrors.eventName = t('applyEventPage.errorEventName', 'Please select the storm name.');
+
     if (!formData.eventDate) newErrors.eventDate = t('applyEventPage.errorEventDate');
-    if (!formData.evacuated) newErrors.evacuated = t('applyEventPage.errorEvacuated');
-    if (formData.evacuated === 'Yes' && !formData.evacuatingFromPrimary) newErrors.evacuatingFromPrimary = t('applyEventPage.errorEvacuatingFromPrimary');
-    if (formData.evacuated === 'Yes' && !formData.stayedWithFamilyOrFriend) newErrors.stayedWithFamilyOrFriend = t('applyEventPage.errorStayedWithFamily');
-    if (formData.evacuated === 'Yes' && !formData.evacuationStartDate) newErrors.evacuationStartDate = t('applyEventPage.errorEvacuationStartDate');
-    if (formData.evacuated === 'Yes' && (!formData.evacuationNights || formData.evacuationNights <= 0)) newErrors.evacuationNights = t('applyEventPage.errorEvacuationNights');
+
+    // Power Loss validation
     if (!formData.powerLoss) newErrors.powerLoss = t('applyEventPage.errorPowerLoss');
     if (formData.powerLoss === 'Yes' && (!formData.powerLossDays || formData.powerLossDays <= 0)) newErrors.powerLossDays = t('applyEventPage.errorPowerLossDays');
-    // requestedAmount is now calculated from expenses
 
+    // Evacuation validation
+    if (!formData.evacuated) newErrors.evacuated = t('applyEventPage.errorEvacuated');
+    if (formData.evacuated === 'Yes') {
+        if (!formData.evacuatingFromPrimary) newErrors.evacuatingFromPrimary = t('applyEventPage.errorEvacuatingFromPrimary');
+        if (formData.evacuatingFromPrimary === 'No' && !formData.evacuationReason) newErrors.evacuationReason = t('applyEventPage.errorEvacuationReason', 'Please provide a reason for evacuating.');
+        if (!formData.stayedWithFamilyOrFriend) newErrors.stayedWithFamilyOrFriend = t('applyEventPage.errorStayedWithFamily');
+        if (!formData.evacuationStartDate) newErrors.evacuationStartDate = t('applyEventPage.errorEvacuationStartDate');
+        if (!formData.evacuationNights || formData.evacuationNights <= 0) newErrors.evacuationNights = t('applyEventPage.errorEvacuationNights');
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -126,14 +136,41 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
   };
   
   const handleUpdate = (data: Partial<EventData>) => {
-    updateFormData(data);
-    const fieldName = Object.keys(data)[0];
-    if (errors[fieldName]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[fieldName];
-        return newErrors;
-      });
+    const newFormData = { ...data };
+    const updatedField = Object.keys(data)[0] as keyof EventData;
+    const updatedValue = data[updatedField];
+
+    if (updatedField === 'event') {
+        if (updatedValue !== 'My disaster is not listed') { newFormData.otherEvent = ''; }
+        if (updatedValue !== 'Tropical Storm/Hurricane') { newFormData.eventName = ''; }
+    }
+    if (updatedField === 'powerLoss' && updatedValue === 'No') {
+        newFormData.powerLossDays = '';
+    }
+    if (updatedField === 'evacuated' && updatedValue === 'No') {
+        newFormData.evacuatingFromPrimary = '';
+        newFormData.evacuationReason = '';
+        newFormData.stayedWithFamilyOrFriend = '';
+        newFormData.evacuationStartDate = '';
+        newFormData.evacuationNights = '';
+    }
+    if (updatedField === 'evacuatingFromPrimary' && updatedValue === 'Yes') {
+        newFormData.evacuationReason = '';
+    }
+
+    updateFormData(newFormData);
+
+    const fieldNamesToClear = Object.keys(newFormData);
+    const currentErrors = { ...errors };
+    let didClearError = false;
+    fieldNamesToClear.forEach(fieldName => {
+        if (currentErrors[fieldName]) {
+            delete currentErrors[fieldName];
+            didClearError = true;
+        }
+    });
+    if (didClearError) {
+        setErrors(currentErrors);
     }
   };
 
@@ -155,6 +192,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 <SearchableSelector
                     label="Select the storm name"
                     id="eventName"
+                    required
                     value={formData.eventName || ''}
                     options={activeFund.eligibleStorms}
                     onUpdate={value => handleUpdate({ eventName: value })}
@@ -226,8 +264,10 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                          <FormInput
                             label={t('applyEventPage.evacuationReasonLabel')}
                             id="evacuationReason"
+                            required
                             value={formData.evacuationReason || ''}
                             onChange={e => handleUpdate({ evacuationReason: e.target.value })}
+                            error={errors.evacuationReason}
                         />
                     )}
                      <FormRadioGroup
