@@ -547,7 +547,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('addresses')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'addresses'}>
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Addresses</h2>
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.addresses')}</h2>
                     {sectionHasErrors.addresses && openSection !== 'addresses' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'addresses'} />

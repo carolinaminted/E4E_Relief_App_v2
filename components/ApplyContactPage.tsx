@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UserProfile, Address, ApplicationFormData } from '../types';
 import CountrySelector from './CountrySelector';
@@ -32,7 +32,7 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-type ApplySection = 'aiStarter' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
+type ApplySection = 'aiStarter' | 'contact' | 'addresses' | 'additionalDetails' | 'consent';
 
 const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFormData, nextStep, onAIParsed }) => {
   const { t } = useTranslation();
@@ -42,40 +42,60 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
     return saved ? JSON.parse(saved) : 'aiStarter';
   });
   const [isAIParsing, setIsAIParsing] = useState(false);
+  
+  const [showMailingAddress, setShowMailingAddress] = useState(false);
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     localStorage.setItem('applyContactPage_openSection', JSON.stringify(openSection));
   }, [openSection]);
+  
+  useLayoutEffect(() => {
+    const calculateHeight = () => {
+        if (openSection === 'addresses') {
+            const frontHeight = frontRef.current?.scrollHeight ?? 0;
+            const backHeight = backRef.current?.scrollHeight ?? 0;
+            if (formData.isMailingAddressSame) {
+                setCardHeight(frontHeight > 0 ? frontHeight : undefined);
+            } else {
+                setCardHeight(Math.max(frontHeight, backHeight) > 0 ? Math.max(frontHeight, backHeight) : undefined);
+            }
+        }
+    };
+    calculateHeight();
+    const timer = setTimeout(calculateHeight, 100); // Recalculate after render
+    window.addEventListener('resize', calculateHeight);
+    return () => {
+        window.removeEventListener('resize', calculateHeight);
+        clearTimeout(timer);
+    };
+  }, [openSection, formData.isMailingAddressSame, showMailingAddress]);
+
 
   const yes = t('common.yes');
   const no = t('common.no');
 
   const sectionHasErrors = useMemo(() => {
-    // Contact
     const contactHasBlanks = !formData.firstName || !formData.lastName || !formData.mobileNumber;
     
-    // Primary Address
     const primaryAddressHasBlanks = !formData.primaryAddress.country || !formData.primaryAddress.street1 || !formData.primaryAddress.city || !formData.primaryAddress.state || !formData.primaryAddress.zip;
-    
-    // Additional Details
-    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
-    
-    // Mailing Address
     let mailingAddressHasBlanks = false;
     if (formData.isMailingAddressSame === null) {
         mailingAddressHasBlanks = true;
     } else if (!formData.isMailingAddressSame) {
         mailingAddressHasBlanks = !formData.mailingAddress?.country || !formData.mailingAddress?.street1 || !formData.mailingAddress?.city || !formData.mailingAddress?.state || !formData.mailingAddress?.zip;
     }
-
-    // Consent
+    
+    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
+    
     const consentHasBlanks = !formData.ackPolicies || !formData.commConsent || !formData.infoCorrect;
 
     return {
         contact: contactHasBlanks,
-        primaryAddress: primaryAddressHasBlanks,
+        addresses: primaryAddressHasBlanks || mailingAddressHasBlanks,
         additionalDetails: additionalDetailsHasBlanks,
-        mailingAddress: mailingAddressHasBlanks,
         consent: consentHasBlanks,
     };
   }, [formData]);
@@ -89,6 +109,11 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
     if ('mobileNumber' in data && typeof data.mobileNumber === 'string') {
         finalData.mobileNumber = formatPhoneNumber(data.mobileNumber);
     }
+    
+    if('isMailingAddressSame' in data) {
+      setShowMailingAddress(!data.isMailingAddressSame);
+    }
+
     updateFormData(finalData);
     
     const fieldName = Object.keys(data)[0];
@@ -108,11 +133,9 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
     };
     updateFormData({ [addressType]: updatedAddress });
 
-    // FIX: Used type assertion to prevent 'symbol' cannot be used as an index type error.
      if (errors[addressType]?.[field as string]) {
         setErrors(prev => {
             const newAddrErrors = { ...prev[addressType] };
-            // FIX: Used type assertion for deleting property.
             delete newAddrErrors[field as string];
             return { ...prev, [addressType]: newAddrErrors };
         });
@@ -200,10 +223,8 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
         let firstErrorSection: ApplySection | null = null;
         if (newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) {
             firstErrorSection = 'contact';
-        } else if (newErrors.primaryAddress) {
-            firstErrorSection = 'primaryAddress';
-        } else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) {
-            firstErrorSection = 'mailingAddress';
+        } else if (newErrors.primaryAddress || newErrors.mailingAddress || newErrors.isMailingAddressSame) {
+            firstErrorSection = 'addresses';
         } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
             firstErrorSection = 'additionalDetails';
         } else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) {
@@ -310,73 +331,62 @@ const ApplyContactPage: React.FC<ApplyContactPageProps> = ({ formData, updateFor
             </div>
         </fieldset>
 
-        {/* 1b Primary Address */}
+        {/* 1b Addresses */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
+            <button type="button" onClick={() => toggleSection('addresses')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'addresses'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.primaryAddressTitle')}</h2>
-                    {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.addresses')}</h2>
+                    {sectionHasErrors.addresses && openSection !== 'addresses' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSection === 'primaryAddress'} />
+                <ChevronIcon isOpen={openSection === 'addresses'} />
             </button>
-            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'primaryAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-6 pt-4">
-                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
-                </div>
-                {openSection === 'primaryAddress' && (
-                    <div className="flex justify-end pt-4">
-                        <button
-                            type="button"
-                            onClick={() => toggleSection('primaryAddress')}
-                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                        >
-                            {t('applyContactPage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                        </button>
+            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'addresses' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="pt-4" aria-live="polite">
+                    <div className="mb-6">
+                        <FormRadioGroup 
+                            legend={t('profilePage.mailingAddressSame')} 
+                            name="isMailingAddressSame" 
+                            options={[yes, no]} 
+                            value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} 
+                            onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} 
+                            required 
+                            error={errors.isMailingAddressSame} 
+                        />
                     </div>
-                )}
-            </div>
-        </fieldset>
-        
-        {/* 1d Mailing Address */}
-        <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyContactPage.mailingAddressTitle')}</h2>
-                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
-                </div>
-                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
-            </button>
-             <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-4 pt-4">
-                    <FormRadioGroup 
-                        legend={t('applyContactPage.mailingAddressSame')}
-                        name="isMailingAddressSame" 
-                        options={[yes, no]} 
-                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} 
-                        onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} 
-                        required
-                        error={errors.isMailingAddressSame}
-                    />
-                    {formData.isMailingAddressSame === false && (
-                        <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
-                        <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}}/>
+                    <div className="flip-container">
+                        <div className={`flipper ${!formData.isMailingAddressSame && showMailingAddress ? 'is-flipped' : ''}`} style={{ height: cardHeight ? `${cardHeight}px` : 'auto' }}>
+                            <div className="flip-front" ref={frontRef}>
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.primaryAddressTitle')}</h3>
+                                        {!formData.isMailingAddressSame && (
+                                            <button type="button" onClick={() => setShowMailingAddress(true)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                                                {t('profilePage.viewMailingAddress')}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
+                                </div>
+                            </div>
+                            <div className="flip-back" ref={backRef}>
+                                 <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.mailingAddressTitle')}</h3>
+                                        <button type="button" onClick={() => setShowMailingAddress(false)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                                            {t('profilePage.viewPrimaryAddress')}
+                                        </button>
+                                    </div>
+                                    <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
+                                </div>
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
-                {openSection === 'mailingAddress' && (
+                {openSection === 'addresses' && (
                     <div className="flex justify-end pt-4">
-                        <button
-                            type="button"
-                            onClick={() => toggleSection('mailingAddress')}
-                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                        >
-                            {t('applyContactPage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
+                        <button type="button" onClick={() => toggleSection('addresses')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                            {t('profilePage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
                         </button>
                     </div>
                 )}

@@ -79,6 +79,7 @@
   "applyContactPage": {
     "getStartedTitle": "Empecemos",
     "contactInfoTitle": "Información de Contacto",
+    "addresses": "Direcciones",
     "primaryAddressTitle": "Dirección Principal",
     "mailingAddressTitle": "Dirección Postal",
     "additionalDetailsTitle": "Detalles Adicionales",
@@ -201,6 +202,7 @@
     "email": "Correo Electrónico",
     "mobileNumber": "Número de Móvil",
     "collapse": "Ocultar",
+    "addresses": "Direcciones",
     "primaryAddressTitle": "Dirección Principal",
     "mailingAddressTitle": "Dirección Postal",
     "mailingAddressSame": "¿La dirección postal es la misma que la principal?",
@@ -218,7 +220,9 @@
     "errorCorrection": "Por favor, corrige los errores resaltados antes de guardar.",
     "saveButton": "Guardar Cambios",
     "removeIdentityConfirm": "¿Estás seguro de que quieres eliminar la identidad para {{fundName}}?",
-    "cannotRemoveActive": "No puedes eliminar tu identidad activa."
+    "cannotRemoveActive": "No puedes eliminar tu identidad activa.",
+    "viewMailingAddress": "Ver Dirección Postal",
+    "viewPrimaryAddress": "Ver Dirección Principal"
   },
   "myApplicationsPage": {
     "title": "Mis Solicitudes",
