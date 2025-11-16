@@ -4,7 +4,7 @@ import RequiredIndicator from './RequiredIndicator';
 import CountrySelector from './CountrySelector';
 import AddressHelper from './AddressHelper';
 
-export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => {
+export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => {
     const isDateInput = props.type === 'date';
 
     const eventHandlers = isDateInput ? {
@@ -32,9 +32,11 @@ export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
     
     return (
         <div>
-            <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
-                {label} <RequiredIndicator required={required} isMet={!!props.value} />
-            </label>
+            {label && (
+                <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
+                    {label} <RequiredIndicator required={required} isMet={!!props.value} />
+                </label>
+            )}
             <input
                 id={id}
                 {...props}

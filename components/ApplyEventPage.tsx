@@ -241,14 +241,6 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 onChange={e => handleUpdate({ additionalDetails: e.target.value })}
                 placeholder={t('applyEventPage.additionalDetailsPlaceholder')}
             />
-            <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0] text-center">
-                <p className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                💡 Your relief amount is calculated automatically
-                </p>
-                <p className="text-xs text-gray-300 mt-1">
-                After providing event details, you'll itemize your expenses on the next page. The total of all expenses becomes your requested relief amount.
-                </p>
-            </div>
         </div>
       <div className="flex justify-between pt-4">
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
