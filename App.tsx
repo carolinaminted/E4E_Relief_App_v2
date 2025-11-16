@@ -1,10 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage, ApplicationFormData } from './types';
 import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
-import type { ApplicationFormData } from './types';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
 import { authClient } from './services/firebaseAuthClient';
 import { usersRepo, identitiesRepo, applicationsRepo, fundsRepo } from './services/firestoreRepo';
@@ -666,6 +665,7 @@ function App() {
                     applications={userApplications}
                     onChatbotAction={handleChatbotAction}
                     activeFund={activeFund}
+                    applicationDraft={applicationDraft}
                 />;
       case 'profile':
         return <ProfilePage 

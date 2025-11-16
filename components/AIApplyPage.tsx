@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
-import type { ChatMessage, Application, UserProfile, Page } from '../types';
+import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData } from '../types';
 import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
@@ -15,9 +15,61 @@ interface AIApplyPageProps {
   onChatbotAction: (functionName: string, args: any) => void;
   activeFund: Fund | null;
   navigate: (page: Page) => void;
+  applicationDraft: Partial<ApplicationFormData> | null;
 }
 
-const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate }) => {
+const CheckmarkIcon: React.FC = () => (
+    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+);
+
+const CircleIcon: React.FC = () => (
+    <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
+);
+
+const AdditionalDetailsPreview: React.FC<{ profileData: Partial<UserProfile> | null | undefined }> = ({ profileData }) => {
+    const { t } = useTranslation();
+    
+    const checklistItems = [
+        { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
+        { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
+        { key: 'householdIncome', label: t('applyContactPage.householdIncome') },
+        { key: 'householdSize', label: t('applyContactPage.householdSize') },
+        { key: 'homeowner', label: t('applyContactPage.homeowner') },
+        { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
+    ];
+
+    const isComplete = (key: string) => {
+        if (!profileData) return false;
+        const value = profileData[key as keyof UserProfile];
+        // Check for non-empty strings, non-empty numbers (0 is valid for income, but not size), and boolean-like strings
+        return value !== undefined && value !== null && value !== '';
+    };
+    
+    return (
+        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] h-full flex flex-col p-4">
+            <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
+                Additional Details Preview
+            </h2>
+            <p className="text-xs text-gray-400 text-center mb-4">As you answer the assistant, this list will update.</p>
+            <div className="flex-grow space-y-3 overflow-y-auto pr-2">
+                {checklistItems.map(item => (
+                    <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
+                        <div className="flex-shrink-0 w-5 h-5">
+                            {isComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                        </div>
+                        <span className={`text-sm ${isComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                            {item.label}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +77,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const chatTokenSessionIdRef = useRef<string | null>(null);
   const initDoneForUser = useRef<string | null>(null);
 
-  const sessionKey = userProfile ? `chatHistory-${userProfile.uid}` : null;
+  const sessionKey = userProfile ? `aiApplyChatHistory-${userProfile.uid}` : null;
 
   useEffect(() => {
     if (sessionKey && userProfile && initDoneForUser.current !== userProfile.uid) {
@@ -57,8 +109,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   useEffect(() => {
     if (userProfile) {
       const historyToSeed = messages.length > 0 ? messages.slice(-6) : [];
-      chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed);
-      chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
+      chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply');
+      chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
     }
   }, [applications, activeFund, userProfile, messages]);
 
@@ -71,7 +123,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     const inputTokens = estimateTokens(userInput);
 
     if (!chatSessionRef.current && userProfile) {
-        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6));
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6), 'aiApply');
     }
 
     try {
@@ -162,7 +214,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
   return (
     <div className="flex-1 flex flex-col p-4 md:p-8 h-full">
-      <div className="max-w-4xl mx-auto w-full h-full flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
         <div className="relative flex justify-center items-center mb-4 md:mb-8">
             <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('aiApplyPage.backToHome')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -174,30 +226,38 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             </h1>
         </div>
 
-        <main className="flex-1 overflow-hidden flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
-            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
-                <div>
-                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                    {t('chatbotWidget.title')}
-                    </h2>
-                    <p className="text-xs text-gray-400 italic mt-1">
-                        <Trans
-                        i18nKey="chatbotWidget.disclaimer"
-                        components={{
-                            1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
-                            2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
-                        }}
-                        />
-                    </p>
+        <div className="flex-1 flex flex-col md:flex-row gap-8 min-h-0">
+            {/* Main Chat Area */}
+            <main className="w-full md:w-3/5 h-full flex-1 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
+                <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                    <div>
+                        <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                        {t('chatbotWidget.title')}
+                        </h2>
+                        <p className="text-xs text-gray-400 italic mt-1">
+                            <Trans
+                            i18nKey="chatbotWidget.disclaimer"
+                            components={{
+                                1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                                2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />,
+                            }}
+                            />
+                        </p>
+                    </div>
+                </header>
+                <div className="flex-1 overflow-hidden flex flex-col">
+                    <ChatWindow messages={messages} isLoading={isLoading} />
                 </div>
-            </header>
-            <div className="flex-1 overflow-hidden flex flex-col">
-                <ChatWindow messages={messages} isLoading={isLoading} />
-            </div>
-            <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-            </footer>
-        </main>
+                <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+                </footer>
+            </main>
+
+            {/* Details Preview Panel */}
+            <aside className="hidden md:flex md:w-2/5 h-full">
+                <AdditionalDetailsPreview profileData={applicationDraft?.profileData} />
+            </aside>
+        </div>
       </div>
     </div>
   );

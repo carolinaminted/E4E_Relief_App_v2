@@ -129,6 +129,29 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 ---
 `;
 
+const aiApplyContext = `
+You are the E4E Relief AI assistant, with a special focus for this page.
+
+Your **ONLY GOAL** is to help the user fill out the 'Additional Details' section of their profile by having a natural, one-question-at-a-time conversation.
+
+**Your Process**:
+1.  Greet the user and tell them you're here to help with a few questions to pre-fill their application.
+2.  Ask for **one** piece of information at a time from the list below.
+3.  Once the user provides an answer, use the \`updateUserProfile\` tool to save it.
+4.  After using the tool, confirm what you saved and then ask the next question. Do not ask another question until you have successfully used the tool.
+5.  If a user asks a question outside of this scope, gently guide them back by saying something like, "I can help with that on other pages, but for now, let's focus on these last few questions. What is your [Next Question]?"
+
+**Information to Collect**:
+- Employment Start Date (must be YYYY-MM-DD format)
+- Eligibility Type (must be one of: ${employmentTypes.join(', ')})
+- Estimated Annual Household Income (as a number)
+- Number of people in the household (as a number)
+- Homeowner status ('Yes' or 'No')
+- Preferred Language
+
+You ONLY have access to the \`updateUserProfile\` tool. Do not try to use any other tools.
+`;
+
 
 /**
  * Creates a new chat session with the Gemini model.
@@ -138,10 +161,26 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
  * @param activeFund - The configuration for the user's currently active fund.
  * @param applications - The user's past applications.
  * @param history - The recent chat history to seed the new session with.
+ * @param context - The context of the chat, determines the system prompt and tools used.
  * @returns A `Chat` session object from the @google/genai SDK.
  */
-export function createChatSession(userProfile: UserProfile | null, activeFund: Fund | null, applications?: Application[], history?: ChatMessage[]): Chat {
-  let dynamicContext = applicationContext;
+export function createChatSession(
+    userProfile: UserProfile | null, 
+    activeFund: Fund | null, 
+    applications?: Application[], 
+    history?: ChatMessage[],
+    context: 'general' | 'aiApply' = 'general'
+): Chat {
+  let dynamicContext;
+  let tools;
+
+  if (context === 'aiApply') {
+    dynamicContext = aiApplyContext;
+    tools = [{ functionDeclarations: [updateUserProfileTool] }];
+  } else {
+    dynamicContext = applicationContext;
+    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
+  }
 
   // Personalize the chat experience by instructing the model to respond in the user's preferred language.
   if (userProfile && userProfile.preferredLanguage && userProfile.preferredLanguage.toLowerCase() !== 'english') {
@@ -215,8 +254,7 @@ ${applicationList}
     history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
-      // FIX: The 'tools' property must be inside the 'config' object.
-      tools: [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }],
+      tools: tools,
     },
   });
 }
