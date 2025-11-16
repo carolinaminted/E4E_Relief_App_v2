@@ -266,7 +266,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       { key: 'stayedWithFamilyOrFriend', label: t('applyEventPage.stayedWithFamilyLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
       { key: 'evacuationStartDate', label: t('applyEventPage.evacuationStartDateLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
       { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-      { key: 'additionalDetails', label: t('applyEventPage.additionalDetailsLabel') },
   ], [t]);
   
   const isApplicationReadyForExpenses = useMemo(() => {

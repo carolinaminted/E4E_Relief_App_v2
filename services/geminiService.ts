@@ -188,7 +188,6 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
         if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
         if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
     }
-    if (combinedEvent.additionalDetails === undefined) missingEventFields.push("The final question is to ask for any other additional details (additionalDetails). It is optional for the user to answer. If they provide details, you MUST use the `startOrUpdateApplicationDraft` tool to save them. If they decline to provide details, you MUST also use the `startOrUpdateApplicationDraft` tool and set the `additionalDetails` field to the exact string \"None provided\".");
 
     if (missingEventFields.length > 0) {
       dynamicContext += `
