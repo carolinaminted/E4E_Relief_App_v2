@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
-import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from './Icons';
+import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, SparklesIcon } from './Icons';
 import type { Page, UserProfile } from '../types';
 import EligibilityIndicator from './EligibilityIndicator';
 
@@ -36,9 +36,15 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
             disabled: !canApply,
             disabledTooltipKey: userProfile.classVerificationStatus !== 'passed' ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
         },
+        { 
+            key: 'aiApply', 
+            titleKey: 'nav.aiApply', 
+            icon: <SparklesIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
+            onClick: () => navigate('aiApply'),
+        },
         { key: 'profile', titleKey: 'nav.profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
         { key: 'support', titleKey: 'nav.support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },
-        { key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') },
+        
     ];
 
     if (userProfile.role === 'Admin') {
@@ -47,8 +53,10 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
             titleKey: 'nav.fundPortal', 
             icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('fundPortal'),
-            colSpan: 'col-span-2'
         });
+         tiles.push({ key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') });
+    } else {
+        tiles.push({ key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, colSpan: 'col-span-2', onClick: () => navigate('donate') });
     }
 
   return (

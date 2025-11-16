@@ -28,6 +28,7 @@
     "home": "Home",
     "profile": "Profile",
     "apply": "Apply",
+    "aiApply": "AI Apply",
     "support": "Support",
     "donate": "Donate",
     "fundPortal": "Fund",
@@ -71,6 +72,10 @@
     "poweredBy": "Powered by E4E Relief",
     "applyTooltipVerification": "Class Verification required to access applications.",
     "applyTooltipLimits": "Your grant limits have been reached."
+  },
+  "aiApplyPage": {
+    "title": "AI Apply",
+    "backToHome": "Back to Home"
   },
   "applyPage": {
     "title": "Apply for Relief",
@@ -221,7 +226,6 @@
     "householdSize": "Number of people in household",
     "homeowner": "Do you own your own home?",
     "preferredLanguage": "Preferred Language",
-    "consentTitle": "Consent & Acknowledgement",
     "ackPolicies": "I have read and agree to E4E Relief’s Privacy Policy and Cookie Policy.",
     "commConsent": "I consent to receive emails and text messages regarding my application.",
     "infoCorrect": "All information I have provided is accurate.",

@@ -27,6 +27,7 @@
     "home": "Inicio",
     "profile": "Perfil",
     "apply": "Solicitar",
+    "aiApply": "Solicitud IA",
     "support": "Soporte",
     "donate": "Donar",
     "fundPortal": "Fondo",
@@ -70,6 +71,10 @@
     "poweredBy": "Impulsado por E4E Relief",
     "applyTooltipVerification": "Se requiere verificación de clase para acceder a las solicitudes.",
     "applyTooltipLimits": "Has alcanzado los límites de tu subvención."
+  },
+  "aiApplyPage": {
+    "title": "Solicitud con IA",
+    "backToHome": "Volver a Inicio"
   },
   "applyPage": {
     "title": "Solicitar Ayuda",

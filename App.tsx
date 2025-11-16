@@ -19,7 +19,7 @@ import ApplyPage from './components/ApplyPage';
 import ProfilePage from './components/ProfilePage';
 import SupportPage from './components/SupportPage';
 import SubmissionSuccessPage from './components/SubmissionSuccessPage';
-import ChatbotWidget from './components/ChatbotWidget';
+import AIApplyPage from './components/AIApplyPage';
 import TokenUsagePage from './components/TokenUsagePage';
 import FAQPage from './components/FAQPage';
 import PaymentOptionsPage from './components/PaymentOptionsPage';
@@ -40,9 +40,6 @@ import LiveDashboardPage from './components/LiveDashboardPage';
 import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
 import ReliefQueuePage from './components/ReliefQueuePage';
-
-// FIX: Removed local Page type definition.
-// type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'dashboard' | 'ticketing' | 'programDetails' | 'proxy';
 
 type AuthState = {
     status: 'loading' | 'signedIn' | 'signedOut';
@@ -65,7 +62,6 @@ function App() {
   const [verifyingFundCode, setVerifyingFundCode] = useState<string | null>(null);
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -631,8 +627,7 @@ function App() {
     });
   }, []);
   
-  // FIX: The 'reliefQueue' page is rendered in a separate block that doesn't include the main footer. Removing it from this array resolves a TypeScript error caused by type narrowing where `page` is checked with `.includes()`.
-  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile'];
+  const pagesWithoutFooter: GlobalPage[] = ['home', 'login', 'register', 'classVerification', 'profile', 'aiApply'];
 
   const renderPage = () => {
     if (authState.status === 'loading' || (authState.status === 'signedIn' && !currentUser)) {
@@ -655,7 +650,6 @@ function App() {
       );
     }
     
-    // This case should now be covered by the loading overlay above, but as a fallback:
     if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
 
     switch (page) {
@@ -665,6 +659,14 @@ function App() {
         return <ClassVerificationPage user={currentUser} onVerificationSuccess={handleVerificationSuccess} onVerificationFailed={handleVerificationFailed} navigate={navigate} verifyingFundCode={verifyingFundCode} />;
       case 'apply':
         return <ApplyPage navigate={navigate} onSubmit={handleApplicationSubmit} userProfile={currentUser} applicationDraft={applicationDraft} mainRef={mainRef} canApply={canApply} activeFund={activeFund} />;
+      case 'aiApply':
+        return <AIApplyPage 
+                    navigate={navigate}
+                    userProfile={currentUser}
+                    applications={userApplications}
+                    onChatbotAction={handleChatbotAction}
+                    activeFund={activeFund}
+                />;
       case 'profile':
         return <ProfilePage 
                     navigate={navigate} 
@@ -692,7 +694,7 @@ function App() {
                     userProfile={currentUser}
                 />;
       case 'support':
-        return <SupportPage navigate={navigate} openChatbot={() => setIsChatbotOpen(true)} />;
+        return <SupportPage navigate={navigate} />;
        case 'tokenUsage':
         return <TokenUsagePage navigate={navigate} currentUser={currentUser} />;
       case 'submissionSuccess':
@@ -800,10 +802,6 @@ function App() {
             userRole={currentUser.role}
             canApply={canApply}
         />
-        
-        {/* FIX: Pass 'setIsChatbotOpen' to the 'setIsOpen' prop as 'setIsOpen' is not defined. */}
-        {/* FIX: Removed redundant `page !== 'reliefQueue'` check. The parent `if (page === 'reliefQueue')` block already handles this case, and TypeScript's type narrowing causes an error here. */}
-        {page !== 'classVerification' && <ChatbotWidget userProfile={currentUser} applications={userApplications} onChatbotAction={handleChatbotAction} isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} scrollContainerRef={mainRef} activeFund={activeFund} />}
       </div>
     </div>
   );
