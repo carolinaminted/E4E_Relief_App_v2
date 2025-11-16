@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
@@ -29,24 +29,40 @@ const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
 );
 
-const AdditionalDetailsPreview: React.FC<{ profileData: Partial<UserProfile> | null | undefined }> = ({ profileData }) => {
+const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, profileData: Partial<UserProfile> | null | undefined }> = ({ userProfile, profileData }) => {
     const { t } = useTranslation();
     
-    const checklistItems = [
+    // The master list of what this component can show
+    const baseChecklistItems = useMemo(() => [
         { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
         { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
         { key: 'householdIncome', label: t('applyContactPage.householdIncome') },
         { key: 'householdSize', label: t('applyContactPage.householdSize') },
         { key: 'homeowner', label: t('applyContactPage.homeowner') },
         { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
-    ];
+    ], [t]);
 
-    const isComplete = (key: string) => {
+    // Filter to only show items that are incomplete in the user's base profile
+    const checklistItems = useMemo(() => {
+        if (!userProfile) return baseChecklistItems; // Show all if profile isn't loaded
+        return baseChecklistItems.filter(item => {
+            const value = userProfile[item.key as keyof UserProfile];
+            return value === undefined || value === null || value === '';
+        });
+    }, [userProfile, baseChecklistItems]);
+
+    // This function checks if the item has been filled *during this session* by the AI
+    const isCompleteInDraft = (key: string) => {
         if (!profileData) return false;
         const value = profileData[key as keyof UserProfile];
         // Check for non-empty strings, non-empty numbers (0 is valid for income, but not size), and boolean-like strings
         return value !== undefined && value !== null && value !== '';
     };
+    
+    // If all details are already complete in the user's profile, don't render this component.
+    if (checklistItems.length === 0) {
+        return null;
+    }
     
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
@@ -58,9 +74,9 @@ const AdditionalDetailsPreview: React.FC<{ profileData: Partial<UserProfile> | n
                 {checklistItems.map(item => (
                     <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
                         <div className="flex-shrink-0 w-5 h-5">
-                            {isComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                            {isCompleteInDraft(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
                         </div>
-                        <span className={`text-sm ${isComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                        <span className={`text-sm ${isCompleteInDraft(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
                             {item.label}
                         </span>
                     </div>
@@ -241,7 +257,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       
       const outputTokens = estimateTokens(modelResponseText);
       if (chatTokenSessionIdRef.current) {
-        // FIX: The function was imported as `logTokenEvent`, not `logEvent`.
         logTokenEvent({
             feature: 'AI Assistant',
             model: 'gemini-2.5-flash',
@@ -306,7 +321,10 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
             {/* Details Preview Panel */}
             <aside className="hidden md:flex md:w-2/5 flex-col gap-8">
-                <AdditionalDetailsPreview profileData={applicationDraft?.profileData} />
+                <AdditionalDetailsPreview 
+                    userProfile={userProfile} 
+                    profileData={applicationDraft?.profileData} 
+                />
                 <EventDetailsPreview eventData={applicationDraft?.eventData} />
             </aside>
         </div>
