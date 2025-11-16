@@ -142,6 +142,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const initDoneForUser = useRef<string | null>(null);
 
   const sessionKey = userProfile ? `aiApplyChatHistory-${userProfile.uid}` : null;
+  const greetingMessage = t('aiApplyPage.greeting');
 
   useEffect(() => {
     if (sessionKey && userProfile && initDoneForUser.current !== userProfile.uid) {
@@ -150,15 +151,15 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         if (savedMessages) {
           setMessages(JSON.parse(savedMessages));
         } else {
-          setMessages([{ role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }]);
+          setMessages([{ role: MessageRole.MODEL, content: greetingMessage }]);
         }
       } catch (error) {
         console.error('Could not load chat history from session storage', error);
-        setMessages([{ role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }]);
+        setMessages([{ role: MessageRole.MODEL, content: greetingMessage }]);
       }
       initDoneForUser.current = userProfile.uid;
     }
-  }, [sessionKey, t, userProfile]);
+  }, [sessionKey, greetingMessage, userProfile]);
 
   useEffect(() => {
     if (sessionKey && messages.length > 0) {
@@ -173,10 +174,10 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   useEffect(() => {
     if (userProfile) {
       const historyToSeed = messages.length > 0 ? messages.slice(-6) : [];
-      chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply');
+      chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply', applicationDraft);
       chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
     }
-  }, [applications, activeFund, userProfile, messages]);
+  }, [applications, activeFund, userProfile, messages, applicationDraft]);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (!userInput.trim() || isLoading) return;
@@ -186,7 +187,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     setMessages(prev => [...prev, userMessage]);
     
     if (!chatSessionRef.current && userProfile) {
-        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6), 'aiApply');
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6), 'aiApply', applicationDraft);
         if (!chatTokenSessionIdRef.current) {
             chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
         }
@@ -242,7 +243,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages]);
+  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages, applicationDraft]);
 
   const baseProfileChecklistItems = useMemo(() => [
       { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },

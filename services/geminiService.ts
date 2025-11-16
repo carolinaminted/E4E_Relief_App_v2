@@ -130,32 +130,35 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 ---
 `;
 
-const getAIApplyContext = (userProfile: UserProfile | null): string => {
+const getAIApplyContext = (userProfile: UserProfile | null, applicationDraft: Partial<ApplicationFormData> | null): string => {
     let dynamicContext = `
 You are the E4E Relief AI assistant, with a special focus for this page.
 
-Your GOAL is to help the user complete their application by asking questions one at a time.
+Your GOAL is to help the user complete their application by asking questions one at a time from the 'Missing' lists below.
 
 **Your Process**:
-1. Greet the user and tell them you're here to help with a few questions to pre-fill their application.
-2. First, ask for the missing 'Additional Details' information listed below, one question at a time.
+1. Review the lists of missing 'Additional Details' and 'Event Details' provided below.
+2. First, ask for the missing 'Additional Details' information, one question at a time.
 3. After a user provides an answer, use the \`updateUserProfile\` tool to save it.
-4. Once all 'Additional Details' are collected, move on to the 'Event Details' questions below, one at a time.
+4. Once all 'Additional Details' are collected, move on to the 'Event Details' questions.
 5. For event details, use the \`startOrUpdateApplicationDraft\` tool to save the information.
-6. After using any tool, you MUST confirm what you saved and then ask the next question. Do not ask another question until you have successfully used a tool.
+6. After using any tool, you MUST confirm what you saved and then ask the next question from the list. Do not ask another question until you have successfully used a tool.
 7. If a user asks a question outside of this scope, gently guide them back by saying something like, "I can help with that on other pages, but for now, let's focus on these last few questions. What is your [Next Question]?"
 
 You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft\` tools.
 ---
 `;
+    // Combine the base user profile with any data already entered in the current application draft.
+    const combinedProfile = { ...userProfile, ...(applicationDraft?.profileData || {}) };
+    const combinedEvent = { ...(applicationDraft?.eventData || {}) };
 
     const missingProfileFields: string[] = [];
-    if (!userProfile?.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
-    if (!userProfile?.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
-    if (userProfile?.householdIncome === '' || userProfile?.householdIncome === undefined || userProfile?.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
-    if (userProfile?.householdSize === '' || userProfile?.householdSize === undefined || userProfile?.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
-    if (!userProfile?.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
-    if (!userProfile?.preferredLanguage) missingProfileFields.push('Preferred Language');
+    if (!combinedProfile.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
+    if (!combinedProfile.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
+    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
+    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
+    if (!combinedProfile.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
+    if (!combinedProfile.preferredLanguage) missingProfileFields.push('Preferred Language');
 
     if (missingProfileFields.length > 0) {
         dynamicContext += `
@@ -171,20 +174,33 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
 `;
     }
 
-    dynamicContext += `
-**Event Details to Collect (ask after Additional Details are complete)**:
-- The type of disaster experienced (event)
-- The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*
-- Date of the event (eventDate)
-- If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')
-- How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*
-- If they evacuated or plan to (evacuated: 'Yes' or 'No')
-- If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*
-- Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*
-- Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*
-- How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*
-- The final question is to ask for any other additional details (additionalDetails). It is optional for the user to answer. If they provide details, you MUST use the \`startOrUpdateApplicationDraft\` tool to save them. If they decline to provide details, you MUST also use the \`startOrUpdateApplicationDraft\` tool and set the \`additionalDetails\` field to the exact string "None provided".
+    const missingEventFields: string[] = [];
+    if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
+    if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
+    if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
+    if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
+    if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
+    if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
+    if (combinedEvent.evacuated === 'Yes') {
+        if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
+        if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
+        if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
+        if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
+        if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+    }
+    if (combinedEvent.additionalDetails === undefined) missingEventFields.push("The final question is to ask for any other additional details (additionalDetails). It is optional for the user to answer. If they provide details, you MUST use the `startOrUpdateApplicationDraft` tool to save them. If they decline to provide details, you MUST also use the `startOrUpdateApplicationDraft` tool and set the `additionalDetails` field to the exact string \"None provided\".");
+
+    if (missingEventFields.length > 0) {
+      dynamicContext += `
+**Missing Event Details to Collect (ask after Additional Details are complete)**:
+- ${missingEventFields.join('\n- ')}
 `;
+    } else {
+      dynamicContext += `
+**Missing Event Details to Collect (ask after Additional Details are complete)**:
+- All event details are already complete.
+`;
+    }
 
     return dynamicContext;
 };
@@ -199,6 +215,7 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
  * @param applications - The user's past applications.
  * @param history - The recent chat history to seed the new session with.
  * @param context - The context of the chat, determines the system prompt and tools used.
+ * @param applicationDraft - The current application draft, used for the 'aiApply' context.
  * @returns A `Chat` session object from the @google/genai SDK.
  */
 export function createChatSession(
@@ -206,13 +223,14 @@ export function createChatSession(
     activeFund: Fund | null, 
     applications?: Application[], 
     history?: ChatMessage[],
-    context: 'general' | 'aiApply' = 'general'
+    context: 'general' | 'aiApply' = 'general',
+    applicationDraft: Partial<ApplicationFormData> | null = null
 ): Chat {
   let dynamicContext;
   let tools;
 
   if (context === 'aiApply') {
-    dynamicContext = getAIApplyContext(userProfile);
+    dynamicContext = getAIApplyContext(userProfile, applicationDraft);
     tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
   } else {
     dynamicContext = applicationContext;

@@ -74,7 +74,8 @@
   },
   "aiApplyPage": {
     "title": "Solicitud con IA",
-    "backToHome": "Volver a Inicio"
+    "backToHome": "Volver a Inicio",
+    "greeting": "¡Hola! Soy el Asistente de Ayuda. Por favor, revisa el panel de Detalles a la derecha con las preguntas de la solicitud que necesitamos saber sobre tu situación. Solo envíame un mensaje cuando estés listo."
   },
   "applyPage": {
     "title": "Solicitar Ayuda",
