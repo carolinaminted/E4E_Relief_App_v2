@@ -51,7 +51,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
             title="Click to autofill demo user credentials"
         >
             <img 
-                src="https://gateway.pinata.cloud/ipfs/bafybeihjhfybcxtlj6r4u7c6jdgte7ehcrctaispvtsndkvgc3bmevuvqi" 
+                src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy" 
                 alt="E4E Relief Logo" 
                 className="mx-auto h-32 sm:h-36 w-auto"
             />
