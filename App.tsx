@@ -152,7 +152,7 @@ function App() {
             }
           } else {
             // --- Profile not found ---
-            const creationTime = new Date(user.metadata.creationTime || 0).getTime();
+            const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : 0;
             // Check if the user was created within the last 10 seconds.
             const isNewUser = (Date.now() - creationTime) < 10000;
 
