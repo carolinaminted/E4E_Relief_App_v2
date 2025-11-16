@@ -76,7 +76,10 @@
   "aiApplyPage": {
     "title": "AI Apply",
     "backToHome": "Back to Home",
-    "greeting": "Hello! I'm the Relief Assistant. Please review the Details pane on the right with application questions we need to know about your situation. Just message me when you are ready."
+    "greeting": "Hello! I'm the Relief Assistant. Please review the Details pane on the right with application questions we need to know about your situation. Just message me when you are ready.",
+    "additionalDetailsPreviewTitle": "Additional Details Preview",
+    "eventDetailsPreviewTitle": "Event Details Preview",
+    "previewSubtitle": "This list updates as you answer the assistant."
   },
   "applyPage": {
     "title": "Apply for Relief",
@@ -483,17 +486,17 @@
     ]
   },
   "paymentOptionsPage": {
-    "title": "Payment Options",
-    "description": "We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.",
-    "usApplicantsTitle": "U.S. Applicants",
-    "usApplicantsBody": "For applicants within the United States, please review our payment guide to understand the available options and requirements for receiving your grant.",
-    "usApplicantsLink": "Bank of America Recipient Select Guide",
-    "intlApplicantsTitle": "International Applicants",
-    "intlSupportTitle": "International Grant Award Payment Support",
-    "intlSupportBody": "Once a grant is awarded, there are a few important registration steps you must complete before you receive the financial assistance. To receive this financial assistance you must successfully complete your account registration with our payment partners. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\">Click Here</a> to review the international grant award guide.",
-    "intlPartnersTitle": "Payment Partner Information",
-    "converaGuide": "Convera Guide",
-    "tipaltiGuide": "Tipalti Guide"
+    "title": "Opciones de Pago",
+    "description": "Nos asociamos con proveedores de pago líderes en la industria para garantizar que sus fondos de ayuda se entreguen de manera rápida y segura, dondequiera que se encuentre en el mundo.",
+    "usApplicantsTitle": "Solicitantes de EE. UU.",
+    "usApplicantsBody": "Para los solicitantes dentro de los Estados Unidos, revise nuestra guía de pago para comprender las opciones y los requisitos disponibles para recibir su subvención.",
+    "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
+    "intlApplicantsTitle": "Solicitantes Internacionales",
+    "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
+    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Haga clic aquí </a> para revisar la guía de adjudicación de subvenciones internacionales.",
+    "intlPartnersTitle": "Información del Socio de Pago",
+    "converaGuide": "Guía de Convera",
+    "tipaltiGuide": "Guía de Tipalti"
   },
   "validation": {
     "required": "Por favor, rellena este campo.",

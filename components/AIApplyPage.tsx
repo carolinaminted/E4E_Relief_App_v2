@@ -38,7 +38,7 @@ const CircleIcon: React.FC = () => (
 );
 
 export const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, profileData: Partial<UserProfile> | null | undefined, baseChecklistItems: { key: string, label: string }[] }> = ({ userProfile, profileData, baseChecklistItems }) => {
-    
+    const { t } = useTranslation();
     const checklistItems = baseChecklistItems;
 
     // This function checks if the item has been filled, either in the base profile OR during this session by the AI
@@ -57,9 +57,9 @@ export const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | nul
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
             <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
-                Additional Details Preview
+                {t('aiApplyPage.additionalDetailsPreviewTitle')}
             </h2>
-            <p className="text-xs text-gray-400 text-center mb-4">This list updates as you answer the assistant.</p>
+            <p className="text-xs text-gray-400 text-center mb-4">{t('aiApplyPage.previewSubtitle')}</p>
             <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                 {checklistItems.map(item => (
                     <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
@@ -77,6 +77,7 @@ export const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | nul
 };
 
 export const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | undefined, eventChecklistItems: any[] }> = ({ eventData, eventChecklistItems }) => {
+    const { t } = useTranslation();
     const isComplete = (key: keyof EventData) => {
         if (!eventData) return false;
         const value = eventData[key];
@@ -88,9 +89,9 @@ export const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | nul
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
             <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
-                Event Details Preview
+                {t('aiApplyPage.eventDetailsPreviewTitle')}
             </h2>
-            <p className="text-xs text-gray-400 text-center mb-4">This list updates as you answer the assistant.</p>
+            <p className="text-xs text-gray-400 text-center mb-4">{t('aiApplyPage.previewSubtitle')}</p>
             <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                 {visibleItems.map(item => (
                     <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
