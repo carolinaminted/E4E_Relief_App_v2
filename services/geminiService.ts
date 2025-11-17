@@ -105,7 +105,11 @@ const addOrUpdateExpenseTool: FunctionDeclaration = {
             items: {
                 type: Type.OBJECT,
                 properties: {
-                    type: { type: Type.STRING, description: "The type of expense.", enum: expenseTypes },
+                    type: {
+                        type: Type.STRING,
+                        description: "The type of expense. Must be one of the available enum options. You must match the user's description of an expense to the closest possible enum value. For example, if the user says 'disaster supplies' or 'basic supplies', you must use the value 'Basic Disaster Supplies'.",
+                        enum: expenseTypes
+                    },
                     amount: { type: Type.NUMBER, description: "The cost of the expense." },
                 },
                 required: ['type', 'amount'],
