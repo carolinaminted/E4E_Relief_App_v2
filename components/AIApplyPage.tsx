@@ -223,7 +223,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       const outputTokens = estimateTokens(modelResponseText); // Estimate tokens from the final response
       if (chatTokenSessionIdRef.current) {
           logTokenEvent({
-              feature: 'AI Assistant',
+              feature: 'AI Apply Chat',
               model: 'gemini-2.5-flash',
               inputTokens,
               outputTokens,

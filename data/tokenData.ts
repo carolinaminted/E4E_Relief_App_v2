@@ -12,7 +12,7 @@ const MODEL_PRICING: ModelPricing = {
 };
 
 const MOCK_USERS = ['user@example.com', 'admin@example.com', 'test@example.com'];
-const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision'];
+const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision', 'AI Apply Chat'];
 const MOCK_MODELS: TokenEvent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 const MOCK_FUND_CODES = ['E4E', 'JHH', 'SQRT', 'DOM', 'ROST'];
 

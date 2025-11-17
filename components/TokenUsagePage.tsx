@@ -5,6 +5,7 @@ import { tokenEventsRepo } from '../services/firestoreRepo';
 import { TokenUsageFilterModal } from './TokenUsageFilters';
 import { TopSessionChart, LastHourUsageChart, Last15MinutesUsageChart } from './TokenUsageCharts';
 import TokenUsageTable from './TokenUsageTable';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface TokenUsagePageProps {
   navigate: (page: 'fundPortal') => void;
@@ -245,7 +246,17 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
             </button>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage</h1>
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage</h1>
+              {currentUser && (
+                <div className="mt-2 flex flex-col items-center gap-2">
+                  <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
+                  <EligibilityIndicator 
+                    cvStatus={currentUser.classVerificationStatus} 
+                  />
+                </div>
+              )}
+          </div>
         </div>
 
         <div className="flex justify-between items-center mb-4 py-2 border-y border-[#005ca0]">

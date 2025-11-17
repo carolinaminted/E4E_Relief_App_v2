@@ -243,7 +243,7 @@ export interface TokenEvent {
   uid: string; // The user's Firebase Auth UID.
   userId: string; // The user's email, for easier filtering in analytics.
   timestamp: string; // ISO 8601 timestamp string.
-  feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision';
+  feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision' | 'AI Apply Chat';
   model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
   inputTokens: number;
   cachedInputTokens: number;
