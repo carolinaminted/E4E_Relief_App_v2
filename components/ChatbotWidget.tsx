@@ -99,43 +99,54 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     
     if (!chatSessionRef.current && userProfile) {
         chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6));
+        if (!chatTokenSessionIdRef.current) {
+            chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
+        }
     }
 
     try {
       if (!chatSessionRef.current) throw new Error("Chat session not initialized.");
 
-      const inputTokens = estimateTokens(userInput);
-      // Use non-streaming sendMessage to wait for the full response.
+      let totalInputTokens = estimateTokens(userInput);
+      let totalOutputTokens = 0;
+
+      // First API call
       let response = await chatSessionRef.current.sendMessage({ message: userInput });
       
-      let modelResponseText = response.text;
       const functionCalls = response.functionCalls;
 
       // If the model returns function calls, execute them and send back the results.
       if (functionCalls && functionCalls.length > 0) {
+          // "Output" of first call is the function call object
+          totalOutputTokens += estimateTokens(JSON.stringify(functionCalls));
+
           const functionResponses = functionCalls.map(call => {
-              // This action updates the application draft state in the parent component.
               onChatbotAction(call.name, call.args);
               return { functionResponse: { name: call.name, response: { result: 'ok' } } };
           });
           
-          // Send the function responses back to the model and wait for its final text response.
+          // "Input" for second call is the function response
+          totalInputTokens += estimateTokens(JSON.stringify(functionResponses));
+
+          // Second API call
           response = await chatSessionRef.current.sendMessage({ message: functionResponses });
-          modelResponseText = response.text;
       }
+      
+      // Final text response comes from either the first or second call
+      const modelResponseText = response.text;
+      totalOutputTokens += estimateTokens(modelResponseText);
 
       // Only add the final model message to the chat history after all actions are complete.
       if (modelResponseText) {
           setMessages(prev => [...prev, { role: MessageRole.MODEL, content: modelResponseText }]);
       }
       
-      const outputTokens = estimateTokens(modelResponseText); // Estimate tokens from the final response.
       if (chatTokenSessionIdRef.current) {
           logTokenEvent({
               feature: 'AI Assistant',
               model: 'gemini-2.5-flash',
-              inputTokens,
-              outputTokens,
+              inputTokens: totalInputTokens,
+              outputTokens: totalOutputTokens,
               sessionId: chatTokenSessionIdRef.current,
           });
       }

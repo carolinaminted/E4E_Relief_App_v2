@@ -262,9 +262,11 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
   useEffect(() => {
     if (userProfile) {
+      if (!chatTokenSessionIdRef.current) {
+        chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
+      }
       const historyToSeed = messages.length > 0 ? messages.slice(-6) : [];
       chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply', applicationDraft);
-      chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
     }
   }, [applications, activeFund, userProfile, messages, applicationDraft]);
 
@@ -276,51 +278,57 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     setMessages(prev => [...prev, userMessage]);
     
     if (!chatSessionRef.current && userProfile) {
-        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, messages.slice(-6), 'aiApply', applicationDraft);
-        if (!chatTokenSessionIdRef.current) {
-            chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
-        }
+        const historyToSeed = messages.slice(-6);
+        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply', applicationDraft);
     }
 
     try {
-      if (!chatSessionRef.current) throw new Error("Chat session not initialized.");
-      
-      const inputTokens = estimateTokens(userInput);
+        if (!chatSessionRef.current) throw new Error("Chat session not initialized.");
+        
+        let totalInputTokens = estimateTokens(userInput);
+        let totalOutputTokens = 0;
 
-      // Use non-streaming sendMessage to wait for the full response
-      let response = await chatSessionRef.current.sendMessage({ message: userInput });
+        // First API call
+        let response = await chatSessionRef.current.sendMessage({ message: userInput });
+        
+        const functionCalls = response.functionCalls;
 
-      let modelResponseText = response.text;
-      const functionCalls = response.functionCalls;
+        // If the model returns function calls, execute them and send back the results
+        if (functionCalls && functionCalls.length > 0) {
+            // "Output" of first call is the function call object
+            totalOutputTokens += estimateTokens(JSON.stringify(functionCalls));
 
-      // If the model returns function calls, execute them and send back the results
-      if (functionCalls && functionCalls.length > 0) {
-          const functionResponses = functionCalls.map(call => {
-              // This action updates the UI preview panes via state changes in the parent component
-              onChatbotAction(call.name, call.args);
-              return { functionResponse: { name: call.name, response: { result: 'ok' } } };
-          });
-          
-          // Send the function responses back to the model and wait for its final text response
-          response = await chatSessionRef.current.sendMessage({ message: functionResponses });
-          modelResponseText = response.text;
-      }
+            const functionResponses = functionCalls.map(call => {
+                onChatbotAction(call.name, call.args);
+                return { functionResponse: { name: call.name, response: { result: 'ok' } } };
+            });
+            
+            // "Input" for second call is the function response
+            totalInputTokens += estimateTokens(JSON.stringify(functionResponses));
+            
+            // Second API call
+            response = await chatSessionRef.current.sendMessage({ message: functionResponses });
+        }
+        
+        // Final text response comes from either the first or second call
+        const modelResponseText = response.text;
+        totalOutputTokens += estimateTokens(modelResponseText);
 
-      // Only add the final model message to the chat history after all actions are complete
-      if (modelResponseText) {
-          setMessages(prev => [...prev, { role: MessageRole.MODEL, content: modelResponseText }]);
-      }
+        // Only add the final model message to the chat history after all actions are complete
+        if (modelResponseText) {
+            setMessages(prev => [...prev, { role: MessageRole.MODEL, content: modelResponseText }]);
+        }
 
-      const outputTokens = estimateTokens(modelResponseText); // Estimate tokens from the final response
-      if (chatTokenSessionIdRef.current) {
-          logTokenEvent({
-              feature: 'AI Apply Chat',
-              model: 'gemini-2.5-flash',
-              inputTokens,
-              outputTokens,
-              sessionId: chatTokenSessionIdRef.current,
-          });
-      }
+        // Log the aggregated event
+        if (chatTokenSessionIdRef.current) {
+            logTokenEvent({
+                feature: 'AI Apply Chat',
+                model: 'gemini-2.5-flash',
+                inputTokens: totalInputTokens,
+                outputTokens: totalOutputTokens,
+                sessionId: chatTokenSessionIdRef.current,
+            });
+        }
 
     } catch (error) {
       console.error(error);
