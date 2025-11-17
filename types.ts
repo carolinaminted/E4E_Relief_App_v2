@@ -242,6 +242,7 @@ export interface TokenEvent {
   sessionId: string; // Groups multiple calls within a single user interaction (e.g., one chat conversation).
   uid: string; // The user's Firebase Auth UID.
   userId: string; // The user's email, for easier filtering in analytics.
+  userName: string; // The user's full name, denormalized for easier display.
   timestamp: string; // ISO 8601 timestamp string.
   feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision' | 'AI Apply Chat';
   model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
@@ -259,10 +260,12 @@ export interface TokenEvent {
  * This is a client-side derived type for display purposes.
  */
 export interface TokenUsageTableRow {
-  user: string;
+  user: string; // email
+  userName: string;
   date: string;
   session: string;
   feature: string;
+  fundCode: string;
   input: number;
   cached: number;
   output: number;

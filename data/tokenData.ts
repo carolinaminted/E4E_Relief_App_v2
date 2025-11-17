@@ -26,6 +26,7 @@ if (typeof window !== 'undefined') {
     const now = new Date();
     for (let i = 0; i < 300; i++) {
       const user = MOCK_USERS[i % MOCK_USERS.length];
+      const userName = user.split('@')[0].charAt(0).toUpperCase() + user.split('@')[0].slice(1) + ' User';
       const date = new Date(now.getTime() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000);
       
       generatedEvents.push({
@@ -34,6 +35,8 @@ if (typeof window !== 'undefined') {
         // FIX: Added missing 'uid' property to satisfy the TokenEvent type.
         uid: `uid-${user.split('@')[0]}`,
         userId: user,
+        // FIX: Added missing 'userName' property to satisfy the TokenEvent type.
+        userName: userName,
         timestamp: date.toISOString(),
         feature: MOCK_FEATURES[Math.floor(Math.random() * MOCK_FEATURES.length)],
         model: MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)],
@@ -80,7 +83,17 @@ export async function getTokenUsageTableData(filters: TokenUsageFilters, current
                 day: 'numeric',
                 year: 'numeric'
             });
-            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0 };
+            // FIX: Add missing 'userName' and 'fundCode' properties to satisfy the TokenUsageTableRow type.
+            usageByFeatureInSession[key] = {
+              date: formattedDate,
+              userName: event.userName,
+              fundCode: event.fundCode,
+              input: 0,
+              cached: 0,
+              output: 0,
+              total: 0,
+              cost: 0
+            };
         }
         const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
         const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);

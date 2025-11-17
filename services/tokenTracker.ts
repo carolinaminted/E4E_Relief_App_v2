@@ -92,6 +92,7 @@ export async function logEvent(data: {
     uid: currentUser.uid,
     sessionId: data.sessionId,
     userId: currentUser.email,
+    userName: `${currentUser.firstName} ${currentUser.lastName}`,
     timestamp: new Date().toISOString(),
     feature: data.feature,
     model: data.model,

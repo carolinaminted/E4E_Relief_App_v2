@@ -218,45 +218,9 @@ class TokenEventsRepo implements ITokenEventsRepo {
         return { id: docRef.id, ...event };
     }
 
-    async getEventsForFund(options: { fundCode: string; filters: TokenUsageFilters; uid?: string; }): Promise<TokenEvent[]> {
-        const { fundCode, filters, uid } = options;
-        
-        const queryConstraints = [where('fundCode', '==', fundCode)];
-
-        if (uid) {
-            queryConstraints.push(where('uid', '==', uid));
-        }
-        if (filters.dateRange.start) {
-            queryConstraints.push(where('timestamp', '>=', filters.dateRange.start));
-        }
-        if (filters.dateRange.end) {
-            const endDate = new Date(filters.dateRange.end);
-            endDate.setDate(endDate.getDate() + 1);
-            queryConstraints.push(where('timestamp', '<', endDate.toISOString().split('T')[0]));
-        }
-        
-        const q = query(this.eventsCol, ...queryConstraints);
-        const snapshot = await getDocs(q);
-
-        let events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TokenEvent));
-
-        // Client-side filtering for non-indexed fields
-        if (filters.feature !== 'all') {
-            events = events.filter(e => e.feature === filters.feature);
-        }
-        if (filters.model !== 'all') {
-            events = events.filter(e => e.model === filters.model);
-        }
-        if (filters.environment !== 'all') {
-            events = events.filter(e => e.environment === filters.environment);
-        }
-        if (filters.user !== 'all') {
-            events = events.filter(e => e.userId === filters.user);
-        }
-        if (filters.account !== 'all') {
-            events = events.filter(e => e.account === filters.account);
-        }
-        
+    async getAllEvents(): Promise<TokenEvent[]> {
+        const snapshot = await getDocs(this.eventsCol);
+        const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TokenEvent));
         // Sort client-side
         return events.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }

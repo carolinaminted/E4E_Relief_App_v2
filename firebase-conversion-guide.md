@@ -220,9 +220,8 @@ service cloud.firestore {
     match /tokenEvents/{eventId} {
       // A user can only create a token event log for themselves, preventing them from logging events on behalf of others.
       allow create: if isSelf(request.resource.data.uid);
-      // Only admins can read the analytics data from token events.
-      // Client-side code filters by fund, so a broad read permission is acceptable here and more robust.
-      allow read: if isAdmin();
+      // Allow any authenticated user to read the analytics data for the PoC phase.
+      allow read: if isAuthed();
       // No one can modify or delete event logs once created, ensuring data integrity for auditing.
       allow update, delete: if false;
     }

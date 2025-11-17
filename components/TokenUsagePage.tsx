@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import type { UserProfile, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, TokenUsageFilters, TokenEvent, ModelPricing } from '../types';
+import type { UserProfile, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, TokenEvent, ModelPricing } from '../types';
 import { tokenEventsRepo } from '../services/firestoreRepo';
 
-import { TokenUsageFilterModal } from './TokenUsageFilters';
 import { TopSessionChart, LastHourUsageChart, Last15MinutesUsageChart } from './TokenUsageCharts';
 import TokenUsageTable from './TokenUsageTable';
-import EligibilityIndicator from './EligibilityIndicator';
 
 interface TokenUsagePageProps {
   navigate: (page: 'fundPortal') => void;
@@ -37,16 +35,6 @@ const CardLoader: React.FC = () => (
 const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }) => {
   const [isFetching, setIsFetching] = useState(true);
   const [allEvents, setAllEvents] = useState<TokenEvent[]>([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-
-  const [filters, setFilters] = useState<TokenUsageFilters>({
-    account: 'all',
-    dateRange: { start: '', end: '' },
-    feature: 'all',
-    user: 'all',
-    model: 'all',
-    environment: 'all',
-  });
 
   const [openSections, setOpenSections] = useState(() => {
     const saved = localStorage.getItem('tokenUsagePage_openSections');
@@ -70,11 +58,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   const fetchData = useCallback(async () => {
     setIsFetching(true);
     try {
-        const events = await tokenEventsRepo.getEventsForFund({
-          fundCode: currentUser.fundCode,
-          filters,
-          uid: currentUser.role === 'Admin' ? undefined : currentUser.uid,
-        });
+        const events = await tokenEventsRepo.getAllEvents();
         setAllEvents(events);
     } catch (error) {
         console.error("Failed to fetch token analytics:", error);
@@ -82,21 +66,11 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     } finally {
         setIsFetching(false);
     }
-  }, [filters, currentUser.fundCode, currentUser.uid, currentUser.role]);
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const filterOptions = useMemo(() => {
-      const eventsToFilter = allEvents;
-      const features = [...new Set(eventsToFilter.map(e => e.feature))];
-      const models = [...new Set(eventsToFilter.map(e => e.model))];
-      const environments = [...new Set(eventsToFilter.map(e => e.environment))];
-      const users = [...new Set(eventsToFilter.map(e => e.userId))];
-      const accounts = [...new Set(eventsToFilter.map(e => e.account))];
-      return { features, models, environments, users, accounts };
-  }, [allEvents]);
 
   const tableData = useMemo((): TokenUsageTableRow[] => {
     const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
@@ -113,7 +87,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                 day: 'numeric',
                 year: 'numeric'
             });
-            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0 };
+            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0, userName: event.userName, fundCode: event.fundCode };
         }
         const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
         const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);
@@ -209,10 +183,12 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
   const handleExportCSV = () => {
     if (tableData.length === 0) return;
-    const headers = ['User', 'Date', 'Session ID', 'Feature', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
+    const headers = ['User Name', 'Email', 'Fund', 'Date', 'Session ID', 'Feature', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
     const rows = tableData.map(row => 
       [
+        `"${row.userName}"`,
         row.user,
+        row.fundCode,
         row.date,
         row.session,
         row.feature,
@@ -248,39 +224,22 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
             </button>
             <div className="text-center">
               <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Token Usage</h1>
-              {currentUser && (
-                <div className="mt-2 flex flex-col items-center gap-2">
-                  <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
-                  <EligibilityIndicator 
-                    cvStatus={currentUser.classVerificationStatus} 
-                  />
-                </div>
-              )}
+              <p className="text-lg text-gray-300 mt-2">All token usage across all funds</p>
           </div>
         </div>
 
         <div className="flex justify-between items-center mb-4 py-2 border-y border-[#005ca0]">
-            <div className="flex items-center gap-2">
-                <button 
-                    onClick={() => setIsFilterModalOpen(true)} 
-                    className="bg-[#004b8d] hover:bg-[#005ca0] text-white font-semibold p-2 rounded-md text-sm transition-colors duration-200 border border-[#005ca0]"
-                    aria-label="Open filters"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                </button>
-                <button 
-                    onClick={fetchData} 
-                    className="bg-[#004b8d] hover:bg-[#005ca0] text-white font-semibold p-2 rounded-md text-sm transition-colors duration-200 flex items-center justify-center border border-[#005ca0] disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Refresh data"
-                    disabled={isFetching}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-500 ${isFetching ? 'animate-spin' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                    </svg>
-                </button>
-            </div>
+            <button 
+                onClick={fetchData} 
+                className="bg-[#004b8d] hover:bg-[#005ca0] text-white font-semibold p-2 rounded-md text-sm transition-colors duration-200 flex items-center justify-center border border-[#005ca0] disabled:opacity-50 disabled:cursor-not-allowed gap-2"
+                aria-label="Refresh data"
+                disabled={isFetching}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-500 ${isFetching ? 'animate-spin' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+                <span>{isFetching ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
             
             <div>
                 <button 
@@ -295,8 +254,6 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         </div>
         
         <div className="space-y-4">
-            <TokenUsageFilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} filters={filters} setFilters={setFilters} filterOptions={filterOptions} />
-            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
                     <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Cost (USD)</h3>
