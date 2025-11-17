@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage, ApplicationFormData } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage, ApplicationFormData, Expense } from './types';
 import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
@@ -617,36 +617,114 @@ function App() {
     setPage('submissionSuccess');
   }, [currentUser, authState.claims.admin, activeFund]);
 
-  const handleDraftUpdate = useCallback((draft: Partial<ApplicationFormData>) => {
+  const handleDraftUpdate = useCallback((partialDraft: Partial<ApplicationFormData>) => {
     if (!currentUser) return;
-    const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
-    try {
-        localStorage.setItem(draftKey, JSON.stringify(draft));
-        setApplicationDraft(draft);
-    } catch (error) {
-        console.error("Could not save application draft:", error);
-    }
+    
+    setApplicationDraft(prevDraft => {
+        // Deep merge the new partial draft into the previous state
+        const newDraft: Partial<ApplicationFormData> = {
+            ...prevDraft,
+            ...partialDraft,
+            profileData: {
+                ...(prevDraft?.profileData || {}),
+                ...(partialDraft.profileData || {}),
+            } as UserProfile,
+            eventData: {
+                ...(prevDraft?.eventData || {}),
+                ...(partialDraft.eventData || {}),
+            } as EventData,
+            agreementData: {
+                ...(prevDraft?.agreementData || {}),
+                ...(partialDraft.agreementData || {}),
+            },
+        };
+
+        const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
+        try {
+            localStorage.setItem(draftKey, JSON.stringify(newDraft));
+        } catch (error) {
+            console.error("Could not save application draft:", error);
+        }
+        return newDraft;
+    });
   }, [currentUser]);
 
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     if (!currentUser) return;
     console.log(`Executing tool: ${functionName}`, args);
 
-    const currentDraft = applicationDraft || {};
-    const newDraft = { ...currentDraft };
+    const newDraft: Partial<ApplicationFormData> = {};
 
     if (functionName === 'updateUserProfile') {
-        const prevProfile: Partial<UserProfile> = newDraft.profileData || {};
-        const newProfile = { ...prevProfile, ...args };
+        const profileUpdates: Partial<UserProfile> = { ...args };
         if (args.primaryAddress) {
-            newProfile.primaryAddress = { ...(prevProfile.primaryAddress || {}), ...args.primaryAddress };
+            profileUpdates.primaryAddress = { ...(applicationDraft?.profileData?.primaryAddress || {}), ...args.primaryAddress };
         }
-        newDraft.profileData = newProfile as UserProfile;
+        // FIX: Type 'Partial<UserProfile>' is not assignable to type 'UserProfile'.
+        // Create a full UserProfile object by merging with the current user and draft data.
+        newDraft.profileData = {
+            ...currentUser,
+            ...applicationDraft?.profileData,
+            ...profileUpdates,
+        };
     }
 
     if (functionName === 'startOrUpdateApplicationDraft') {
-        const prevEventData: Partial<EventData> = newDraft.eventData || {};
-        newDraft.eventData = { ...prevEventData, ...args };
+        // FIX: The `eventData` property expects a full `EventData` object. Create one by merging
+        // the partial updates from the AI with default values and the existing draft data.
+        const eventUpdates: Partial<EventData> = { ...args };
+        newDraft.eventData = {
+            event: '',
+            eventDate: '',
+            evacuated: '',
+            powerLoss: '',
+            requestedAmount: 0,
+            expenses: [],
+            ...applicationDraft?.eventData,
+            ...eventUpdates
+        };
+    }
+
+    if (functionName === 'addOrUpdateExpense') {
+        const prevEventData = applicationDraft?.eventData || {};
+        const existingExpenses: Expense[] = [...(prevEventData.expenses || [])];
+        const expenseIndex = existingExpenses.findIndex(e => e.type === args.type);
+        
+        if (expenseIndex > -1) {
+            existingExpenses[expenseIndex].amount = args.amount;
+        } else {
+            existingExpenses.push({
+                id: `exp-${args.type.replace(/\s+/g, '-')}`,
+                type: args.type,
+                amount: args.amount,
+                fileName: '',
+            });
+        }
+        // FIX: Type '{ expenses: Expense[]; }' is missing properties from type 'EventData'.
+        // Create a full EventData object by merging the expense update with default values and existing draft data.
+        const eventUpdates: Partial<EventData> = { expenses: existingExpenses };
+         newDraft.eventData = {
+            event: '',
+            eventDate: '',
+            evacuated: '',
+            powerLoss: '',
+            requestedAmount: 0,
+            expenses: [],
+            ...applicationDraft?.eventData,
+            ...eventUpdates
+        };
+    }
+
+    if (functionName === 'updateAgreements') {
+        // FIX: The `agreementData` property expects a full object. Create one by merging
+        // the partial updates with default values and existing draft data.
+        const agreementUpdates = { ...args };
+        newDraft.agreementData = {
+            shareStory: null,
+            receiveAdditionalInfo: null,
+            ...applicationDraft?.agreementData,
+            ...agreementUpdates,
+        };
     }
     
     handleDraftUpdate(newDraft);
@@ -696,6 +774,8 @@ function App() {
                     onChatbotAction={handleChatbotAction}
                     activeFund={activeFund}
                     applicationDraft={applicationDraft}
+                    onDraftUpdate={handleDraftUpdate}
+                    onSubmit={handleApplicationSubmit}
                 />;
       case 'profile':
         return <ProfilePage 

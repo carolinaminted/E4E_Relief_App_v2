@@ -1,8 +1,8 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
-import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage } from '../types';
+import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
-import { allEventTypes, employmentTypes, languages } from '../data/appData';
+import { allEventTypes, employmentTypes, languages, expenseTypes } from '../data/appData';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -89,7 +89,31 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
       powerLoss: { type: Type.STRING, description: "Whether the user lost power for more than 4 hours.", enum: ['Yes', 'No'] },
       powerLossDays: { type: Type.NUMBER, description: "The number of days the user was without power." },
       additionalDetails: { type: Type.STRING, description: "Any additional details provided by the user about their situation." },
-      requestedAmount: { type: Type.NUMBER, description: 'The amount of financial relief the user is requesting.' },
+    },
+  },
+};
+
+const addOrUpdateExpenseTool: FunctionDeclaration = {
+  name: 'addOrUpdateExpense',
+  description: 'Adds a new expense item or updates the amount for an existing expense type.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+        type: { type: Type.STRING, description: "The type of expense.", enum: expenseTypes },
+        amount: { type: Type.NUMBER, description: "The cost of the expense." },
+    },
+    required: ['type', 'amount'],
+  },
+};
+
+const updateAgreementsTool: FunctionDeclaration = {
+  name: 'updateAgreements',
+  description: "Updates the user's agreement choices for the application.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+        shareStory: { type: Type.BOOLEAN, description: "User's choice to share their story." },
+        receiveAdditionalInfo: { type: Type.BOOLEAN, description: "User's choice to receive additional info." },
     },
   },
 };
@@ -134,24 +158,25 @@ const getAIApplyContext = (userProfile: UserProfile | null, applicationDraft: Pa
     let dynamicContext = `
 You are the E4E Relief AI assistant, with a special focus for this page.
 
-Your GOAL is to help the user complete their application by having a natural conversation to fill in the 'Missing Information' below.
+Your GOAL is to help the user complete their application by having a natural conversation to fill in the 'Missing Information' below, section by section.
 
-**IMPORTANT**: The list of 'Missing Information' is dynamic. Answering one question (e.g., confirming they evacuated) may reveal new, more specific questions that need to be answered. Always refer to the most up-to-date list I provide in each turn to determine the next logical question to ask.
+**IMPORTANT**: The application has multiple sections: Additional Details, Event Details, Expenses, and Agreements. You must complete them IN ORDER. Do not ask for expenses until all event details are known.
 
 **Your Process**:
 1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
-2.  **Act**: Use your tools (\`updateUserProfile\` or \`startOrUpdateApplicationDraft\`) to save ALL the information you can gather from the user's message in a single turn.
+2.  **Act**: Use your tools (\`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, \`updateAgreements\`) to save ALL the information you can gather from the user's message in a single turn.
 3.  **Confirm**: After a successful tool call, briefly confirm what you saved.
-4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing. Do NOT ask for information that is already known.
-5.  **Guide**: If a user asks a question outside of this scope, gently guide them back to completing the application.
-6.  **Complete**: Once all information is gathered, inform the user they are ready for the next step.
+4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing from the CURRENT section.
+5.  **Transition**: Once a section is complete, tell the user you will now move on to the next section (e.g., "Great, that's all for the event details. Now let's talk about your expenses.").
+6.  **Complete**: Only when the 'Missing Information to Collect' list explicitly says 'All details are complete', you MUST instruct the user they are ready to click the 'Submit Application' button. Do not say the application is complete before then.
 
-You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft\` tools.
+You have access to the \`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, and \`updateAgreements\` tools.
 ---
 `;
     // Combine the base user profile with any data already entered in the current application draft.
     const combinedProfile = { ...userProfile, ...(applicationDraft?.profileData || {}) };
     const combinedEvent = { ...(applicationDraft?.eventData || {}) };
+    const combinedAgreements = { ...(applicationDraft?.agreementData || {}) };
 
     const currentProfileInfo: string[] = [];
     if (combinedProfile.employmentStartDate) currentProfileInfo.push(`Employment Start Date: ${combinedProfile.employmentStartDate}`);
@@ -173,6 +198,11 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
     if (combinedEvent.stayedWithFamilyOrFriend) currentEventInfo.push(`Stayed with Family/Friend: ${combinedEvent.stayedWithFamilyOrFriend}`);
     if (combinedEvent.evacuationStartDate) currentEventInfo.push(`Evacuation Start Date: ${combinedEvent.evacuationStartDate}`);
     if (combinedEvent.evacuationNights) currentEventInfo.push(`Evacuation Nights: ${combinedEvent.evacuationNights}`);
+    if (combinedEvent.expenses && combinedEvent.expenses.length > 0) {
+        const expenseList = combinedEvent.expenses.map(e => `${e.type}: $${e.amount}`).join('; ');
+        currentEventInfo.push(`Expenses: ${expenseList}`);
+    }
+
 
     if ([...currentProfileInfo, ...currentEventInfo].length > 0) {
         dynamicContext += `
@@ -206,11 +236,37 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
         if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
     }
 
-    if ([...missingProfileFields, ...missingEventFields].length > 0) {
+    const allBaseFieldsComplete = missingProfileFields.length === 0 && missingEventFields.length === 0;
+
+    const missingExpenseFields: string[] = [];
+    if (allBaseFieldsComplete) {
+        const knownExpenseTypes = new Set((combinedEvent.expenses || []).map(e => e.type));
+        expenseTypes.forEach(type => {
+            if (!knownExpenseTypes.has(type)) {
+                missingExpenseFields.push(`Amount for '${type}'`);
+            }
+        });
+    }
+
+    const allExpensesComplete = allBaseFieldsComplete && missingExpenseFields.length === 0;
+    
+    const missingAgreementFields: string[] = [];
+    if (allExpensesComplete) {
+        if (combinedAgreements.shareStory === null || combinedAgreements.shareStory === undefined) {
+            missingAgreementFields.push("If they are willing to share their story (shareStory: true or false)");
+        }
+        if (combinedAgreements.receiveAdditionalInfo === null || combinedAgreements.receiveAdditionalInfo === undefined) {
+            missingAgreementFields.push("If they are interested in receiving additional information (receiveAdditionalInfo: true or false)");
+        }
+    }
+
+    if ([...missingProfileFields, ...missingEventFields, ...missingExpenseFields, ...missingAgreementFields].length > 0) {
         dynamicContext += `
 **Missing Information to Collect**:
 ${missingProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingProfileFields.join('\n- ') : ''}
 ${missingEventFields.length > 0 ? `\n*Event Details*\n- ` + missingEventFields.join('\n- ') : ''}
+${missingExpenseFields.length > 0 ? `\n*Expense Details*\n- ` + missingExpenseFields.join('\n- ') : ''}
+${missingAgreementFields.length > 0 ? `\n*Final Agreements*\n- ` + missingAgreementFields.join('\n- ') : ''}
 `;
     } else {
         dynamicContext += `
@@ -248,7 +304,7 @@ export function createChatSession(
 
   if (context === 'aiApply') {
     dynamicContext = getAIApplyContext(userProfile, applicationDraft);
-    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
+    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool, addOrUpdateExpenseTool, updateAgreementsTool] }];
   } else {
     dynamicContext = applicationContext;
     tools = [{ functionDeclarations: [updateUserProfileTool] }];

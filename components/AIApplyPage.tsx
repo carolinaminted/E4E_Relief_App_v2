@@ -10,6 +10,8 @@ import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTrac
 import { useTranslation, Trans } from 'react-i18next';
 import Footer from './Footer';
 import AIApplyPreviewModal from './AIApplyPreviewModal';
+import AIApplyExpenses from './AIApplyExpenses';
+import AIApplyAgreements from './AIApplyAgreements';
 
 interface AIApplyPageProps {
   userProfile: UserProfile | null;
@@ -18,6 +20,8 @@ interface AIApplyPageProps {
   activeFund: Fund | null;
   navigate: (page: Page) => void;
   applicationDraft: Partial<ApplicationFormData> | null;
+  onDraftUpdate: (draft: Partial<ApplicationFormData>) => void;
+  onSubmit: (formData: ApplicationFormData) => Promise<void>;
 }
 
 const CheckmarkIcon: React.FC = () => (
@@ -25,13 +29,6 @@ const CheckmarkIcon: React.FC = () => (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
     </svg>
 );
-
-const CompletionCheckmarkIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-    </svg>
-);
-
 
 const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
@@ -50,11 +47,12 @@ const FirstTimeUserGuide: React.FC = () => (
 );
 
 
-const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: boolean; onToggle: () => void }> = ({ title, isComplete, isOpen, onToggle }) => (
+const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: boolean; onToggle: () => void, disabled?: boolean }> = ({ title, isComplete, isOpen, onToggle, disabled }) => (
     <button
         onClick={onToggle}
-        className="w-full flex justify-between items-center text-left py-3 px-4 bg-[#004b8d]/50 rounded-t-md border-b border-[#005ca0]"
+        className="w-full flex justify-between items-center text-left py-3 px-4 bg-[#004b8d]/50 rounded-t-md border-b border-[#005ca0] disabled:opacity-60 disabled:cursor-not-allowed"
         aria-expanded={isOpen}
+        disabled={disabled}
     >
         <div className="flex items-center gap-3">
             {isComplete && <CheckmarkIcon />}
@@ -66,13 +64,38 @@ const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: bool
     </button>
 );
 
+type SectionKey = 'additional' | 'event' | 'expenses' | 'agreements';
+
 const AIApplyPreviewPane: React.FC<{
     userProfile: UserProfile | null;
     applicationDraft: Partial<ApplicationFormData> | null;
-    baseChecklistItems: { key: string; label: string }[];
-    eventChecklistItems: any[];
-}> = ({ userProfile, applicationDraft, baseChecklistItems, eventChecklistItems }) => {
+    onDraftUpdate: (draft: Partial<ApplicationFormData>) => void;
+    onSubmit: (formData: ApplicationFormData) => Promise<void>;
+}> = ({ userProfile, applicationDraft, onDraftUpdate, onSubmit }) => {
     const { t } = useTranslation();
+
+    const baseChecklistItems = useMemo(() => [
+      { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
+      { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
+      { key: 'householdIncome', label: t('applyContactPage.householdIncome') },
+      { key: 'householdSize', label: t('applyContactPage.householdSize') },
+      { key: 'homeowner', label: t('applyContactPage.homeowner') },
+      { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
+    ], [t]);
+
+    const eventChecklistItems = useMemo(() => [
+        { key: 'event', label: t('applyEventPage.disasterLabel') },
+        { key: 'eventName', label: t('applyEventPage.errorEventName', 'What is the name of the event?'), condition: (data?: Partial<EventData>) => data?.event === 'Tropical Storm/Hurricane' },
+        { key: 'eventDate', label: t('applyEventPage.eventDateLabel') },
+        { key: 'powerLoss', label: t('applyEventPage.powerLossLabel') },
+        { key: 'powerLossDays', label: t('applyEventPage.powerLossDaysLabel'), condition: (data?: Partial<EventData>) => data?.powerLoss === 'Yes' },
+        { key: 'evacuated', label: t('applyEventPage.evacuatedLabel') },
+        { key: 'evacuatingFromPrimary', label: t('applyEventPage.evacuatingFromPrimaryLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'evacuationReason', label: t('applyEventPage.evacuationReasonLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' && data?.evacuatingFromPrimary === 'No' },
+        { key: 'stayedWithFamilyOrFriend', label: t('applyEventPage.stayedWithFamilyLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'evacuationStartDate', label: t('applyEventPage.evacuationStartDateLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+        { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
+    ], [t]);
 
     const isAdditionalDetailsComplete = useMemo(() => {
         if (!userProfile) return false;
@@ -102,23 +125,24 @@ const AIApplyPreviewPane: React.FC<{
             return value !== undefined && value !== null && value !== '';
         });
     }, [applicationDraft, eventChecklistItems]);
+
+    const isExpensesComplete = useMemo(() => {
+        const expenses = applicationDraft?.eventData?.expenses || [];
+        // Assuming all expense types are required.
+        return expenses.length === 3 && expenses.every(e => e.amount !== '' && Number(e.amount) > 0);
+    }, [applicationDraft]);
     
-    const [openSections, setOpenSections] = useState({
-        additional: !isAdditionalDetailsComplete,
-        event: !isEventDetailsComplete,
-    });
+    const getInitialSection = useCallback((): SectionKey => {
+        if (!isAdditionalDetailsComplete) return 'additional';
+        if (!isEventDetailsComplete) return 'event';
+        if (!isExpensesComplete) return 'expenses';
+        return 'agreements';
+    }, [isAdditionalDetailsComplete, isEventDetailsComplete, isExpensesComplete]);
 
-    useEffect(() => {
-        if (isAdditionalDetailsComplete && openSections.additional) {
-            setOpenSections(prev => ({ ...prev, additional: false }));
-        }
-        if (isEventDetailsComplete && openSections.event) {
-            setOpenSections(prev => ({ ...prev, event: false }));
-        }
-    }, [isAdditionalDetailsComplete, isEventDetailsComplete]);
+    const [openSection, setOpenSection] = useState<SectionKey | null>(getInitialSection());
 
-    const toggleSection = (section: 'additional' | 'event') => {
-        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    const toggleSection = (section: SectionKey) => {
+        setOpenSection(prev => (prev === section ? null : section));
     };
     
     const isProfileItemComplete = (key: string) => {
@@ -146,8 +170,8 @@ const AIApplyPreviewPane: React.FC<{
             <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                 {/* Additional Details Section */}
                 <div className="bg-[#004b8d]/30 rounded-md">
-                    <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSections.additional} onToggle={() => toggleSection('additional')} />
-                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.additional ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSection === 'additional'} onToggle={() => toggleSection('additional')} />
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'additional' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
                             {baseChecklistItems.map(item => (
                                 <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
@@ -163,9 +187,9 @@ const AIApplyPreviewPane: React.FC<{
                     </div>
                 </div>
                 {/* Event Details Section */}
-                <div className="bg-[#004b8d]/30 rounded-md">
-                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSections.event} onToggle={() => toggleSection('event')} />
-                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.event ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className={`bg-[#004b8d]/30 rounded-md ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
+                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAdditionalDetailsComplete} />
+                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
                             {visibleEventItems.map(item => (
                                 <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
@@ -180,35 +204,40 @@ const AIApplyPreviewPane: React.FC<{
                         </div>
                     </div>
                 </div>
+
+                {/* Expenses Section */}
+                <div className={`bg-[#004b8d]/30 rounded-md ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
+                    <SectionHeader title="Expenses" isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'expenses' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
+                        {userProfile && (
+                            <AIApplyExpenses
+                                formData={applicationDraft?.eventData || {expenses: []} as EventData}
+                                userProfile={userProfile}
+                                updateFormData={(data) => onDraftUpdate({ eventData: data })}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {/* Agreements Section */}
+                <div className={`bg-[#004b8d]/30 rounded-md ${!isExpensesComplete ? 'opacity-50' : ''}`}>
+                    <SectionHeader title="Agreements & Submission" isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'agreements' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
+                        {userProfile && (
+                            <AIApplyAgreements
+                                formData={applicationDraft?.agreementData || { shareStory: null, receiveAdditionalInfo: null }}
+                                updateFormData={(data) => onDraftUpdate({ agreementData: data })}
+                                onSubmit={() => onSubmit(applicationDraft as ApplicationFormData)}
+                            />
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
-
-const CompletionView: React.FC<{ onNext: () => void }> = ({ onNext }) => {
-    const { t } = useTranslation();
-    return (
-        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-8 flex-1 justify-center items-center text-center">
-            <CompletionCheckmarkIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4">
-                Application Almost Complete!
-            </h2>
-            <p className="text-gray-300 mb-6">
-                You have answered all the initial questions. Please proceed to the next step to add your expenses.
-            </p>
-            <button
-                onClick={onNext}
-                className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
-            >
-                {t('common.next')}: Add Expenses
-            </button>
-        </div>
-    );
-};
-
-
-const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft }) => {
+const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -216,15 +245,12 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const chatSessionRef = useRef<Chat | null>(null);
   const chatTokenSessionIdRef = useRef<string | null>(null);
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(() => {
-    // Check if we are in a browser environment
     if (typeof window === 'undefined') {
-        return true; // Default to 'interacted' on server or non-browser envs
-    }
-    // On desktop, the preview pane is visible, so this feature is not needed.
-    if (window.innerWidth >= 768) { // md breakpoint in tailwind
         return true;
     }
-    // On mobile, check session storage
+    if (window.innerWidth >= 768) {
+        return true;
+    }
     return sessionStorage.getItem('ai-apply-preview-interacted') === 'true';
   });
   const initDoneForUser = useRef<string | null>(null);
@@ -287,7 +313,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         let totalInputTokens = estimateTokens(userInput);
         let totalOutputTokens = 0;
 
-        // First API call
         const response1 = await chatSessionRef.current.sendMessage({ message: userInput });
         
         const text1 = response1.text;
@@ -298,7 +323,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             totalOutputTokens += estimateTokens(text1);
         }
 
-        // If the model returns function calls, execute them and send back the results
         if (functionCalls && functionCalls.length > 0) {
             totalOutputTokens += estimateTokens(JSON.stringify(functionCalls));
 
@@ -309,13 +333,10 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             
             totalInputTokens += estimateTokens(JSON.stringify(functionResponses));
             
-            // Second API call
             const response2 = await chatSessionRef.current.sendMessage({ message: functionResponses });
             const text2 = response2.text;
 
             if (text2) {
-                // If there was already a text response from the first call, append to that message bubble.
-                // Otherwise, create a new message bubble.
                 if (text1) {
                     setMessages(prev => {
                         const lastMessage = prev[prev.length - 1];
@@ -336,7 +357,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             }
         }
 
-        // Log the aggregated event
         if (chatTokenSessionIdRef.current) {
             logTokenEvent({
                 feature: 'AI Apply Chat',
@@ -367,63 +387,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     setIsPreviewModalOpen(true);
   }, [hasInteractedWithPreview]);
 
-  const baseProfileChecklistItems = useMemo(() => [
-      { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
-      { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
-      { key: 'householdIncome', label: t('applyContactPage.householdIncome') },
-      { key: 'householdSize', label: t('applyContactPage.householdSize') },
-      { key: 'homeowner', label: t('applyContactPage.homeowner') },
-      { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
-  ], [t]);
-
-  const eventChecklistItems = useMemo(() => [
-      { key: 'event', label: t('applyEventPage.disasterLabel') },
-      { key: 'eventName', label: t('applyEventPage.errorEventName', 'What is the name of the event?'), condition: (data?: Partial<EventData>) => data?.event === 'Tropical Storm/Hurricane' },
-      { key: 'eventDate', label: t('applyEventPage.eventDateLabel') },
-      { key: 'powerLoss', label: t('applyEventPage.powerLossLabel') },
-      { key: 'powerLossDays', label: t('applyEventPage.powerLossDaysLabel'), condition: (data?: Partial<EventData>) => data?.powerLoss === 'Yes' },
-      { key: 'evacuated', label: t('applyEventPage.evacuatedLabel') },
-      { key: 'evacuatingFromPrimary', label: t('applyEventPage.evacuatingFromPrimaryLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-      { key: 'evacuationReason', label: t('applyEventPage.evacuationReasonLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' && data?.evacuatingFromPrimary === 'No' },
-      { key: 'stayedWithFamilyOrFriend', label: t('applyEventPage.stayedWithFamilyLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-      { key: 'evacuationStartDate', label: t('applyEventPage.evacuationStartDateLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-      { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
-  ], [t]);
-  
-  const isAdditionalDetailsComplete = useMemo(() => {
-    if (!userProfile) return false;
-    return baseProfileChecklistItems.every(item => {
-        const key = item.key as keyof UserProfile;
-        const draftValue = applicationDraft?.profileData?.[key];
-        if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
-        
-        const profileValue = userProfile?.[key];
-        return profileValue !== undefined && profileValue !== null && profileValue !== '';
-    });
-  }, [userProfile, applicationDraft, baseProfileChecklistItems]);
-
-  const isEventDetailsComplete = useMemo(() => {
-    const eventData = applicationDraft?.eventData;
-    if (!eventData) return false;
-
-    const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(eventData));
-    if (visibleEventItems.length === 0 && !eventData.event) return false;
-
-    return visibleEventItems.every(item => {
-        const key = item.key as keyof EventData;
-        const value = eventData[key];
-
-        if (key === 'powerLossDays' || key === 'evacuationNights') {
-            return typeof value === 'number' && value > 0;
-        }
-        return value !== undefined && value !== null && value !== '';
-    });
-  }, [applicationDraft, eventChecklistItems]);
-
-  const isApplicationReadyForExpenses = isAdditionalDetailsComplete && isEventDetailsComplete;
-
-  const handleNext = () => navigate('applyExpenses');
-
   return (
     <>
     <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
@@ -442,31 +405,24 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                 <div className="flex-1 flex flex-col min-h-0">
                 
                     {/* --- MOBILE VIEW --- */}
-                    <div className="md:hidden flex-1 flex flex-col min-h-0 flip-container">
-                        <div className={`flipper w-full h-full ${isApplicationReadyForExpenses ? 'is-flipped' : ''}`}>
-                            <main className="flip-front w-full h-full flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
-                                <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
-                                    <div>
-                                        <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
-                                        <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
-                                    </div>
-                                </header>
-                                <div className="flex-1 overflow-hidden flex flex-col">
-                                    <ChatWindow messages={messages} isLoading={isLoading} />
+                    <div className="md:hidden flex-1 flex flex-col min-h-0">
+                        <main className="w-full h-full flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
+                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                                <div>
+                                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
+                                    <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
                                 </div>
-                                <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                                    <div className="relative">
-                                        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!hasInteractedWithPreview} />
-                                        {!hasInteractedWithPreview && <FirstTimeUserGuide />}
-                                    </div>
-                                </footer>
-                            </main>
-                            <div className="flip-back w-full h-full">
-                                <div className="p-4 h-full">
-                                    <CompletionView onNext={handleNext} />
-                                </div>
+                            </header>
+                            <div className="flex-1 overflow-hidden flex flex-col">
+                                <ChatWindow messages={messages} isLoading={isLoading} />
                             </div>
-                        </div>
+                            <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                                <div className="relative">
+                                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!hasInteractedWithPreview} />
+                                    {!hasInteractedWithPreview && <FirstTimeUserGuide />}
+                                </div>
+                            </footer>
+                        </main>
                     </div>
 
                     {/* --- DESKTOP VIEW --- */}
@@ -486,16 +442,12 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                             </footer>
                         </main>
                         <aside className="w-2/5 flex flex-col min-h-0">
-                             {isApplicationReadyForExpenses ? (
-                                <CompletionView onNext={handleNext} />
-                            ) : (
-                                <AIApplyPreviewPane
-                                    userProfile={userProfile}
-                                    applicationDraft={applicationDraft}
-                                    baseChecklistItems={baseProfileChecklistItems}
-                                    eventChecklistItems={eventChecklistItems}
-                                />
-                            )}
+                             <AIApplyPreviewPane
+                                userProfile={userProfile}
+                                applicationDraft={applicationDraft}
+                                onDraftUpdate={onDraftUpdate}
+                                onSubmit={onSubmit}
+                            />
                         </aside>
                     </div>
                 </div>
@@ -510,8 +462,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             <AIApplyPreviewPane
                 userProfile={userProfile}
                 applicationDraft={applicationDraft}
-                baseChecklistItems={baseProfileChecklistItems}
-                eventChecklistItems={eventChecklistItems}
+                onDraftUpdate={onDraftUpdate}
+                onSubmit={onSubmit}
             />
         </AIApplyPreviewModal>
     )}
