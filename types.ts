@@ -75,7 +75,7 @@ export interface ActiveIdentity {
  * A centralized type for all possible page routes in the application.
  * Using a single type ensures type-safe navigation and prevents magic strings.
  */
-export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications' | 'myProxyApplications' | 'forgotPassword' | 'reliefQueue';
+export type Page = 'login' | 'register' | 'home' | 'apply' | 'profile' | 'support' | 'submissionSuccess' | 'tokenUsage' | 'faq' | 'paymentOptions' | 'donate' | 'classVerification' | 'eligibility' | 'fundPortal' | 'ticketing' | 'programDetails' | 'proxy' | 'liveDashboard' | 'myApplications' | 'myProxyApplications' | 'forgotPassword' | 'reliefQueue' | 'aiApply' | 'applyExpenses';
 
 
 /**
@@ -242,8 +242,9 @@ export interface TokenEvent {
   sessionId: string; // Groups multiple calls within a single user interaction (e.g., one chat conversation).
   uid: string; // The user's Firebase Auth UID.
   userId: string; // The user's email, for easier filtering in analytics.
+  userName: string; // The user's full name, denormalized for easier display.
   timestamp: string; // ISO 8601 timestamp string.
-  feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision';
+  feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision' | 'AI Apply Chat';
   model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
   inputTokens: number;
   cachedInputTokens: number;
@@ -259,10 +260,13 @@ export interface TokenEvent {
  * This is a client-side derived type for display purposes.
  */
 export interface TokenUsageTableRow {
-  user: string;
+  user: string; // email
+  userName: string;
   date: string;
   session: string;
   feature: string;
+  fundCode: string;
+  fundName: string;
   input: number;
   cached: number;
   output: number;
@@ -309,5 +313,16 @@ export interface DailyUsageData {
  */
 export interface LastHourUsageDataPoint {
   timestamp: string; // ISO 8601 timestamp string.
+  totalTokens: number;
+}
+
+/**
+ * Represents aggregated token usage data for the user with the highest token count.
+ */
+export interface TopUserData {
+  userName: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
   totalTokens: number;
 }

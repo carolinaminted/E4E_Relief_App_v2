@@ -11,7 +11,12 @@
     "success": "Éxito",
     "yes": "Sí",
     "no": "No",
-    "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora."
+    "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora.",
+    "close": "Cerrar"
+  },
+  "eligibilityIndicator": {
+    "eligibleMessage": "Estás verificado para este programa de fondos de ayuda. Solicitar ayuda no garantiza que se desembolsará un pago.",
+    "verificationNeededMessage": "Visita 'Identidades del Fondo' en tu página de Perfil para verificarte y ser elegible para la ayuda."
   },
   "app": {
     "loading": "Cargando...",
@@ -22,6 +27,7 @@
     "home": "Inicio",
     "profile": "Perfil",
     "apply": "Solicitar",
+    "aiApply": "Solicitud IA",
     "support": "Soporte",
     "donate": "Donar",
     "fundPortal": "Fondo",
@@ -66,6 +72,14 @@
     "applyTooltipVerification": "Se requiere verificación de clase para acceder a las solicitudes.",
     "applyTooltipLimits": "Has alcanzado los límites de tu subvención."
   },
+  "aiApplyPage": {
+    "title": "Solicitud con IA",
+    "backToHome": "Volver a Inicio",
+    "greeting": "¡Hola! Por favor, revisa las preguntas de la solicitud. Envíame un mensaje cuando estés listo.",
+    "additionalDetailsPreviewTitle": "Vista Previa de Detalles Adicionales",
+    "eventDetailsPreviewTitle": "Vista Previa de Detalles del Evento",
+    "previewSubtitle": "Esta lista se actualiza a medida que respondes al asistente."
+  },
   "applyPage": {
     "title": "Solicitar Ayuda",
     "eligibility": "Elegible para solicitar ayuda",
@@ -79,6 +93,7 @@
   "applyContactPage": {
     "getStartedTitle": "Empecemos",
     "contactInfoTitle": "Información de Contacto",
+    "addresses": "Direcciones",
     "primaryAddressTitle": "Dirección Principal",
     "mailingAddressTitle": "Dirección Postal",
     "additionalDetailsTitle": "Detalles Adicionales",
@@ -130,7 +145,9 @@
     "errorEvacuationNights": "Por favor, ingresa un número válido de noches.",
     "errorPowerLoss": "Por favor, responde si perdiste la electricidad.",
     "errorPowerLossDays": "Por favor, ingresa un número válido de días.",
-    "errorRequestedAmount": "La cantidad solicitada debe ser mayor que cero."
+    "errorRequestedAmount": "La cantidad solicitada debe ser mayor que cero.",
+    "errorEventName": "Por favor, selecciona el nombre de la tormenta.",
+    "errorEvacuationReason": "Por favor, proporciona un motivo para la evacuación."
   },
   "applyExpensesPage": {
     "title": "Gastos",
@@ -201,6 +218,7 @@
     "email": "Correo Electrónico",
     "mobileNumber": "Número de Móvil",
     "collapse": "Ocultar",
+    "addresses": "Direcciones",
     "primaryAddressTitle": "Dirección Principal",
     "mailingAddressTitle": "Dirección Postal",
     "mailingAddressSame": "¿La dirección postal es la misma que la principal?",
@@ -218,7 +236,9 @@
     "errorCorrection": "Por favor, corrige los errores resaltados antes de guardar.",
     "saveButton": "Guardar Cambios",
     "removeIdentityConfirm": "¿Estás seguro de que quieres eliminar la identidad para {{fundName}}?",
-    "cannotRemoveActive": "No puedes eliminar tu identidad activa."
+    "cannotRemoveActive": "No puedes eliminar tu identidad activa.",
+    "viewMailingAddress": "Ver Dirección Postal",
+    "viewPrimaryAddress": "Ver Dirección Principal"
   },
   "myApplicationsPage": {
     "title": "Mis Solicitudes",
@@ -474,5 +494,29 @@
     "intlPartnersTitle": "Información del Socio de Pago",
     "converaGuide": "Guía de Convera",
     "tipaltiGuide": "Guía de Tipalti"
+  },
+  "validation": {
+    "required": "Por favor, rellena este campo.",
+    "firstNameRequired": "El nombre es obligatorio.",
+    "lastNameRequired": "El apellido es obligatorio.",
+    "mobileNumberRequired": "El número de móvil es obligatorio.",
+    "mobileNumberInvalid": "Por favor, introduce un número de teléfono válido (al menos 7 dígitos).",
+    "countryRequired": "El país es obligatorio.",
+    "street1Required": "La calle 1 es obligatoria.",
+    "cityRequired": "La ciudad es obligatoria.",
+    "stateRequired": "El estado es obligatorio.",
+    "zipRequired": "El código postal es obligatorio.",
+    "employmentStartDateRequired": "La fecha de inicio del empleo es obligatoria.",
+    "eligibilityTypeRequired": "El tipo de elegibilidad es obligatorio.",
+    "householdIncomeRequired": "El ingreso del hogar es obligatorio.",
+    "householdSizeRequired": "El tamaño del hogar es obligatorio.",
+    "homeownerRequired": "El estado de propietario es obligatorio.",
+    "mailingAddressSameRequired": "Por favor, selecciona una opción para la dirección postal.",
+    "ackPoliciesRequired": "Debes aceptar las políticas.",
+    "commConsentRequired": "Debes dar tu consentimiento para las comunicaciones.",
+    "infoCorrectRequired": "Debes confirmar que tu información es correcta.",
+    "applicantFirstNameRequired": "El nombre del solicitante es obligatorio.",
+    "applicantLastNameRequired": "El apellido del solicitante es obligatorio.",
+    "applicantEmailRequired": "Se requiere un correo electrónico válido del solicitante."
   }
 }

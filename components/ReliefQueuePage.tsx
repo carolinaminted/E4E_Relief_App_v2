@@ -1,47 +1,10 @@
 import React, { useState } from 'react';
 // FIX: Changed import for `Fund` type to its source file `data/fundData` to resolve export error.
-import type { Page, UserProfile, ClassVerificationStatus } from '../types';
+import type { Page, UserProfile } from '../types';
 import type { Fund } from '../data/fundData';
 import { useTranslation } from 'react-i18next';
 import { FormInput } from './FormControls';
-
-// A copy of the EligibilityIndicator component, scoped to this file.
-const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
-    const { t } = useTranslation();
-    const hasPassedCV = cvStatus === 'passed';
-
-    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const passedClasses = "bg-green-800/50 text-green-300";
-    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
-
-    const handleClick = () => {
-        if (!hasPassedCV) {
-             console.log("[Telemetry] verification_needed_cta_clicked_from_relief_queue");
-             onClick();
-        }
-    };
-
-    const text = hasPassedCV ? t('applyPage.eligibility') : t('applyPage.verificationNeeded');
-    
-    return (
-        <button
-            onClick={handleClick}
-            disabled={hasPassedCV}
-            role={hasPassedCV ? 'status' : 'button'}
-            aria-label={text}
-            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
-        >
-            {!hasPassedCV && (
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-            )}
-            <span>{text}</span>
-        </button>
-    );
-};
-
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface ReliefQueuePageProps {
   userProfile: UserProfile;
@@ -89,7 +52,7 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
         </div>
 
         <div className="flex justify-center">
-            <EligibilityIndicator cvStatus={userProfile.classVerificationStatus} onClick={() => setIsReattempting(true)} />
+            <EligibilityIndicator cvStatus={userProfile.classVerificationStatus} />
         </div>
 
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-left">

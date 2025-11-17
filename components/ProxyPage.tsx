@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
+import type { Application, UserProfile, ApplicationFormData, EventData } from '../types';
 import type { Fund } from '../data/fundData';
 import ApplyProxyContactPage from './ApplyProxyContactPage';
 import ApplyEventPage from './ApplyEventPage';
 import ApplyExpensesPage from './ApplyExpensesPage';
 import ApplyTermsPage from './ApplyTermsPage';
 import ApplicationDetailModal from './ApplicationDetailModal';
+import EligibilityIndicator from './EligibilityIndicator';
 
 type Page = 'home' | 'fundPortal' | 'profile';
 
@@ -16,44 +17,8 @@ interface ProxyApplyPageProps {
   userProfile: UserProfile; // This is the admin's profile
   onAddIdentity: (fundCode: string) => void;
   mainRef: React.RefObject<HTMLElement>;
-  // FIX: Added missing activeFund prop.
   activeFund: Fund | null;
 }
-
-const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
-    const hasPassedCV = cvStatus === 'passed';
-
-    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const passedClasses = "bg-green-800/50 text-green-300";
-    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
-
-    const handleClick = () => {
-        if (!hasPassedCV) {
-             console.log("[Telemetry] verification_needed_cta_clicked_from_proxy_page");
-             onClick();
-        }
-    };
-
-    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
-    
-    return (
-        <button
-            onClick={handleClick}
-            disabled={hasPassedCV}
-            role={hasPassedCV ? 'status' : 'button'}
-            aria-label={text}
-            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
-        >
-            {!hasPassedCV && (
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-            )}
-            <span>{text}</span>
-        </button>
-    );
-};
 
 const statusStyles: Record<Application['status'], string> = {
     Submitted: 'text-[#ff8400]',
@@ -81,7 +46,6 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
 
     const [formData, setFormData] = useState<ApplicationFormData>(() => {
         const blankProfile: UserProfile = {
-            // FIX: Added missing 'uid' and 'activeIdentityId' properties to satisfy the UserProfile type.
             uid: '',
             activeIdentityId: null,
             identityId: '',
@@ -101,7 +65,6 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
             infoCorrect: false,
             fundCode: '',
             classVerificationStatus: 'pending',
-            // FIX: Changed 'Inactive' to 'Not Eligible' to match the EligibilityStatus type definition.
             eligibilityStatus: 'Not Eligible',
             role: 'User',
         };
@@ -200,10 +163,8 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                             onAIParsed={handleAIParsedData} 
                         />;
             case 2:
-                // FIX: Pass the required 'activeFund' prop to ApplyEventPage.
                 return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} activeFund={activeFund} />;
             case 3:
-                // FIX: Pass the required `userProfile` prop to ApplyExpensesPage.
                 return <ApplyExpensesPage userProfile={formData.profileData} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
             case 4:
                 return <ApplyTermsPage formData={formData.agreementData} updateFormData={updateAgreementData} prevStep={prevStep} onSubmit={handleFinalSubmit} />;
@@ -228,8 +189,7 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                         <div className="mt-2 flex flex-col items-center gap-2">
                             <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
                             <EligibilityIndicator 
-                                cvStatus={userProfile.classVerificationStatus} 
-                                onClick={() => onAddIdentity(userProfile.fundCode)} 
+                                cvStatus={userProfile.classVerificationStatus}
                             />
                         </div>
                     )}

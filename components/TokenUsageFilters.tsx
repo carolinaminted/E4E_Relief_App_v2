@@ -27,27 +27,6 @@ const FilterSelect: React.FC<{ label: string, value: string, onChange: (e: React
 );
 
 const FilterDate: React.FC<{ label: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }> = ({ label, value, onChange }) => {
-    const eventHandlers = {
-        onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
-            if (typeof e.target.showPicker === 'function') {
-                try {
-                    e.target.showPicker();
-                } catch (error) {
-                    console.error("Couldn't show date picker:", error);
-                }
-            }
-        },
-        onClick: (e: React.MouseEvent<HTMLInputElement>) => {
-            if (typeof (e.target as HTMLInputElement).showPicker === 'function') {
-                try {
-                    (e.target as HTMLInputElement).showPicker();
-                } catch (error) {
-                    console.error("Couldn't show date picker:", error);
-                }
-            }
-        }
-    };
-    
     return (
         <div className="flex-1 min-w-[150px]">
             <label className="block text-xs font-medium text-gray-300 mb-1">{label}</label>
@@ -55,7 +34,6 @@ const FilterDate: React.FC<{ label: string, value: string, onChange: (e: React.C
                 type="date" 
                 value={value} 
                 onChange={onChange} 
-                {...eventHandlers}
                 className="w-full bg-[#004b8d] border border-[#005ca0] rounded-md p-2 text-white focus:ring-2 focus:ring-[#ff8400] focus:border-[#ff8400]" 
             />
         </div>

@@ -33,7 +33,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
       aria-modal="true"
     >
       <div 
-        className="bg-[#004b8d] rounded-lg shadow-xl p-8 w-full max-w-lg m-4 relative border border-[#002a50]"
+        className="bg-[#004b8d] rounded-lg shadow-xl p-8 w-full max-w-lg m-4 relative border border-[#002a50] flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
@@ -45,52 +45,54 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-          {t('modals.applicationDetail.title')}
-        </h2>
-        <div className="space-y-4 text-white">
-          <div className="flex justify-between border-b border-[#002a50] pb-2">
-            <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.id')}</span>
-            <span className="font-mono">{application.id}</span>
-          </div>
-          {application.submittedBy && (
+        <div className="flex-shrink-0">
+            <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+            {t('modals.applicationDetail.title')}
+            </h2>
+        </div>
+        <div className="space-y-4 text-white overflow-y-auto pr-4 -mr-4 custom-scrollbar">
             <div className="flex justify-between border-b border-[#002a50] pb-2">
-              <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.submittedBy')}</span>
-              <span className="font-mono">{application.submittedBy}</span>
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.id')}</span>
+                <span className="font-mono">{application.id}</span>
             </div>
-          )}
-          <div className="flex justify-between border-b border-[#002a50] pb-2 items-center">
-            <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.status')}</span>
-            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[application.status]}`}>
-                {application.status}
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-[#002a50] pb-2">
-            <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.submittedDate')}</span>
-            <span>{new Date(application.submittedDate).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/New_York' })}</span>
-          </div>
-           <div className="flex justify-between border-b border-[#002a50] pb-2">
-            <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.decisionedDate')}</span>
-            <span>{application.decisionedDate}</span>
-          </div>
-          <div className="flex justify-between border-b border-[#002a50] pb-2">
-            <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.eventType')}</span>
-            <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{eventDisplay}</span>
-          </div>
-          <div className="flex justify-between pb-2 border-b border-[#002a50]">
-            <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.requestedAmount')}</span>
-            <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${application.requestedAmount.toFixed(2)}</span>
-          </div>
-           {application.reasons && application.reasons.length > 0 && (
-            <div className="pt-2">
-              <h3 className="font-semibold text-white opacity-70 mb-2">{t('modals.applicationDetail.reasons')}</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-300 bg-[#003a70]/50 p-3 rounded-md">
-                {application.reasons.map((reason, index) => (
-                  <li key={index}>{reason}</li>
-                ))}
-              </ul>
+            {application.submittedBy && (
+                <div className="flex justify-between border-b border-[#002a50] pb-2">
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.submittedBy')}</span>
+                <span className="font-mono">{application.submittedBy}</span>
+                </div>
+            )}
+            <div className="flex justify-between border-b border-[#002a50] pb-2 items-center">
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.status')}</span>
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[application.status]}`}>
+                    {application.status}
+                </span>
             </div>
-          )}
+            <div className="flex justify-between border-b border-[#002a50] pb-2">
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.submittedDate')}</span>
+                <span>{new Date(application.submittedDate).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/New_York' })}</span>
+            </div>
+            <div className="flex justify-between border-b border-[#002a50] pb-2">
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.decisionedDate')}</span>
+                <span>{application.decisionedDate}</span>
+            </div>
+            <div className="flex justify-between border-b border-[#002a50] pb-2">
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.eventType')}</span>
+                <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{eventDisplay}</span>
+            </div>
+            <div className="flex justify-between pb-2 border-b border-[#002a50]">
+                <span className="font-semibold text-white opacity-70">{t('modals.applicationDetail.requestedAmount')}</span>
+                <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${application.requestedAmount.toFixed(2)}</span>
+            </div>
+            {application.reasons && application.reasons.length > 0 && (
+                <div className="pt-2">
+                <h3 className="font-semibold text-white opacity-70 mb-2">{t('modals.applicationDetail.reasons')}</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-300 bg-[#003a70]/50 p-3 rounded-md">
+                    {application.reasons.map((reason, index) => (
+                    <li key={index}>{reason}</li>
+                    ))}
+                </ul>
+                </div>
+            )}
         </div>
       </div>
     </div>,

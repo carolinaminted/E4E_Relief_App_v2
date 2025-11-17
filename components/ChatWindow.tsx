@@ -27,11 +27,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
   }, [messages, isLoading]);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#004b8d]">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#004b8d] custom-scrollbar">
       {messages.map((msg, index) => (
         <ChatMessageBubble key={index} message={msg} />
       ))}
-      {isLoading && messages[messages.length - 1]?.role === "user" && <LoadingIndicator />}
+      {isLoading && <LoadingIndicator />}
     </div>
   );
 };

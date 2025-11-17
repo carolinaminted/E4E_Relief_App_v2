@@ -2,7 +2,7 @@ import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/g
 import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
-import { allEventTypes, employmentTypes } from '../data/appData';
+import { allEventTypes, employmentTypes, languages } from '../data/appData';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -60,6 +60,7 @@ const updateUserProfileTool: FunctionDeclaration = {
       householdIncome: { type: Type.NUMBER, description: 'The user\'s estimated annual household income as a number.' },
       householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
       homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
+      preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication.", enum: languages },
     },
   },
 };
@@ -129,6 +130,98 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 ---
 `;
 
+const getAIApplyContext = (userProfile: UserProfile | null, applicationDraft: Partial<ApplicationFormData> | null): string => {
+    let dynamicContext = `
+You are the E4E Relief AI assistant, with a special focus for this page.
+
+Your GOAL is to help the user complete their application by having a natural conversation to fill in the 'Missing Information' below.
+
+**IMPORTANT**: The list of 'Missing Information' is dynamic. Answering one question (e.g., confirming they evacuated) may reveal new, more specific questions that need to be answered. Always refer to the most up-to-date list I provide in each turn to determine the next logical question to ask.
+
+**Your Process**:
+1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
+2.  **Act**: Use your tools (\`updateUserProfile\` or \`startOrUpdateApplicationDraft\`) to save ALL the information you can gather from the user's message in a single turn.
+3.  **Confirm**: After a successful tool call, briefly confirm what you saved.
+4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing. Do NOT ask for information that is already known.
+5.  **Guide**: If a user asks a question outside of this scope, gently guide them back to completing the application.
+6.  **Complete**: Once all information is gathered, inform the user they are ready for the next step.
+
+You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft\` tools.
+---
+`;
+    // Combine the base user profile with any data already entered in the current application draft.
+    const combinedProfile = { ...userProfile, ...(applicationDraft?.profileData || {}) };
+    const combinedEvent = { ...(applicationDraft?.eventData || {}) };
+
+    const currentProfileInfo: string[] = [];
+    if (combinedProfile.employmentStartDate) currentProfileInfo.push(`Employment Start Date: ${combinedProfile.employmentStartDate}`);
+    if (combinedProfile.eligibilityType) currentProfileInfo.push(`Eligibility Type: ${combinedProfile.eligibilityType}`);
+    if (combinedProfile.householdIncome) currentProfileInfo.push(`Household Income: ${combinedProfile.householdIncome}`);
+    if (combinedProfile.householdSize) currentProfileInfo.push(`Household Size: ${combinedProfile.householdSize}`);
+    if (combinedProfile.homeowner) currentProfileInfo.push(`Homeowner: ${combinedProfile.homeowner}`);
+    if (combinedProfile.preferredLanguage) currentProfileInfo.push(`Preferred Language: ${combinedProfile.preferredLanguage}`);
+    
+    const currentEventInfo: string[] = [];
+    if (combinedEvent.event) currentEventInfo.push(`Event Type: ${combinedEvent.event}`);
+    if (combinedEvent.eventName) currentEventInfo.push(`Event Name: ${combinedEvent.eventName}`);
+    if (combinedEvent.eventDate) currentEventInfo.push(`Event Date: ${combinedEvent.eventDate}`);
+    if (combinedEvent.powerLoss) currentEventInfo.push(`Power Loss: ${combinedEvent.powerLoss}`);
+    if (combinedEvent.powerLossDays) currentEventInfo.push(`Power Loss Days: ${combinedEvent.powerLossDays}`);
+    if (combinedEvent.evacuated) currentEventInfo.push(`Evacuated: ${combinedEvent.evacuated}`);
+    if (combinedEvent.evacuatingFromPrimary) currentEventInfo.push(`Evacuating From Primary: ${combinedEvent.evacuatingFromPrimary}`);
+    if (combinedEvent.evacuationReason) currentEventInfo.push(`Evacuation Reason: Provided`);
+    if (combinedEvent.stayedWithFamilyOrFriend) currentEventInfo.push(`Stayed with Family/Friend: ${combinedEvent.stayedWithFamilyOrFriend}`);
+    if (combinedEvent.evacuationStartDate) currentEventInfo.push(`Evacuation Start Date: ${combinedEvent.evacuationStartDate}`);
+    if (combinedEvent.evacuationNights) currentEventInfo.push(`Evacuation Nights: ${combinedEvent.evacuationNights}`);
+
+    if ([...currentProfileInfo, ...currentEventInfo].length > 0) {
+        dynamicContext += `
+**Current Information Known**:
+${currentProfileInfo.length > 0 ? `\n*Profile Details*\n- ` + currentProfileInfo.join('\n- ') : ''}
+${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join('\n- ') : ''}
+---
+`;
+    }
+
+    const missingProfileFields: string[] = [];
+    if (!combinedProfile.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
+    if (!combinedProfile.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
+    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
+    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
+    if (!combinedProfile.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
+    if (!combinedProfile.preferredLanguage) missingProfileFields.push('Preferred Language');
+    
+    const missingEventFields: string[] = [];
+    if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
+    if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
+    if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
+    if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
+    if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
+    if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
+    if (combinedEvent.evacuated === 'Yes') {
+        if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
+        if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
+        if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
+        if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
+        if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+    }
+
+    if ([...missingProfileFields, ...missingEventFields].length > 0) {
+        dynamicContext += `
+**Missing Information to Collect**:
+${missingProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingProfileFields.join('\n- ') : ''}
+${missingEventFields.length > 0 ? `\n*Event Details*\n- ` + missingEventFields.join('\n- ') : ''}
+`;
+    } else {
+        dynamicContext += `
+**Missing Information to Collect**:
+- All details are complete.
+`;
+    }
+
+    return dynamicContext;
+};
+
 
 /**
  * Creates a new chat session with the Gemini model.
@@ -138,10 +231,28 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
  * @param activeFund - The configuration for the user's currently active fund.
  * @param applications - The user's past applications.
  * @param history - The recent chat history to seed the new session with.
+ * @param context - The context of the chat, determines the system prompt and tools used.
+ * @param applicationDraft - The current application draft, used for the 'aiApply' context.
  * @returns A `Chat` session object from the @google/genai SDK.
  */
-export function createChatSession(userProfile: UserProfile | null, activeFund: Fund | null, applications?: Application[], history?: ChatMessage[]): Chat {
-  let dynamicContext = applicationContext;
+export function createChatSession(
+    userProfile: UserProfile | null, 
+    activeFund: Fund | null, 
+    applications?: Application[], 
+    history?: ChatMessage[],
+    context: 'general' | 'aiApply' = 'general',
+    applicationDraft: Partial<ApplicationFormData> | null = null
+): Chat {
+  let dynamicContext;
+  let tools;
+
+  if (context === 'aiApply') {
+    dynamicContext = getAIApplyContext(userProfile, applicationDraft);
+    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
+  } else {
+    dynamicContext = applicationContext;
+    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
+  }
 
   // Personalize the chat experience by instructing the model to respond in the user's preferred language.
   if (userProfile && userProfile.preferredLanguage && userProfile.preferredLanguage.toLowerCase() !== 'english') {
@@ -215,8 +326,7 @@ ${applicationList}
     history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
-      // FIX: The 'tools' property must be inside the 'config' object.
-      tools: [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }],
+      tools: tools,
     },
   });
 }
@@ -400,6 +510,7 @@ const finalDecisionSchema = {
  * application data and the preliminary decision, asking it to act as a final reviewer.
  * @param appData - The raw application data.
  * @param preliminaryDecision - The output from the `evaluateApplicationEligibility` function.
+ * @param applicantProfile - The profile of the user for whom the application is being decided, for token logging.
  * @returns A final `EligibilityDecision` object, either from the AI or falling back to the preliminary one on error.
  */
 export async function getAIAssistedDecision(
@@ -408,7 +519,8 @@ export async function getAIAssistedDecision(
         currentTwelveMonthRemaining: number,
         currentLifetimeRemaining: number,
     },
-    preliminaryDecision: EligibilityDecision
+    preliminaryDecision: EligibilityDecision,
+    applicantProfile?: UserProfile | null
 ): Promise<EligibilityDecision> {
     // Critical safeguard: If the rules engine issued a hard denial, do not let the AI override it.
     // This prevents AI from approving an application that definitively breaks a core business rule.
@@ -460,7 +572,7 @@ export async function getAIAssistedDecision(
         });
         
         const outputTokens = estimateTokens(response.text);
-        logTokenEvent({ feature: 'Final Decision', model, inputTokens, outputTokens, sessionId });
+        logTokenEvent({ feature: 'Final Decision', model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
         const jsonString = response.text.trim();
         const aiResponse = JSON.parse(jsonString) as { finalDecision: 'Approved' | 'Denied', finalReason: string, finalAward: number };
@@ -514,9 +626,10 @@ const addressJsonSchema = {
  * Uses Gemini to parse an unstructured address string into a structured JSON object.
  * The prompt includes rules for standardization (e.g., casing, state abbreviations).
  * @param addressString - The unstructured address string provided by the user.
+ * @param forUser - The user profile for whom the address is being parsed, for token logging.
  * @returns A promise that resolves to a partial `Address` object.
  */
-export async function parseAddressWithGemini(addressString: string): Promise<Partial<Address>> {
+export async function parseAddressWithGemini(addressString: string, forUser?: UserProfile | null): Promise<Partial<Address>> {
   if (!addressString) return {};
 
   const prompt = `
@@ -546,7 +659,7 @@ export async function parseAddressWithGemini(addressString: string): Promise<Par
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Address Parsing', model, inputTokens, outputTokens, sessionId });
+    logTokenEvent({ feature: 'Address Parsing', model, inputTokens, outputTokens, sessionId }, forUser);
 
     const jsonString = response.text.trim();
     if (jsonString) {
@@ -608,11 +721,13 @@ const applicationDetailsJsonSchema = {
  * structured data to pre-fill an application form.
  * @param description - The user's unstructured text description.
  * @param isProxy - A boolean indicating if the submission is from an admin on behalf of a user.
+ * @param applicantProfile - The profile of the user for whom the application is being parsed, for token logging.
  * @returns A promise that resolves to a partial `ApplicationFormData` object.
  */
 export async function parseApplicationDetailsWithGemini(
   description: string,
-  isProxy: boolean = false
+  isProxy: boolean = false,
+  applicantProfile?: UserProfile | null
 ): Promise<Partial<ApplicationFormData>> {
   if (!description) return {};
 
@@ -656,7 +771,7 @@ export async function parseApplicationDetailsWithGemini(
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Application Parsing', model, inputTokens, outputTokens, sessionId });
+    logTokenEvent({ feature: 'Application Parsing', model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
     const jsonString = response.text.trim();
     if (jsonString) {

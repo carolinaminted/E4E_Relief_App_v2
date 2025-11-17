@@ -220,12 +220,17 @@ service cloud.firestore {
     match /tokenEvents/{eventId} {
       // A user can only create a token event log for themselves, preventing them from logging events on behalf of others.
       allow create: if isSelf(request.resource.data.uid);
-      // Only admins can read token events, and only for the fund they are associated with. This scopes admin data access.
-      allow read: if isAdmin() && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.fundCode == resource.data.fundCode
-      );
+      // Allow any authenticated user to read the analytics data for the PoC phase.
+      allow read: if isAuthed();
       // No one can modify or delete event logs once created, ensuring data integrity for auditing.
       allow update, delete: if false;
+    }
+
+    // --- Collection: _admin_requests (for Cloud Function trigger) ---
+    // This collection is used to securely trigger the makeAdmin Cloud Function.
+    match /_admin_requests/{docId} {
+      // Only an existing admin can create a document here, which triggers the function.
+      allow create: if isAdmin();
     }
 
     // --- Subcollection: chat messages ---

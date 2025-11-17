@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
-import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon } from './Icons';
-import type { Page, UserProfile, ClassVerificationStatus } from '../types';
+import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, SparklesIcon } from './Icons';
+import type { Page, UserProfile } from '../types';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
   canApply: boolean;
   userProfile: UserProfile;
-  onAddIdentity: (fundCode: string) => void;
 }
 
 // --- Component ---
@@ -23,44 +23,7 @@ interface Tile {
   colSpan?: string;
 }
 
-const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
-    const { t } = useTranslation();
-    const hasPassedCV = cvStatus === 'passed';
-
-    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const passedClasses = "bg-green-800/50 text-green-300";
-    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
-
-    const handleClick = () => {
-        if (!hasPassedCV) {
-             console.log("[Telemetry] verification_needed_cta_clicked_from_home_page");
-             onClick();
-        }
-    };
-
-    const text = hasPassedCV ? t('applyPage.eligibility') : t('applyPage.verificationNeeded');
-    
-    return (
-        <button
-            onClick={handleClick}
-            disabled={hasPassedCV}
-            role={hasPassedCV ? 'status' : 'button'}
-            aria-label={text}
-            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
-        >
-            {!hasPassedCV && (
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-            )}
-            <span>{text}</span>
-        </button>
-    );
-};
-
-
-const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, onAddIdentity }) => {
+const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) => {
     const { t } = useTranslation();
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
@@ -73,9 +36,15 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, on
             disabled: !canApply,
             disabledTooltipKey: userProfile.classVerificationStatus !== 'passed' ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
         },
+        { 
+            key: 'aiApply', 
+            titleKey: 'nav.aiApply', 
+            icon: <SparklesIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
+            onClick: () => navigate('aiApply'),
+        },
         { key: 'profile', titleKey: 'nav.profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
         { key: 'support', titleKey: 'nav.support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },
-        { key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') },
+        
     ];
 
     if (userProfile.role === 'Admin') {
@@ -84,8 +53,10 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, on
             titleKey: 'nav.fundPortal', 
             icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('fundPortal'),
-            colSpan: 'col-span-2'
         });
+         tiles.push({ key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') });
+    } else {
+        tiles.push({ key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, colSpan: 'col-span-2', onClick: () => navigate('donate') });
     }
 
   return (
@@ -103,7 +74,6 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile, on
                   ) : null }
                   <EligibilityIndicator 
                       cvStatus={userProfile.classVerificationStatus} 
-                      onClick={() => onAddIdentity(userProfile.fundCode)} 
                   />
               </div>
             ) : (

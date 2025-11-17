@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Application, UserProfile, ApplicationFormData, EventData, ClassVerificationStatus } from '../types';
+import type { UserProfile, ApplicationFormData, EventData } from '../types';
 import type { Fund } from '../data/fundData';
+import EligibilityIndicator from './EligibilityIndicator';
 
 // Import step components
 import ApplyContactPage from './ApplyContactPage';
@@ -17,61 +18,15 @@ interface ApplyPageProps {
   mainRef: React.RefObject<HTMLElement>;
   canApply: boolean;
   activeFund: Fund | null;
+  initialStep?: number;
+  onDraftUpdate: (draft: ApplicationFormData) => void;
 }
 
-const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
-    const { t } = useTranslation();
-    const hasPassedCV = cvStatus === 'passed';
-
-    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const passedClasses = "bg-green-800/50 text-green-300";
-    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
-
-    const handleClick = () => {
-        if (!hasPassedCV) {
-             console.log("[Telemetry] verification_needed_cta_clicked_from_apply_page");
-             onClick();
-        }
-    };
-
-    const text = hasPassedCV ? t('applyPage.eligibility') : t('applyPage.verificationNeeded');
-    
-    return (
-        <button
-            onClick={handleClick}
-            disabled={hasPassedCV}
-            role={hasPassedCV ? 'status' : 'button'}
-            aria-label={text}
-            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
-        >
-            {!hasPassedCV && (
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-            )}
-            <span>{text}</span>
-        </button>
-    );
-};
-
-const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund }) => {
+const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, applicationDraft, mainRef, canApply, activeFund, initialStep, onDraftUpdate }) => {
   const { t } = useTranslation();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(initialStep || 1);
   
   const [formData, setFormData] = useState<ApplicationFormData>(() => {
-    const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
-    try {
-        const savedDraft = localStorage.getItem(draftKey);
-        if (savedDraft) {
-            console.log("Loading saved application draft from localStorage.");
-            return JSON.parse(savedDraft);
-        }
-    } catch (error) {
-        console.error("Could not parse saved application draft:", error);
-        localStorage.removeItem(draftKey); // Clear corrupted data
-    }
-
     const draftProfile: Partial<UserProfile> = applicationDraft?.profileData || {};
     const draftEvent: Partial<EventData> = applicationDraft?.eventData || {};
 
@@ -112,20 +67,14 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
         agreementData: {
             shareStory: null,
             receiveAdditionalInfo: null,
+            ...(applicationDraft?.agreementData || {}),
         },
     };
   });
 
   useEffect(() => {
-    if (userProfile.uid && userProfile.fundCode) {
-        const draftKey = `applicationDraft-${userProfile.uid}-${userProfile.fundCode}`;
-        try {
-            localStorage.setItem(draftKey, JSON.stringify(formData));
-        } catch (error) {
-            console.error("Could not save application draft to localStorage:", error);
-        }
-    }
-  }, [formData, userProfile.uid, userProfile.fundCode]);
+    onDraftUpdate(formData);
+  }, [formData, onDraftUpdate]);
 
   useEffect(() => {
     if (mainRef.current) {
@@ -244,7 +193,6 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
                 ) : null }
                 <EligibilityIndicator 
                     cvStatus={userProfile.classVerificationStatus} 
-                    onClick={() => navigate('classVerification')} 
                 />
             </div>
           ) : (
