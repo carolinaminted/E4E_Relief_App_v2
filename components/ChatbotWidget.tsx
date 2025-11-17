@@ -73,8 +73,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
         return;
       }
 
-      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
-        // Scrolling down and we're not near the top of the page
+      if (currentScrollY > lastScrollY.current) {
+        // Scrolling down
         setIsButtonVisible(false);
       } else {
         // Scrolling up
