@@ -359,7 +359,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
                             </footer>
                         </main>
-                        <aside className="w-2/5 flex flex-col gap-8">
+                        <aside className="w-2/5 flex flex-col gap-8 min-h-0">
                              {isApplicationReadyForExpenses ? (
                                 <CompletionView onNext={handleNext} />
                             ) : (

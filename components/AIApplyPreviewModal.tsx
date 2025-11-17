@@ -42,7 +42,7 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, user
                         </svg>
                     </button>
                 </header>
-                <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2 flex flex-col">
+                <div className="flex-1 space-y-4 flex flex-col min-h-0">
                      <AdditionalDetailsPreview 
                         userProfile={userProfile} 
                         profileData={applicationDraft?.profileData}
