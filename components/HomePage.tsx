@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
 import { ApplyIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, SparklesIcon } from './Icons';
 import type { Page, UserProfile } from '../types';
-import EligibilityIndicator from './EligibilityIndicator';
 
 interface HomePageProps {
   navigate: (page: Page) => void;
@@ -72,9 +71,6 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
                   {userProfile.fundName && userProfile.fundCode ? (
                       <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
                   ) : null }
-                  <EligibilityIndicator 
-                      cvStatus={userProfile.classVerificationStatus} 
-                  />
               </div>
             ) : (
               <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>

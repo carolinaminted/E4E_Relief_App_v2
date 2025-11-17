@@ -10,7 +10,6 @@ import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTrac
 import { useTranslation, Trans } from 'react-i18next';
 import Footer from './Footer';
 import AIApplyPreviewModal from './AIApplyPreviewModal';
-import EligibilityIndicator from './EligibilityIndicator';
 
 interface AIApplyPageProps {
   userProfile: UserProfile | null;
@@ -428,32 +427,17 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   return (
     <>
     <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
-        <div className="flex-1 flex flex-col p-4 md:p-8 md:pb-4 min-h-0">
+        <div className="flex-1 flex flex-col p-4 pt-0 md:p-8 md:pt-2 md:pb-4 min-h-0">
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
-                <header className="relative flex justify-center items-center mb-4 md:mb-8 flex-shrink-0">
-                    <button onClick={() => navigate('home')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('aiApplyPage.backToHome')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-                        </svg>
-                    </button>
-                    <div className="text-center">
-                        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                            {t('aiApplyPage.title')}
-                        </h1>
-                        {userProfile ? (
-                            <div className="mt-2 flex flex-col items-center gap-2">
-                                {userProfile.fundName && userProfile.fundCode ? (
-                                    <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
-                                ) : null}
-                                <EligibilityIndicator 
-                                    cvStatus={userProfile.classVerificationStatus} 
-                                />
-                            </div>
-                        ) : (
-                            <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>
-                        )}
-                    </div>
-                </header>
+                <div className="relative flex justify-center items-center mb-4 md:mb-6">
+                  <div className="text-center">
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                      {userProfile?.fundName && userProfile?.fundCode 
+                        ? `${userProfile.fundName} (${userProfile.fundCode})` 
+                        : t('aiApplyPage.title')}
+                    </h1>
+                  </div>
+                </div>
 
                 <div className="flex-1 flex flex-col min-h-0">
                 
@@ -464,7 +448,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
                                     <div>
                                         <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
-                                        <p className="text-xs text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
+                                        <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
                                     </div>
                                 </header>
                                 <div className="flex-1 overflow-hidden flex flex-col">
@@ -491,7 +475,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                             <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
                                 <div>
                                     <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
-                                    <p className="text-xs text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
+                                    <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
                                 </div>
                             </header>
                             <div className="flex-1 overflow-hidden flex flex-col">

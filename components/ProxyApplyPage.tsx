@@ -6,7 +6,6 @@ import ApplyEventPage from './ApplyEventPage';
 import ApplyExpensesPage from './ApplyExpensesPage';
 import ApplyTermsPage from './ApplyTermsPage';
 import ApplicationDetailModal from './ApplicationDetailModal';
-import EligibilityIndicator from './EligibilityIndicator';
 
 type Page = 'home' | 'fundPortal' | 'profile';
 
@@ -17,7 +16,6 @@ interface ProxyApplyPageProps {
   userProfile: UserProfile; // This is the admin's profile
   onAddIdentity: (fundCode: string) => void;
   mainRef: React.RefObject<HTMLElement>;
-  // FIX: Added missing activeFund prop.
   activeFund: Fund | null;
 }
 
@@ -47,7 +45,6 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
 
     const [formData, setFormData] = useState<ApplicationFormData>(() => {
         const blankProfile: UserProfile = {
-            // FIX: Added missing 'uid' and 'activeIdentityId' properties to satisfy the UserProfile type.
             uid: '',
             activeIdentityId: null,
             identityId: '',
@@ -67,7 +64,6 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
             infoCorrect: false,
             fundCode: '',
             classVerificationStatus: 'pending',
-            // FIX: Changed 'Inactive' to 'Not Eligible' to match the EligibilityStatus type definition.
             eligibilityStatus: 'Not Eligible',
             role: 'User',
         };
@@ -166,10 +162,8 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                             onAIParsed={handleAIParsedData} 
                         />;
             case 2:
-                // FIX: Pass the required 'activeFund' prop to ApplyEventPage.
                 return <ApplyEventPage formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} activeFund={activeFund} />;
             case 3:
-                // FIX: Pass the required `userProfile` prop to ApplyExpensesPage.
                 return <ApplyExpensesPage userProfile={formData.profileData} formData={formData.eventData} updateFormData={updateEventData} nextStep={nextStep} prevStep={prevStep} />;
             case 4:
                 return <ApplyTermsPage formData={formData.agreementData} updateFormData={updateAgreementData} prevStep={prevStep} onSubmit={handleFinalSubmit} />;
@@ -193,9 +187,6 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                     {userProfile && (
                         <div className="mt-2 flex flex-col items-center gap-2">
                             <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
-                            <EligibilityIndicator 
-                                cvStatus={userProfile.classVerificationStatus} 
-                            />
                         </div>
                     )}
                 </div>

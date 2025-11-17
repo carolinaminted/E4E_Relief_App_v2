@@ -301,9 +301,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             {currentActiveFullIdentity && (
               <div className="mt-2 flex flex-col items-center gap-2">
                 <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
-                <EligibilityIndicator 
-                  cvStatus={currentActiveFullIdentity.classVerificationStatus} 
-                />
               </div>
             )}
         </div>
@@ -389,6 +386,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <div className="space-y-4">
                 {identitiesToDisplay.map(identity => {
                     const isActive = activeIdentity?.id === identity.id;
+                    const isEligible = identity.eligibilityStatus === 'Eligible';
                     return (
                         <div key={identity.id} className={`bg-[#004b8d] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[#ff8400]' : 'border-transparent'}`}>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -398,10 +396,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
-                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} />
+                                        <EligibilityIndicator eligibilityStatus={identity.eligibilityStatus} cvStatus={identity.classVerificationStatus} />
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
+                                     {!isEligible && (
+                                        <button
+                                            onClick={() => onAddIdentity(identity.fundCode)}
+                                            className="bg-yellow-800/50 text-yellow-300 text-sm font-semibold py-2 px-3 rounded-md transition-colors duration-200 hover:bg-yellow-700/50"
+                                        >
+                                            Re-verify
+                                        </button>
+                                    )}
                                     {identities.length > 1 && (
                                         isActive ? (
                                             <span className="bg-green-800/50 text-green-300 text-sm font-semibold py-2 px-3 rounded-md flex items-center gap-2 cursor-default">
@@ -413,7 +419,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         ) : (
                                             <button
                                                 onClick={() => onSetActiveIdentity(identity.id)}
-                                                disabled={identity.eligibilityStatus !== 'Eligible'}
+                                                disabled={!isEligible}
                                                 className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
                                                 aria-label={`Set ${identity.fundName} as active identity`}
                                             >
@@ -520,17 +526,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             <div className={`transition-all duration-500 ease-in-out ${openSection === 'addresses' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="pt-4" aria-live="polite">
                     <div className="mb-6">
-                        <FormRadioGroup legend={t('profilePage.mailingAddressSame')} name="isMailingAddressSame" options={[yes, no]} value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} onChange={value => handleFormChange('isMailingAddressSame', value === yes)} required error={errors.isMailingAddressSame} />
+                        <FormRadioGroup 
+                            legend={t('profilePage.mailingAddressSame')} 
+                            name="isMailingAddressSame" 
+                            options={[yes, no]} 
+                            value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} 
+                            onChange={value => handleFormChange('isMailingAddressSame', value === yes)} 
+                            required 
+                            error={errors.isMailingAddressSame} 
+                        />
                     </div>
                     <div className="flip-container">
                         <div className={`flipper ${!formData.isMailingAddressSame && showMailingAddress ? 'is-flipped' : ''}`} style={{ height: cardHeight ? `${cardHeight}px` : 'auto' }}>
                             <div className="flip-front" ref={frontRef}>
                                 <div className="space-y-6">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold text-white">Primary Address</h3>
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.primaryAddressTitle')}</h3>
                                         {!formData.isMailingAddressSame && (
                                             <button type="button" onClick={() => setShowMailingAddress(true)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
-                                                View Mailing Address
+                                                {t('profilePage.viewMailingAddress')}
                                             </button>
                                         )}
                                     </div>
@@ -540,9 +554,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             <div className="flip-back" ref={backRef}>
                                  <div className="space-y-6">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold text-white">Mailing Address</h3>
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.mailingAddressTitle')}</h3>
                                         <button type="button" onClick={() => setShowMailingAddress(false)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
-                                            View Primary Address
+                                            {t('profilePage.viewPrimaryAddress')}
                                         </button>
                                     </div>
                                     <AddressFields forUser={formData} address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
@@ -551,7 +565,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         </div>
                     </div>
                 </div>
-                 {openSection === 'addresses' && (
+                {openSection === 'addresses' && (
                     <div className="flex justify-end pt-4">
                         <button type="button" onClick={() => toggleSection('addresses')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
                             {t('profilePage.collapse')}
@@ -571,27 +585,35 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
             <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-6 pt-4">
-                    <div className="grid grid-cols-2 gap-6">
-                        <FormInput type="date" label={t('profilePage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormChange('employmentStartDate', e.target.value)} error={errors.employmentStartDate} />
-                        <SearchableSelector label={t('profilePage.eligibilityType')} id="eligibilityType" required value={formData.eligibilityType} options={employmentTypes} onUpdate={value => handleFormChange('eligibilityType', value)} variant="underline" error={errors.eligibilityType} />
-                    </div>
-                    
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <FormInput type="date" label={t('profilePage.employmentStartDate')} id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormChange('employmentStartDate', e.target.value)} error={errors.employmentStartDate} />
+                    <SearchableSelector
+                        label={t('profilePage.eligibilityType')}
+                        id="eligibilityType"
+                        required
+                        value={formData.eligibilityType}
+                        options={employmentTypes}
+                        onUpdate={value => handleFormChange('eligibilityType', value)}
+                        variant="underline"
+                        error={errors.eligibilityType}
+                    />
                     <FormInput type="number" label={t('profilePage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormChange('householdIncome', parseFloat(e.target.value) || '')} error={errors.householdIncome} />
                     <FormInput type="number" label={t('profilePage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormChange('householdSize', parseInt(e.target.value, 10) || '')} error={errors.householdSize} />
-
-                    <div className="grid grid-cols-2 gap-6">
-                        <FormRadioGroup legend={t('profilePage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormChange('homeowner', value === yes ? 'Yes' : 'No')} required error={errors.homeowner} />
-                        <SearchableSelector label={t('profilePage.preferredLanguage')} id="preferredLanguage" value={formData.preferredLanguage || ''} options={languages} onUpdate={value => handleFormChange('preferredLanguage', value)} variant="underline" />
-                    </div>
+                    <FormRadioGroup legend={t('profilePage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormChange('homeowner', value === yes ? 'Yes' : 'No')} required error={errors.homeowner} />
+                    <SearchableSelector
+                        label={t('profilePage.preferredLanguage')}
+                        id="preferredLanguage"
+                        value={formData.preferredLanguage || ''}
+                        options={languages}
+                        onUpdate={value => handleFormChange('preferredLanguage', value)}
+                        variant="underline"
+                    />
                 </div>
                 {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">
-                        <button type="button" onClick={() => toggleSection('additionalDetails')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity" aria-controls="details-section" aria-expanded="true" >
+                        <button type="button" onClick={() => toggleSection('additionalDetails')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity" aria-controls="details-section" aria-expanded="true">
                             {t('profilePage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
                         </button>
                     </div>
                 )}
@@ -608,49 +630,41 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </button>
             <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSection === 'consent' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-3 pt-4">
-                     {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
+                    {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="ackPolicies" required checked={formData.ackPolicies} onChange={e => handleFormChange('ackPolicies', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="ackPolicies" className="flex items-center ml-3 text-sm text-white">{t('profilePage.ackPolicies')} <RequiredIndicator required isMet={formData.ackPolicies} /></label>
                     </div>
-                     {errors.commConsent && <p className="text-red-400 text-xs">{errors.commConsent}</p>}
+                    {errors.commConsent && <p className="text-red-400 text-xs">{errors.commConsent}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="commConsent" required checked={formData.commConsent} onChange={e => handleFormChange('commConsent', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="commConsent" className="flex items-center ml-3 text-sm text-white">{t('profilePage.commConsent')} <RequiredIndicator required isMet={formData.commConsent} /></label>
                     </div>
-                     {errors.infoCorrect && <p className="text-red-400 text-xs">{errors.infoCorrect}</p>}
+                    {errors.infoCorrect && <p className="text-red-400 text-xs">{errors.infoCorrect}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="infoCorrect" required checked={formData.infoCorrect} onChange={e => handleFormChange('infoCorrect', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">{t('profilePage.infoCorrect')} <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
+                    <button type="button" onClick={() => setIsPolicyModalOpen(true)} className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200 mt-2">{t('profilePage.viewPolicies')}</button>
                 </div>
                 {openSection === 'consent' && (
                     <div className="flex justify-end pt-4">
                         <button type="button" onClick={() => toggleSection('consent')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity" aria-controls="consent-section" aria-expanded="true">
                             {t('profilePage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
                         </button>
                     </div>
                 )}
             </div>
         </fieldset>
 
-        <div className="flex justify-center pt-4 flex-col items-center">
+        <div className="flex justify-center pt-8 flex-col items-center">
             {Object.keys(errors).length > 0 && (
                 <div className="bg-red-800/50 border border-red-600 text-red-200 p-4 rounded-md mb-4 w-full max-w-md text-sm">
                     <p className="font-bold">{t('profilePage.errorCorrection')}</p>
                 </div>
             )}
             <button type="submit" className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-8 rounded-md transition-colors duration-200">{t('profilePage.saveButton')}</button>
-            <button
-                type="button"
-                onClick={() => setIsPolicyModalOpen(true)}
-                className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200 mt-2"
-            >
-                {t('homePage.poweredBy')}
-            </button>
         </div>
       </form>
       

@@ -12,7 +12,9 @@
     "yes": "Sí",
     "no": "No",
     "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora.",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "eligible": "Elegible",
+    "ineligible": "No Elegible"
   },
   "eligibilityIndicator": {
     "eligibleMessage": "Estás verificado para este programa de fondos de ayuda. Solicitar ayuda no garantiza que se desembolsará un pago.",
@@ -192,8 +194,6 @@
   },
   "profilePage": {
     "title": "Perfil",
-    "eligibility": "Elegible para solicitar ayuda",
-    "verificationNeeded": "Verificación necesaria",
     "myApplicationsTitle": "Mis Solicitudes",
     "twelveMonthRemaining": "Restante de 12 Meses",
     "lifetimeRemaining": "Restante de por Vida",
@@ -229,7 +229,6 @@
     "householdSize": "Número de personas en el hogar",
     "homeowner": "¿Eres propietario de tu vivienda?",
     "preferredLanguage": "Idioma de Preferencia",
-    "consentTitle": "Consentimiento y Reconocimiento",
     "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
     "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
     "infoCorrect": "Toda la información que he proporcionado es precisa.",
@@ -256,8 +255,8 @@
     "title": "Centro de Soporte",
     "emailLabel": "Correo de Soporte",
     "phoneLabel": "Teléfono de Soporte",
-    "chatbotButton": "Hablar con el Asistente de Ayuda",
-    "chatbotDisclaimer": "El Asistente de Ayuda usa IA. Llámanos o envíanos un correo con cualquier pregunta adicional.",
+    "chatbotButton": "Hablar con el Asistente de Solicitud de Ayuda",
+    "chatbotDisclaimer": "El Asistente de Solicitud de Ayuda usa IA. Llámanos o envíanos un correo con cualquier pregunta adicional.",
     "faqTitle": "Preguntas Frecuentes",
     "faqDescription": "Encuentra respuestas a preguntas comunes.",
     "paymentsTitle": "Pagos",
@@ -332,8 +331,8 @@
     "errorCvc": "El CVC debe tener 3 o 4 dígitos."
   },
   "chatbotWidget": {
-    "greeting": "¡Hola! Soy el Asistente de Ayuda. ¿Cómo puedo ayudarte hoy? Siéntete libre de contarme sobre tu situación.",
-    "title": "Asistente de Ayuda",
+    "greeting": "¡Hola! Soy el Asistente de Solicitud de Ayuda. ¿Cómo puedo ayudarte hoy? Siéntete libre de contarme sobre tu situación.",
+    "title": "Asistente de Solicitud de Ayuda",
     "disclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>.",
     "errorMessage": "Lo siento, encontré un error. Por favor, inténtalo de nuevo.",
     "placeholder": "Escribe tu mensaje..."
@@ -473,8 +472,8 @@
         "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, podrá acceder a cualquier recibo relacionado con sus donaciones anteriores."
       },
       {
-        "question": "¿Qué pasa si quiero hacer donaciones recurrentes?",
-        "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
+        "question": "¿Cómo puedo hacer donaciones recurrentes?",
+        "answer": "Una vez que inicies sesión en el Panel de Donantes de The Giving Block, puedes ver tus planes de donación y actualizar la información relacionada con tu tarjeta de crédito y la frecuencia de los pagos. También puedes desactivar cualquier donación recurrente aquí. Las donaciones recurrentes no se pueden hacer de forma anónima por razones regulatorias."
       },
       {
         "question": "¿A quién puedo contactar si tengo preguntas adicionales?",
