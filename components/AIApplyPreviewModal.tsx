@@ -1,18 +1,13 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import type { UserProfile, ApplicationFormData, EventData } from '../types';
-import { AdditionalDetailsPreview, EventDetailsPreview } from './AIApplyPage';
 
 interface AIApplyPreviewModalProps {
   onClose: () => void;
-  userProfile: UserProfile | null;
-  applicationDraft: Partial<ApplicationFormData> | null;
-  baseChecklistItems: { key: string, label: string }[];
-  eventChecklistItems: any[];
+  children: React.ReactNode;
 }
 
-const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, userProfile, applicationDraft, baseChecklistItems, eventChecklistItems }) => {
+const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, children }) => {
     const { t } = useTranslation();
     const modalRoot = document.getElementById('modal-root');
     if (!modalRoot) return null;
@@ -25,10 +20,10 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, user
             aria-modal="true"
         >
             <div 
-                className="bg-[#003a70] rounded-lg shadow-xl p-4 w-full max-w-lg m-4 relative border border-[#002a50] max-h-[80vh] flex flex-col"
+                className="bg-[#003a70] rounded-lg shadow-xl p-0 w-full max-w-lg m-4 relative border border-[#002a50] max-h-[80vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
-                <header className="flex justify-between items-center border-b border-[#005ca0] pb-3 mb-4 flex-shrink-0">
+                <header className="flex justify-between items-center border-b border-[#005ca0] p-4 flex-shrink-0">
                     <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
                         Application Progress
                     </h2>
@@ -42,18 +37,10 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, user
                         </svg>
                     </button>
                 </header>
-                <div className="flex-1 space-y-4 flex flex-col min-h-0">
-                     <AdditionalDetailsPreview 
-                        userProfile={userProfile} 
-                        profileData={applicationDraft?.profileData}
-                        baseChecklistItems={baseChecklistItems} 
-                    />
-                    <EventDetailsPreview 
-                        eventData={applicationDraft?.eventData} 
-                        eventChecklistItems={eventChecklistItems}
-                    />
+                <div className="flex-1 flex flex-col min-h-0">
+                     {children}
                 </div>
-                <footer className="mt-4 pt-4 border-t border-[#005ca0] flex-shrink-0">
+                <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
                     <button
                         onClick={onClose}
                         className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200"

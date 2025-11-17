@@ -37,76 +37,141 @@ const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
 );
 
-export const AdditionalDetailsPreview: React.FC<{ userProfile: UserProfile | null, profileData: Partial<UserProfile> | null | undefined, baseChecklistItems: { key: string, label: string }[] }> = ({ userProfile, profileData, baseChecklistItems }) => {
+const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: boolean; onToggle: () => void }> = ({ title, isComplete, isOpen, onToggle }) => (
+    <button
+        onClick={onToggle}
+        className="w-full flex justify-between items-center text-left py-3 px-4 bg-[#004b8d]/50 rounded-t-md border-b border-[#005ca0]"
+        aria-expanded={isOpen}
+    >
+        <div className="flex items-center gap-3">
+            {isComplete && <CheckmarkIcon />}
+            <h2 className={`text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] ${isComplete ? 'opacity-60' : ''}`}>{title}</h2>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+    </button>
+);
+
+const AIApplyPreviewPane: React.FC<{
+    userProfile: UserProfile | null;
+    applicationDraft: Partial<ApplicationFormData> | null;
+    baseChecklistItems: { key: string; label: string }[];
+    eventChecklistItems: any[];
+}> = ({ userProfile, applicationDraft, baseChecklistItems, eventChecklistItems }) => {
     const { t } = useTranslation();
-    const checklistItems = baseChecklistItems;
 
-    // This function checks if the item has been filled, either in the base profile OR during this session by the AI
-    const isComplete = (key: string) => {
-        // Check draft first, as it's the most up-to-date
-        const draftValue = profileData?.[key as keyof UserProfile];
-        if (draftValue !== undefined && draftValue !== null && draftValue !== '') {
-            return true;
+    const isAdditionalDetailsComplete = useMemo(() => {
+        if (!userProfile) return false;
+        return baseChecklistItems.every(item => {
+            const key = item.key as keyof UserProfile;
+            const draftValue = applicationDraft?.profileData?.[key];
+            if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
+            
+            const profileValue = userProfile?.[key];
+            return profileValue !== undefined && profileValue !== null && profileValue !== '';
+        });
+    }, [userProfile, applicationDraft, baseChecklistItems]);
+
+    const isEventDetailsComplete = useMemo(() => {
+        const eventData = applicationDraft?.eventData;
+        if (!eventData) return false;
+
+        const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(eventData));
+        if (visibleEventItems.length === 0 && !eventData.event) return false;
+
+        return visibleEventItems.every(item => {
+            const key = item.key as keyof EventData;
+            const value = eventData[key];
+            if (key === 'powerLossDays' || key === 'evacuationNights') {
+                return typeof value === 'number' && value > 0;
+            }
+            return value !== undefined && value !== null && value !== '';
+        });
+    }, [applicationDraft, eventChecklistItems]);
+    
+    const [openSections, setOpenSections] = useState({
+        additional: !isAdditionalDetailsComplete,
+        event: !isEventDetailsComplete,
+    });
+
+    useEffect(() => {
+        if (isAdditionalDetailsComplete && openSections.additional) {
+            setOpenSections(prev => ({ ...prev, additional: false }));
         }
+        if (isEventDetailsComplete && openSections.event) {
+            setOpenSections(prev => ({ ...prev, event: false }));
+        }
+    }, [isAdditionalDetailsComplete, isEventDetailsComplete]);
 
-        // Then check base profile for pre-existing data
+    const toggleSection = (section: 'additional' | 'event') => {
+        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    };
+    
+    const isProfileItemComplete = (key: string) => {
+        const draftValue = applicationDraft?.profileData?.[key as keyof UserProfile];
+        if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
         const profileValue = userProfile?.[key as keyof UserProfile];
         return profileValue !== undefined && profileValue !== null && profileValue !== '';
     };
-    
-    return (
-        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
-            <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
-                {t('aiApplyPage.additionalDetailsPreviewTitle')}
-            </h2>
-            <p className="text-xs text-gray-400 text-center mb-4">{t('aiApplyPage.previewSubtitle')}</p>
-            <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-                {checklistItems.map(item => (
-                    <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                        <div className="flex-shrink-0 w-5 h-5">
-                            {isComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
-                        </div>
-                        <span className={`text-sm ${isComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                            {item.label}
-                        </span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
 
-export const EventDetailsPreview: React.FC<{ eventData: Partial<EventData> | null | undefined, eventChecklistItems: any[] }> = ({ eventData, eventChecklistItems }) => {
-    const { t } = useTranslation();
-    const isComplete = (key: keyof EventData) => {
-        if (!eventData) return false;
-        const value = eventData[key];
+    const isEventItemComplete = (key: keyof EventData) => {
+        if (!applicationDraft?.eventData) return false;
+        const value = applicationDraft.eventData[key];
         return value !== undefined && value !== null && value !== '';
     };
 
-    const visibleItems = eventChecklistItems.filter(item => !item.condition || item.condition(eventData || {}));
+    const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(applicationDraft?.eventData || {}));
+
 
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
-            <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center">
-                {t('aiApplyPage.eventDetailsPreviewTitle')}
+            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center flex-shrink-0">
+                Application Progress
             </h2>
-            <p className="text-xs text-gray-400 text-center mb-4">{t('aiApplyPage.previewSubtitle')}</p>
-            <div className="flex-grow space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-                {visibleItems.map(item => (
-                    <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                        <div className="flex-shrink-0 w-5 h-5">
-                            {isComplete(item.key as keyof EventData) ? <CheckmarkIcon /> : <CircleIcon />}
+            <p className="text-xs text-gray-400 text-center mb-4 flex-shrink-0">{t('aiApplyPage.previewSubtitle')}</p>
+            <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
+                {/* Additional Details Section */}
+                <div className="bg-[#004b8d]/30 rounded-md">
+                    <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSections.additional} onToggle={() => toggleSection('additional')} />
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.additional ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="p-3 space-y-2">
+                            {baseChecklistItems.map(item => (
+                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
+                                    <div className="flex-shrink-0 w-5 h-5">
+                                        {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                                    </div>
+                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                        {item.label}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
-                        <span className={`text-sm ${isComplete(item.key as keyof EventData) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                            {item.label}
-                        </span>
                     </div>
-                ))}
+                </div>
+                {/* Event Details Section */}
+                <div className="bg-[#004b8d]/30 rounded-md">
+                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSections.event} onToggle={() => toggleSection('event')} />
+                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.event ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="p-3 space-y-2">
+                            {visibleEventItems.map(item => (
+                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
+                                    <div className="flex-shrink-0 w-5 h-5">
+                                        {isEventItemComplete(item.key as keyof EventData) ? <CheckmarkIcon /> : <CircleIcon />}
+                                    </div>
+                                    <span className={`text-sm ${isEventItemComplete(item.key as keyof EventData) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                        {item.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
+
 
 const CompletionView: React.FC<{ onNext: () => void }> = ({ onNext }) => {
     const { t } = useTranslation();
@@ -266,11 +331,9 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       { key: 'evacuationNights', label: t('applyEventPage.evacuationNightsLabel'), condition: (data?: Partial<EventData>) => data?.evacuated === 'Yes' },
   ], [t]);
   
-  const isApplicationReadyForExpenses = useMemo(() => {
+  const isAdditionalDetailsComplete = useMemo(() => {
     if (!userProfile) return false;
-
-    // 1. Check if all required profile fields are filled (in original profile or draft)
-    const allProfileFieldsComplete = baseProfileChecklistItems.every(item => {
+    return baseProfileChecklistItems.every(item => {
         const key = item.key as keyof UserProfile;
         const draftValue = applicationDraft?.profileData?.[key];
         if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
@@ -278,16 +341,16 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         const profileValue = userProfile?.[key];
         return profileValue !== undefined && profileValue !== null && profileValue !== '';
     });
+  }, [userProfile, applicationDraft, baseProfileChecklistItems]);
 
-    if (!allProfileFieldsComplete) return false;
-
-    // 2. Check if all required and visible event fields are filled in the draft
+  const isEventDetailsComplete = useMemo(() => {
     const eventData = applicationDraft?.eventData;
     if (!eventData) return false;
 
     const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(eventData));
+    if (visibleEventItems.length === 0 && !eventData.event) return false;
 
-    const allEventFieldsComplete = visibleEventItems.every(item => {
+    return visibleEventItems.every(item => {
         const key = item.key as keyof EventData;
         const value = eventData[key];
 
@@ -296,9 +359,9 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         }
         return value !== undefined && value !== null && value !== '';
     });
-    
-    return allEventFieldsComplete;
-  }, [userProfile, applicationDraft, baseProfileChecklistItems, eventChecklistItems]);
+  }, [applicationDraft, eventChecklistItems]);
+
+  const isApplicationReadyForExpenses = isAdditionalDetailsComplete && isEventDetailsComplete;
 
   const handleNext = () => navigate('applyExpenses');
 
@@ -359,14 +422,16 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
                             </footer>
                         </main>
-                        <aside className="w-2/5 flex flex-col gap-8 min-h-0">
+                        <aside className="w-2/5 flex flex-col min-h-0">
                              {isApplicationReadyForExpenses ? (
                                 <CompletionView onNext={handleNext} />
                             ) : (
-                                <>
-                                    <AdditionalDetailsPreview userProfile={userProfile} profileData={applicationDraft?.profileData} baseChecklistItems={baseProfileChecklistItems} />
-                                    <EventDetailsPreview eventData={applicationDraft?.eventData} eventChecklistItems={eventChecklistItems} />
-                                </>
+                                <AIApplyPreviewPane
+                                    userProfile={userProfile}
+                                    applicationDraft={applicationDraft}
+                                    baseChecklistItems={baseProfileChecklistItems}
+                                    eventChecklistItems={eventChecklistItems}
+                                />
                             )}
                         </aside>
                     </div>
@@ -378,13 +443,14 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         </div>
     </div>
     {isPreviewModalOpen && (
-        <AIApplyPreviewModal
-            onClose={() => setIsPreviewModalOpen(false)}
-            userProfile={userProfile}
-            applicationDraft={applicationDraft}
-            baseChecklistItems={baseProfileChecklistItems}
-            eventChecklistItems={eventChecklistItems}
-        />
+        <AIApplyPreviewModal onClose={() => setIsPreviewModalOpen(false)}>
+            <AIApplyPreviewPane
+                userProfile={userProfile}
+                applicationDraft={applicationDraft}
+                baseChecklistItems={baseProfileChecklistItems}
+                eventChecklistItems={eventChecklistItems}
+            />
+        </AIApplyPreviewModal>
     )}
     </>
   );
