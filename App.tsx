@@ -479,7 +479,8 @@ function App() {
     
     const finalDecision = await getAIAssistedDecision(
       { eventData: appFormData.eventData, currentTwelveMonthRemaining: twelveMonthRemaining, currentLifetimeRemaining: lifetimeRemaining },
-      preliminaryDecision
+      preliminaryDecision,
+      appFormData.profileData
     );
 
     const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {
@@ -570,7 +571,8 @@ function App() {
     
     const finalDecision = await getAIAssistedDecision(
       { eventData: appFormData.eventData, currentTwelveMonthRemaining, currentLifetimeRemaining },
-      preliminaryDecision
+      preliminaryDecision,
+      appFormData.profileData
     );
 
     const getStatusFromDecision = (decision: EligibilityDecision['decision']): Application['status'] => {

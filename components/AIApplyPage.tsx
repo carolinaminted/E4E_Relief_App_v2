@@ -289,13 +289,18 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         let totalOutputTokens = 0;
 
         // First API call
-        let response = await chatSessionRef.current.sendMessage({ message: userInput });
+        const response1 = await chatSessionRef.current.sendMessage({ message: userInput });
         
-        const functionCalls = response.functionCalls;
+        const text1 = response1.text;
+        const functionCalls = response1.functionCalls;
+
+        if (text1) {
+            setMessages(prev => [...prev, { role: MessageRole.MODEL, content: text1 }]);
+            totalOutputTokens += estimateTokens(text1);
+        }
 
         // If the model returns function calls, execute them and send back the results
         if (functionCalls && functionCalls.length > 0) {
-            // "Output" of first call is the function call object
             totalOutputTokens += estimateTokens(JSON.stringify(functionCalls));
 
             const functionResponses = functionCalls.map(call => {
@@ -303,20 +308,33 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                 return { functionResponse: { name: call.name, response: { result: 'ok' } } };
             });
             
-            // "Input" for second call is the function response
             totalInputTokens += estimateTokens(JSON.stringify(functionResponses));
             
             // Second API call
-            response = await chatSessionRef.current.sendMessage({ message: functionResponses });
-        }
-        
-        // Final text response comes from either the first or second call
-        const modelResponseText = response.text;
-        totalOutputTokens += estimateTokens(modelResponseText);
+            const response2 = await chatSessionRef.current.sendMessage({ message: functionResponses });
+            const text2 = response2.text;
 
-        // Only add the final model message to the chat history after all actions are complete
-        if (modelResponseText) {
-            setMessages(prev => [...prev, { role: MessageRole.MODEL, content: modelResponseText }]);
+            if (text2) {
+                // If there was already a text response from the first call, append to that message bubble.
+                // Otherwise, create a new message bubble.
+                if (text1) {
+                    setMessages(prev => {
+                        const lastMessage = prev[prev.length - 1];
+                        if (lastMessage && lastMessage.role === MessageRole.MODEL) {
+                            const newMessages = [...prev];
+                            newMessages[newMessages.length - 1] = {
+                                ...lastMessage,
+                                content: lastMessage.content + '\n\n' + text2
+                            };
+                            return newMessages;
+                        }
+                        return [...prev, { role: MessageRole.MODEL, content: text2 }];
+                    });
+                } else {
+                    setMessages(prev => [...prev, { role: MessageRole.MODEL, content: text2 }]);
+                }
+                totalOutputTokens += estimateTokens(text2);
+            }
         }
 
         // Log the aggregated event
@@ -409,7 +427,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
   return (
     <>
-    <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:flex-1">
+    <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
         <div className="flex-1 flex flex-col p-4 md:p-8 md:pb-4 min-h-0">
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
                 <header className="relative flex justify-center items-center mb-4 md:mb-8 flex-shrink-0">

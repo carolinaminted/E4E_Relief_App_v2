@@ -158,7 +158,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     try {
       // The `isProxy=true` flag tells the Gemini service to use a specific prompt
       // tailored for extracting the applicant's details from a third-person description.
-      const parsedDetails = await parseApplicationDetailsWithGemini(description, true);
+      const parsedDetails = await parseApplicationDetailsWithGemini(description, true, formData);
       onAIParsed(parsedDetails);
     } catch (e) {
       console.error("AI Parsing failed in parent component:", e);
@@ -318,32 +318,32 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
             <div className={`transition-all duration-500 ease-in-out ${openSection === 'addresses' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="pt-4" aria-live="polite">
                     <div className="mb-6">
-                        <FormRadioGroup legend={t('profilePage.mailingAddressSame')} name="isMailingAddressSame" options={[yes, no]} value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} required error={errors.isMailingAddressSame} />
+                        <FormRadioGroup legend="Mailing Address Same as Primary?" name="isMailingAddressSame" options={[yes, no]} value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} onChange={value => handleFormUpdate({ isMailingAddressSame: value === yes })} required error={errors.isMailingAddressSame} />
                     </div>
                     <div className="flip-container">
                         <div className={`flipper ${!formData.isMailingAddressSame && showMailingAddress ? 'is-flipped' : ''}`} style={{ height: cardHeight ? `${cardHeight}px` : 'auto' }}>
                             <div className="flip-front" ref={frontRef}>
                                 <div className="space-y-6">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.primaryAddressTitle')}</h3>
+                                        <h3 className="text-lg font-semibold text-white">Primary Address</h3>
                                         {!formData.isMailingAddressSame && (
                                             <button type="button" onClick={() => setShowMailingAddress(true)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
-                                                {t('profilePage.viewMailingAddress')}
+                                                View Mailing Address
                                             </button>
                                         )}
                                     </div>
-                                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
+                                    <AddressFields forUser={formData} address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
                                 </div>
                             </div>
                             <div className="flip-back" ref={backRef}>
                                  <div className="space-y-6">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.mailingAddressTitle')}</h3>
+                                        <h3 className="text-lg font-semibold text-white">Mailing Address</h3>
                                         <button type="button" onClick={() => setShowMailingAddress(false)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
-                                            {t('profilePage.viewPrimaryAddress')}
+                                            View Primary Address
                                         </button>
                                     </div>
-                                    <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
+                                    <AddressFields forUser={formData} address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
                                 </div>
                             </div>
                         </div>

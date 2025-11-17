@@ -63,17 +63,23 @@ export function estimateTokens(text: string): number {
  * 2.  It creates a new, detailed document in the `tokenEvents` collection for granular analytics.
  * 
  * @param data - An object containing details about the Gemini API call.
+ * @param forUser - An optional UserProfile. If provided, the event is logged for this user. If not, it defaults to the currently logged-in user.
  */
-export async function logEvent(data: {
-  feature: TokenEvent['feature'];
-  model: TokenEvent['model'];
-  inputTokens: number;
-  outputTokens: number;
-  cachedInputTokens?: number;
-  sessionId: string;
-}) {
-  if (!currentUser) {
-    console.warn('Token Tracker not initialized, skipping log. User might be logged out.');
+export async function logEvent(
+  data: {
+    feature: TokenEvent['feature'];
+    model: TokenEvent['model'];
+    inputTokens: number;
+    outputTokens: number;
+    cachedInputTokens?: number;
+    sessionId: string;
+  },
+  forUser?: UserProfile | null
+) {
+  const userToLog = forUser || currentUser;
+
+  if (!userToLog) {
+    console.warn('Token Tracker not initialized or no user context provided, skipping log.');
     return;
   }
 
@@ -83,16 +89,16 @@ export async function logEvent(data: {
 
   // Update aggregate totals on the user's profile document. This is a "fire-and-forget"
   // operation; we don't `await` it so the UI isn't blocked.
-  usersRepo.incrementTokenUsage(currentUser.uid, totalTokens, cost).catch(error => {
+  usersRepo.incrementTokenUsage(userToLog.uid, totalTokens, cost).catch(error => {
     // We log the error but don't re-throw, as failing to update analytics shouldn't break the user experience.
     console.error("Failed to update aggregate token usage in Firestore:", error);
   });
 
   const newEvent: Omit<TokenEvent, 'id'> = {
-    uid: currentUser.uid,
+    uid: userToLog.uid,
     sessionId: data.sessionId,
-    userId: currentUser.email,
-    userName: `${currentUser.firstName} ${currentUser.lastName}`,
+    userId: userToLog.email,
+    userName: `${userToLog.firstName} ${userToLog.lastName}`,
     timestamp: new Date().toISOString(),
     feature: data.feature,
     model: data.model,
@@ -101,7 +107,7 @@ export async function logEvent(data: {
     outputTokens: data.outputTokens,
     environment: currentEnv,
     account: currentAccount,
-    fundCode: currentUser.fundCode,
+    fundCode: userToLog.fundCode,
   };
 
   // Create a detailed log document in the tokenEvents collection. This is also fire-and-forget.

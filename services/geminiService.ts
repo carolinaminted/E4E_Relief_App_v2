@@ -510,6 +510,7 @@ const finalDecisionSchema = {
  * application data and the preliminary decision, asking it to act as a final reviewer.
  * @param appData - The raw application data.
  * @param preliminaryDecision - The output from the `evaluateApplicationEligibility` function.
+ * @param applicantProfile - The profile of the user for whom the application is being decided, for token logging.
  * @returns A final `EligibilityDecision` object, either from the AI or falling back to the preliminary one on error.
  */
 export async function getAIAssistedDecision(
@@ -518,7 +519,8 @@ export async function getAIAssistedDecision(
         currentTwelveMonthRemaining: number,
         currentLifetimeRemaining: number,
     },
-    preliminaryDecision: EligibilityDecision
+    preliminaryDecision: EligibilityDecision,
+    applicantProfile?: UserProfile | null
 ): Promise<EligibilityDecision> {
     // Critical safeguard: If the rules engine issued a hard denial, do not let the AI override it.
     // This prevents AI from approving an application that definitively breaks a core business rule.
@@ -570,7 +572,7 @@ export async function getAIAssistedDecision(
         });
         
         const outputTokens = estimateTokens(response.text);
-        logTokenEvent({ feature: 'Final Decision', model, inputTokens, outputTokens, sessionId });
+        logTokenEvent({ feature: 'Final Decision', model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
         const jsonString = response.text.trim();
         const aiResponse = JSON.parse(jsonString) as { finalDecision: 'Approved' | 'Denied', finalReason: string, finalAward: number };
@@ -624,9 +626,10 @@ const addressJsonSchema = {
  * Uses Gemini to parse an unstructured address string into a structured JSON object.
  * The prompt includes rules for standardization (e.g., casing, state abbreviations).
  * @param addressString - The unstructured address string provided by the user.
+ * @param forUser - The user profile for whom the address is being parsed, for token logging.
  * @returns A promise that resolves to a partial `Address` object.
  */
-export async function parseAddressWithGemini(addressString: string): Promise<Partial<Address>> {
+export async function parseAddressWithGemini(addressString: string, forUser?: UserProfile | null): Promise<Partial<Address>> {
   if (!addressString) return {};
 
   const prompt = `
@@ -656,7 +659,7 @@ export async function parseAddressWithGemini(addressString: string): Promise<Par
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Address Parsing', model, inputTokens, outputTokens, sessionId });
+    logTokenEvent({ feature: 'Address Parsing', model, inputTokens, outputTokens, sessionId }, forUser);
 
     const jsonString = response.text.trim();
     if (jsonString) {
@@ -718,11 +721,13 @@ const applicationDetailsJsonSchema = {
  * structured data to pre-fill an application form.
  * @param description - The user's unstructured text description.
  * @param isProxy - A boolean indicating if the submission is from an admin on behalf of a user.
+ * @param applicantProfile - The profile of the user for whom the application is being parsed, for token logging.
  * @returns A promise that resolves to a partial `ApplicationFormData` object.
  */
 export async function parseApplicationDetailsWithGemini(
   description: string,
-  isProxy: boolean = false
+  isProxy: boolean = false,
+  applicantProfile?: UserProfile | null
 ): Promise<Partial<ApplicationFormData>> {
   if (!description) return {};
 
@@ -766,7 +771,7 @@ export async function parseApplicationDetailsWithGemini(
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Application Parsing', model, inputTokens, outputTokens, sessionId });
+    logTokenEvent({ feature: 'Application Parsing', model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
     const jsonString = response.text.trim();
     if (jsonString) {

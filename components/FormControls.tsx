@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Address } from '../types';
+import type { Address, UserProfile } from '../types';
 import RequiredIndicator from './RequiredIndicator';
 import CountrySelector from './CountrySelector';
 import AddressHelper from './AddressHelper';
@@ -40,9 +40,9 @@ export const FormRadioGroup: React.FC<{ legend: string, name: string, options: s
     </div>
 );
 
-export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof Address, value: string) => void, onBulkUpdate: (parsedAddress: Partial<Address>) => void, prefix: string, errors: Record<string, string> }> = ({ address, onUpdate, onBulkUpdate, prefix, errors }) => (
+export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof Address, value: string) => void, onBulkUpdate: (parsedAddress: Partial<Address>) => void, prefix: string, errors: Record<string, string>, forUser?: UserProfile | null }> = ({ address, onUpdate, onBulkUpdate, prefix, errors, forUser }) => (
     <>
-        <AddressHelper onAddressParsed={onBulkUpdate} variant="underline" />
+        <AddressHelper onAddressParsed={onBulkUpdate} variant="underline" forUser={forUser} />
         <CountrySelector id={`${prefix}Country`} required value={address.country} onUpdate={value => onUpdate('country', value)} variant="underline" error={errors.country}/>
         <FormInput label="Street 1" id={`${prefix}Street1`} required value={address.street1} onChange={e => onUpdate('street1', e.target.value)} error={errors.street1} />
         <div className="grid grid-cols-2 gap-x-6">
