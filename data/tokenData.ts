@@ -15,6 +15,15 @@ const MOCK_USERS = ['user@example.com', 'admin@example.com', 'test@example.com']
 const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision', 'AI Apply Chat'];
 const MOCK_MODELS: TokenEvent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 const MOCK_FUND_CODES = ['E4E', 'JHH', 'SQRT', 'DOM', 'ROST'];
+// FIX: Added a mock fund map to provide fund names for mock data, resolving the missing 'fundName' property error.
+const MOCK_FUND_MAP = new Map([
+    ['E4E', 'E4E Relief Fund'],
+    ['JHH', 'JHH Relief Fund'],
+    ['SQRT', 'SQRT Relief Fund'],
+    ['DOM', 'Domino\'s Partner Foundation'],
+    ['ROST', 'Roster Fund'],
+]);
+
 
 // --- Generate realistic mock data ---
 let mockTokenEvents: TokenEvent[] = [];
@@ -84,10 +93,12 @@ export async function getTokenUsageTableData(filters: TokenUsageFilters, current
                 year: 'numeric'
             });
             // FIX: Add missing 'userName' and 'fundCode' properties to satisfy the TokenUsageTableRow type.
+            // FIX: Added missing 'fundName' property to satisfy the TokenUsageTableRow type.
             usageByFeatureInSession[key] = {
               date: formattedDate,
               userName: event.userName,
               fundCode: event.fundCode,
+              fundName: MOCK_FUND_MAP.get(event.fundCode) || event.fundCode,
               input: 0,
               cached: 0,
               output: 0,

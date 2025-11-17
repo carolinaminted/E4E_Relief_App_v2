@@ -51,7 +51,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data, onSort, sortCon
         <thead className="border-b border-[#005ca0] text-xs text-gray-200 uppercase">
           <tr>
             <SortableTh sortKey="userName" onSort={onSort} sortConfig={sortConfig}>User</SortableTh>
-            <SortableTh sortKey="fundCode" onSort={onSort} sortConfig={sortConfig}>Fund</SortableTh>
+            <SortableTh sortKey="fundName" onSort={onSort} sortConfig={sortConfig}>Fund</SortableTh>
             <SortableTh sortKey="date" onSort={onSort} sortConfig={sortConfig}>Date</SortableTh>
             <SortableTh sortKey="feature" onSort={onSort} sortConfig={sortConfig}>Feature</SortableTh>
             <SortableTh sortKey="input" onSort={onSort} sortConfig={sortConfig} className="text-right">Input</SortableTh>
@@ -66,7 +66,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data, onSort, sortCon
               data.map((row, index) => (
                   <tr key={`${row.user}-${row.session}-${row.feature}-${index}`} className="border-b border-[#005ca0] hover:bg-[#004b8d]/50">
                       <td className="px-4 py-2 font-medium text-white truncate" title={row.user}>{row.userName}</td>
-                      <td className="px-4 py-2 text-white font-mono">{row.fundCode}</td>
+                      <td className="px-4 py-2 text-white">{row.fundName}</td>
                       <td className="px-4 py-2 text-white">{row.date}</td>
                       <td className="px-4 py-2 text-white">{row.feature}</td>
                       <td className="px-4 py-2 text-white text-right">{row.input.toLocaleString()}</td>

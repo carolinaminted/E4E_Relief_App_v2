@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { UserProfile, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, TokenEvent, ModelPricing } from '../types';
-import { tokenEventsRepo } from '../services/firestoreRepo';
+import { tokenEventsRepo, fundsRepo } from '../services/firestoreRepo';
+import type { Fund } from '../data/fundData';
 
 import { TopSessionChart, LastHourUsageChart, Last15MinutesUsageChart } from './TokenUsageCharts';
 import TokenUsageTable from './TokenUsageTable';
@@ -42,6 +43,7 @@ const CardLoader: React.FC = () => (
 const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }) => {
   const [isFetching, setIsFetching] = useState(true);
   const [allEvents, setAllEvents] = useState<TokenEvent[]>([]);
+  const [allFunds, setAllFunds] = useState<Fund[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>({ key: 'date', direction: 'descending' });
 
@@ -68,11 +70,16 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   const fetchData = useCallback(async () => {
     setIsFetching(true);
     try {
-        const events = await tokenEventsRepo.getAllEvents();
+        const [events, funds] = await Promise.all([
+            tokenEventsRepo.getAllEvents(),
+            fundsRepo.getAllFunds()
+        ]);
         setAllEvents(events);
+        setAllFunds(funds);
     } catch (error) {
         console.error("Failed to fetch token analytics:", error);
         setAllEvents([]);
+        setAllFunds([]);
     } finally {
         setIsFetching(false);
     }
@@ -81,6 +88,10 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const fundMap = useMemo(() => {
+    return new Map(allFunds.map(fund => [fund.code, fund.name]));
+  }, [allFunds]);
 
   const tableData = useMemo((): TokenUsageTableRow[] => {
     const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
@@ -93,7 +104,17 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                 day: 'numeric',
                 year: 'numeric'
             });
-            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0, userName: event.userName, fundCode: event.fundCode };
+            usageByFeatureInSession[key] = { 
+                date: formattedDate, 
+                input: 0, 
+                cached: 0, 
+                output: 0, 
+                total: 0, 
+                cost: 0, 
+                userName: event.userName, 
+                fundCode: event.fundCode,
+                fundName: fundMap.get(event.fundCode) || event.fundCode
+            };
         }
         const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
         const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);
@@ -107,11 +128,20 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     return Object.entries(usageByFeatureInSession).map(([key, data]) => {
         const [user, session, feature] = key.split('|');
         return { user, session, feature, ...data };
-    });
-  }, [allEvents]);
+    }) as TokenUsageTableRow[];
+  }, [allEvents, fundMap]);
   
+  const recentTableData = useMemo(() => {
+    const sortedByDate = [...tableData].sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA; // Descending
+    });
+    return sortedByDate.slice(0, 25);
+  }, [tableData]);
+
   const processedTableData = useMemo(() => {
-    let sortedData = [...tableData];
+    let sortedData = [...recentTableData];
 
     if (sortConfig !== null) {
       sortedData.sort((a, b) => {
@@ -146,10 +176,10 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     return sortedData.filter(row => 
         row.userName.toLowerCase().includes(lowercasedSearchTerm) ||
-        row.fundCode.toLowerCase().includes(lowercasedSearchTerm) ||
+        row.fundName.toLowerCase().includes(lowercasedSearchTerm) ||
         row.feature.toLowerCase().includes(lowercasedSearchTerm)
     );
-  }, [tableData, searchTerm, sortConfig]);
+  }, [recentTableData, searchTerm, sortConfig]);
 
   const handleSort = (key: keyof TokenUsageTableRow) => {
     let direction: SortDirection = 'ascending';
@@ -239,7 +269,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
       [
         `"${row.userName}"`,
         row.user,
-        row.fundCode,
+        row.fundName,
         row.date,
         row.session,
         row.feature,

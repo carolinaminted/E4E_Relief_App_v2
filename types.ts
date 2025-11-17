@@ -266,6 +266,7 @@ export interface TokenUsageTableRow {
   session: string;
   feature: string;
   fundCode: string;
+  fundName: string;
   input: number;
   cached: number;
   output: number;
