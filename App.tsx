@@ -510,7 +510,9 @@ function App() {
     try {
         const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
         localStorage.removeItem(draftKey);
-        console.log("Successfully submitted. Cleared saved application draft.");
+        const chatHistoryKey = `aiApplyChatHistory-${currentUser.uid}`;
+        sessionStorage.removeItem(chatHistoryKey);
+        console.log("Successfully submitted. Cleared saved application draft and AI Apply chat history.");
     } catch (error) {
         console.error("Could not remove application draft from localStorage after submission:", error);
     }
@@ -660,8 +662,6 @@ function App() {
         if (args.primaryAddress) {
             profileUpdates.primaryAddress = { ...(applicationDraft?.profileData?.primaryAddress || {}), ...args.primaryAddress };
         }
-        // FIX: Type 'Partial<UserProfile>' is not assignable to type 'UserProfile'.
-        // Create a full UserProfile object by merging with the current user and draft data.
         newDraft.profileData = {
             ...currentUser,
             ...applicationDraft?.profileData,
@@ -670,8 +670,6 @@ function App() {
     }
 
     if (functionName === 'startOrUpdateApplicationDraft') {
-        // FIX: The `eventData` property expects a full `EventData` object. Create one by merging
-        // the partial updates from the AI with default values and the existing draft data.
         const eventUpdates: Partial<EventData> = { ...args };
         newDraft.eventData = {
             event: '',
@@ -687,22 +685,28 @@ function App() {
 
     if (functionName === 'addOrUpdateExpense') {
         const prevEventData = applicationDraft?.eventData || {};
-        const existingExpenses: Expense[] = [...(prevEventData.expenses || [])];
-        const expenseIndex = existingExpenses.findIndex(e => e.type === args.type);
+        const newExpenses: Expense[] = [...(prevEventData.expenses || [])];
         
-        if (expenseIndex > -1) {
-            existingExpenses[expenseIndex].amount = args.amount;
-        } else {
-            existingExpenses.push({
-                id: `exp-${args.type.replace(/\s+/g, '-')}`,
-                type: args.type,
-                amount: args.amount,
-                fileName: '',
-            });
+        if (args.expenses && Array.isArray(args.expenses)) {
+            for (const expenseArg of args.expenses) {
+                if (expenseArg.type && typeof expenseArg.amount === 'number') {
+                    const expenseIndex = newExpenses.findIndex(e => e.type === expenseArg.type);
+                    
+                    if (expenseIndex > -1) {
+                        newExpenses[expenseIndex].amount = expenseArg.amount;
+                    } else {
+                        newExpenses.push({
+                            id: `exp-${expenseArg.type.replace(/\s+/g, '-')}`,
+                            type: expenseArg.type,
+                            amount: expenseArg.amount,
+                            fileName: '',
+                        });
+                    }
+                }
+            }
         }
-        // FIX: Type '{ expenses: Expense[]; }' is missing properties from type 'EventData'.
-        // Create a full EventData object by merging the expense update with default values and existing draft data.
-        const eventUpdates: Partial<EventData> = { expenses: existingExpenses };
+        
+        const eventUpdates: Partial<EventData> = { expenses: newExpenses };
          newDraft.eventData = {
             event: '',
             eventDate: '',
@@ -716,8 +720,6 @@ function App() {
     }
 
     if (functionName === 'updateAgreements') {
-        // FIX: The `agreementData` property expects a full object. Create one by merging
-        // the partial updates with default values and existing draft data.
         const agreementUpdates = { ...args };
         newDraft.agreementData = {
             shareStory: null,

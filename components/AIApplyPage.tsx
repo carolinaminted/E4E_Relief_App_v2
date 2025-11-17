@@ -132,18 +132,19 @@ const AIApplyPreviewPane: React.FC<{
         return expenses.length === 3 && expenses.every(e => e.amount !== '' && Number(e.amount) > 0);
     }, [applicationDraft]);
     
-    const getInitialSection = useCallback((): SectionKey => {
-        if (!isAdditionalDetailsComplete) return 'additional';
-        if (!isEventDetailsComplete) return 'event';
-        if (!isExpensesComplete) return 'expenses';
-        return 'agreements';
-    }, [isAdditionalDetailsComplete, isEventDetailsComplete, isExpensesComplete]);
-
-    const [openSection, setOpenSection] = useState<SectionKey | null>(getInitialSection());
+    const [openSection, setOpenSection] = useState<SectionKey | null>(null);
 
     const toggleSection = (section: SectionKey) => {
         setOpenSection(prev => (prev === section ? null : section));
     };
+
+    // Effect to auto-open the next incomplete section
+    useEffect(() => {
+        if (!isAdditionalDetailsComplete) setOpenSection('additional');
+        else if (!isEventDetailsComplete) setOpenSection('event');
+        else if (!isExpensesComplete) setOpenSection('expenses');
+        else setOpenSection('agreements');
+    }, [isAdditionalDetailsComplete, isEventDetailsComplete, isExpensesComplete]);
     
     const isProfileItemComplete = (key: string) => {
         const draftValue = applicationDraft?.profileData?.[key as keyof UserProfile];
@@ -244,13 +245,10 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const chatSessionRef = useRef<Chat | null>(null);
   const chatTokenSessionIdRef = useRef<string | null>(null);
+
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(() => {
-    if (typeof window === 'undefined') {
-        return true;
-    }
-    if (window.innerWidth >= 768) {
-        return true;
-    }
+    if (typeof window === 'undefined') return true;
+    if (window.innerWidth >= 768) return true;
     return sessionStorage.getItem('ai-apply-preview-interacted') === 'true';
   });
   const initDoneForUser = useRef<string | null>(null);
@@ -290,11 +288,11 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       if (!chatTokenSessionIdRef.current) {
         chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
       }
-      const historyToSeed = messages.length > 0 ? messages.slice(-6) : [];
+      const historyToSeed = messages.length > 1 ? messages.slice(-6) : [];
       chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply', applicationDraft);
     }
-  }, [applications, activeFund, userProfile, messages, applicationDraft]);
-
+  }, [applications, activeFund, userProfile, applicationDraft, messages]);
+  
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (!userInput.trim() || isLoading) return;
 
@@ -302,82 +300,54 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
     setMessages(prev => [...prev, userMessage]);
     
-    if (!chatSessionRef.current && userProfile) {
-        const historyToSeed = messages.slice(-6);
-        chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply', applicationDraft);
-    }
+    // Capture the session at the beginning of the turn to avoid race conditions.
+    const currentTurnSession = chatSessionRef.current;
 
     try {
-        if (!chatSessionRef.current) throw new Error("Chat session not initialized.");
-        
-        let totalInputTokens = estimateTokens(userInput);
-        let totalOutputTokens = 0;
+      if (!currentTurnSession) throw new Error("Chat session not initialized.");
+      
+      // FIRST API CALL: Send user message and get potential function calls
+      const response1 = await currentTurnSession.sendMessage({ message: userInput });
+      
+      const functionCalls = response1.functionCalls;
 
-        const response1 = await chatSessionRef.current.sendMessage({ message: userInput });
-        
-        const text1 = response1.text;
-        const functionCalls = response1.functionCalls;
-
-        if (text1) {
-            setMessages(prev => [...prev, { role: MessageRole.MODEL, content: text1 }]);
-            totalOutputTokens += estimateTokens(text1);
+      // If there are no function calls, the turn is simple. Display the text and finish.
+      if (!functionCalls || functionCalls.length === 0) {
+        if (response1.text) {
+          setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response1.text }]);
         }
+        // Even if the response is empty, the turn is over.
+        return;
+      }
+      
+      // If there are function calls, execute them and then send the results back to the model.
+      
+      // This will trigger a re-render and update the application draft state in the parent.
+      // A new `chatSessionRef` will be created for the *next* turn, which is the desired behavior.
+      functionCalls.forEach(call => onChatbotAction(call.name, call.args));
 
-        if (functionCalls && functionCalls.length > 0) {
-            totalOutputTokens += estimateTokens(JSON.stringify(functionCalls));
+      const functionResponses = functionCalls.map(call => {
+        return { functionResponse: { name: call.name, response: { result: 'ok' } } };
+      });
 
-            const functionResponses = functionCalls.map(call => {
-                onChatbotAction(call.name, call.args);
-                return { functionResponse: { name: call.name, response: { result: 'ok' } } };
-            });
-            
-            totalInputTokens += estimateTokens(JSON.stringify(functionResponses));
-            
-            const response2 = await chatSessionRef.current.sendMessage({ message: functionResponses });
-            const text2 = response2.text;
-
-            if (text2) {
-                if (text1) {
-                    setMessages(prev => {
-                        const lastMessage = prev[prev.length - 1];
-                        if (lastMessage && lastMessage.role === MessageRole.MODEL) {
-                            const newMessages = [...prev];
-                            newMessages[newMessages.length - 1] = {
-                                ...lastMessage,
-                                content: lastMessage.content + '\n\n' + text2
-                            };
-                            return newMessages;
-                        }
-                        return [...prev, { role: MessageRole.MODEL, content: text2 }];
-                    });
-                } else {
-                    setMessages(prev => [...prev, { role: MessageRole.MODEL, content: text2 }]);
-                }
-                totalOutputTokens += estimateTokens(text2);
-            }
-        }
-
-        if (chatTokenSessionIdRef.current) {
-            logTokenEvent({
-                feature: 'AI Apply Chat',
-                model: 'gemini-2.5-flash',
-                inputTokens: totalInputTokens,
-                outputTokens: totalOutputTokens,
-                sessionId: chatTokenSessionIdRef.current,
-            });
-        }
-
+      // SECOND API CALL: Send tool responses back using the *same session* from this turn.
+      const response2 = await currentTurnSession.sendMessage({ message: functionResponses });
+      
+      // The final text response comes from the second call.
+      if (response2.text) {
+        setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response2.text }]);
+      }
+      // It's possible for the model to just execute a tool and say nothing. In that case, we don't add an empty bubble.
+      
     } catch (error) {
-      console.error(error);
-      const errorMessage: ChatMessage = { 
-        role: MessageRole.ERROR, 
-        content: t('chatbotWidget.errorMessage') 
-      };
-      setMessages(prevMessages => [...prevMessages, errorMessage]);
+      console.error("Error during AI Apply chat turn:", error);
+      const errorMessage: ChatMessage = { role: MessageRole.ERROR, content: t('chatbotWidget.errorMessage') };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
+      // This always runs, ensuring the loading state is reset.
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages, applicationDraft]);
+  }, [isLoading, onChatbotAction, t]);
 
   const handlePreviewClick = useCallback(() => {
     if (!hasInteractedWithPreview) {

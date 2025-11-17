@@ -17,19 +17,29 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({ id, value, onUpdate, 
   const [searchTerm, setSearchTerm] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+    };
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   useEffect(() => {
     setSearchTerm(value);
   }, [value]);
 
   const filteredCountries = useMemo(() => {
-    if (!searchTerm) {
+    if (!searchTerm || isMobile) {
       return countries;
     }
     return countries.filter(country =>
       country.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [searchTerm, isMobile]);
 
   const handleSelectCountry = (country: string) => {
     setSearchTerm(country);
@@ -38,6 +48,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({ id, value, onUpdate, 
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isMobile) return;
     setSearchTerm(e.target.value);
     if (!isOpen) setIsOpen(true);
   };
@@ -49,15 +60,19 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({ id, value, onUpdate, 
         // When clicking away, check if the current input is a valid option (case-insensitive).
         // If it is, ensure the parent state is updated with the correctly cased version.
         // If it's not, revert the input to the last valid value from the parent.
-        const foundCountry = countries.find(c => c.toLowerCase() === searchTerm.toLowerCase());
-        if (foundCountry) {
-            if (foundCountry !== value) {
-                onUpdate(foundCountry);
-            }
-            // also update the local state to have the correct casing
-            setSearchTerm(foundCountry);
+        if (!isMobile) {
+          const foundCountry = countries.find(c => c.toLowerCase() === searchTerm.toLowerCase());
+          if (foundCountry) {
+              if (foundCountry !== value) {
+                  onUpdate(foundCountry);
+              }
+              // also update the local state to have the correct casing
+              setSearchTerm(foundCountry);
+          } else {
+              setSearchTerm(value);
+          }
         } else {
-            setSearchTerm(value);
+          setSearchTerm(value);
         }
       }
     }
@@ -65,7 +80,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({ id, value, onUpdate, 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [wrapperRef, searchTerm, value, onUpdate]);
+  }, [wrapperRef, searchTerm, value, onUpdate, isMobile]);
   
   const baseInputClasses = "w-full text-base text-white focus:outline-none focus:ring-0";
   const variantClasses = {
@@ -84,6 +99,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({ id, value, onUpdate, 
         value={searchTerm}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
+        readOnly={isMobile}
         className={`${baseInputClasses} ${variantClasses[variant]}`}
         autoComplete="off"
         required={required}

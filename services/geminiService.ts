@@ -95,14 +95,24 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
 
 const addOrUpdateExpenseTool: FunctionDeclaration = {
   name: 'addOrUpdateExpense',
-  description: 'Adds a new expense item or updates the amount for an existing expense type.',
+  description: 'Adds or updates one or more expense items to the application draft. Can process a list of expenses provided by the user in a single message.',
   parameters: {
     type: Type.OBJECT,
     properties: {
-        type: { type: Type.STRING, description: "The type of expense.", enum: expenseTypes },
-        amount: { type: Type.NUMBER, description: "The cost of the expense." },
+        expenses: {
+            type: Type.ARRAY,
+            description: "An array of expense items.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    type: { type: Type.STRING, description: "The type of expense.", enum: expenseTypes },
+                    amount: { type: Type.NUMBER, description: "The cost of the expense." },
+                },
+                required: ['type', 'amount'],
+            }
+        }
     },
-    required: ['type', 'amount'],
+    required: ['expenses'],
   },
 };
 
