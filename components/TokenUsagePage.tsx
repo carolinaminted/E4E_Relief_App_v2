@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import type { UserProfile, TokenUsageTableRow, TopSessionData, LastHourUsageDataPoint, TokenEvent, ModelPricing } from '../types';
+import type { UserProfile, TokenUsageTableRow, TopUserData, LastHourUsageDataPoint, TokenEvent, ModelPricing } from '../types';
 import { tokenEventsRepo, fundsRepo } from '../services/firestoreRepo';
 import type { Fund } from '../data/fundData';
 
-import { TopSessionChart, LastHourUsageChart, Last15MinutesUsageChart } from './TokenUsageCharts';
+import { TopUserChart, LastHourUsageChart, TopFundsChart } from './TokenUsageCharts';
 import TokenUsageTable from './TokenUsageTable';
 
 interface TokenUsagePageProps {
@@ -67,6 +67,9 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
   
+  // FIX: Define chartColors constant for use in charts.
+  const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600'];
+
   const fetchData = useCallback(async () => {
     setIsFetching(true);
     try {
@@ -181,28 +184,21 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     );
   }, [recentTableData, searchTerm, sortConfig]);
 
-  const handleSort = (key: keyof TokenUsageTableRow) => {
-    let direction: SortDirection = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const topSessionData = useMemo((): TopSessionData | null => {
+  const topUserData = useMemo((): TopUserData | null => {
     if (allEvents.length === 0) return null;
-    const usageBySession: { [sessionId: string]: TopSessionData } = {};
+    const usageByUser: { [userName: string]: TopUserData } = {};
     for (const event of allEvents) {
-        if (!usageBySession[event.sessionId]) {
-            usageBySession[event.sessionId] = { sessionId: event.sessionId, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0, totalTokens: 0 };
+        if (!usageByUser[event.userName]) {
+            usageByUser[event.userName] = { userName: event.userName, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0, totalTokens: 0 };
         }
-        usageBySession[event.sessionId].inputTokens += event.inputTokens;
-        usageBySession[event.sessionId].cachedInputTokens += event.cachedInputTokens;
-        usageBySession[event.sessionId].outputTokens += event.outputTokens;
-        usageBySession[event.sessionId].totalTokens += event.inputTokens + event.cachedInputTokens + event.outputTokens;
+        usageByUser[event.userName].inputTokens += event.inputTokens;
+        usageByUser[event.userName].cachedInputTokens += event.cachedInputTokens;
+        usageByUser[event.userName].outputTokens += event.outputTokens;
+        usageByUser[event.userName].totalTokens += event.inputTokens + event.cachedInputTokens + event.outputTokens;
     }
-    const allSessions = Object.values(usageBySession);
-    return allSessions.reduce((max, current) => current.totalTokens > max.totalTokens ? current : max, allSessions[0]);
+    const allUsers = Object.values(usageByUser);
+    if (allUsers.length === 0) return null;
+    return allUsers.reduce((max, current) => current.totalTokens > max.totalTokens ? current : max, allUsers[0]);
   }, [allEvents]);
 
   const lastHourUsage = useMemo((): LastHourUsageDataPoint[] => {
@@ -229,30 +225,6 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
       return fullHourData;
   }, [allEvents]);
 
-  const last15MinutesUsage = useMemo((): LastHourUsageDataPoint[] => {
-      const now = new Date();
-      const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
-      const relevantEvents = allEvents.filter(event => new Date(event.timestamp) >= fifteenMinutesAgo);
-      const usageByMinute: Map<string, number> = new Map();
-
-      for (const event of relevantEvents) {
-          const eventDate = new Date(event.timestamp);
-          eventDate.setSeconds(0, 0);
-          const minuteKey = eventDate.toISOString();
-          const totalTokens = event.inputTokens + event.cachedInputTokens + event.outputTokens;
-          usageByMinute.set(minuteKey, (usageByMinute.get(minuteKey) || 0) + totalTokens);
-      }
-      
-      const full15MinutesData: LastHourUsageDataPoint[] = [];
-      for (let i = 0; i <= 15; i++) {
-          const minuteTimestamp = new Date(fifteenMinutesAgo.getTime() + i * 60 * 1000);
-          minuteTimestamp.setSeconds(0, 0);
-          const minuteKey = minuteTimestamp.toISOString();
-          full15MinutesData.push({ timestamp: minuteKey, totalTokens: usageByMinute.get(minuteKey) || 0 });
-      }
-      return full15MinutesData;
-  }, [allEvents]);
-
   const { totalCost, totalTokens } = useMemo(() => {
       return tableData.reduce((acc, row) => {
           acc.totalCost += row.cost;
@@ -261,6 +233,32 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
       }, { totalCost: 0, totalTokens: 0 });
   }, [tableData]);
 
+  const topFundsData = useMemo(() => {
+    if (allEvents.length === 0) return [];
+    const usageByFund: { [fundCode: string]: number } = {};
+    for (const event of allEvents) {
+        if (!usageByFund[event.fundCode]) {
+            usageByFund[event.fundCode] = 0;
+        }
+        usageByFund[event.fundCode] += event.inputTokens + event.cachedInputTokens + event.outputTokens;
+    }
+
+    return Object.entries(usageByFund)
+        .map(([fundCode, totalTokens]) => ({
+            label: fundMap.get(fundCode) || fundCode,
+            value: totalTokens,
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+  }, [allEvents, fundMap]);
+
+  const handleSort = (key: keyof TokenUsageTableRow) => {
+    let direction: SortDirection = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const handleExportCSV = () => {
     if (processedTableData.length === 0) return;
@@ -351,12 +349,12 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                     {isFetching && <CardLoader />}
                 </div>
                  <div className="relative bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0] md:col-span-2 lg:col-span-1">
-                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Highest-Token Session</h3>
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider text-center mb-2">Top User by Token Count</h3>
                     <div className="pt-2">
                         {isFetching ? (
                             <div className="h-20" /> // Placeholder to prevent layout shift
                         ) : (
-                            <TopSessionChart topSession={topSessionData} />
+                            <TopUserChart topUser={topUserData} />
                         )}
                     </div>
                     {isFetching && <CardLoader />}
@@ -378,12 +376,12 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
                 <div className="bg-[#003a70]/50 rounded-lg border border-[#005ca0]">
                     <button type="button" onClick={() => toggleSection('last15')} className="w-full flex justify-between items-center text-left p-4" aria-expanded={openSections.last15}>
-                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Session Tokens (Last 15 Min)</h3>
+                        <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Top 5 Funds by Tokens Used</h3>
                         <ChevronIcon isOpen={openSections.last15} />
                     </button>
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.last15 ? 'max-h-[1000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
                         <div className="pt-4">
-                            <Last15MinutesUsageChart usage={last15MinutesUsage} />
+                            <TopFundsChart data={topFundsData} colors={chartColors} />
                         </div>
                     </div>
                 </div>

@@ -315,3 +315,14 @@ export interface LastHourUsageDataPoint {
   timestamp: string; // ISO 8601 timestamp string.
   totalTokens: number;
 }
+
+/**
+ * Represents aggregated token usage data for the user with the highest token count.
+ */
+export interface TopUserData {
+  userName: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
