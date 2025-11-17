@@ -292,9 +292,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
                     <div className="space-y-2 w-full">
                         {stats.recentUsersData.map((user, index) => (
                             <div key={index} className="grid grid-cols-10 gap-2 text-sm p-2 rounded hover:bg-[#004b8d]/50">
-                                <span className="text-white truncate col-span-4">{user.name}</span>
-                                <span className="text-gray-300 truncate col-span-4">{user.email}</span>
-                                <span className="text-white font-mono text-right col-span-2">{user.fund}</span>
+                                <span className="text-white truncate col-span-5">{user.name}</span>
+                                <span className="text-gray-300 truncate col-span-5">{user.email}</span>
                             </div>
                         ))}
                     </div>
