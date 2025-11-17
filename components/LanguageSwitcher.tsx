@@ -25,7 +25,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'header' 
   // The 'sideNav' variant has a distinct background and is used in the desktop sidebar.
   if (variant === 'sideNav') {
     return (
-        <div className="flex items-center justify-center gap-2 p-2 bg-[#004b8d]/50 rounded-md">
+        <div className="flex items-center justify-center gap-2">
             <button
                 onClick={() => changeLanguage('en')}
                 className={`${baseClasses} ${i18n.language.startsWith('en') ? activeClasses : inactiveClasses}`}
