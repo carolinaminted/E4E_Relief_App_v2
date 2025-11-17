@@ -105,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
               aria-haspopup="true"
               aria-expanded={isUserDropdownOpen}
             >
-              <div className="flex flex-col items-end -space-y-1">
+              <div className="flex flex-col items-end space-y-1">
                   <span className="text-base truncate max-w-[150px]">{t('nav.welcome', { name: userName })}</span>
                    <div onClick={(e) => { e.stopPropagation(); handleEligibilityClick(); }}>
                       <EligibilityIndicator eligibilityStatus={eligibilityStatus} cvStatus={cvStatus} />

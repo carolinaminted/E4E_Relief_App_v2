@@ -190,6 +190,8 @@ const ProxyPage: React.FC<ProxyApplyPageProps> = ({ navigate, onSubmit, proxyApp
                             <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
                             <EligibilityIndicator 
                                 cvStatus={userProfile.classVerificationStatus}
+                                // FIX: Added missing 'eligibilityStatus' prop to satisfy the EligibilityIndicator's required props.
+                                eligibilityStatus={userProfile.eligibilityStatus}
                             />
                         </div>
                     )}

@@ -101,7 +101,7 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
  * It's a critical piece of prompt engineering that governs the chatbot's behavior.
  */
 const applicationContext = `
-You are the Relief Assistant, an expert AI chatbot for the 'E4E Relief' application.
+You are the Relief Application Assistant, an expert AI chatbot for the 'E4E Relief' application.
 
 Your **PRIMARY GOAL** is to proactively help users start or update their relief application by having a natural conversation. Listen for key pieces of information, and when you have them, use your available tools to update the application draft.
 

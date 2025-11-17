@@ -256,8 +256,8 @@
     "title": "Centro de Soporte",
     "emailLabel": "Correo de Soporte",
     "phoneLabel": "Teléfono de Soporte",
-    "chatbotButton": "Hablar con el Asistente de Ayuda",
-    "chatbotDisclaimer": "El Asistente de Ayuda usa IA. Llámanos o envíanos un correo con cualquier pregunta adicional.",
+    "chatbotButton": "Hablar con el Asistente de Solicitud de Ayuda",
+    "chatbotDisclaimer": "El Asistente de Solicitud de Ayuda usa IA. Llámanos o envíanos un correo con cualquier pregunta adicional.",
     "faqTitle": "Preguntas Frecuentes",
     "faqDescription": "Encuentra respuestas a preguntas comunes.",
     "paymentsTitle": "Pagos",
@@ -332,8 +332,8 @@
     "errorCvc": "El CVC debe tener 3 o 4 dígitos."
   },
   "chatbotWidget": {
-    "greeting": "¡Hola! Soy el Asistente de Ayuda. ¿Cómo puedo ayudarte hoy? Siéntete libre de contarme sobre tu situación.",
-    "title": "Asistente de Ayuda",
+    "greeting": "¡Hola! Soy el Asistente de Solicitud de Ayuda. ¿Cómo puedo ayudarte hoy? Siéntete libre de contarme sobre tu situación.",
+    "title": "Asistente de Solicitud de Ayuda",
     "disclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>.",
     "errorMessage": "Lo siento, encontré un error. Por favor, inténtalo de nuevo.",
     "placeholder": "Escribe tu mensaje..."

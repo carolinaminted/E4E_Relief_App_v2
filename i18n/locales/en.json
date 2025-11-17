@@ -259,8 +259,8 @@
     "title": "Support Center",
     "emailLabel": "Support Email",
     "phoneLabel": "Support Phone",
-    "chatbotButton": "Talk to Relief Assistant",
-    "chatbotDisclaimer": "Relief Assistant uses AI. Call or email us with any additional questions.",
+    "chatbotButton": "Talk to Relief Application Assistant",
+    "chatbotDisclaimer": "Relief Application Assistant uses AI. Call or email us with any additional questions.",
     "faqTitle": "FAQs",
     "faqDescription": "Find answers to common questions.",
     "paymentsTitle": "Payments",
@@ -335,8 +335,8 @@
     "errorCvc": "CVC must be 3 or 4 digits."
   },
   "chatbotWidget": {
-    "greeting": "Hello! I'm the Relief Assistant. How can I help you today? Feel free to tell me about your situation.",
-    "title": "Relief Assistant",
+    "greeting": "Hello! I'm the Relief Application Assistant. How can I help you today? Feel free to tell me about your situation.",
+    "title": "Relief Application Assistant",
     "disclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>.",
     "errorMessage": "Sorry, I encountered an error. Please try again.",
     "placeholder": "Type your message..."
