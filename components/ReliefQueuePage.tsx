@@ -52,7 +52,7 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
         </div>
 
         <div className="flex justify-center">
-            <EligibilityIndicator cvStatus={userProfile.classVerificationStatus} />
+            <EligibilityIndicator eligibilityStatus={userProfile.eligibilityStatus} cvStatus={userProfile.classVerificationStatus} />
         </div>
 
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-left">

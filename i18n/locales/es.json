@@ -12,7 +12,9 @@
     "yes": "Sí",
     "no": "No",
     "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora.",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "eligible": "Elegible",
+    "ineligible": "No Elegible"
   },
   "eligibilityIndicator": {
     "eligibleMessage": "Estás verificado para este programa de fondos de ayuda. Solicitar ayuda no garantiza que se desembolsará un pago.",
@@ -192,8 +194,6 @@
   },
   "profilePage": {
     "title": "Perfil",
-    "eligibility": "Elegible para solicitar ayuda",
-    "verificationNeeded": "Verificación necesaria",
     "myApplicationsTitle": "Mis Solicitudes",
     "twelveMonthRemaining": "Restante de 12 Meses",
     "lifetimeRemaining": "Restante de por Vida",

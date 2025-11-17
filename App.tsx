@@ -795,12 +795,16 @@ function App() {
         userName={currentUser.firstName}
         onLogout={handleLogout}
         canApply={canApply}
+        eligibilityStatus={currentUser.eligibilityStatus}
+        cvStatus={currentUser.classVerificationStatus}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header 
             userName={currentUser.firstName}
             onLogout={handleLogout}
+            eligibilityStatus={currentUser.eligibilityStatus}
+            cvStatus={currentUser.classVerificationStatus}
         />
         <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
           <div className="hidden md:block">
@@ -813,9 +817,6 @@ function App() {
                       {activeIdentity && (
                         <div className="mt-2 flex flex-col items-center gap-2">
                           <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
-                           <span className="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors bg-green-800/50 text-green-300">
-                              {t('applyPage.eligibility')}
-                          </span>
                         </div>
                       )}
                   </div>

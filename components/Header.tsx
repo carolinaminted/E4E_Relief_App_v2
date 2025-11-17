@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { EligibilityStatus, ClassVerificationStatus } from '../types';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface HeaderProps {
   userName: string;
   onLogout: () => void;
+  eligibilityStatus: EligibilityStatus;
+  cvStatus: ClassVerificationStatus;
 }
 
-const Header: React.FC<HeaderProps> = ({ userName, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus }) => {
   const { t, i18n } = useTranslation();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -85,11 +89,14 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout }) => {
         <div className="relative" ref={userDropdownRef}>
           <button
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-            className="flex items-center gap-1 text-gray-200 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1"
+            className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1"
             aria-haspopup="true"
             aria-expanded={isUserDropdownOpen}
           >
-            <span className="text-base truncate max-w-[150px]">{t('nav.welcome', { name: userName })}</span>
+            <div className="flex flex-col items-end -space-y-1">
+                <span className="text-base truncate max-w-[150px]">{t('nav.welcome', { name: userName })}</span>
+                <EligibilityIndicator eligibilityStatus={eligibilityStatus} cvStatus={cvStatus} />
+            </div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>

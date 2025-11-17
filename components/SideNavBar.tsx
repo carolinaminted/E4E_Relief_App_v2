@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon, SparklesIcon } from './Icons';
-import type { Page } from '../types';
+import type { Page, EligibilityStatus, ClassVerificationStatus } from '../types';
 import LanguageSwitcher from './LanguageSwitcher';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface SideNavBarProps {
   navigate: (page: Page) => void;
@@ -11,6 +12,8 @@ interface SideNavBarProps {
   userName: string;
   onLogout: () => void;
   canApply: boolean;
+  eligibilityStatus: EligibilityStatus;
+  cvStatus: ClassVerificationStatus;
 }
 
 interface NavItemType {
@@ -34,7 +37,7 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus }) => {
   const { t, i18n } = useTranslation();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -77,7 +80,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
   return (
       <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#002a50] p-4">
         <div className="mb-6">
-            <div className="flex items-center mb-4">
+            <div className="flex justify-center items-center mb-2">
                 <div className="relative" ref={langDropdownRef}>
                   <button
                     onClick={() => setIsLangDropdownOpen(prev => !prev)}
@@ -109,11 +112,14 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
                     </div>
                   )}
                 </div>
-                <div className="flex-1 flex justify-center items-center min-w-0">
-                    <span className="text-gray-200 truncate pl-2">{t('nav.welcome', { name: userName })}</span>
+            </div>
+            <div className="text-center">
+                <span className="text-gray-200 truncate">{t('nav.welcome', { name: userName })}</span>
+                 <div className="mt-1 flex justify-center">
+                    <EligibilityIndicator eligibilityStatus={eligibilityStatus} cvStatus={cvStatus} />
                 </div>
             </div>
-            <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200">
+            <button onClick={onLogout} className="bg-[#ff8400]/20 hover:bg-[#ff8400]/40 text-[#ffc88a] font-semibold py-2 w-full rounded-md text-sm transition-colors duration-200 mt-4">
               {t('nav.logout')}
             </button>
         </div>

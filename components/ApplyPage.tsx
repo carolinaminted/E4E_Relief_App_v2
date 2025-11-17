@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UserProfile, ApplicationFormData, EventData } from '../types';
 import type { Fund } from '../data/fundData';
-import EligibilityIndicator from './EligibilityIndicator';
 
 // Import step components
 import ApplyContactPage from './ApplyContactPage';
@@ -191,9 +190,6 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
                 {userProfile.fundName && userProfile.fundCode ? (
                     <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
                 ) : null }
-                <EligibilityIndicator 
-                    cvStatus={userProfile.classVerificationStatus} 
-                />
             </div>
           ) : (
             <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>

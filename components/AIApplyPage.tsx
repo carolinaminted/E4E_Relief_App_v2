@@ -10,7 +10,6 @@ import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTrac
 import { useTranslation, Trans } from 'react-i18next';
 import Footer from './Footer';
 import AIApplyPreviewModal from './AIApplyPreviewModal';
-import EligibilityIndicator from './EligibilityIndicator';
 
 interface AIApplyPageProps {
   userProfile: UserProfile | null;
@@ -445,9 +444,6 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 {userProfile.fundName && userProfile.fundCode ? (
                                     <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
                                 ) : null}
-                                <EligibilityIndicator 
-                                    cvStatus={userProfile.classVerificationStatus} 
-                                />
                             </div>
                         ) : (
                             <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>
