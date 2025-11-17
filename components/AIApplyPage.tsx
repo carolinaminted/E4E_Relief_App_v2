@@ -453,7 +453,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                 </div>
             </div>
         </div>
-        <div className="flex-shrink-0 hidden md:block">
+        <div className="flex-shrink-0">
             <Footer />
         </div>
     </div>
