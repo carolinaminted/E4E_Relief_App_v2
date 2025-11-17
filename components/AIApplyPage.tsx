@@ -10,6 +10,7 @@ import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTrac
 import { useTranslation, Trans } from 'react-i18next';
 import Footer from './Footer';
 import AIApplyPreviewModal from './AIApplyPreviewModal';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface AIApplyPageProps {
   userProfile: UserProfile | null;
@@ -376,9 +377,23 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                         </svg>
                     </button>
-                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {t('aiApplyPage.title')}
-                    </h1>
+                    <div className="text-center">
+                        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                            {t('aiApplyPage.title')}
+                        </h1>
+                        {userProfile ? (
+                            <div className="mt-2 flex flex-col items-center gap-2">
+                                {userProfile.fundName && userProfile.fundCode ? (
+                                    <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
+                                ) : null}
+                                <EligibilityIndicator 
+                                    cvStatus={userProfile.classVerificationStatus} 
+                                />
+                            </div>
+                        ) : (
+                            <p className="text-lg text-gray-400 mt-2 italic">{t('applyPage.noActiveFund')}</p>
+                        )}
+                    </div>
                 </header>
 
                 <div className="flex-1 flex flex-col min-h-0">
