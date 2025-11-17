@@ -21,7 +21,6 @@ const EligibilityIndicator: React.FC<EligibilityIndicatorProps> = ({ eligibility
         text = t('common.eligible', 'Eligible');
         colorClasses = 'bg-green-800/50 text-green-300';
     } else {
-        // If eligibility has failed but class verification is 'passed', it means they are ineligible for other reasons (e.g. limits).
         if (cvStatus === 'passed') {
             text = t('common.ineligible', 'Ineligible');
             colorClasses = 'bg-red-800/50 text-red-300';
@@ -38,8 +37,7 @@ const EligibilityIndicator: React.FC<EligibilityIndicatorProps> = ({ eligibility
     }
     
     const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center justify-center gap-1.5 transition-colors";
-    const buttonClasses = !isEligible ? 'hover:bg-yellow-800/80' : '';
-
+    
     const content = (
         <>
             {icon}
@@ -47,12 +45,12 @@ const EligibilityIndicator: React.FC<EligibilityIndicatorProps> = ({ eligibility
         </>
     );
 
-    if (!isEligible && onClick) {
+    if (onClick) {
         return (
             <button
                 onClick={onClick}
-                aria-label={text}
-                className={`${baseClasses} ${colorClasses} ${buttonClasses} ${className || ''}`}
+                aria-label={`Eligibility status: ${text}. Click for details.`}
+                className={`${baseClasses} ${colorClasses} hover:opacity-80 ${className || ''}`}
             >
                 {content}
             </button>
