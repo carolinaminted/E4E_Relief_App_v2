@@ -36,7 +36,7 @@ export interface IFundsRepo {
 
 export interface ITokenEventsRepo {
     add(event: Omit<TokenEvent, 'id'>): Promise<TokenEvent>;
-    getEventsForFund(options: { fundCode: string; filters: TokenUsageFilters; uid?: string; }): Promise<TokenEvent[]>;
+    getAllEvents(): Promise<TokenEvent[]>;
 }
 
 

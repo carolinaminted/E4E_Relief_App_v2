@@ -12,7 +12,12 @@
     "yes": "Yes",
     "no": "No",
     "unknownError": "An unknown error occurred.",
-    "aiApplyingDetails": "We are applying your details to the application now."
+    "aiApplyingDetails": "We are applying your details to the application now.",
+    "close": "Close"
+  },
+  "eligibilityIndicator": {
+    "eligibleMessage": "You are verified for this relief funds program. Applying for relief does not guarantee a payment will be disbursed.",
+    "verificationNeededMessage": "Visit 'Fund Identities' in your Profile page to verify yourself to be eligible for relief."
   },
   "app": {
     "loading": "Loading...",
@@ -23,6 +28,7 @@
     "home": "Home",
     "profile": "Profile",
     "apply": "Apply",
+    "aiApply": "AI Apply",
     "support": "Support",
     "donate": "Donate",
     "fundPortal": "Fund",
@@ -67,6 +73,14 @@
     "applyTooltipVerification": "Class Verification required to access applications.",
     "applyTooltipLimits": "Your grant limits have been reached."
   },
+  "aiApplyPage": {
+    "title": "AI Apply",
+    "backToHome": "Back to Home",
+    "greeting": "Hello! I'm the Relief Assistant. Please review the Details pane on the right with application questions we need to know about your situation. Just message me when you are ready.",
+    "additionalDetailsPreviewTitle": "Additional Details Preview",
+    "eventDetailsPreviewTitle": "Event Details Preview",
+    "previewSubtitle": "This list updates as you answer the assistant."
+  },
   "applyPage": {
     "title": "Apply for Relief",
     "eligibility": "Eligible to apply for relief",
@@ -80,6 +94,7 @@
   "applyContactPage": {
     "getStartedTitle": "Let's Get Started",
     "contactInfoTitle": "Contact Information",
+    "addresses": "Addresses",
     "primaryAddressTitle": "Primary Address",
     "mailingAddressTitle": "Mailing Address",
     "additionalDetailsTitle": "Additional Details",
@@ -131,7 +146,9 @@
     "errorEvacuationNights": "Please enter a valid number of nights.",
     "errorPowerLoss": "Please answer if you lost power.",
     "errorPowerLossDays": "Please enter a valid number of days.",
-    "errorRequestedAmount": "Requested amount must be greater than zero."
+    "errorRequestedAmount": "Requested amount must be greater than zero.",
+    "errorEventName": "Please select the storm name.",
+    "errorEvacuationReason": "Please provide a reason for evacuating."
   },
   "applyExpensesPage": {
     "title": "Expenses",
@@ -204,6 +221,7 @@
     "email": "Email",
     "mobileNumber": "Mobile Number",
     "collapse": "Collapse",
+    "addresses": "Addresses",
     "primaryAddressTitle": "Primary Address",
     "mailingAddressTitle": "Mailing Address",
     "mailingAddressSame": "Mailing Address Same as Primary?",
@@ -221,7 +239,9 @@
     "errorCorrection": "Please correct the highlighted errors before saving.",
     "saveButton": "Save Changes",
     "removeIdentityConfirm": "Are you sure you want to remove the identity for {{fundName}}?",
-    "cannotRemoveActive": "You cannot remove your active identity."
+    "cannotRemoveActive": "You cannot remove your active identity.",
+    "viewMailingAddress": "View Mailing Address",
+    "viewPrimaryAddress": "View Primary Address"
   },
   "myApplicationsPage": {
     "title": "My Applications",
@@ -277,7 +297,7 @@
     "title": "Eligible for Assistance?",
     "description": "Your program covers the eligibility types and events below - confirm you're eligible before applying. You can check your current eligibility status on your <1>Profile page</1>.",
     "statusActive": "<1>'Active'</1> means you are eligible to apply.",
-    "statusInactive": "<1>'Inactive'</1> requires additional verification.",
+    "statusInactive": "<1>'Inactive'</1> requires verification.",
     "header": "Eligible",
     "eligibilityType": "Eligibility Type",
     "disasters": "Disasters",
@@ -466,16 +486,40 @@
     ]
   },
   "paymentOptionsPage": {
-    "title": "Opciones de Pago",
-    "description": "Nos asociamos con proveedores de pago líderes en la industria para garantizar que sus fondos de ayuda se entreguen de manera rápida y segura, dondequiera que se encuentre en el mundo.",
-    "usApplicantsTitle": "Solicitantes de EE. UU.",
-    "usApplicantsBody": "Para los solicitantes dentro de los Estados Unidos, revise nuestra guía de pago para comprender las opciones y los requisitos disponibles para recibir su subvención.",
-    "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
-    "intlApplicantsTitle": "Solicitantes Internacionales",
-    "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
-    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Haga clic aquí </a> para revisar la guía de adjudicación de subvenciones internacionales.",
-    "intlPartnersTitle": "Información del Socio de Pago",
-    "converaGuide": "Guía de Convera",
-    "tipaltiGuide": "Guía de Tipalti"
+    "title": "Payment Options",
+    "description": "We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.",
+    "usApplicantsTitle": "U.S. Applicants",
+    "usApplicantsBody": "For applicants within the United States, please review our payment guide to understand the options and requirements available to receive your grant.",
+    "usApplicantsLink": "Bank of America Recipient Select Guide",
+    "intlApplicantsTitle": "International Applicants",
+    "intlSupportTitle": "International Grant Award Payment Support",
+    "intlSupportBody": "Once a grant is awarded, there are a few important registration steps you must complete before you can receive the financial assistance. To receive this financial assistance, you must successfully complete your account registration with our payment partners. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Click here </a> to review the international grant award guide.",
+    "intlPartnersTitle": "Payment Partner Information",
+    "converaGuide": "Convera Guide",
+    "tipaltiGuide": "Tipalti Guide"
+  },
+  "validation": {
+    "required": "Por favor, rellena este campo.",
+    "firstNameRequired": "El nombre es obligatorio.",
+    "lastNameRequired": "El apellido es obligatorio.",
+    "mobileNumberRequired": "El número de móvil es obligatorio.",
+    "mobileNumberInvalid": "Por favor, introduce un número de teléfono válido (al menos 7 dígitos).",
+    "countryRequired": "El país es obligatorio.",
+    "street1Required": "La calle 1 es obligatoria.",
+    "cityRequired": "La ciudad es obligatoria.",
+    "stateRequired": "El estado es obligatorio.",
+    "zipRequired": "El código postal es obligatorio.",
+    "employmentStartDateRequired": "La fecha de inicio del empleo es obligatoria.",
+    "eligibilityTypeRequired": "El tipo de elegibilidad es obligatorio.",
+    "householdIncomeRequired": "El ingreso del hogar es obligatorio.",
+    "householdSizeRequired": "El tamaño del hogar es obligatorio.",
+    "homeownerRequired": "El estado de propietario es obligatorio.",
+    "mailingAddressSameRequired": "Por favor, selecciona una opción para la dirección postal.",
+    "ackPoliciesRequired": "Debes aceptar las políticas.",
+    "commConsentRequired": "Debes dar tu consentimiento para las comunicaciones.",
+    "infoCorrectRequired": "Debes confirmar que tu información es correcta.",
+    "applicantFirstNameRequired": "El nombre del solicitante es obligatorio.",
+    "applicantLastNameRequired": "El apellido del solicitante es obligatorio.",
+    "applicantEmailRequired": "Se requiere un correo electrónico válido del solicitante."
   }
 }

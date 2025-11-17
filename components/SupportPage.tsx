@@ -4,10 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 interface SupportPageProps {
   navigate: (page: Page) => void;
-  openChatbot: () => void;
 }
 
-const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
+const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
   const { t } = useTranslation();
   
   const SubActionCard: React.FC<{ title: string; description: string; onClick: () => void; }> = ({ title, description, onClick }) => (
@@ -47,7 +46,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate, openChatbot }) => {
             </div>
             <div>
               <button 
-                onClick={openChatbot}
+                onClick={() => navigate('aiApply')}
                 className="bg-transparent border border-[#ff8400] text-[#ff8400] hover:bg-[#ff8400]/20 font-semibold py-2 px-6 rounded-md transition-colors duration-200"
               >
                 {t('supportPage.chatbotButton')}

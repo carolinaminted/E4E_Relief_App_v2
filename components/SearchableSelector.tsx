@@ -95,7 +95,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
         disabled={disabled}
       />
       {isOpen && !disabled && (
-        <ul className="absolute z-10 w-full bg-[#003a70] border border-[#005ca0] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+        <ul className="absolute z-10 w-full bg-[#003a70] border border-[#005ca0] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg custom-scrollbar">
           {filteredOptions.length > 0 ? (
             filteredOptions.map(option => (
               <li

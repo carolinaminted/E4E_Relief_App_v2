@@ -1,35 +1,10 @@
 import React from 'react';
-import type { Address } from '../types';
+import type { Address, UserProfile } from '../types';
 import RequiredIndicator from './RequiredIndicator';
 import CountrySelector from './CountrySelector';
 import AddressHelper from './AddressHelper';
 
 export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => {
-    const isDateInput = props.type === 'date';
-
-    const eventHandlers = isDateInput ? {
-        onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
-            if (typeof e.target.showPicker === 'function') {
-                try {
-                    e.target.showPicker();
-                } catch (error) {
-                    console.error("Couldn't show date picker:", error);
-                }
-            }
-            props.onFocus?.(e);
-        },
-        onClick: (e: React.MouseEvent<HTMLInputElement>) => {
-            if (typeof (e.target as HTMLInputElement).showPicker === 'function') {
-                try {
-                    (e.target as HTMLInputElement).showPicker();
-                } catch (error) {
-                    console.error("Couldn't show date picker:", error);
-                }
-            }
-            props.onClick?.(e);
-        }
-    } : {};
-    
     return (
         <div>
             {label && (
@@ -40,7 +15,6 @@ export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
             <input
                 id={id}
                 {...props}
-                {...eventHandlers}
                 className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`}
             />
             {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
@@ -66,9 +40,9 @@ export const FormRadioGroup: React.FC<{ legend: string, name: string, options: s
     </div>
 );
 
-export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof Address, value: string) => void, onBulkUpdate: (parsedAddress: Partial<Address>) => void, prefix: string, errors: Record<string, string> }> = ({ address, onUpdate, onBulkUpdate, prefix, errors }) => (
+export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof Address, value: string) => void, onBulkUpdate: (parsedAddress: Partial<Address>) => void, prefix: string, errors: Record<string, string>, forUser?: UserProfile | null }> = ({ address, onUpdate, onBulkUpdate, prefix, errors, forUser }) => (
     <>
-        <AddressHelper onAddressParsed={onBulkUpdate} variant="underline" />
+        <AddressHelper onAddressParsed={onBulkUpdate} variant="underline" forUser={forUser} />
         <CountrySelector id={`${prefix}Country`} required value={address.country} onUpdate={value => onUpdate('country', value)} variant="underline" error={errors.country}/>
         <FormInput label="Street 1" id={`${prefix}Street1`} required value={address.street1} onChange={e => onUpdate('street1', e.target.value)} error={errors.street1} />
         <div className="grid grid-cols-2 gap-x-6">

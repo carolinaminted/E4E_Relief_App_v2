@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { parseAddressWithGemini } from '../services/geminiService';
-import type { Address } from '../types';
+import type { Address, UserProfile } from '../types';
 
 interface AddressHelperProps {
   onAddressParsed: (parsedAddress: Partial<Address>) => void;
   variant?: 'boxed' | 'underline';
+  forUser?: UserProfile | null;
 }
 
-const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant = 'boxed' }) => {
+const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant = 'boxed', forUser }) => {
   const { t } = useTranslation();
   const [addressInput, setAddressInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +24,7 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
     setIsLoading(true);
     setError('');
     try {
-      const parsedAddress = await parseAddressWithGemini(addressInput);
+      const parsedAddress = await parseAddressWithGemini(addressInput, forUser);
       onAddressParsed(parsedAddress);
       setAddressInput(''); // Clear after successful parse
     } catch (e) {

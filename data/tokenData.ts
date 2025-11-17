@@ -12,9 +12,18 @@ const MODEL_PRICING: ModelPricing = {
 };
 
 const MOCK_USERS = ['user@example.com', 'admin@example.com', 'test@example.com'];
-const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision'];
+const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision', 'AI Apply Chat'];
 const MOCK_MODELS: TokenEvent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 const MOCK_FUND_CODES = ['E4E', 'JHH', 'SQRT', 'DOM', 'ROST'];
+// FIX: Added a mock fund map to provide fund names for mock data, resolving the missing 'fundName' property error.
+const MOCK_FUND_MAP = new Map([
+    ['E4E', 'E4E Relief Fund'],
+    ['JHH', 'JHH Relief Fund'],
+    ['SQRT', 'SQRT Relief Fund'],
+    ['DOM', 'Domino\'s Partner Foundation'],
+    ['ROST', 'Roster Fund'],
+]);
+
 
 // --- Generate realistic mock data ---
 let mockTokenEvents: TokenEvent[] = [];
@@ -26,6 +35,7 @@ if (typeof window !== 'undefined') {
     const now = new Date();
     for (let i = 0; i < 300; i++) {
       const user = MOCK_USERS[i % MOCK_USERS.length];
+      const userName = user.split('@')[0].charAt(0).toUpperCase() + user.split('@')[0].slice(1) + ' User';
       const date = new Date(now.getTime() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000);
       
       generatedEvents.push({
@@ -34,6 +44,8 @@ if (typeof window !== 'undefined') {
         // FIX: Added missing 'uid' property to satisfy the TokenEvent type.
         uid: `uid-${user.split('@')[0]}`,
         userId: user,
+        // FIX: Added missing 'userName' property to satisfy the TokenEvent type.
+        userName: userName,
         timestamp: date.toISOString(),
         feature: MOCK_FEATURES[Math.floor(Math.random() * MOCK_FEATURES.length)],
         model: MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)],
@@ -80,7 +92,19 @@ export async function getTokenUsageTableData(filters: TokenUsageFilters, current
                 day: 'numeric',
                 year: 'numeric'
             });
-            usageByFeatureInSession[key] = { date: formattedDate, input: 0, cached: 0, output: 0, total: 0, cost: 0 };
+            // FIX: Add missing 'userName' and 'fundCode' properties to satisfy the TokenUsageTableRow type.
+            // FIX: Added missing 'fundName' property to satisfy the TokenUsageTableRow type.
+            usageByFeatureInSession[key] = {
+              date: formattedDate,
+              userName: event.userName,
+              fundCode: event.fundCode,
+              fundName: MOCK_FUND_MAP.get(event.fundCode) || event.fundCode,
+              input: 0,
+              cached: 0,
+              output: 0,
+              total: 0,
+              cost: 0
+            };
         }
         const pricing = MODEL_PRICING[event.model] || { input: 0, output: 0 };
         const eventCost = ((event.inputTokens / 1000) * pricing.input) + ((event.outputTokens / 1000) * pricing.output);

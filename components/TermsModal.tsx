@@ -39,7 +39,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ onClose }) => {
             {t('modals.terms.title')}
             </h2>
         </div>
-        <div className="space-y-4 text-white/90 overflow-y-auto pr-4 text-sm">
+        <div className="space-y-4 text-white/90 overflow-y-auto pr-4 text-sm custom-scrollbar">
           {termsContent.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
