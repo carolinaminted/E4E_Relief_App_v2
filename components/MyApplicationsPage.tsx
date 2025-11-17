@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Application, Page, UserProfile } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
-import EligibilityIndicator from './EligibilityIndicator';
 
 interface MyApplicationsPageProps {
   navigate: (page: Page) => void;
@@ -57,9 +56,6 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
                 {userProfile && (
                   <div className="mt-2 flex flex-col items-center gap-2">
                     <p className="text-lg text-gray-300">{userProfile.fundName} ({userProfile.fundCode})</p>
-                    <EligibilityIndicator 
-                      cvStatus={userProfile.classVerificationStatus}
-                    />
                   </div>
                 )}
             </div>
