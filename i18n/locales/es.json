@@ -75,7 +75,7 @@
   "aiApplyPage": {
     "title": "Solicitud con IA",
     "backToHome": "Volver a Inicio",
-    "greeting": "¡Hola! Soy el Asistente de Ayuda. Por favor, revisa el panel de Detalles a la derecha con las preguntas de la solicitud que necesitamos saber sobre tu situación. Solo envíame un mensaje cuando estés listo.",
+    "greeting": "¡Hola! Por favor, revisa las preguntas de la solicitud. Envíame un mensaje cuando estés listo.",
     "additionalDetailsPreviewTitle": "Vista Previa de Detalles Adicionales",
     "eventDetailsPreviewTitle": "Vista Previa de Detalles del Evento",
     "previewSubtitle": "Esta lista se actualiza a medida que respondes al asistente."
