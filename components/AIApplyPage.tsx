@@ -429,6 +429,16 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
         <div className="flex-1 flex flex-col p-4 pt-0 md:p-8 md:pt-2 md:pb-4 min-h-0">
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
+                <div className="relative flex justify-center items-center mb-4 md:mb-6">
+                  <div className="text-center">
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                      {userProfile?.fundName && userProfile?.fundCode 
+                        ? `${userProfile.fundName} (${userProfile.fundCode})` 
+                        : t('aiApplyPage.title')}
+                    </h1>
+                  </div>
+                </div>
+
                 <div className="flex-1 flex flex-col min-h-0">
                 
                     {/* --- MOBILE VIEW --- */}

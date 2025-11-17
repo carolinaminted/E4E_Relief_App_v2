@@ -126,6 +126,11 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
               )}
             </div>
         </div>
+
+        <div className="mb-4">
+          <LanguageSwitcher variant="sideNav" />
+        </div>
+
         <div className="flex-grow">
           {navItems.map(item => (
             <NavItem
@@ -137,9 +142,6 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
               disabled={item.disabled}
             />
           ))}
-        </div>
-        <div className="mt-auto">
-          <LanguageSwitcher variant="sideNav" />
         </div>
       </nav>
       {isEligibilityModalOpen && (
