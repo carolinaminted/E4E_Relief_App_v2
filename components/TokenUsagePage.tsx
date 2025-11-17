@@ -15,6 +15,13 @@ const MODEL_PRICING: ModelPricing = {
   'gemini-2.5-pro': { input: 0.0035, output: 0.0070 },
 };
 
+// Types for sorting
+type SortDirection = 'ascending' | 'descending';
+interface SortConfig {
+  key: keyof TokenUsageTableRow;
+  direction: SortDirection;
+}
+
 const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -35,6 +42,9 @@ const CardLoader: React.FC = () => (
 const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }) => {
   const [isFetching, setIsFetching] = useState(true);
   const [allEvents, setAllEvents] = useState<TokenEvent[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>({ key: 'date', direction: 'descending' });
+
 
   const [openSections, setOpenSections] = useState(() => {
     const saved = localStorage.getItem('tokenUsagePage_openSections');
@@ -74,11 +84,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
   const tableData = useMemo((): TokenUsageTableRow[] => {
     const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
-
-    // Sort events by timestamp so we can grab the date from the first event in a group
-    const sortedEvents = [...allEvents].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-    for (const event of sortedEvents) {
+    for (const event of allEvents) {
         const key = `${event.userId}|${event.sessionId}|${event.feature}`;
         if (!usageByFeatureInSession[key]) {
             const eventDate = new Date(event.timestamp);
@@ -98,15 +104,60 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         usageByFeatureInSession[key].total += event.inputTokens + event.cachedInputTokens + event.outputTokens;
         usageByFeatureInSession[key].cost += eventCost;
     }
-
-    const result = Object.entries(usageByFeatureInSession).map(([key, data]) => {
+    return Object.entries(usageByFeatureInSession).map(([key, data]) => {
         const [user, session, feature] = key.split('|');
         return { user, session, feature, ...data };
     });
-    
-    // Sort by date, newest first as is common in tables.
-    return result.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allEvents]);
+  
+  const processedTableData = useMemo(() => {
+    let sortedData = [...tableData];
+
+    if (sortConfig !== null) {
+      sortedData.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        // Handle different data types for accurate sorting
+        if (sortConfig.key === 'date') {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            if (dateA < dateB) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (dateA > dateB) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+            if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        } else {
+            const strA = String(aValue).toLowerCase();
+            const strB = String(bValue).toLowerCase();
+            if (strA < strB) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (strA > strB) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        }
+      });
+    }
+
+    if (!searchTerm) {
+      return sortedData;
+    }
+
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+    return sortedData.filter(row => 
+        row.userName.toLowerCase().includes(lowercasedSearchTerm) ||
+        row.fundCode.toLowerCase().includes(lowercasedSearchTerm) ||
+        row.feature.toLowerCase().includes(lowercasedSearchTerm)
+    );
+  }, [tableData, searchTerm, sortConfig]);
+
+  const handleSort = (key: keyof TokenUsageTableRow) => {
+    let direction: SortDirection = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const topSessionData = useMemo((): TopSessionData | null => {
     if (allEvents.length === 0) return null;
@@ -182,9 +233,9 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
 
   const handleExportCSV = () => {
-    if (tableData.length === 0) return;
+    if (processedTableData.length === 0) return;
     const headers = ['User Name', 'Email', 'Fund', 'Date', 'Session ID', 'Feature', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
-    const rows = tableData.map(row => 
+    const rows = processedTableData.map(row => 
       [
         `"${row.userName}"`,
         row.user,
@@ -244,7 +295,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
             <div>
                 <button 
                     onClick={handleExportCSV}
-                    disabled={tableData.length === 0}
+                    disabled={processedTableData.length === 0}
                     className="bg-[#004b8d] hover:bg-[#005ca0] text-white font-semibold py-2 px-3 rounded-md text-sm transition-colors duration-200 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed border border-[#005ca0]"
                     aria-label="Export Lifetime Token Usage to CSV"
                 >
@@ -313,9 +364,31 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                     <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Detailed Token Usage</h3>
                     <ChevronIcon isOpen={openSections.lifetime} />
                 </button>
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lifetime ? 'max-h-[3000px] opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
+                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSections.lifetime ? 'max-h-none opacity-100 p-4 pt-0 border-t border-[#005ca0]/50' : 'max-h-0 opacity-0'}`}>
                      <div className="pt-4">
-                        <TokenUsageTable data={tableData} />
+                        <div className="mb-4">
+                             <div className="relative">
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg className="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                                    </svg>
+                                </div>
+                                <input
+                                    type="search"
+                                    id="token-search"
+                                    className="block w-full p-3 pl-10 text-sm text-white bg-[#004b8d]/50 border border-[#005ca0] rounded-lg focus:ring-[#ff8400] focus:border-[#ff8400]"
+                                    placeholder="Search by user, fund, or feature..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    aria-label="Search token usage table"
+                                />
+                            </div>
+                        </div>
+                        <TokenUsageTable 
+                            data={processedTableData}
+                            onSort={handleSort}
+                            sortConfig={sortConfig}
+                        />
                      </div>
                 </div>
             </div>

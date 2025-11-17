@@ -1,25 +1,64 @@
 import React from 'react';
 import type { TokenUsageTableRow } from '../types';
 
-interface TokenUsageTableProps {
-  data: TokenUsageTableRow[];
+// Types for sorting
+type SortDirection = 'ascending' | 'descending';
+interface SortConfig {
+  key: keyof TokenUsageTableRow;
+  direction: SortDirection;
 }
 
-const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
+interface TokenUsageTableProps {
+  data: TokenUsageTableRow[];
+  onSort: (key: keyof TokenUsageTableRow) => void;
+  sortConfig: SortConfig | null;
+}
+
+const SortIndicator: React.FC<{ direction: SortDirection }> = ({ direction }) => (
+    <span className="ml-1 opacity-80">{direction === 'ascending' ? '▲' : '▼'}</span>
+);
+
+interface SortableThProps {
+    sortKey: keyof TokenUsageTableRow;
+    onSort: (key: keyof TokenUsageTableRow) => void;
+    sortConfig: SortConfig | null;
+    children: React.ReactNode;
+    className?: string;
+}
+
+const SortableTh: React.FC<SortableThProps> = ({ sortKey, onSort, sortConfig, children, className = '' }) => {
+    const isSorted = sortConfig?.key === sortKey;
+    const direction = isSorted ? sortConfig.direction : undefined;
+
+    return (
+        <th scope="col" className={`px-4 py-3 ${className}`} aria-sort={direction || 'none'}>
+            <button
+                onClick={() => onSort(sortKey)}
+                className={`flex items-center gap-1 hover:text-white transition-colors w-full ${className.includes('text-right') ? 'justify-end' : ''}`}
+            >
+                {children}
+                {isSorted && <SortIndicator direction={direction!} />}
+            </button>
+        </th>
+    );
+};
+
+
+const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data, onSort, sortConfig }) => {
   return (
     <div className="overflow-x-auto custom-scrollbar">
       <table className="min-w-full text-sm text-left">
         <thead className="border-b border-[#005ca0] text-xs text-gray-200 uppercase">
           <tr>
-            <th scope="col" className="px-4 py-3">User</th>
-            <th scope="col" className="px-4 py-3">Fund</th>
-            <th scope="col" className="px-4 py-3">Date</th>
-            <th scope="col" className="px-4 py-3">Feature</th>
-            <th scope="col" className="px-4 py-3 text-right">Input</th>
-            <th scope="col" className="px-4 py-3 text-right">Cached</th>
-            <th scope="col" className="px-4 py-3 text-right">Output</th>
-            <th scope="col" className="px-4 py-3 text-right">Total</th>
-            <th scope="col" className="px-4 py-3 text-right">Cost (USD)</th>
+            <SortableTh sortKey="userName" onSort={onSort} sortConfig={sortConfig}>User</SortableTh>
+            <SortableTh sortKey="fundCode" onSort={onSort} sortConfig={sortConfig}>Fund</SortableTh>
+            <SortableTh sortKey="date" onSort={onSort} sortConfig={sortConfig}>Date</SortableTh>
+            <SortableTh sortKey="feature" onSort={onSort} sortConfig={sortConfig}>Feature</SortableTh>
+            <SortableTh sortKey="input" onSort={onSort} sortConfig={sortConfig} className="text-right">Input</SortableTh>
+            <SortableTh sortKey="cached" onSort={onSort} sortConfig={sortConfig} className="text-right">Cached</SortableTh>
+            <SortableTh sortKey="output" onSort={onSort} sortConfig={sortConfig} className="text-right">Output</SortableTh>
+            <SortableTh sortKey="total" onSort={onSort} sortConfig={sortConfig} className="text-right">Total</SortableTh>
+            <SortableTh sortKey="cost" onSort={onSort} sortConfig={sortConfig} className="text-right">Cost (USD)</SortableTh>
           </tr>
         </thead>
         <tbody>
@@ -40,7 +79,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data }) => {
           ) : (
               <tr>
                   <td colSpan={9} className="text-center py-8 text-white">
-                      No token usage data found.
+                      No token usage data found for the current search criteria.
                   </td>
               </tr>
           )}
