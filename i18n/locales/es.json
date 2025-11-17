@@ -229,7 +229,6 @@
     "householdSize": "Número de personas en el hogar",
     "homeowner": "¿Eres propietario de tu vivienda?",
     "preferredLanguage": "Idioma de Preferencia",
-    "consentTitle": "Consentimiento y Reconocimiento",
     "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
     "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
     "infoCorrect": "Toda la información que he proporcionado es precisa.",
@@ -473,8 +472,8 @@
         "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, podrá acceder a cualquier recibo relacionado con sus donaciones anteriores."
       },
       {
-        "question": "¿Qué pasa si quiero hacer donaciones recurrentes?",
-        "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
+        "question": "¿Cómo puedo hacer donaciones recurrentes?",
+        "answer": "Una vez que inicies sesión en el Panel de Donantes de The Giving Block, puedes ver tus planes de donación y actualizar la información relacionada con tu tarjeta de crédito y la frecuencia de los pagos. También puedes desactivar cualquier donación recurrente aquí. Las donaciones recurrentes no se pueden hacer de forma anónima por razones regulatorias."
       },
       {
         "question": "¿A quién puedo contactar si tengo preguntas adicionales?",
