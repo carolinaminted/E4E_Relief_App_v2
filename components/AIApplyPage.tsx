@@ -38,6 +38,19 @@ const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
 );
 
+const FirstTimeUserGuide: React.FC = () => (
+    <div 
+      className="absolute top-0 left-0 flex items-center justify-center h-full w-[50px] pointer-events-none"
+      aria-hidden="true"
+    >
+      <div className="bg-[#ff8400] text-white p-2 rounded-lg shadow-lg text-xs whitespace-nowrap absolute -top-14 left-0 animate-bounce">
+        Click to see questions
+        <div className="absolute left-6 -translate-x-1/2 top-full w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-[#ff8400]"></div>
+      </div>
+    </div>
+);
+
+
 const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: boolean; onToggle: () => void }> = ({ title, isComplete, isOpen, onToggle }) => (
     <button
         onClick={onToggle}
@@ -203,6 +216,18 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const chatSessionRef = useRef<Chat | null>(null);
   const chatTokenSessionIdRef = useRef<string | null>(null);
+  const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(() => {
+    // Check if we are in a browser environment
+    if (typeof window === 'undefined') {
+        return true; // Default to 'interacted' on server or non-browser envs
+    }
+    // On desktop, the preview pane is visible, so this feature is not needed.
+    if (window.innerWidth >= 768) { // md breakpoint in tailwind
+        return true;
+    }
+    // On mobile, check session storage
+    return sessionStorage.getItem('ai-apply-preview-interacted') === 'true';
+  });
   const initDoneForUser = useRef<string | null>(null);
 
   const sessionKey = userProfile ? `aiApplyChatHistory-${userProfile.uid}` : null;
@@ -309,6 +334,14 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     }
   }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages, applicationDraft]);
 
+  const handlePreviewClick = useCallback(() => {
+    if (!hasInteractedWithPreview) {
+        setHasInteractedWithPreview(true);
+        sessionStorage.setItem('ai-apply-preview-interacted', 'true');
+    }
+    setIsPreviewModalOpen(true);
+  }, [hasInteractedWithPreview]);
+
   const baseProfileChecklistItems = useMemo(() => [
       { key: 'employmentStartDate', label: t('applyContactPage.employmentStartDate') },
       { key: 'eligibilityType', label: t('applyContactPage.eligibilityType') },
@@ -412,11 +445,16 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                     <ChatWindow messages={messages} isLoading={isLoading} />
                                 </div>
                                 <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={() => setIsPreviewModalOpen(true)} />
+                                    <div className="relative">
+                                        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!hasInteractedWithPreview} />
+                                        {!hasInteractedWithPreview && <FirstTimeUserGuide />}
+                                    </div>
                                 </footer>
                             </main>
                             <div className="flip-back w-full h-full">
-                                <CompletionView onNext={handleNext} />
+                                <div className="p-4 h-full">
+                                    <CompletionView onNext={handleNext} />
+                                </div>
                             </div>
                         </div>
                     </div>

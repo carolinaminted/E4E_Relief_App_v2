@@ -6,6 +6,7 @@ interface ChatInputProps {
   isLoading: boolean;
   showPreviewButton?: boolean;
   onPreviewClick?: () => void;
+  disabled?: boolean;
 }
 
 const SendIcon: React.FC<{ disabled: boolean }> = ({ disabled }) => (
@@ -31,7 +32,7 @@ const PreviewIcon: React.FC<{ disabled: boolean }> = ({ disabled }) => (
 );
 
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPreviewButton, onPreviewClick }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPreviewButton, onPreviewClick, disabled }) => {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
 
@@ -67,15 +68,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPre
         onKeyDown={handleKeyPress}
         placeholder={t('chatbotWidget.placeholder')}
         rows={1}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
       />
       <button
         onClick={handleSubmit}
-        disabled={isLoading || !input.trim()}
+        disabled={isLoading || !input.trim() || disabled}
         className="bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold rounded-md transition-colors duration-200 w-[50px] h-10 flex items-center justify-center"
       >
-        <SendIcon disabled={isLoading || !input.trim()} />
+        <SendIcon disabled={isLoading || !input.trim() || disabled} />
       </button>
     </div>
   );
