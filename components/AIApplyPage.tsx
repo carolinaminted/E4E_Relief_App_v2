@@ -249,6 +249,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const chatSessionRef = useRef<Chat | null>(null);
   const chatTokenSessionIdRef = useRef<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -297,6 +298,17 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     }
   }, [applications, activeFund, userProfile, applicationDraft, messages]);
   
+    useEffect(() => {
+      // After a message is sent and a response is received (isLoading becomes false)
+      if (!isLoading) {
+        // Check if we are in desktop view (md breakpoint is 768px)
+        const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+        if (isDesktop && inputRef.current) {
+          inputRef.current.focus();
+        }
+      }
+    }, [isLoading]); // This effect runs whenever isLoading changes.
+
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (!userInput.trim() || isLoading) return;
 
@@ -398,7 +410,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                             </div>
                             <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
                                 <div className="relative">
-                                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!canApply || !hasInteractedWithPreview} />
+                                    <ChatInput ref={inputRef} onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!canApply || !hasInteractedWithPreview} />
                                     {!hasInteractedWithPreview && canApply && <FirstTimeUserGuide />}
                                 </div>
                             </footer>
@@ -418,7 +430,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 <ChatWindow messages={messages} isLoading={isLoading} />
                             </div>
                             <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                                <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={!canApply} />
+                                <ChatInput ref={inputRef} onSendMessage={handleSendMessage} isLoading={isLoading} disabled={!canApply} />
                             </footer>
                         </main>
                         <aside className="w-2/5 flex flex-col min-h-0">

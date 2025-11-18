@@ -623,11 +623,12 @@ function App() {
     if (!currentUser) return;
     
     setApplicationDraft(prevDraft => {
-        // Deep merge the new partial draft into the previous state
+        // Deep merge the new partial draft into the previous state, ensuring profileData is always seeded.
         const newDraft: Partial<ApplicationFormData> = {
             ...prevDraft,
             ...partialDraft,
             profileData: {
+                ...currentUser,
                 ...(prevDraft?.profileData || {}),
                 ...(partialDraft.profileData || {}),
             } as UserProfile,
