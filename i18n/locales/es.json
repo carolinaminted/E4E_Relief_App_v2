@@ -410,5 +410,47 @@
     "applicantFirstNameRequired": "El nombre del solicitante es obligatorio.",
     "applicantLastNameRequired": "El apellido del solicitante es obligatorio.",
     "applicantEmailRequired": "Se requiere un correo electrónico válido del solicitante."
+  },
+  "faqPage": {
+    "title": "Preguntas Frecuentes",
+    "backToSupport": "Volver a Soporte",
+    "applicantTitle": "Para Solicitantes",
+    "donorTitle": "Para Donantes",
+    "applicantFaqs": [
+      {
+        "question": "¿Cómo sé si soy elegible?",
+        "answer": "Puedes verificar tu estado de elegibilidad en tu página de Perfil. Generalmente, la elegibilidad se determina por tu estado laboral y la naturaleza del evento, según lo definen las reglas de tu fondo específico. Para más detalles, visita la página 'Elegibilidad' desde el Centro de Soporte."
+      },
+      {
+        "question": "¿Cuánto tiempo se tarda en obtener una decisión?",
+        "answer": "Las decisiones suelen ser instantáneas. Nuestro sistema utiliza una combinación de reglas automatizadas y revisión por IA para proporcionar una decisión momentos después de que envíes tu solicitud."
+      },
+      {
+        "question": "¿Dónde puedo ver mis solicitudes anteriores?",
+        "answer": "Puedes ver todas tus solicitudes pasadas y actuales en tu página de Perfil en la sección 'Mis Solicitudes'."
+      },
+      {
+        "question": "¿Qué es la Solicitud con IA?",
+        "answer": "La Solicitud con IA es una forma conversacional de completar tu solicitud. Un asistente de IA te hará preguntas una por una, lo que puede ser más fácil que llenar un formulario largo. Puedes encontrarla en la pantalla de Inicio."
+      }
+    ],
+    "donorFaqs": [
+      {
+        "question": "¿Mi donación es deducible de impuestos?",
+        "answer": "E4E Relief es una organización benéfica 501(c)(3). Tu donación es deducible de impuestos en la medida permitida por la ley. Recibirás un recibo de tu contribución por correo electrónico."
+      },
+      {
+        "question": "¿Puedo donar a un fondo específico?",
+        "answer": "Actualmente, todas las donaciones van a un fondo de ayuda general para ayudar a los más necesitados en todos los programas que apoyamos. Estamos explorando opciones para donaciones a fondos específicos en el futuro."
+      },
+      {
+        "question": "¿Cómo se toman las decisiones de las subvenciones?",
+        "answer": "Las decisiones de las subvenciones se toman a través de un proceso confidencial y objetivo. Cada solicitud se verifica primero con las reglas de elegibilidad específicas del fondo. Luego, pasa por una revisión final de nuestro sistema de decisiones impulsado por IA para garantizar la equidad y la coherencia."
+      },
+      {
+        "question": "¿De qué otras maneras puedo donar?",
+        "answer": "Para obtener información sobre otras formas de donar, comunícate con los Servicios para Donantes de E4E Relief al 704-973-4564 o a <1>donorservices@e4erelief.org</1>."
+      }
+    ]
   }
 }

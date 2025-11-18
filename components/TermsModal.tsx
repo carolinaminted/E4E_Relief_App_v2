@@ -11,8 +11,9 @@ const TermsModal: React.FC<TermsModalProps> = ({ onClose }) => {
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot) return null; // Should not happen in normal execution
 
-  // FIX: The t function with `returnObjects: true` can return a complex object. Cast the result to the expected `string[]` to satisfy TypeScript.
-  const termsContent = t('modals.terms.body', { returnObjects: true }) as string[];
+  // Guard against t() returning a string before translations are loaded.
+  const termsContentData = t('modals.terms.body', { returnObjects: true });
+  const termsContent: string[] = Array.isArray(termsContentData) ? termsContentData : [];
 
   return createPortal(
     <div 

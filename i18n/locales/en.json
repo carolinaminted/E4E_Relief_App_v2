@@ -414,5 +414,47 @@
     "applicantFirstNameRequired": "Applicant's first name is required.",
     "applicantLastNameRequired": "Applicant's last name is required.",
     "applicantEmailRequired": "A valid applicant email is required."
+  },
+  "faqPage": {
+    "title": "Frequently Asked Questions",
+    "backToSupport": "Back to Support",
+    "applicantTitle": "For Applicants",
+    "donorTitle": "For Donors",
+    "applicantFaqs": [
+      {
+        "question": "How do I know if I'm eligible?",
+        "answer": "You can check your eligibility status on your Profile page. Generally, eligibility is determined by your employment status and the nature of the event, as defined by your specific fund's rules. For more details, visit the 'Eligibility' page from the Support Center."
+      },
+      {
+        "question": "How long does it take to get a decision?",
+        "answer": "Decisions are typically instant. Our system uses a combination of automated rules and AI review to provide a decision within moments of you submitting your application."
+      },
+      {
+        "question": "Where can I see my past applications?",
+        "answer": "You can view all your past and current applications on your Profile page under the 'My Applications' section."
+      },
+      {
+        "question": "What is AI Apply?",
+        "answer": "AI Apply is a conversational way to complete your application. An AI assistant will ask you questions one by one, which can be easier than filling out a long form. You can find it on the Home screen."
+      }
+    ],
+    "donorFaqs": [
+      {
+        "question": "Is my donation tax-deductible?",
+        "answer": "E4E Relief is a 501(c)(3) charitable organization. Your donation is tax-deductible to the extent allowed by law. You will receive a receipt for your contribution via email."
+      },
+      {
+        "question": "Can I donate to a specific fund?",
+        "answer": "Currently, all donations go into a general relief fund to help those most in need across all programs we support. We are exploring options for fund-specific donations in the future."
+      },
+      {
+        "question": "How are grant decisions made?",
+        "answer": "Grant decisions are made through a confidential and objective process. Each application is first checked against the fund's specific eligibility rules. It then undergoes a final review by our AI-powered decisioning system to ensure fairness and consistency."
+      },
+      {
+        "question": "What other ways can I give?",
+        "answer": "For information about other ways to give, please contact E4E Relief Donor Services at 704-973-4564 or <1>donorservices@e4erelief.org</1>."
+      }
+    ]
   }
 }

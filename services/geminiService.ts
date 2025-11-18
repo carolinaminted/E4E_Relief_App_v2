@@ -170,18 +170,22 @@ Your **PRIMARY GOAL** is to answer user questions and help them update their pro
 
 const getAIApplyContext = (userProfile: UserProfile | null, applicationDraft: Partial<ApplicationFormData> | null): string => {
     let dynamicContext = `
-You are the E4E Relief AI assistant, with a special focus for this page.
+You are the E4E Relief AI assistant, with a single, highly-focused mission on this page.
 
-Your GOAL is to help the user complete their application by having a natural conversation to fill in the 'Missing Information' below, section by section.
+**Your ONLY GOAL**: Help the user complete their application by asking questions to fill the 'Missing Information' list below.
 
-**IMPORTANT**: The application has multiple sections: Additional Details, Event Details, Expenses, and Agreements. You must complete them IN ORDER. Do not ask for expenses until all event details are known.
+**!! STRICT GUARDRAILS - YOU MUST OBEY !!**
+- **DO NOT ANSWER USER QUESTIONS.** Your only function is to ask for the next piece of missing information.
+- **NEVER REVEAL LOGIC.** Do not explain why information is needed or what makes someone eligible or ineligible.
+- **NEVER DISCUSS ELIGIBILITY.** If the user asks if they are eligible, if an event is covered, about grant amounts, or any other policy question, you MUST respond with: "My role is to help you complete the application. For questions about eligibility or fund rules, please see the 'Support' page."
+- **FOCUS ON THE CURRENT SECTION.** The application has multiple sections: Additional Details, Event Details, Expenses, and Agreements. You must complete them IN ORDER. Do not ask for expenses until all event details are collected.
 
 **Your Process**:
 1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
 2.  **Act**: Use your tools (\`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, \`updateAgreements\`) to save ALL the information you can gather from the user's message in a single turn.
-3.  **Confirm**: After a successful tool call, briefly confirm what you saved.
-4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing from the CURRENT section.
-5.  **Transition**: Once a section is complete, tell the user you will now move on to the next section (e.g., "Great, that's all for the event details. Now let's talk about your expenses.").
+3.  **Confirm**: After a successful tool call, briefly confirm what you saved. Example: "Thanks, I've noted the event date."
+4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing from the CURRENT section. Be direct. Example: "What was the date of the event?"
+5.  **Transition**: Once a section is complete, tell the user you will now move on to the next section. Example: "Great, that's all for the event details. Now let's talk about your expenses."
 6.  **Complete & Hand-off**: When the 'Missing Information to Collect' list shows 'All details are complete', your final task is to instruct the user to perform the manual submission steps. Your final message MUST clearly tell them to go to the 'Agreements & Submission' section, check the box to agree to the 'Terms of Acceptance', and then click the 'Submit Application' button.
 
 You have access to the \`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, and \`updateAgreements\` tools.
@@ -329,17 +333,20 @@ export function createChatSession(
     dynamicContext += `\n**User's Language Preference**: The user's preferred language is ${userProfile.preferredLanguage}. You MUST respond in ${userProfile.preferredLanguage}.`;
   }
   
-  // If an active fund is available, inject its specific details (name, limits, covered events) into the prompt.
-  // This grounds the model in the correct data and prevents it from hallucinating or using general knowledge.
-  if (activeFund) {
-    dynamicContext = dynamicContext.replace(
-      "for the 'E4E Relief' application",
-      `for the '${activeFund.name}' application`
-    );
-    const limits = activeFund.limits;
-    const allCoveredEvents = [...activeFund.eligibleDisasters, ...activeFund.eligibleHardships];
+  // For the general assistant, provide fund-specific and historical context.
+  // The AI Apply assistant is strictly firewalled from this information to keep it focused on data collection.
+  if (context !== 'aiApply') {
+      // If an active fund is available, inject its specific details (name, limits, covered events) into the prompt.
+      // This grounds the model in the correct data and prevents it from hallucinating or using general knowledge.
+      if (activeFund) {
+        dynamicContext = dynamicContext.replace(
+          "for the 'E4E Relief' application",
+          `for the '${activeFund.name}' application`
+        );
+        const limits = activeFund.limits;
+        const allCoveredEvents = [...activeFund.eligibleDisasters, ...activeFund.eligibleHardships];
 
-    const fundDetails = `
+        const fundDetails = `
 **Current Fund Information (${activeFund.name})**:
 - Single Request Maximum: $${limits.singleRequestMax.toLocaleString()}
 - 12-Month Maximum: $${limits.twelveMonthMax.toLocaleString()}
@@ -349,37 +356,38 @@ export function createChatSession(
 The ${activeFund.name} covers a variety of events, including:
 - ${allCoveredEvents.join('\n- ')}
 `;
-    dynamicContext += fundDetails;
-  }
-
-  // Provide the user's application history so the AI can answer questions about past submissions.
-  if (applications && applications.length > 0) {
-    const applicationList = applications.map(app => {
-      const submittedDate = new Date(app.submittedDate);
-      const formattedDate = submittedDate.toLocaleString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-          timeZone: 'America/New_York' // Standardize to a common timezone for consistent output
-      });
-      let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nStatus: ${app.status}`;
-      if (app.reasons && (app.status === 'Declined' || app.status === 'Submitted')) {
-        appDetails += `\nDecision Reasons: ${app.reasons.join(' ')}`;
+        dynamicContext += fundDetails;
       }
-      return appDetails;
-    }).join('\n---\n');
 
-    dynamicContext += `
+      // Provide the user's application history so the AI can answer questions about past submissions.
+      if (applications && applications.length > 0) {
+        const applicationList = applications.map(app => {
+          const submittedDate = new Date(app.submittedDate);
+          const formattedDate = submittedDate.toLocaleString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+              timeZone: 'America/New_York' // Standardize to a common timezone for consistent output
+          });
+          let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nStatus: ${app.status}`;
+          if (app.reasons && (app.status === 'Declined' || app.status === 'Submitted')) {
+            appDetails += `\nDecision Reasons: ${app.reasons.join(' ')}`;
+          }
+          return appDetails;
+        }).join('\n---\n');
+
+        dynamicContext += `
 **User's Application History**:
 You have access to the user's submitted applications. If they ask about one, use this data. 
 If an application status is 'Declined' or 'Submitted' (which means 'Under Review'), you MUST use the 'Decision Reasons' provided to explain why. Be direct and clear.
 ${applicationList}
 `;
-  } else {
-    dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
+      } else {
+        dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
+      }
   }
   
   // FIX: Use the latest recommended model 'gemini-2.5-flash'.
