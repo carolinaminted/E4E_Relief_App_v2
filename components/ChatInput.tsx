@@ -68,8 +68,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPre
         onKeyDown={handleKeyPress}
         placeholder={t('chatbotWidget.placeholder')}
         rows={1}
-        disabled={isLoading || disabled}
-        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
+        disabled={isLoading}
+        readOnly={disabled}
+        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2 read-only:cursor-not-allowed"
       />
       <button
         onClick={handleSubmit}
