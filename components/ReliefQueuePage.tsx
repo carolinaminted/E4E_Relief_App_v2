@@ -101,6 +101,8 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
             <EligibilityIndicator eligibilityStatus={userProfile.eligibilityStatus} cvStatus={userProfile.classVerificationStatus} />
         </div>
 
+        {renderHelpText()}
+
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-left">
             <h2 className="text-xl font-semibold text-white mb-4 text-center">Update Your Information</h2>
             <p className="text-sm text-gray-300 mb-6 text-center">If your verification failed due to a typo in your name, you can correct it here and save before re-attempting.</p>
@@ -119,8 +121,6 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
             </div>
         </div>
         
-        {renderHelpText()}
-
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-center">
             {!isReattempting ? (
                 <button onClick={() => setIsReattempting(true)} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200">
