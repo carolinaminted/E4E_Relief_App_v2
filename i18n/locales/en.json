@@ -1,3 +1,4 @@
+
 {
   "common": {
     "next": "Next",
@@ -422,39 +423,66 @@
     "donorTitle": "For Donors",
     "applicantFaqs": [
       {
-        "question": "How do I know if I'm eligible?",
-        "answer": "You can check your eligibility status on your Profile page. Generally, eligibility is determined by your employment status and the nature of the event, as defined by your specific fund's rules. For more details, visit the 'Eligibility' page from the Support Center."
+        "question": "How do I start a new application?",
+        "answer": "You can start a new application from the Home screen by tapping either 'Apply' for the standard form, or 'AI Apply' for a conversational experience. Both options are disabled if you are not eligible or have reached your grant limits."
       },
       {
-        "question": "How long does it take to get a decision?",
-        "answer": "Decisions are typically instant. Our system uses a combination of automated rules and AI review to provide a decision within moments of you submitting your application."
+        "question": "What is the difference between 'Apply' and 'AI Apply'?",
+        "answer": [
+          "#### Apply",
+          "The standard application is a multi-step form that you fill out manually. It is ideal if you prefer a traditional form-filling experience.",
+          "",
+          "#### AI Apply",
+          "AI Apply is a conversational experience where an AI assistant asks you questions one-by-one to complete your application. It is ideal if you prefer a more guided, interactive process."
+        ]
       },
       {
-        "question": "Where can I see my past applications?",
-        "answer": "You can view all your past and current applications on your Profile page under the 'My Applications' section."
+        "question": "How do I know if I'm eligible to apply?",
+        "answer": "Your eligibility status is shown on your Profile page and in the header. If your status is 'Eligible', you can apply. If it shows 'Verification Needed', you must complete the verification process first. You can start this from the 'Fund Identities' section of your Profile."
       },
       {
-        "question": "What is AI Apply?",
-        "answer": "AI Apply is a conversational way to complete your application. An AI assistant will ask you questions one by one, which can be easier than filling out a long form. You can find it on the Home screen."
+        "question": "Where can I see my grant limits?",
+        "answer": "Your remaining 12-month and lifetime grant balances are displayed at the top of the 'My Applications' section on your Profile page."
+      },
+      {
+        "question": "I failed verification, what do I do now?",
+        "answer": "If you fail verification after the maximum number of attempts, you will be placed in the Relief Queue. From there, you can contact support or correct your name and re-attempt verification with the correct fund code."
+      },
+      {
+        "question": "How will I receive my grant payment?",
+        "answer": "Grant payments are disbursed through our payment partners. You can find detailed guides for both U.S. and international payment options on the 'Payments' page, accessible from the Support Center."
       }
     ],
     "donorFaqs": [
       {
         "question": "Is my donation tax-deductible?",
-        "answer": "E4E Relief is a 501(c)(3) charitable organization. Your donation is tax-deductible to the extent allowed by law. You will receive a receipt for your contribution via email."
+        "answer": "Yes, E4E Relief is a 501(c)(3) charitable organization. Your donation is tax-deductible to the extent allowed by law. You will receive an email receipt for your contribution."
       },
       {
-        "question": "Can I donate to a specific fund?",
-        "answer": "Currently, all donations go into a general relief fund to help those most in need across all programs we support. We are exploring options for fund-specific donations in the future."
+        "question": "How does E4E Relief use my donation?",
+        "answer": "100% of your donation goes directly to funding grants for employees in need. Your contribution provides critical financial assistance to individuals affected by unforeseen disasters and hardships."
       },
       {
-        "question": "How are grant decisions made?",
-        "answer": "Grant decisions are made through a confidential and objective process. Each application is first checked against the fund's specific eligibility rules. It then undergoes a final review by our AI-powered decisioning system to ensure fairness and consistency."
+        "question": "Can I donate to a specific fund or employee?",
+        "answer": "To ensure fairness and privacy, all donations go into a general relief fund that supports employees across all our partner programs. We cannot direct donations to specific individuals or funds."
       },
       {
         "question": "What other ways can I give?",
-        "answer": "For information about other ways to give, please contact E4E Relief Donor Services at 704-973-4564 or <1>donorservices@e4erelief.org</1>."
+        "answer": "For information about other ways to give, such as planned giving or corporate partnerships, please contact E4E Relief Donor Services at (704) 973-4564 or <1>donorservices@e4erelief.org</1>."
       }
     ]
+  },
+  "paymentOptionsPage": {
+    "title": "Payment Options",
+    "description": "Grants are disbursed through our payment partners. Below you will find information for both U.S. and International applicants.",
+    "usApplicantsTitle": "For U.S. Applicants",
+    "usApplicantsBody": "U.S. grant payments are made through Bank of America Recipient Select. You will receive an email from Bank of America with instructions on how to choose your payment method (Zelle, ACH, or check).",
+    "usApplicantsLink": "Learn More at Bank of America",
+    "intlApplicantsTitle": "For International Applicants",
+    "intlSupportTitle": "Payment Support",
+    "intlSupportBody": "For support with international payments, please contact <a href=\"mailto:support@e4erelief.example\" class=\"font-semibold text-white hover:underline\">support@e4erelief.example</a>.",
+    "intlPartnersTitle": "Payment Partner Guides",
+    "converaGuide": "Convera Guide",
+    "tipaltiGuide": "Tipalti Guide"
   }
 }

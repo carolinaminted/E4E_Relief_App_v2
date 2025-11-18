@@ -1,3 +1,4 @@
+
 {
   "common": {
     "next": "Siguiente",
@@ -418,39 +419,66 @@
     "donorTitle": "Para Donantes",
     "applicantFaqs": [
       {
-        "question": "¿Cómo sé si soy elegible?",
-        "answer": "Puedes verificar tu estado de elegibilidad en tu página de Perfil. Generalmente, la elegibilidad se determina por tu estado laboral y la naturaleza del evento, según lo definen las reglas de tu fondo específico. Para más detalles, visita la página 'Elegibilidad' desde el Centro de Soporte."
+        "question": "¿Cómo inicio una nueva solicitud?",
+        "answer": "Puedes iniciar una nueva solicitud desde la pantalla de Inicio tocando 'Solicitar' para el formulario estándar, o 'Solicitud IA' para una experiencia conversacional. Ambas opciones están deshabilitadas si no eres elegible o has alcanzado tus límites de subvención."
       },
       {
-        "question": "¿Cuánto tiempo se tarda en obtener una decisión?",
-        "answer": "Las decisiones suelen ser instantáneas. Nuestro sistema utiliza una combinación de reglas automatizadas y revisión por IA para proporcionar una decisión momentos después de que envíes tu solicitud."
+        "question": "¿Cuál es la diferencia entre 'Solicitar' y 'Solicitud IA'?",
+        "answer": [
+          "#### Solicitar",
+          "La solicitud estándar es un formulario de varios pasos que llenas manualmente. Es ideal si prefieres una experiencia tradicional de llenado de formularios.",
+          "",
+          "#### Solicitud IA",
+          "La Solicitud IA es una experiencia conversacional donde un asistente de IA te hace preguntas una por una para completar tu solicitud. Es ideal si prefieres un proceso más guiado e interactivo."
+        ]
       },
       {
-        "question": "¿Dónde puedo ver mis solicitudes anteriores?",
-        "answer": "Puedes ver todas tus solicitudes pasadas y actuales en tu página de Perfil en la sección 'Mis Solicitudes'."
+        "question": "¿Cómo sé si soy elegible para solicitar?",
+        "answer": "Tu estado de elegibilidad se muestra en tu página de Perfil y en el encabezado. Si tu estado es 'Elegible', puedes solicitar. Si muestra 'Verificación Necesaria', primero debes completar el proceso de verificación. Puedes iniciarlo desde la sección 'Identidades del Fondo' de tu Perfil."
       },
       {
-        "question": "¿Qué es la Solicitud con IA?",
-        "answer": "La Solicitud con IA es una forma conversacional de completar tu solicitud. Un asistente de IA te hará preguntas una por una, lo que puede ser más fácil que llenar un formulario largo. Puedes encontrarla en la pantalla de Inicio."
+        "question": "¿Dónde puedo ver mis límites de subvención?",
+        "answer": "Tus saldos restantes de subvención de 12 meses y de por vida se muestran en la parte superior de la sección 'Mis Solicitudes' en tu página de Perfil."
+      },
+      {
+        "question": "Fallé en la verificación, ¿qué hago ahora?",
+        "answer": "Si fallas en la verificación después del número máximo de intentos, serás colocado en la Cola de Ayuda. Desde allí, puedes contactar a soporte o corregir tu nombre e intentar nuevamente la verificación con el código de fondo correcto."
+      },
+      {
+        "question": "¿Cómo recibiré el pago de mi subvención?",
+        "answer": "Los pagos de las subvenciones se desembolsan a través de nuestros socios de pago. Puedes encontrar guías detalladas para opciones de pago en EE. UU. e internacionales en la página de 'Pagos', accesible desde el Centro de Soporte."
       }
     ],
     "donorFaqs": [
       {
         "question": "¿Mi donación es deducible de impuestos?",
-        "answer": "E4E Relief es una organización benéfica 501(c)(3). Tu donación es deducible de impuestos en la medida permitida por la ley. Recibirás un recibo de tu contribución por correo electrónico."
+        "answer": "Sí, E4E Relief es una organización benéfica 501(c)(3). Tu donación es deducible de impuestos en la medida permitida por la ley. Recibirás un recibo de tu contribución por correo electrónico."
       },
       {
-        "question": "¿Puedo donar a un fondo específico?",
-        "answer": "Actualmente, todas las donaciones van a un fondo de ayuda general para ayudar a los más necesitados en todos los programas que apoyamos. Estamos explorando opciones para donaciones a fondos específicos en el futuro."
+        "question": "¿Cómo utiliza E4E Relief mi donación?",
+        "answer": "El 100% de tu donación se destina directamente a financiar subvenciones para empleados necesitados. Tu contribución proporciona asistencia financiera crítica a personas afectadas por desastres y dificultades imprevistas."
       },
       {
-        "question": "¿Cómo se toman las decisiones de las subvenciones?",
-        "answer": "Las decisiones de las subvenciones se toman a través de un proceso confidencial y objetivo. Cada solicitud se verifica primero con las reglas de elegibilidad específicas del fondo. Luego, pasa por una revisión final de nuestro sistema de decisiones impulsado por IA para garantizar la equidad y la coherencia."
+        "question": "¿Puedo donar a un fondo o empleado específico?",
+        "answer": "Para garantizar la equidad y la privacidad, todas las donaciones se destinan a un fondo de ayuda general que apoya a los empleados en todos nuestros programas asociados. No podemos dirigir donaciones a individuos o fondos específicos."
       },
       {
         "question": "¿De qué otras maneras puedo donar?",
-        "answer": "Para obtener información sobre otras formas de donar, comunícate con los Servicios para Donantes de E4E Relief al 704-973-4564 o a <1>donorservices@e4erelief.org</1>."
+        "answer": "Para obtener información sobre otras formas de donar, como donaciones planificadas o asociaciones corporativas, comunícate con los Servicios para Donantes de E4E Relief al (704) 973-4564 o a <1>donorservices@e4erelief.org</1>."
       }
     ]
+  },
+  "paymentOptionsPage": {
+    "title": "Opciones de Pago",
+    "description": "Las subvenciones se desembolsan a través de nuestros socios de pago. A continuación encontrará información para solicitantes de EE. UU. e internacionales.",
+    "usApplicantsTitle": "Para Solicitantes en EE. UU.",
+    "usApplicantsBody": "Los pagos de subvenciones en EE. UU. se realizan a través de Bank of America Recipient Select. Recibirá un correo electrónico de Bank of America con instrucciones sobre cómo elegir su método de pago (Zelle, ACH o cheque).",
+    "usApplicantsLink": "Más Información en Bank of America",
+    "intlApplicantsTitle": "Para Solicitantes Internacionales",
+    "intlSupportTitle": "Soporte de Pagos",
+    "intlSupportBody": "Para obtener ayuda con los pagos internacionales, comuníquese con <a href=\"mailto:support@e4erelief.example\" class=\"font-semibold text-white hover:underline\">support@e4erelief.example</a>.",
+    "intlPartnersTitle": "Guías de Socios de Pago",
+    "converaGuide": "Guía de Convera",
+    "tipaltiGuide": "Guía de Tipalti"
   }
 }
