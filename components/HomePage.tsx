@@ -40,6 +40,8 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
             titleKey: 'nav.aiApply', 
             icon: <SparklesIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('aiApply'),
+            disabled: !canApply,
+            disabledTooltipKey: userProfile.classVerificationStatus !== 'passed' ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
         },
         { key: 'profile', titleKey: 'nav.profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
         { key: 'support', titleKey: 'nav.support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },

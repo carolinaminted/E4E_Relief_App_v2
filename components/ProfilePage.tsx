@@ -16,7 +16,7 @@ interface ProfilePageProps {
   navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
   applications: Application[];
   userProfile: UserProfile;
-  onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
+  onProfileUpdate: (updatedProfile: UserProfile, options?: { silent?: boolean }) => Promise<void>;
   identities: FundIdentity[];
   activeIdentity: ActiveIdentity | null;
   onSetActiveIdentity: (identityId: string) => void;
@@ -645,7 +645,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <input type="checkbox" id="infoCorrect" required checked={formData.infoCorrect} onChange={e => handleFormChange('infoCorrect', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">{t('profilePage.infoCorrect')} <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
-                    <button type="button" onClick={() => setIsPolicyModalOpen(true)} className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200 mt-2">{t('profilePage.viewPolicies')}</button>
                 </div>
                 {openSection === 'consent' && (
                     <div className="flex justify-end pt-4">
@@ -665,6 +664,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 </div>
             )}
             <button type="submit" className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-8 rounded-md transition-colors duration-200">{t('profilePage.saveButton')}</button>
+            <button
+              type="button"
+              onClick={() => setIsPolicyModalOpen(true)}
+              className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200 mt-4"
+            >
+              {t('homePage.poweredBy')}
+            </button>
         </div>
       </form>
       

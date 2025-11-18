@@ -1,3 +1,4 @@
+
 {
   "common": {
     "next": "Siguiente",
@@ -15,6 +16,11 @@
     "close": "Cerrar",
     "eligible": "Elegible",
     "ineligible": "No Elegible"
+  },
+  "reliefQueue": {
+    "helpRoster": "Su empresa proporciona a E4E Relief una lista de empleados elegibles. Asegúrese de que sus criterios de elegibilidad se ingresen exactamente como su empleador los tiene en su sistema de recursos humanos.",
+    "helpDomain": "Su empleador exige una lista de dominios de correo electrónico permitidos para registrarse en esta aplicación. Asegúrese de registrar una nueva cuenta con el correo electrónico proporcionado por su empresa.",
+    "helpSSO": "Su empleador admite SSO. Si ha llegado a la Cola de Ayuda después de autenticarse con éxito con su empleador, comuníquese con nuestro <phoneLink>{{phone}}</phoneLink> o <emailLink>{{email}}</emailLink>."
   },
   "eligibilityIndicator": {
     "eligibleMessage": "Estás verificado para este programa de fondos de ayuda. Solicitar ayuda no garantiza que se desembolsará un pago.",
@@ -80,7 +86,8 @@
     "greeting": "¡Hola! Por favor, revisa las preguntas de la solicitud. Envíame un mensaje cuando estés listo.",
     "additionalDetailsPreviewTitle": "Vista Previa de Detalles Adicionales",
     "eventDetailsPreviewTitle": "Vista Previa de Detalles del Evento",
-    "previewSubtitle": "Esta lista se actualiza a medida que respondes al asistente."
+    "previewSubtitle": "Esta lista se actualiza a medida que respondes al asistente.",
+    "eligibilityNotice": "Actualmente no eres elegible para solicitar. Por favor, visita tu página de Perfil para verificar tu estado de verificación y los límites de tu subvención."
   },
   "applyPage": {
     "title": "Solicitar Ayuda",
@@ -381,119 +388,6 @@
     "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos.",
     "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>."
   },
-  "faqPage": {
-    "title": "Preguntas Frecuentes",
-    "backToSupport": "Volver al Centro de Soporte",
-    "applicantTitle": "Para Solicitantes",
-    "donorTitle": "Para Donantes",
-    "applicantFaqs": [
-      {
-        "question": "¿Cuánto tiempo tardará en procesarse mi solicitud?",
-        "answer": "Una vez que hayamos recibido toda la documentación de respaldo requerida, un especialista en subvenciones revisará su solicitud y tomará una decisión sobre su solicitud dentro de 3 a 5 días hábiles. Si se aprueba, se realizará una distribución de la subvención según la preferencia de pago seleccionada en su perfil de solicitante."
-      },
-      {
-        "question": "¿Cómo puedo verificar el estado de mi solicitud?",
-        "answer": "Puede verificar fácilmente el estado de su solicitud en este portal. Una vez que haya enviado una solicitud, simplemente regrese a este portal, inicie sesión y busque una barra de estado gris en la parte superior de su página de inicio. Puede hacer clic en el enlace de detalles para obtener más información."
-      },
-      {
-        "question": "Si mi solicitud es aprobada, ¿cuánto tiempo tardaré en recibir mi pago?",
-        "answer": [
-          "El tiempo de pago de la subvención depende del tipo de pago seleccionado, la ubicación geográfica y la información bancaria. A continuación se presentan los plazos generales:",
-          "- Los solicitantes de EE. UU. que seleccionen un método de pago digital pueden esperar que los fondos se depositen en un plazo de 1 a 3 días hábiles.",
-          "- Los solicitantes de EE. UU. que seleccionen un cheque por correo suelen recibir los fondos en un plazo de 7 días hábiles. No hay número de seguimiento y los cheques se envían por USPS.",
-          "- El tiempo de pago internacional varía según el país. Consulte su carta de adjudicación cuando se procese la subvención para obtener detalles adicionales."
-        ]
-      },
-      {
-        "question": "¿Cuánto recibiré?",
-        "answer": "Las adjudicaciones de subvenciones se basan en la necesidad y variarán según los parámetros de subvención del programa de ayuda de su empresa."
-      },
-      {
-        "question": "¿Tengo que devolver la subvención o pagar impuestos si recibo asistencia?",
-        "answer": [
-          "Las subvenciones proporcionadas a través del Fondo de Ayuda no son préstamos y no tienen que ser devueltas.",
-          "- Para los beneficiarios de subvenciones de EE. UU., una subvención generalmente no generará ingresos imponibles (es decir, no aparecerá en su W2).",
-          "- Para los beneficiarios fuera de los EE. UU., consulte a su asesor fiscal local para obtener más información."
-        ]
-      },
-      {
-        "question": "Si no soy seleccionado para una subvención, ¿recibiré una notificación con el motivo?",
-        "answer": "Sí, se le informará por correo electrónico que el programa no puede proporcionar la asistencia con detalles sobre por qué es posible que no haya sido seleccionado para una subvención."
-      },
-      {
-        "question": "¿Quién revisa y toma la decisión sobre las solicitudes?",
-        "answer": "Su Fondo de Ayuda es administrado por E4E Relief. E4E Relief es un tercero que ha sido designado para administrar el procesamiento de subvenciones, la toma de decisiones y los aspectos administrativos de su Programa de Ayuda. Esto garantiza la confidencialidad y la toma de decisiones imparcial. También tienen experiencia en este tema para tomar decisiones acertadas sobre eventos calificados."
-      },
-      {
-        "question": "¿Quién es E4E Relief?",
-        "answer": "E4E Relief es una organización benéfica pública 501(c)(3). El número de identificación fiscal de E4E Relief es 87-3137387. Con más de dos décadas de experiencia sirviendo a clientes, E4E Relief es el proveedor líder del país de fondos para desastres y dificultades de los empleados."
-      }
-    ],
-    "donorFaqs": [
-      {
-        "question": "¿Quién es E4E Relief?",
-        "answer": "E4E Relief es una organización benéfica pública 501(c)(3). El número de identificación fiscal de E4E Relief es 87-3137387. Con más de dos décadas de experiencia sirviendo a clientes, E4E Relief es el proveedor líder del país de fondos para desastres y dificultades de los empleados."
-      },
-      {
-        "question": "¿Puedo designar mi contribución a una persona específica?",
-        "answer": "Si bien las donaciones no se pueden designar para una persona, país (ubicación) o evento específicos, sí garantizan que haya fondos disponibles para brindar asistencia a las personas necesitadas que cumplen con los criterios del programa."
-      },
-      {
-        "question": "¿Mis donaciones al fondo son deducibles de impuestos? ¿Recibiré un estado de cuenta a fin de año?",
-        "answer": "Una donación a su fondo de ayuda administrado por E4E Relief puede ser deducible de impuestos, siempre que no se hayan recibido bienes o servicios a cambio de la donación. Recibirá un recibo de impuestos por correo electrónico para donaciones con tarjeta de crédito y criptomonedas. Para cualquier otro regalo, se proporcionará un acuse de recibo de regalo para todos aquellos, de $250 o más, hechos directamente al Fondo a través de E4E Relief. Los obsequios en efectivo, según el monto, pueden o no requerir un recibo para fines fiscales. Consulte a su asesor fiscal para obtener más información."
-      },
-      {
-        "question": "¿Necesito donar para ser elegible para solicitar asistencia del Fondo de Ayuda?",
-        "answer": "Las donaciones al Fondo de Ayuda son voluntarias y no son necesarias para solicitar asistencia."
-      },
-      {
-        "question": "¿E4E Relief acepta obsequios de fuera de los EE. UU.?",
-        "answer": "Sí, nuestros programas de ayuda actualmente aceptan obsequios de fuera de los EE. UU. Sin embargo, restringimos los países sancionados según la guía de la Oficina de Control de Activos Extranjeros (OFAC)."
-      },
-      {
-        "question": "¿Cuándo recibiré un recibo de impuestos por mi donación de tarjeta de crédito, acciones, criptomonedas o de mi Fondo Asesorado por Donantes?",
-        "answer": [
-          "#### Tarjeta de Crédito",
-          "Las donaciones con tarjeta de crédito tardan de 3 a 5 días hábiles en recibirse en el fondo.",
-          "#### Cripto",
-          "Las donaciones de criptomonedas tardan de 2 a 5 días hábiles en completarse y recibirse en el fondo.",
-          "#### Acciones",
-          "El tiempo para recibir los fondos de los obsequios de acciones dependerá de la rapidez con que el corredor del donante pueda procesar la transacción y mover las acciones, lo que puede tardar hasta 2-3 semanas en procesarse.",
-          "#### Fondos Asesorados por Donantes (DAF)",
-          "Dependiendo del proveedor, recibiremos las donaciones de DAF entre 1 y 3 semanas."
-        ]
-      },
-      {
-        "question": "¿Cómo veo mis donaciones históricas?",
-        "answer": "Puede revisar las donaciones históricas a través de su portal en 'Mis Donaciones' o accediendo al panel de donantes de The Giving Block. Deberá crear una cuenta con la misma dirección de correo electrónico utilizada al realizar la donación. Este ID de usuario y contraseña NO son necesariamente los mismos para su portal de programa, sino un inicio de sesión único con The Giving Block."
-      },
-      {
-        "question": "¿Cómo solicito un recibo de impuestos de reemplazo?",
-        "answer": "Una vez que inicie sesión en el Panel de Donantes de The Giving Block, podrá acceder a cualquier recibo relacionado con sus donaciones anteriores."
-      },
-      {
-        "question": "¿Cómo puedo hacer donaciones recurrentes?",
-        "answer": "Una vez que inicies sesión en el Panel de Donantes de The Giving Block, puedes ver tus planes de donación y actualizar la información relacionada con tu tarjeta de crédito y la frecuencia de los pagos. También puedes desactivar cualquier donación recurrente aquí. Las donaciones recurrentes no se pueden hacer de forma anónima por razones regulatorias."
-      },
-      {
-        "question": "¿A quién puedo contactar si tengo preguntas adicionales?",
-        "answer": "Para obtener información sobre otras formas de donar, comuníquese con los Servicios para Donantes de E4E Relief al 704-973-4564 o <1>donorservices@e4erelief.org</1>."
-      }
-    ]
-  },
-  "paymentOptionsPage": {
-    "title": "Opciones de Pago",
-    "description": "Nos asociamos con proveedores de pago líderes en la industria para garantizar que sus fondos de ayuda se entreguen de manera rápida y segura, dondequiera que se encuentre en el mundo.",
-    "usApplicantsTitle": "Solicitantes de EE. UU.",
-    "usApplicantsBody": "Para los solicitantes dentro de los Estados Unidos, revise nuestra guía de pago para comprender las opciones y los requisitos disponibles para recibir su subvención.",
-    "usApplicantsLink": "Guía de Selección de Beneficiarios de Bank of America",
-    "intlApplicantsTitle": "Solicitantes Internacionales",
-    "intlSupportTitle": "Soporte de Pago de Adjudicación de Subvenciones Internacionales",
-    "intlSupportBody": "Una vez que se otorga una subvención, hay algunos pasos de registro importantes que debe completar antes de recibir la asistencia financiera. Para recibir esta asistencia financiera, debe completar con éxito el registro de su cuenta con nuestros socios de pago. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\"> Haga clic aquí </a> para revisar la guía de adjudicación de subvenciones internacionales.",
-    "intlPartnersTitle": "Información del Socio de Pago",
-    "converaGuide": "Guía de Convera",
-    "tipaltiGuide": "Guía de Tipalti"
-  },
   "validation": {
     "required": "Por favor, rellena este campo.",
     "firstNameRequired": "El nombre es obligatorio.",
@@ -517,5 +411,74 @@
     "applicantFirstNameRequired": "El nombre del solicitante es obligatorio.",
     "applicantLastNameRequired": "El apellido del solicitante es obligatorio.",
     "applicantEmailRequired": "Se requiere un correo electrónico válido del solicitante."
+  },
+  "faqPage": {
+    "title": "Preguntas Frecuentes",
+    "backToSupport": "Volver a Soporte",
+    "applicantTitle": "Para Solicitantes",
+    "donorTitle": "Para Donantes",
+    "applicantFaqs": [
+      {
+        "question": "¿Cómo inicio una nueva solicitud?",
+        "answer": "Puedes iniciar una nueva solicitud desde la pantalla de Inicio tocando 'Solicitar' para el formulario estándar, o 'Solicitud IA' para una experiencia conversacional. Ambas opciones están deshabilitadas si no eres elegible o has alcanzado tus límites de subvención."
+      },
+      {
+        "question": "¿Cuál es la diferencia entre 'Solicitar' y 'Solicitud IA'?",
+        "answer": [
+          "#### Solicitar",
+          "La solicitud estándar es un formulario de varios pasos que llenas manualmente. Es ideal si prefieres una experiencia tradicional de llenado de formularios.",
+          "",
+          "#### Solicitud IA",
+          "La Solicitud IA es una experiencia conversacional donde un asistente de IA te hace preguntas una por una para completar tu solicitud. Es ideal si prefieres un proceso más guiado e interactivo."
+        ]
+      },
+      {
+        "question": "¿Cómo sé si soy elegible para solicitar?",
+        "answer": "Tu estado de elegibilidad se muestra en tu página de Perfil y en el encabezado. Si tu estado es 'Elegible', puedes solicitar. Si muestra 'Verificación Necesaria', primero debes completar el proceso de verificación. Puedes iniciarlo desde la sección 'Identidades del Fondo' de tu Perfil."
+      },
+      {
+        "question": "¿Dónde puedo ver mis límites de subvención?",
+        "answer": "Tus saldos restantes de subvención de 12 meses y de por vida se muestran en la parte superior de la sección 'Mis Solicitudes' en tu página de Perfil."
+      },
+      {
+        "question": "Fallé en la verificación, ¿qué hago ahora?",
+        "answer": "Si fallas en la verificación después del número máximo de intentos, serás colocado en la Cola de Ayuda. Desde allí, puedes contactar a soporte o corregir tu nombre e intentar nuevamente la verificación con el código de fondo correcto."
+      },
+      {
+        "question": "¿Cómo recibiré el pago de mi subvención?",
+        "answer": "Los pagos de las subvenciones se desembolsan a través de nuestros socios de pago. Puedes encontrar guías detalladas para opciones de pago en EE. UU. e internacionales en la página de 'Pagos', accesible desde el Centro de Soporte."
+      }
+    ],
+    "donorFaqs": [
+      {
+        "question": "¿Mi donación es deducible de impuestos?",
+        "answer": "Sí, E4E Relief es una organización benéfica 501(c)(3). Tu donación es deducible de impuestos en la medida permitida por la ley. Recibirás un recibo de tu contribución por correo electrónico."
+      },
+      {
+        "question": "¿Cómo utiliza E4E Relief mi donación?",
+        "answer": "El 100% de tu donación se destina directamente a financiar subvenciones para empleados necesitados. Tu contribución proporciona asistencia financiera crítica a personas afectadas por desastres y dificultades imprevistas."
+      },
+      {
+        "question": "¿Puedo donar a un fondo o empleado específico?",
+        "answer": "Para garantizar la equidad y la privacidad, todas las donaciones se destinan a un fondo de ayuda general que apoya a los empleados en todos nuestros programas asociados. No podemos dirigir donaciones a individuos o fondos específicos."
+      },
+      {
+        "question": "¿De qué otras maneras puedo donar?",
+        "answer": "Para obtener información sobre otras formas de donar, como donaciones planificadas o asociaciones corporativas, comunícate con los Servicios para Donantes de E4E Relief al (704) 973-4564 o a <1>donorservices@e4erelief.org</1>."
+      }
+    ]
+  },
+  "paymentOptionsPage": {
+    "title": "Opciones de Pago",
+    "description": "Las subvenciones se desembolsan a través de nuestros socios de pago. A continuación encontrará información para solicitantes de EE. UU. e internacionales.",
+    "usApplicantsTitle": "Para Solicitantes en EE. UU.",
+    "usApplicantsBody": "Los pagos de subvenciones en EE. UU. se realizan a través de Bank of America Recipient Select. Recibirá un correo electrónico de Bank of America con instrucciones sobre cómo elegir su método de pago (Zelle, ACH o cheque).",
+    "usApplicantsLink": "Más Información en Bank of America",
+    "intlApplicantsTitle": "Para Solicitantes Internacionales",
+    "intlSupportTitle": "Soporte de Pagos",
+    "intlSupportBody": "Para obtener ayuda con los pagos internacionales, comuníquese con <a href=\"mailto:support@e4erelief.example\" class=\"font-semibold text-white hover:underline\">support@e4erelief.example</a>.",
+    "intlPartnersTitle": "Guías de Socios de Pago",
+    "converaGuide": "Guía de Convera",
+    "tipaltiGuide": "Guía de Tipalti"
   }
 }

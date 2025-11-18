@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
 
   return (
     <>
-      <header className="flex md:hidden items-center justify-between w-full h-20 bg-[#003a70] px-4 flex-shrink-0 z-30">
+      <header className="flex md:hidden items-center justify-between w-full h-20 bg-[#003a70] px-4 flex-shrink-0 z-30 pt-[env(safe-area-inset-top)]">
         <div className="relative" ref={langDropdownRef}>
           <button
             onClick={() => setIsLangDropdownOpen(prev => !prev)}

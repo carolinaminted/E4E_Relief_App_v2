@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Application } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +9,16 @@ interface SubmissionSuccessPageProps {
 
 const SubmissionSuccessPage: React.FC<SubmissionSuccessPageProps> = ({ application, onGoToProfile }) => {
   const { t } = useTranslation();
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsButtonDisabled(false);
+    }, 3000); // 3-second delay for data propagation
+
+    return () => clearTimeout(timer); // Cleanup timer on component unmount
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-6 md:p-8 text-center">
       <div className="w-full max-w-2xl bg-[#004b8d] p-6 sm:p-8 md:p-10 rounded-lg shadow-lg">
@@ -28,9 +38,18 @@ const SubmissionSuccessPage: React.FC<SubmissionSuccessPageProps> = ({ applicati
         </p>
         <button
           onClick={onGoToProfile}
-          className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
+          disabled={isButtonDisabled}
+          className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-wait flex justify-center items-center h-12"
         >
-          {t('submissionSuccessPage.goToProfileButton')}
+          {isButtonDisabled ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            </div>
+          ) : (
+            t('submissionSuccessPage.goToProfileButton')
+          )}
         </button>
       </div>
     </div>
