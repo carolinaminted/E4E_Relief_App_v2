@@ -65,7 +65,7 @@ const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: bool
     </button>
 );
 
-type SectionKey = 'additional' | 'event' | 'expenses' | 'agreements';
+type SectionKey = 'additional' | 'acknowledgements' | 'event' | 'expenses' | 'agreements';
 
 const AIApplyPreviewPane: React.FC<{
     userProfile: UserProfile | null;
@@ -83,6 +83,12 @@ const AIApplyPreviewPane: React.FC<{
       { key: 'householdSize', label: t('applyContactPage.householdSize') },
       { key: 'homeowner', label: t('applyContactPage.homeowner') },
       { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
+    ], [t]);
+    
+    const acknowledgementChecklistItems = useMemo(() => [
+        { key: 'ackPolicies', label: t('applyContactPage.ackPolicies') },
+        { key: 'commConsent', label: t('applyContactPage.commConsent') },
+        { key: 'infoCorrect', label: t('applyContactPage.infoCorrect') },
     ], [t]);
 
     const eventChecklistItems = useMemo(() => [
@@ -110,6 +116,20 @@ const AIApplyPreviewPane: React.FC<{
             return profileValue !== undefined && profileValue !== null && profileValue !== '';
         });
     }, [userProfile, applicationDraft, baseChecklistItems]);
+    
+    const isAcknowledgementsComplete = useMemo(() => {
+        if (!userProfile) return false;
+        return acknowledgementChecklistItems.every(item => {
+            const key = item.key as keyof UserProfile;
+            // Check in draft first
+            const draftValue = applicationDraft?.profileData?.[key];
+            if (draftValue === true) return true;
+            
+            // Check in profile
+            const profileValue = userProfile?.[key];
+            return profileValue === true;
+        });
+    }, [userProfile, applicationDraft, acknowledgementChecklistItems]);
 
     const isEventDetailsComplete = useMemo(() => {
         const eventData = applicationDraft?.eventData;
@@ -143,15 +163,21 @@ const AIApplyPreviewPane: React.FC<{
     // Effect to auto-open the next incomplete section
     useEffect(() => {
         if (!isAdditionalDetailsComplete) setOpenSection('additional');
+        else if (!isAcknowledgementsComplete) setOpenSection('acknowledgements');
         else if (!isEventDetailsComplete) setOpenSection('event');
         else if (!isExpensesComplete) setOpenSection('expenses');
         else setOpenSection('agreements');
-    }, [isAdditionalDetailsComplete, isEventDetailsComplete, isExpensesComplete]);
+    }, [isAdditionalDetailsComplete, isAcknowledgementsComplete, isEventDetailsComplete, isExpensesComplete]);
     
     const isProfileItemComplete = (key: string) => {
         const draftValue = applicationDraft?.profileData?.[key as keyof UserProfile];
-        if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
+        if (draftValue !== undefined && draftValue !== null && draftValue !== '') {
+             // For booleans, check explicitly if true for acknowledgements, though checklist logic handles existence.
+             if (typeof draftValue === 'boolean') return draftValue === true;
+             return true;
+        }
         const profileValue = userProfile?.[key as keyof UserProfile];
+        if (typeof profileValue === 'boolean') return profileValue === true;
         return profileValue !== undefined && profileValue !== null && profileValue !== '';
     };
 
@@ -189,9 +215,29 @@ const AIApplyPreviewPane: React.FC<{
                         </div>
                     </div>
                 </div>
-                {/* Event Details Section */}
+
+                {/* Profile Acknowledgements Section */}
                 <div className={`bg-[#004b8d]/30 rounded-md ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
-                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAdditionalDetailsComplete} />
+                    <SectionHeader title={t('aiApplyPage.profileAcknowledgementsPreviewTitle')} isComplete={isAcknowledgementsComplete} isOpen={openSection === 'acknowledgements'} onToggle={() => toggleSection('acknowledgements')} disabled={!isAdditionalDetailsComplete} />
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'acknowledgements' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="p-3 space-y-2">
+                            {acknowledgementChecklistItems.map(item => (
+                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
+                                    <div className="flex-shrink-0 w-5 h-5">
+                                        {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                                    </div>
+                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                        {item.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Event Details Section */}
+                <div className={`bg-[#004b8d]/30 rounded-md ${!isAcknowledgementsComplete ? 'opacity-50' : ''}`}>
+                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAcknowledgementsComplete} />
                      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
                             {visibleEventItems.map(item => (
@@ -375,7 +421,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
   return (
     <>
-    <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
+    <div className="absolute inset-0 top-20 bottom-[calc(4rem+env(safe-area-inset-bottom))] md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
         <div className="flex-1 flex flex-col p-4 pt-0 md:p-8 md:pt-2 md:pb-4 min-h-0">
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
                 <div className="relative flex justify-center items-center mb-4 md:mb-6">

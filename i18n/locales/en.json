@@ -1,4 +1,3 @@
-
 {
   "common": {
     "next": "Next",
@@ -85,8 +84,9 @@
     "title": "AI Apply",
     "backToHome": "Back to Home",
     "greeting": "Hello! Please review the application questions. Message me when you are ready.",
-    "additionalDetailsPreviewTitle": "Additional Details Preview",
-    "eventDetailsPreviewTitle": "Event Details Preview",
+    "additionalDetailsPreviewTitle": "Additional Details",
+    "profileAcknowledgementsPreviewTitle": "Profile Acknowledgements",
+    "eventDetailsPreviewTitle": "Event Details",
     "previewSubtitle": "This list updates as you answer the assistant.",
     "eligibilityNotice": "You are not currently eligible to apply. Please visit your Profile page to check your verification status and grant limits."
   },

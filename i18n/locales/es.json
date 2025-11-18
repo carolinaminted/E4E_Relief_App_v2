@@ -1,4 +1,3 @@
-
 {
   "common": {
     "next": "Siguiente",
@@ -84,8 +83,9 @@
     "title": "Solicitud con IA",
     "backToHome": "Volver a Inicio",
     "greeting": "¡Hola! Por favor, revisa las preguntas de la solicitud. Envíame un mensaje cuando estés listo.",
-    "additionalDetailsPreviewTitle": "Vista Previa de Detalles Adicionales",
-    "eventDetailsPreviewTitle": "Vista Previa de Detalles del Evento",
+    "additionalDetailsPreviewTitle": "Detalles Adicionales",
+    "profileAcknowledgementsPreviewTitle": "Confirmación de Perfil",
+    "eventDetailsPreviewTitle": "Detalles del Evento",
     "previewSubtitle": "Esta lista se actualiza a medida que respondes al asistente.",
     "eligibilityNotice": "Actualmente no eres elegible para solicitar. Por favor, visita tu página de Perfil para verificar tu estado de verificación y los límites de tu subvención."
   },

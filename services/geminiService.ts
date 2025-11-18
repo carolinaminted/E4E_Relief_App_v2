@@ -61,6 +61,9 @@ const updateUserProfileTool: FunctionDeclaration = {
       householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
       homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
       preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication.", enum: languages },
+      ackPolicies: { type: Type.BOOLEAN, description: "User confirms they have read and agree to the Privacy Policy and Cookie Policy." },
+      commConsent: { type: Type.BOOLEAN, description: "User consents to receive emails and text messages regarding their application." },
+      infoCorrect: { type: Type.BOOLEAN, description: "User confirms that all information provided is accurate." },
     },
   },
 };
@@ -178,7 +181,7 @@ You are the E4E Relief AI assistant, with a single, highly-focused mission on th
 - **DO NOT ANSWER USER QUESTIONS.** Your only function is to ask for the next piece of missing information.
 - **NEVER REVEAL LOGIC.** Do not explain why information is needed or what makes someone eligible or ineligible.
 - **NEVER DISCUSS ELIGIBILITY.** If the user asks if they are eligible, if an event is covered, about grant amounts, or any other policy question, you MUST respond with: "My role is to help you complete the application. For questions about eligibility or fund rules, please see the 'Support' page."
-- **FOCUS ON THE CURRENT SECTION.** The application has multiple sections: Additional Details, Event Details, Expenses, and Agreements. You must complete them IN ORDER. Do not ask for expenses until all event details are collected.
+- **FOCUS ON THE CURRENT SECTION.** The application has multiple sections: **Additional Details**, **Profile Acknowledgements**, **Event Details**, **Expenses**, and **Final Agreements**. You must complete them **IN ORDER**. Do not jump ahead.
 
 **Your Process**:
 1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
@@ -206,6 +209,9 @@ You have access to the \`updateUserProfile\`, \`startOrUpdateApplicationDraft\`,
     if (combinedProfile.householdSize) currentProfileInfo.push(`Household Size: ${combinedProfile.householdSize}`);
     if (combinedProfile.homeowner) currentProfileInfo.push(`Homeowner: ${combinedProfile.homeowner}`);
     if (combinedProfile.preferredLanguage) currentProfileInfo.push(`Preferred Language: ${combinedProfile.preferredLanguage}`);
+    if (combinedProfile.ackPolicies) currentProfileInfo.push(`Policies Agreed: Yes`);
+    if (combinedProfile.commConsent) currentProfileInfo.push(`Comm Consent: Yes`);
+    if (combinedProfile.infoCorrect) currentProfileInfo.push(`Info Correct: Yes`);
     
     const currentEventInfo: string[] = [];
     if (combinedEvent.event) currentEventInfo.push(`Event Type: ${combinedEvent.event}`);
@@ -234,33 +240,48 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
 `;
     }
 
-    const missingProfileFields: string[] = [];
-    if (!combinedProfile.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
-    if (!combinedProfile.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
-    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
-    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
-    if (!combinedProfile.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
-    if (!combinedProfile.preferredLanguage) missingProfileFields.push('Preferred Language');
+    const missingBasicProfileFields: string[] = [];
+    if (!combinedProfile.employmentStartDate) missingBasicProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
+    if (!combinedProfile.eligibilityType) missingBasicProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
+    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingBasicProfileFields.push('Estimated Annual Household Income (as a number)');
+    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingBasicProfileFields.push('Number of people in household (as a number)');
+    if (!combinedProfile.homeowner) missingBasicProfileFields.push('Homeowner status (Yes or No)');
+    if (!combinedProfile.preferredLanguage) missingBasicProfileFields.push('Preferred Language');
     
-    const missingEventFields: string[] = [];
-    if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
-    if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
-    if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
-    if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
-    if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
-    if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
-    if (combinedEvent.evacuated === 'Yes') {
-        if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
-        if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
-        if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
-        if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
-        if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+    const basicProfileComplete = missingBasicProfileFields.length === 0;
+
+    const missingAcknowledgementFields: string[] = [];
+    // Strictly verify acknowledgements only after basic profile is complete to ensure sequencing
+    if (basicProfileComplete) {
+        if (!combinedProfile.ackPolicies) missingAcknowledgementFields.push('Agreement to Privacy Policy and Cookie Policy (ackPolicies: true)');
+        if (!combinedProfile.commConsent) missingAcknowledgementFields.push('Consent to receive emails and texts (commConsent: true)');
+        if (!combinedProfile.infoCorrect) missingAcknowledgementFields.push('Confirmation that all information is accurate (infoCorrect: true)');
     }
 
-    const allBaseFieldsComplete = missingProfileFields.length === 0 && missingEventFields.length === 0;
+    const allProfileComplete = basicProfileComplete && missingAcknowledgementFields.length === 0;
+
+    const missingEventFields: string[] = [];
+    // Only move to event details if ALL profile sections (basic + acknowledgements) are done
+    if (allProfileComplete) {
+        if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
+        if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
+        if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
+        if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
+        if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
+        if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
+        if (combinedEvent.evacuated === 'Yes') {
+            if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
+            if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
+            if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
+            if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
+            if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+        }
+    }
+
+    const allEventFieldsComplete = allProfileComplete && missingEventFields.length === 0;
 
     const missingExpenseFields: string[] = [];
-    if (allBaseFieldsComplete) {
+    if (allEventFieldsComplete) {
         const knownExpenseTypes = new Set((combinedEvent.expenses || []).map(e => e.type));
         expenseTypes.forEach(type => {
             if (!knownExpenseTypes.has(type)) {
@@ -269,7 +290,7 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
         });
     }
 
-    const allExpensesComplete = allBaseFieldsComplete && missingExpenseFields.length === 0;
+    const allExpensesComplete = allEventFieldsComplete && missingExpenseFields.length === 0;
     
     const missingAgreementFields: string[] = [];
     if (allExpensesComplete) {
@@ -281,10 +302,11 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
         }
     }
 
-    if ([...missingProfileFields, ...missingEventFields, ...missingExpenseFields, ...missingAgreementFields].length > 0) {
+    if ([...missingBasicProfileFields, ...missingAcknowledgementFields, ...missingEventFields, ...missingExpenseFields, ...missingAgreementFields].length > 0) {
         dynamicContext += `
 **Missing Information to Collect**:
-${missingProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingProfileFields.join('\n- ') : ''}
+${missingBasicProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingBasicProfileFields.join('\n- ') : ''}
+${missingAcknowledgementFields.length > 0 ? `\n*Profile Acknowledgements*\n- ` + missingAcknowledgementFields.join('\n- ') : ''}
 ${missingEventFields.length > 0 ? `\n*Event Details*\n- ` + missingEventFields.join('\n- ') : ''}
 ${missingExpenseFields.length > 0 ? `\n*Expense Details*\n- ` + missingExpenseFields.join('\n- ') : ''}
 ${missingAgreementFields.length > 0 ? `\n*Final Agreements*\n- ` + missingAgreementFields.join('\n- ') : ''}
