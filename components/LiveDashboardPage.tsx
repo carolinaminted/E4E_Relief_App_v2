@@ -10,12 +10,28 @@ interface LiveDashboardPageProps {
   currentUser: UserProfile;
 }
 
+// --- Types for Payments Table ---
+interface PaymentTableRow {
+    id: string;
+    recipient: string;
+    amount: number;
+    country: string;
+    event: string;
+    decisionedDate: string; // For sorting
+}
+type PaymentSortKey = keyof PaymentTableRow;
+interface PaymentSortConfig {
+    key: PaymentSortKey;
+    direction: 'ascending' | 'descending';
+}
+
+
 // --- Reusable UI Components ---
 
 const MetricCard: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
     <div className={`bg-[#003a70]/50 p-6 rounded-lg border border-[#005ca0] flex flex-col ${className}`}>
       <h3 className="text-lg font-semibold text-white mb-4 text-center">{title}</h3>
-      <div className="flex-grow flex items-center justify-center">
+      <div className="flex-grow flex items-center justify-center min-h-0">
         {children}
       </div>
     </div>
@@ -217,9 +233,38 @@ interface LiveStats {
     paymentsLast30Days: number;
     paymentsOverTime: { date: string; amount: number }[];
     recentPayments: Application[];
-    // FIX: Added a separate property for payment data by country to resolve duplicate key issue.
     topCountriesByPayment: { label: string; value: number }[];
 }
+
+// --- Sorting Helper Components ---
+const SortIndicator: React.FC<{ direction: 'ascending' | 'descending' }> = ({ direction }) => (
+    <span className="ml-1 opacity-80">{direction === 'ascending' ? '▲' : '▼'}</span>
+);
+
+interface SortableThProps {
+    sortKey: PaymentSortKey;
+    onSort: (key: PaymentSortKey) => void;
+    sortConfig: PaymentSortConfig | null;
+    children: React.ReactNode;
+    className?: string;
+}
+
+const SortableTh: React.FC<SortableThProps> = ({ sortKey, onSort, sortConfig, children, className = '' }) => {
+    const isSorted = sortConfig?.key === sortKey;
+    const direction = isSorted ? sortConfig.direction : undefined;
+
+    return (
+        <th scope="col" className={`px-4 py-3 ${className}`} aria-sort={direction || 'none'}>
+            <button
+                onClick={() => onSort(sortKey)}
+                className={`flex items-center gap-1 hover:text-white transition-colors w-full ${className.includes('text-right') ? 'justify-end' : ''}`}
+            >
+                {children}
+                {isSorted && <SortIndicator direction={direction!} />}
+            </button>
+        </th>
+    );
+};
 
 
 const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, currentUser }) => {
@@ -227,6 +272,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
     const [isFetching, setIsFetching] = useState(true);
     const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
     const [activeTab, setActiveTab] = useState<'home' | 'payments'>('home');
+    const [paymentsSearchTerm, setPaymentsSearchTerm] = useState('');
+    const [paymentsSortConfig, setPaymentsSortConfig] = useState<PaymentSortConfig | null>({ key: 'decisionedDate', direction: 'descending' });
 
     const chartColors = ['#ff8400', '#edda26', '#0091b3', '#94d600'];
 
@@ -311,9 +358,8 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
                 avgPayment: awardedApps.length > 0 ? totalAwarded / awardedApps.length : 0,
                 paymentsLast30Days,
                 paymentsOverTime,
-                // FIX: Correctly assign payment data to its own property instead of overwriting user country data.
                 topCountriesByPayment: topCountriesByPayment,
-                recentPayments: awardedApps.sort((a, b) => new Date(b.decisionedDate).getTime() - new Date(a.decisionedDate).getTime()).slice(0, 10),
+                recentPayments: awardedApps,
             });
             setLastRefresh(new Date());
 
@@ -328,6 +374,62 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    const handlePaymentsSort = (key: PaymentSortKey) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (paymentsSortConfig && paymentsSortConfig.key === key && paymentsSortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setPaymentsSortConfig({ key, direction });
+    };
+
+    const processedRecentPayments = useMemo((): PaymentTableRow[] => {
+        if (!stats?.recentPayments) return [];
+
+        const flattenedData: PaymentTableRow[] = stats.recentPayments.map(app => ({
+            id: app.id,
+            recipient: `${app.profileSnapshot.firstName} ${app.profileSnapshot.lastName.charAt(0)}.`,
+            amount: app.requestedAmount,
+            country: app.profileSnapshot.primaryAddress.country,
+            event: app.event === 'My disaster is not listed' ? (app.otherEvent || 'Other').trim() : app.event.trim(),
+            decisionedDate: app.decisionedDate,
+        }));
+
+        let filteredData = flattenedData;
+        if (paymentsSearchTerm) {
+            const lowercasedSearch = paymentsSearchTerm.toLowerCase();
+            filteredData = flattenedData.filter(row => 
+                row.recipient.toLowerCase().includes(lowercasedSearch) ||
+                row.country.toLowerCase().includes(lowercasedSearch) ||
+                row.event.toLowerCase().includes(lowercasedSearch)
+            );
+        }
+
+        if (paymentsSortConfig !== null) {
+            filteredData.sort((a, b) => {
+                const aValue = a[paymentsSortConfig.key];
+                const bValue = b[paymentsSortConfig.key];
+                
+                let compare = 0;
+                if (paymentsSortConfig.key === 'decisionedDate') {
+                    const dateA = new Date(a.decisionedDate).getTime();
+                    const dateB = new Date(b.decisionedDate).getTime();
+                    if (dateA < dateB) compare = -1;
+                    if (dateA > dateB) compare = 1;
+                } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    if (aValue < bValue) compare = -1;
+                    if (aValue > bValue) compare = 1;
+                } else {
+                    compare = String(aValue).toLowerCase().localeCompare(String(bValue).toLowerCase());
+                }
+
+                return paymentsSortConfig.direction === 'ascending' ? compare : -compare;
+            });
+        }
+        
+        return filteredData;
+
+    }, [stats?.recentPayments, paymentsSearchTerm, paymentsSortConfig]);
 
     if (isFetching && !stats) {
         return <LoadingOverlay message="Fetching Live Data..." />;
@@ -429,31 +531,56 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
                         <PaymentTrendChart data={stats.paymentsOverTime} />
                     </MetricCard>
                      <MetricCard title="Payments by Country (Top 5)">
-                        {/* FIX: Use the correct data property for the payment chart. */}
                         <Treemap data={stats.topCountriesByPayment} />
                     </MetricCard>
                     <MetricCard title="Recent Payments" className="lg:col-span-3">
-                         <div className="w-full">
-                            <table className="min-w-full text-sm text-left">
-                                <thead className="text-xs text-gray-200 uppercase">
-                                    <tr>
-                                        <th className="px-4 py-2">Recipient</th>
-                                        <th className="px-4 py-2">Amount (USD)</th>
-                                        <th className="px-4 py-2 hidden sm:table-cell">Country</th>
-                                        <th className="px-4 py-2 hidden md:table-cell">Event</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#005ca0]/50">
-                                    {stats.recentPayments.map(app => (
-                                        <tr key={app.id}>
-                                            <td className="px-4 py-2 font-medium text-white">{`${app.profileSnapshot.firstName} ${app.profileSnapshot.lastName.charAt(0)}.`}</td>
-                                            <td className="px-4 py-2 font-semibold text-[#edda26]">${app.requestedAmount.toLocaleString()}</td>
-                                            <td className="px-4 py-2 text-white hidden sm:table-cell">{app.profileSnapshot.primaryAddress.country}</td>
-                                            <td className="px-4 py-2 text-white hidden md:table-cell">{app.event}</td>
+                         <div className="w-full flex flex-col h-full">
+                            <div className="mb-4 px-1">
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg className="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="search"
+                                        id="payments-search"
+                                        className="block w-full p-3 pl-10 text-sm text-white bg-[#004b8d]/50 border border-[#005ca0] rounded-lg focus:ring-[#ff8400] focus:border-[#ff8400]"
+                                        placeholder="Search by recipient, country, event..."
+                                        value={paymentsSearchTerm}
+                                        onChange={(e) => setPaymentsSearchTerm(e.target.value)}
+                                        aria-label="Search recent payments"
+                                    />
+                                </div>
+                            </div>
+                            <div className="overflow-y-auto flex-grow custom-scrollbar">
+                                <table className="min-w-full text-sm text-left">
+                                    <thead className="text-xs text-gray-200 uppercase sticky top-0 bg-[#003a70]/80 backdrop-blur-sm">
+                                        <tr>
+                                            <SortableTh sortKey="recipient" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig}>Recipient</SortableTh>
+                                            <SortableTh sortKey="amount" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="text-right">Amount (USD)</SortableTh>
+                                            <SortableTh sortKey="country" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="hidden sm:table-cell">Country</SortableTh>
+                                            <SortableTh sortKey="event" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="hidden md:table-cell">Event</SortableTh>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#005ca0]/50">
+                                        {processedRecentPayments.length > 0 ? (
+                                            processedRecentPayments.map(row => (
+                                            <tr key={row.id} className="hover:bg-[#004b8d]/50">
+                                                <td className="px-4 py-2 font-medium text-white">{row.recipient}</td>
+                                                <td className="px-4 py-2 font-semibold text-[#edda26] text-right">${row.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                                <td className="px-4 py-2 text-white hidden sm:table-cell">{row.country}</td>
+                                                <td className="px-4 py-2 text-white hidden md:table-cell">{row.event}</td>
+                                            </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="text-center py-8 text-gray-400">No payments match your search.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                          </div>
                     </MetricCard>
                 </div>
