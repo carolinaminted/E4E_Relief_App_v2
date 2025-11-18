@@ -16,7 +16,7 @@ interface ProfilePageProps {
   navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
   applications: Application[];
   userProfile: UserProfile;
-  onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
+  onProfileUpdate: (updatedProfile: UserProfile, options?: { silent?: boolean }) => Promise<void>;
   identities: FundIdentity[];
   activeIdentity: ActiveIdentity | null;
   onSetActiveIdentity: (identityId: string) => void;

@@ -9,7 +9,7 @@ import EligibilityIndicator from './EligibilityIndicator';
 interface ReliefQueuePageProps {
   userProfile: UserProfile;
   activeFund: Fund | null;
-  onUpdateProfile: (updatedProfile: UserProfile) => Promise<void>;
+  onUpdateProfile: (updatedProfile: UserProfile, options?: { silent?: boolean }) => Promise<void>;
   onReattemptVerification: (fundCode: string) => void;
   onLogout: () => void;
 }

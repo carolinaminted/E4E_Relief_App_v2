@@ -451,11 +451,13 @@ function App() {
         }
     }, [currentUser, allIdentities]);
 
-  const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile) => {
+  const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile, options?: { silent?: boolean }) => {
     if (!currentUser) return;
     // The onSnapshot listener will automatically update the UI state from this write.
     await usersRepo.update(currentUser.uid, updatedProfile);
-    alert(t('profilePage.saveSuccess', 'Profile saved!')); // Using a default value
+    if (!options?.silent) {
+      alert(t('profilePage.saveSuccess', 'Profile saved!')); // Using a default value
+    }
   }, [currentUser, t]);
 
   const handleApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
@@ -518,7 +520,7 @@ function App() {
     }
     
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
-        await handleProfileUpdate(appFormData.profileData);
+        await handleProfileUpdate(appFormData.profileData, { silent: true });
     }
     
     setApplicationDraft(null);
