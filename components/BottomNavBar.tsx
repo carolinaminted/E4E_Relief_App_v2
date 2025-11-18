@@ -54,17 +54,19 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
   const activePage = userRole === 'Admin' && adminDashboardPages.includes(currentPage) ? 'fundPortal' : currentPage;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#003a70] border-t border-[#005ca0] flex md:hidden z-40">
-      {navItems.map(item => (
-        <NavItem
-          key={item.page}
-          label={t(item.labelKey)}
-          icon={item.icon}
-          onClick={() => navigate(item.page as Page)}
-          isActive={activePage === item.page}
-          disabled={item.disabled}
-        />
-      ))}
+    <nav className="fixed bottom-0 left-0 right-0 bg-[#003a70] border-t border-[#005ca0] md:hidden z-40 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex h-16 w-full">
+        {navItems.map(item => (
+          <NavItem
+            key={item.page}
+            label={t(item.labelKey)}
+            icon={item.icon}
+            onClick={() => navigate(item.page as Page)}
+            isActive={activePage === item.page}
+            disabled={item.disabled}
+          />
+        ))}
+      </div>
     </nav>
   );
 };
