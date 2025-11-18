@@ -16,6 +16,11 @@
     "eligible": "Elegible",
     "ineligible": "No Elegible"
   },
+  "reliefQueue": {
+    "helpRoster": "Su empresa proporciona a E4E Relief una lista de empleados elegibles. Asegúrese de que sus criterios de elegibilidad se ingresen exactamente como su empleador los tiene en su sistema de recursos humanos.",
+    "helpDomain": "Su empleador exige una lista de dominios de correo electrónico permitidos para registrarse en esta aplicación. Asegúrese de registrar una nueva cuenta con el correo electrónico proporcionado por su empresa.",
+    "helpSSO": "Su empleador admite SSO. Si ha llegado a la Cola de Ayuda después de autenticarse con éxito con su empleador, comuníquese con nuestro <phoneLink>{{phone}}</phoneLink> o <emailLink>{{email}}</emailLink>."
+  },
   "eligibilityIndicator": {
     "eligibleMessage": "Estás verificado para este programa de fondos de ayuda. Solicitar ayuda no garantiza que se desembolsará un pago.",
     "verificationNeededMessage": "Visita 'Identidades del Fondo' en tu página de Perfil para verificarte y ser elegible para la ayuda."

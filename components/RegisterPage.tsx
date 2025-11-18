@@ -20,11 +20,19 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDemoRegister = () => {
-    setFirstName('Pikachu');
-    setLastName('Raichu');
-    setEmail(`user${Math.floor(Math.random() * 1000)}@example.com`);
+    const firstNames = ['Pikachu', 'Charmander', 'Squirtle', 'Bulbasaur', 'Jigglypuff', 'Meowth', 'Psyduck', 'Snorlax', 'Eevee', 'Mewtwo'];
+    const lastNames = ['Raichu', 'Charizard', 'Blastoise', 'Venusaur', 'Wigglytuff', 'Persian', 'Golduck', 'Munchlax', 'Vaporeon', 'Mew'];
+    const fundCodes = ['DOM', 'ROST', 'SSO'];
+
+    const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const randomFundCode = fundCodes[Math.floor(Math.random() * fundCodes.length)];
+
+    setFirstName(randomFirstName);
+    setLastName(randomLastName);
+    setEmail(`${randomFirstName.toLowerCase()}.${randomLastName.toLowerCase()}${Math.floor(Math.random() * 100)}@example.com`);
     setPassword('password123');
-    setFundCode('DOM');
+    setFundCode(randomFundCode);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

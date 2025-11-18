@@ -33,4 +33,6 @@ export interface Fund {
   domainConfig?: FundDomainConfig;
   rosterConfig?: FundRosterConfig;
   eligibleStorms?: string[];
+  supportEmail?: string;
+  supportPhone?: string;
 }

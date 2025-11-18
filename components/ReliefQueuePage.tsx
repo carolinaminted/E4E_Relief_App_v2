@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 // FIX: Changed import for `Fund` type to its source file `data/fundData` to resolve export error.
 import type { Page, UserProfile } from '../types';
 import type { Fund } from '../data/fundData';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { FormInput } from './FormControls';
 import EligibilityIndicator from './EligibilityIndicator';
 
@@ -41,6 +41,51 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
     onReattemptVerification(reattemptFundCode.trim().toUpperCase());
   };
 
+  const renderHelpText = () => {
+    if (!activeFund) return null;
+
+    switch (activeFund.cvType) {
+      case 'Roster':
+        return (
+          <div className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0] text-sm text-gray-300 text-left space-y-2">
+            <h3 className="font-semibold text-white">Roster Verification</h3>
+            <p>{t('reliefQueue.helpRoster')}</p>
+          </div>
+        );
+      case 'Domain':
+        return (
+          <div className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0] text-sm text-gray-300 text-left space-y-2">
+            <h3 className="font-semibold text-white">Domain Verification</h3>
+            <p>{t('reliefQueue.helpDomain')}</p>
+          </div>
+        );
+      case 'SSO':
+        return (
+          <div className="bg-[#004b8d]/50 p-4 rounded-lg border border-[#005ca0] text-sm text-gray-300 text-left space-y-2">
+            <h3 className="font-semibold text-white">SSO Verification</h3>
+            <p>
+              <Trans i18nKey="reliefQueue.helpSSO"
+                components={{
+                  phoneLink: <a href={`tel:${activeFund.supportPhone}`} className="font-semibold text-white hover:underline" />,
+                  emailLink: <a href={`mailto:${activeFund.supportEmail}`} className="font-semibold text-white hover:underline" />
+                }}
+                values={{
+                  phone: activeFund.supportPhone,
+                  email: activeFund.supportEmail
+                }}
+              />
+            </p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const supportEmail = activeFund?.supportEmail || 'support@e4erelief.example';
+  const supportPhone = activeFund?.supportPhone || '(800) 555-0199';
+
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 text-center">
       <div className="w-full max-w-2xl bg-[#003a70] p-8 rounded-lg shadow-2xl border border-[#005ca0] space-y-6">
@@ -49,6 +94,7 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
             Relief Queue
           </h1>
           <p className="text-lg text-gray-300 mt-1">{activeFund?.name} ({userProfile.fundCode})</p>
+          <p className="text-md text-gray-400 mt-1">{userProfile.email}</p>
         </div>
 
         <div className="flex justify-center">
@@ -72,6 +118,8 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
                 </button>
             </div>
         </div>
+        
+        {renderHelpText()}
 
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-center">
             {!isReattempting ? (
@@ -98,11 +146,11 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
             <p className="text-gray-300">Contact support for assistance with your verification.</p>
             <div>
               <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Email</h3>
-              <a href="mailto:support@e4erelief.example" className="font-semibold text-white hover:underline text-lg">support@e4erelief.example</a>
+              <a href={`mailto:${supportEmail}`} className="font-semibold text-white hover:underline text-lg">{supportEmail}</a>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-1">Support Phone</h3>
-              <a href="tel:800-555-0199" className="font-semibold text-white hover:underline text-lg">(800) 555-0199</a>
+              <a href={`tel:${supportPhone}`} className="font-semibold text-white hover:underline text-lg">{supportPhone}</a>
             </div>
         </div>
         

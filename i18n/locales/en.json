@@ -17,6 +17,11 @@
     "eligible": "Eligible",
     "ineligible": "Ineligible"
   },
+  "reliefQueue": {
+    "helpRoster": "Your company provides E4E Relief a roster of eligible employees. Please make sure your eligibility criteria is entered exactly as your employer may have it their HR system.",
+    "helpDomain": "Your employer enforces an email domain allow list in order to register for this application. Please make sure to register a new account with your company provided email address.",
+    "helpSSO": "Your employer supports SSO. If you have reached the relief Queue after successfully authenticating with your employer than reach out to our <phoneLink>{{phone}}</phoneLink> or <emailLink>{{email}}</emailLink>."
+  },
   "eligibilityIndicator": {
     "eligibleMessage": "You are verified for this relief funds program. Applying for relief does not guarantee a payment will be disbursed.",
     "verificationNeededMessage": "Visit 'Fund Identities' in your Profile page to verify yourself to be eligible for relief."
