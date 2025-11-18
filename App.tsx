@@ -778,6 +778,7 @@ function App() {
                     applicationDraft={applicationDraft}
                     onDraftUpdate={handleDraftUpdate}
                     onSubmit={handleApplicationSubmit}
+                    canApply={canApply}
                 />;
       case 'profile':
         return <ProfilePage 

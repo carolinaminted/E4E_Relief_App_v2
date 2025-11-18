@@ -22,6 +22,7 @@ interface AIApplyPageProps {
   applicationDraft: Partial<ApplicationFormData> | null;
   onDraftUpdate: (draft: Partial<ApplicationFormData>) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
+  canApply: boolean;
 }
 
 const CheckmarkIcon: React.FC = () => (
@@ -71,7 +72,8 @@ const AIApplyPreviewPane: React.FC<{
     applicationDraft: Partial<ApplicationFormData> | null;
     onDraftUpdate: (draft: Partial<ApplicationFormData>) => void;
     onSubmit: (formData: ApplicationFormData) => Promise<void>;
-}> = ({ userProfile, applicationDraft, onDraftUpdate, onSubmit }) => {
+    canApply: boolean;
+}> = ({ userProfile, applicationDraft, onDraftUpdate, onSubmit, canApply }) => {
     const { t } = useTranslation();
 
     const baseChecklistItems = useMemo(() => [
@@ -215,6 +217,7 @@ const AIApplyPreviewPane: React.FC<{
                                 formData={applicationDraft?.eventData || {expenses: []} as EventData}
                                 userProfile={userProfile}
                                 updateFormData={(data) => onDraftUpdate({ eventData: data })}
+                                disabled={!canApply}
                             />
                         )}
                     </div>
@@ -229,6 +232,7 @@ const AIApplyPreviewPane: React.FC<{
                                 formData={applicationDraft?.agreementData || { shareStory: null, receiveAdditionalInfo: null }}
                                 updateFormData={(data) => onDraftUpdate({ agreementData: data })}
                                 onSubmit={() => onSubmit(applicationDraft as ApplicationFormData)}
+                                disabled={!canApply}
                             />
                         )}
                     </div>
@@ -238,7 +242,7 @@ const AIApplyPreviewPane: React.FC<{
     );
 };
 
-const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit }) => {
+const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -372,6 +376,12 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                   </div>
                 </div>
 
+                {!canApply && (
+                    <div className="bg-yellow-800/50 border border-yellow-600 text-yellow-200 p-3 rounded-md mb-4 text-sm text-center" role="alert">
+                        {t('aiApplyPage.eligibilityNotice')}
+                    </div>
+                )}
+
                 <div className="flex-1 flex flex-col min-h-0">
                 
                     {/* --- MOBILE VIEW --- */}
@@ -388,8 +398,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                             </div>
                             <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
                                 <div className="relative">
-                                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!hasInteractedWithPreview} />
-                                    {!hasInteractedWithPreview && <FirstTimeUserGuide />}
+                                    <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!canApply || !hasInteractedWithPreview} />
+                                    {!hasInteractedWithPreview && canApply && <FirstTimeUserGuide />}
                                 </div>
                             </footer>
                         </main>
@@ -408,7 +418,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 <ChatWindow messages={messages} isLoading={isLoading} />
                             </div>
                             <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
-                                <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+                                <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={!canApply} />
                             </footer>
                         </main>
                         <aside className="w-2/5 flex flex-col min-h-0">
@@ -417,6 +427,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                                 applicationDraft={applicationDraft}
                                 onDraftUpdate={onDraftUpdate}
                                 onSubmit={onSubmit}
+                                canApply={canApply}
                             />
                         </aside>
                     </div>
@@ -434,6 +445,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                 applicationDraft={applicationDraft}
                 onDraftUpdate={onDraftUpdate}
                 onSubmit={onSubmit}
+                canApply={canApply}
             />
         </AIApplyPreviewModal>
     )}

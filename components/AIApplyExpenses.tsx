@@ -9,6 +9,7 @@ interface AIApplyExpensesProps {
   formData: Partial<EventData>;
   userProfile: UserProfile;
   updateFormData: (data: Partial<EventData>) => void;
+  disabled?: boolean;
 }
 
 // --- Icons ---
@@ -33,7 +34,7 @@ const UploadSpinner: React.FC = () => (
 );
 
 
-const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile, updateFormData }) => {
+const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile, updateFormData, disabled = false }) => {
   const { t } = useTranslation();
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
@@ -163,22 +164,22 @@ const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile
                   min="0"
                   max="10000"
                   step="0.01"
-                  disabled={isUploading}
+                  disabled={isUploading || disabled}
                   error={errors[type]}
                 />
                 <div>
                   <div className="flex items-center gap-2">
-                    <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-3 rounded-md text-xs transition-colors duration-200 cursor-pointer flex items-center gap-1 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-3 rounded-md text-xs transition-colors duration-200 cursor-pointer flex items-center gap-1 ${isUploading || disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <UploadIcon />
                       <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>
-                      <input id={`receipt-${type}`} type="file" className="hidden" onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)} disabled={isUploading} accept="image/jpeg,image/png,application/pdf" />
+                      <input id={`receipt-${type}`} type="file" className="hidden" onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)} disabled={isUploading || disabled} accept="image/jpeg,image/png,application/pdf" />
                     </label>
                     {isUploading && <UploadSpinner />}
                   </div>
                    {expense?.fileName && !isUploading && (
                       <div className="flex items-center gap-1 text-xs text-gray-300 truncate mt-2">
                         <span className="truncate" title={expense.fileName}>{expense.fileName}</span>
-                        <button onClick={() => handleDeleteFile(type)} disabled={isUploading} className="text-red-400 hover:text-red-300 flex-shrink-0" title={t('applyExpensesPage.removeReceipt')}><DeleteIcon /></button>
+                        <button onClick={() => handleDeleteFile(type)} disabled={isUploading || disabled} className="text-red-400 hover:text-red-300 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" title={t('applyExpensesPage.removeReceipt')}><DeleteIcon /></button>
                       </div>
                     )}
                   {error && <p className="text-red-400 text-xs mt-1">{error}</p>}

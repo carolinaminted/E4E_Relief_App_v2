@@ -81,7 +81,8 @@
     "greeting": "Hello! Please review the application questions. Message me when you are ready.",
     "additionalDetailsPreviewTitle": "Additional Details Preview",
     "eventDetailsPreviewTitle": "Event Details Preview",
-    "previewSubtitle": "This list updates as you answer the assistant."
+    "previewSubtitle": "This list updates as you answer the assistant.",
+    "eligibilityNotice": "You are not currently eligible to apply. Please visit your Profile page to check your verification status and grant limits."
   },
   "applyPage": {
     "title": "Apply for Relief",
@@ -384,119 +385,6 @@
     "aiParseError": "Could not extract details. Please try again or fill fields manually.",
     "aiSuccess": "Success! We've pre-filled the form with any details we found.",
     "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>."
-  },
-  "faqPage": {
-    "title": "FAQ's",
-    "backToSupport": "Back to Support Center",
-    "applicantTitle": "For Applicants",
-    "donorTitle": "For Donors",
-    "applicantFaqs": [
-      {
-        "question": "How long will it take to process my application?",
-        "answer": "Once we have received all required supporting documentation a grant specialist will review your application and make a decision regarding your request within 3-5 business days. If approved, a grant distribution will be made based on your payment preference selected in your applicant profile."
-      },
-      {
-        "question": "How can I check on the status of my application?",
-        "answer": "You can easily check the status of your application on this portal. Once you've submitted an application, simply return to this portal, login, and check for a gray status bar at the top of your homepage. You can click the details link to get more information."
-      },
-      {
-        "question": "If my request is approved, how long should it take to receive my payment?",
-        "answer": [
-          "Grant award payment timing depends on selected payment type, geographical location, and banking information. Below are general timelines:",
-          "- U.S. applicants who select a digital payment method can expect to have funds deposited within 1-3 business days.",
-          "- U.S. applicants who select a mailed check typically receive funds within 7 business days. There is no tracking number and checks are mailed via USPS.",
-          "- International payment timing varies by country. Please reference your award letter when the grant is processed for additional details."
-        ]
-      },
-      {
-        "question": "How much will I receive?",
-        "answer": "Grant awards are based on need and will vary according to the grant parameters for your company's relief program."
-      },
-      {
-        "question": "Do I have to repay the grant or pay taxes if I receive assistance?",
-        "answer": [
-          "Grants provided through the Relief Fund are not loans and do not have to be repaid.",
-          "- For U.S. grant recipients, a grant generally will not result in taxable income (i.e., will not show up on your W2).",
-          "- For recipients outside the U.S., please check with your local tax advisor for more information."
-        ]
-      },
-      {
-        "question": "If not selected for a grant, will I receive a notification with the reason why?",
-        "answer": "Yes, you will be informed via email that the program is unable to provide the assistance with details on why you may not have been selected for a grant."
-      },
-      {
-        "question": "Who reviews and makes the decision on the applications?",
-        "answer": "Your Relief Fund is administered by E4E Relief. E4E Relief is a third party that has been designated to manage the grant processing, decision-making, and administrative aspects of your Relief Program. This ensures confidentiality and impartial decision-making. They also have expertise on this subject matter to make sound decisions on qualifying events."
-      },
-      {
-        "question": "Who is E4E Relief?",
-        "answer": "E4E Relief is a 501(c)(3) public charity. E4E Relief's tax ID number is 87-3137387. With more than two decades of experience serving clients, E4E Relief is the nation's leading provider of employee disaster and hardship funds."
-      }
-    ],
-    "donorFaqs": [
-      {
-        "question": "Who is E4E Relief?",
-        "answer": "E4E Relief is a 501(c)(3) public charity. E4E Relief's tax ID number is 87-3137387. With more than two decades of experience serving clients, E4E Relief is the nation's leading provider of employee disaster and hardship funds."
-      },
-      {
-        "question": "Can I designate my contribution to a specific individual?",
-        "answer": "While donations cannot be designated for a specific individual, country (location), or event, they do guarantee funds are available to provide assistance to individuals in need who meet the criteria of the program."
-      },
-      {
-        "question": "Are my donations to the fund tax-deductible? Will I get a statement at the end of the year?",
-        "answer": "A donation to your relief fund administered by E4E Relief may be tax-deductible, provided no goods or services were received in exchange for the donation. You will receive an emailed tax receipt for credit card and cryptocurrency donations. For any other gifts a gift acknowledgment will be provided for all those, $250 or more, made directly to the Fund via E4E Relief. Cash gifts, depending on the amount, may or may not require a receipt for tax purposes. Please check with your tax advisor for more information."
-      },
-      {
-        "question": "Do I need to donate to be eligible to apply for assistance from the Relief Fund?",
-        "answer": "Donations to the Relief Fund are voluntary and are not required to apply for assistance."
-      },
-      {
-        "question": "Does E4E Relief accept gifts from outside the U.S.?",
-        "answer": "Yes, our relief programs currently accept gifts from outside the U.S. However, we restrict sanctioned countries based on guidance from the Office of Foreign Assets Control (OFAC)."
-      },
-      {
-        "question": "When will I get a tax receipt for my donation of credit card, stock, crypto, or from my Donor Advised Fund?",
-        "answer": [
-          "#### Credit Card",
-          "Credit Card donations take 3-5 business days to be received into the fund.",
-          "#### Crypto",
-          "Crypto donations take 2-5 business days for the transfer to be completed and received into the fund.",
-          "#### Stock",
-          "Timing to receive the funds on stock gifts will depend on how fast the donor's broker can process the transaction and move the shares, which can take up to 2-3 weeks for processing.",
-          "#### Donor Advised Funds (DAF)",
-          "Depending on the provider, we will receive the DAF donations anywhere between 1-3 weeks."
-        ]
-      },
-      {
-        "question": "How do I see my historical donations?",
-        "answer": "You may review historical donations through your portal under 'My Donations' or by accessing The Giving Block donor dashboard. You will need to create an account using the same email address used when making the donation. This user ID and password IS NOT necessarily the same for your program portal, but a unique login with The Giving Block."
-      },
-      {
-        "question": "How do I request a replacement tax receipt?",
-        "answer": "Once you login to The Giving Block Donor Dashboard, you can access any receipts related to your previous donations."
-      },
-      {
-        "question": "How do I make recurring donations?",
-        "answer": "Once you login to The Giving Block Donor Dashboard, you can view your donation plans and update information related to your credit card and frequency of payments. You can also turn off any recurring donations here. Recurring donations cannot be made anonymously for regulatory reasons."
-      },
-      {
-        "question": "Who can I contact with additional questions?",
-        "answer": "For information about other ways to give, please contact E4E Relief Donor Services at 704-973-4564 or <1>donorservices@e4erelief.org</1>."
-      }
-    ]
-  },
-  "paymentOptionsPage": {
-    "title": "Payment Options",
-    "description": "We partner with industry-leading payment providers to ensure your relief funds are delivered quickly and securely, wherever you are in the world.",
-    "usApplicantsTitle": "U.S. Applicants",
-    "usApplicantsBody": "For applicants within the United States, please review our payment guide to understand the available options and requirements for receiving your grant.",
-    "usApplicantsLink": "Bank of America Recipient Select Guide",
-    "intlApplicantsTitle": "International Applicants",
-    "intlSupportTitle": "International Grant Award Payment Support",
-    "intlSupportBody": "Once a grant is awarded, there are a few important registration steps you must complete before receiving financial assistance. To receive this financial assistance, you must successfully complete your account registration with our payment partners. <a href=\"https://www.e4erelief.org/international-grant-award-guide\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-[#ff8400] hover:underline font-semibold\">Click here</a> to review the international grant award guide.",
-    "intlPartnersTitle": "Payment Partner Information",
-    "converaGuide": "Convera Guide",
-    "tipaltiGuide": "Tipalti Guide"
   },
   "validation": {
     "required": "Please fill out this field.",

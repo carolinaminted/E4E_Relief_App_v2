@@ -16,9 +16,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, switch
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDemoAdmin = () => {
-    setEmail('admin@example.com');
-    setPassword('admin123');
+  const handleSecretClick = () => {
+    setEmail('pikachu@thunderbolt.org');
+    setPassword('electric');
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,8 +41,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, switchToRegister, switch
     <div>
         <div 
             className="w-full flex justify-center items-center mb-6 sm:mb-8 cursor-pointer"
-            onClick={handleDemoAdmin}
-            title="Click to autofill admin credentials"
+            onClick={handleSecretClick}
+            title="Pikachu secret account"
         >
             <img 
                 src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy" 

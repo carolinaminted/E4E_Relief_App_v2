@@ -38,7 +38,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
     { page: 'home', labelKey: 'nav.home', icon: <HomeIcon className="h-6 w-6" /> },
     { page: 'profile', labelKey: 'nav.profile', icon: <ProfileIcon className="h-6 w-6" /> },
     { page: 'apply', labelKey: 'nav.apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
-    { page: 'aiApply', labelKey: 'nav.aiApply', icon: <SparklesIcon className="h-6 w-6" /> },
+    { page: 'aiApply', labelKey: 'nav.aiApply', icon: <SparklesIcon className="h-6 w-6" />, disabled: !canApply },
     { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" /> },
   ];
 

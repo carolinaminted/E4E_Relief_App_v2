@@ -558,9 +558,9 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
                                     <thead className="text-xs text-gray-200 uppercase sticky top-0 bg-[#003a70]/80 backdrop-blur-sm">
                                         <tr>
                                             <SortableTh sortKey="recipient" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig}>Recipient</SortableTh>
-                                            <SortableTh sortKey="amount" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="text-right">Amount (USD)</SortableTh>
                                             <SortableTh sortKey="country" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="hidden sm:table-cell">Country</SortableTh>
                                             <SortableTh sortKey="event" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="hidden md:table-cell">Event</SortableTh>
+                                            <SortableTh sortKey="amount" onSort={handlePaymentsSort} sortConfig={paymentsSortConfig} className="text-right">Amount (USD)</SortableTh>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#005ca0]/50">
@@ -568,9 +568,9 @@ const LiveDashboardPage: React.FC<LiveDashboardPageProps> = ({ navigate, current
                                             processedRecentPayments.map(row => (
                                             <tr key={row.id} className="hover:bg-[#004b8d]/50">
                                                 <td className="px-4 py-2 font-medium text-white">{row.recipient}</td>
-                                                <td className="px-4 py-2 font-semibold text-[#edda26] text-right">${row.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                                 <td className="px-4 py-2 text-white hidden sm:table-cell">{row.country}</td>
                                                 <td className="px-4 py-2 text-white hidden md:table-cell">{row.event}</td>
+                                                <td className="px-4 py-2 font-semibold text-[#edda26] text-right">${row.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                             </tr>
                                             ))
                                         ) : (

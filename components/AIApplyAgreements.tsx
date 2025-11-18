@@ -8,9 +8,10 @@ interface AIApplyAgreementsProps {
   formData: ApplicationFormData['agreementData'];
   updateFormData: (data: Partial<ApplicationFormData['agreementData']>) => void;
   onSubmit: () => Promise<void>;
+  disabled?: boolean;
 }
 
-const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateFormData, onSubmit }) => {
+const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateFormData, onSubmit, disabled = false }) => {
   const { t } = useTranslation();
   const [termsViewed, setTermsViewed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,12 +63,12 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
           </label>
           <p className="text-xs text-gray-400 mb-2 italic">{t('applyTermsPage.shareStoryDisclaimer')}</p>
           <div className="flex gap-4">
-            <label className="flex items-center cursor-pointer text-sm">
-              <input type="radio" name="shareStory" checked={formData.shareStory === true} onChange={() => handleUpdate({ shareStory: true })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
+            <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+              <input type="radio" name="shareStory" checked={formData.shareStory === true} onChange={() => handleUpdate({ shareStory: true })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{yes}</span>
             </label>
-            <label className="flex items-center cursor-pointer text-sm">
-              <input type="radio" name="shareStory" checked={formData.shareStory === false} onChange={() => handleUpdate({ shareStory: false })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
+            <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+              <input type="radio" name="shareStory" checked={formData.shareStory === false} onChange={() => handleUpdate({ shareStory: false })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{no}</span>
             </label>
           </div>
@@ -78,12 +79,12 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
             <RequiredIndicator required isMet={formData.receiveAdditionalInfo !== null} />
           </label>
           <div className="flex gap-4">
-            <label className="flex items-center cursor-pointer text-sm">
-              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === true} onChange={() => handleUpdate({ receiveAdditionalInfo: true })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
+            <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === true} onChange={() => handleUpdate({ receiveAdditionalInfo: true })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{yes}</span>
             </label>
-            <label className="flex items-center cursor-pointer text-sm">
-              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === false} onChange={() => handleUpdate({ receiveAdditionalInfo: false })} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
+            <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === false} onChange={() => handleUpdate({ receiveAdditionalInfo: false })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{no}</span>
             </label>
           </div>
@@ -100,7 +101,7 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
                 setTermsAgreed(e.target.checked)
                 if (error) setError('');
             }}
-            disabled={!termsViewed}
+            disabled={!termsViewed || disabled}
             className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1 disabled:opacity-50 disabled:cursor-not-allowed" 
           />
           <div className="ml-3 text-sm">
@@ -124,7 +125,7 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
       <div className="flex justify-center pt-2">
         <button 
           onClick={handleFinalSubmit}
-          disabled={!termsAgreed || isSubmitting}
+          disabled={!termsAgreed || isSubmitting || disabled}
           className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200 flex justify-center items-center h-12 disabled:bg-[#898c8d] disabled:cursor-wait"
         >
           {isSubmitting ? (
