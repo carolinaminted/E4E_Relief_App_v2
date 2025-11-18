@@ -33,7 +33,9 @@
         "Hurricane Alpha",
         "Tropical Storm Beta",
         "Hurricane Gamma"
-      ]
+      ],
+      "supportEmail": "dom-support@example.com",
+      "supportPhone": "(800) 555-1111"
     },
     "ROST": {
       "name": "Charizard Relief Fund",
@@ -69,7 +71,9 @@
             "birthDay": 2
           }
         ]
-      }
+      },
+      "supportEmail": "rost-support@example.com",
+      "supportPhone": "(800) 555-2222"
     },
     "SSO": {
       "name": "Venusaur Relief Fund",
@@ -96,7 +100,9 @@
         "Active Part Time",
         "Full-Time on FMLA (U.S. only)",
         "Part-Time on FMLA (U.S. only)"
-      ]
+      ],
+      "supportEmail": "sso-support@example.com",
+      "supportPhone": "(800) 555-3333"
     }
   }
 }

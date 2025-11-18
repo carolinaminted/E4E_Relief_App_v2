@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
-import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage, ApplicationFormData } from './types';
+import type { UserProfile, Application, EventData, EligibilityDecision, ClassVerificationStatus, EligibilityStatus, FundIdentity, ActiveIdentity, Page as GlobalPage, ApplicationFormData, Expense } from './types';
 import type { Fund } from './data/fundData';
 import { evaluateApplicationEligibility, getAIAssistedDecision } from './services/geminiService';
 import { init as initTokenTracker, reset as resetTokenTracker } from './services/tokenTracker';
@@ -451,11 +451,13 @@ function App() {
         }
     }, [currentUser, allIdentities]);
 
-  const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile) => {
+  const handleProfileUpdate = useCallback(async (updatedProfile: UserProfile, options?: { silent?: boolean }) => {
     if (!currentUser) return;
     // The onSnapshot listener will automatically update the UI state from this write.
     await usersRepo.update(currentUser.uid, updatedProfile);
-    alert(t('profilePage.saveSuccess', 'Profile saved!')); // Using a default value
+    if (!options?.silent) {
+      alert(t('profilePage.saveSuccess', 'Profile saved!')); // Using a default value
+    }
   }, [currentUser, t]);
 
   const handleApplicationSubmit = useCallback(async (appFormData: ApplicationFormData) => {
@@ -510,13 +512,15 @@ function App() {
     try {
         const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
         localStorage.removeItem(draftKey);
-        console.log("Successfully submitted. Cleared saved application draft.");
+        const chatHistoryKey = `aiApplyChatHistory-${currentUser.uid}`;
+        sessionStorage.removeItem(chatHistoryKey);
+        console.log("Successfully submitted. Cleared saved application draft and AI Apply chat history.");
     } catch (error) {
         console.error("Could not remove application draft from localStorage after submission:", error);
     }
     
     if (JSON.stringify(appFormData.profileData) !== JSON.stringify(currentUser)) {
-        await handleProfileUpdate(appFormData.profileData);
+        await handleProfileUpdate(appFormData.profileData, { silent: true });
     }
     
     setApplicationDraft(null);
@@ -617,36 +621,115 @@ function App() {
     setPage('submissionSuccess');
   }, [currentUser, authState.claims.admin, activeFund]);
 
-  const handleDraftUpdate = useCallback((draft: Partial<ApplicationFormData>) => {
+  const handleDraftUpdate = useCallback((partialDraft: Partial<ApplicationFormData>) => {
     if (!currentUser) return;
-    const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
-    try {
-        localStorage.setItem(draftKey, JSON.stringify(draft));
-        setApplicationDraft(draft);
-    } catch (error) {
-        console.error("Could not save application draft:", error);
-    }
+    
+    setApplicationDraft(prevDraft => {
+        // Deep merge the new partial draft into the previous state, ensuring profileData is always seeded.
+        const newDraft: Partial<ApplicationFormData> = {
+            ...prevDraft,
+            ...partialDraft,
+            profileData: {
+                ...currentUser,
+                ...(prevDraft?.profileData || {}),
+                ...(partialDraft.profileData || {}),
+            } as UserProfile,
+            eventData: {
+                ...(prevDraft?.eventData || {}),
+                ...(partialDraft.eventData || {}),
+            } as EventData,
+            agreementData: {
+                ...(prevDraft?.agreementData || {}),
+                ...(partialDraft.agreementData || {}),
+            },
+        };
+
+        const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
+        try {
+            localStorage.setItem(draftKey, JSON.stringify(newDraft));
+        } catch (error) {
+            console.error("Could not save application draft:", error);
+        }
+        return newDraft;
+    });
   }, [currentUser]);
 
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     if (!currentUser) return;
     console.log(`Executing tool: ${functionName}`, args);
 
-    const currentDraft = applicationDraft || {};
-    const newDraft = { ...currentDraft };
+    const newDraft: Partial<ApplicationFormData> = {};
 
     if (functionName === 'updateUserProfile') {
-        const prevProfile: Partial<UserProfile> = newDraft.profileData || {};
-        const newProfile = { ...prevProfile, ...args };
+        const profileUpdates: Partial<UserProfile> = { ...args };
         if (args.primaryAddress) {
-            newProfile.primaryAddress = { ...(prevProfile.primaryAddress || {}), ...args.primaryAddress };
+            profileUpdates.primaryAddress = { ...(applicationDraft?.profileData?.primaryAddress || {}), ...args.primaryAddress };
         }
-        newDraft.profileData = newProfile as UserProfile;
+        newDraft.profileData = {
+            ...currentUser,
+            ...applicationDraft?.profileData,
+            ...profileUpdates,
+        };
     }
 
     if (functionName === 'startOrUpdateApplicationDraft') {
-        const prevEventData: Partial<EventData> = newDraft.eventData || {};
-        newDraft.eventData = { ...prevEventData, ...args };
+        const eventUpdates: Partial<EventData> = { ...args };
+        newDraft.eventData = {
+            event: '',
+            eventDate: '',
+            evacuated: '',
+            powerLoss: '',
+            requestedAmount: 0,
+            expenses: [],
+            ...applicationDraft?.eventData,
+            ...eventUpdates
+        };
+    }
+
+    if (functionName === 'addOrUpdateExpense') {
+        const prevEventData = applicationDraft?.eventData || {};
+        const newExpenses: Expense[] = [...(prevEventData.expenses || [])];
+        
+        if (args.expenses && Array.isArray(args.expenses)) {
+            for (const expenseArg of args.expenses) {
+                if (expenseArg.type && typeof expenseArg.amount === 'number') {
+                    const expenseIndex = newExpenses.findIndex(e => e.type === expenseArg.type);
+                    
+                    if (expenseIndex > -1) {
+                        newExpenses[expenseIndex].amount = expenseArg.amount;
+                    } else {
+                        newExpenses.push({
+                            id: `exp-${expenseArg.type.replace(/\s+/g, '-')}`,
+                            type: expenseArg.type,
+                            amount: expenseArg.amount,
+                            fileName: '',
+                        });
+                    }
+                }
+            }
+        }
+        
+        const eventUpdates: Partial<EventData> = { expenses: newExpenses };
+         newDraft.eventData = {
+            event: '',
+            eventDate: '',
+            evacuated: '',
+            powerLoss: '',
+            requestedAmount: 0,
+            expenses: [],
+            ...applicationDraft?.eventData,
+            ...eventUpdates
+        };
+    }
+
+    if (functionName === 'updateAgreements') {
+        const agreementUpdates = { ...args };
+        newDraft.agreementData = {
+            shareStory: null,
+            receiveAdditionalInfo: null,
+            ...applicationDraft?.agreementData,
+            ...agreementUpdates,
+        };
     }
     
     handleDraftUpdate(newDraft);
@@ -696,6 +779,9 @@ function App() {
                     onChatbotAction={handleChatbotAction}
                     activeFund={activeFund}
                     applicationDraft={applicationDraft}
+                    onDraftUpdate={handleDraftUpdate}
+                    onSubmit={handleApplicationSubmit}
+                    canApply={canApply}
                 />;
       case 'profile':
         return <ProfilePage 

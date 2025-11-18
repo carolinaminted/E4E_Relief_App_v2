@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, KeyboardEvent, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface ChatInputProps {
@@ -32,7 +32,7 @@ const PreviewIcon: React.FC<{ disabled: boolean }> = ({ disabled }) => (
 );
 
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPreviewButton, onPreviewClick, disabled }) => {
+const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(({ onSendMessage, isLoading, showPreviewButton, onPreviewClick, disabled }, ref) => {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
 
@@ -63,13 +63,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPre
         </button>
       )}
       <textarea
+        ref={ref}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyPress}
         placeholder={t('chatbotWidget.placeholder')}
         rows={1}
         disabled={isLoading || disabled}
-        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2"
+        readOnly={disabled}
+        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2 read-only:cursor-not-allowed"
       />
       <button
         onClick={handleSubmit}
@@ -80,6 +82,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, showPre
       </button>
     </div>
   );
-};
+});
 
 export default ChatInput;

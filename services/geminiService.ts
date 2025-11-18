@@ -1,8 +1,8 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
-import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage } from '../types';
+import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
-import { allEventTypes, employmentTypes, languages } from '../data/appData';
+import { allEventTypes, employmentTypes, languages, expenseTypes } from '../data/appData';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -61,6 +61,9 @@ const updateUserProfileTool: FunctionDeclaration = {
       householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
       homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
       preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication.", enum: languages },
+      ackPolicies: { type: Type.BOOLEAN, description: "User confirms they have read and agree to the Privacy Policy and Cookie Policy." },
+      commConsent: { type: Type.BOOLEAN, description: "User consents to receive emails and text messages regarding their application." },
+      infoCorrect: { type: Type.BOOLEAN, description: "User confirms that all information provided is accurate." },
     },
   },
 };
@@ -89,7 +92,45 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
       powerLoss: { type: Type.STRING, description: "Whether the user lost power for more than 4 hours.", enum: ['Yes', 'No'] },
       powerLossDays: { type: Type.NUMBER, description: "The number of days the user was without power." },
       additionalDetails: { type: Type.STRING, description: "Any additional details provided by the user about their situation." },
-      requestedAmount: { type: Type.NUMBER, description: 'The amount of financial relief the user is requesting.' },
+    },
+  },
+};
+
+const addOrUpdateExpenseTool: FunctionDeclaration = {
+  name: 'addOrUpdateExpense',
+  description: 'Adds or updates one or more expense items to the application draft. Can process a list of expenses provided by the user in a single message.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+        expenses: {
+            type: Type.ARRAY,
+            description: "An array of expense items.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    type: {
+                        type: Type.STRING,
+                        description: "The type of expense. Must be one of the available enum options. You must match the user's description of an expense to the closest possible enum value. For example, if the user says 'disaster supplies' or 'basic supplies', you must use the value 'Basic Disaster Supplies'.",
+                        enum: expenseTypes
+                    },
+                    amount: { type: Type.NUMBER, description: "The cost of the expense." },
+                },
+                required: ['type', 'amount'],
+            }
+        }
+    },
+    required: ['expenses'],
+  },
+};
+
+const updateAgreementsTool: FunctionDeclaration = {
+  name: 'updateAgreements',
+  description: "Updates the user's agreement choices for the application.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+        shareStory: { type: Type.BOOLEAN, description: "User's choice to share their story." },
+        receiveAdditionalInfo: { type: Type.BOOLEAN, description: "User's choice to receive additional info." },
     },
   },
 };
@@ -103,23 +144,23 @@ const startOrUpdateApplicationDraftTool: FunctionDeclaration = {
 const applicationContext = `
 You are the Relief Application Assistant, an expert AI chatbot for the 'E4E Relief' application.
 
-Your **PRIMARY GOAL** is to proactively help users start or update their relief application by having a natural conversation. Listen for key pieces of information, and when you have them, use your available tools to update the application draft.
+Your **PRIMARY GOAL** is to answer user questions and help them update their profile information. You also guide users to the correct place to start their application.
+
+**IMPORTANT**: You CANNOT create or update an application yourself. If a user expresses any intent to apply, fill out an application, or describes their situation for relief, you MUST direct them to the "AI Apply" page. Do not ask them for application details.
 
 **Your Capabilities & Tools**:
-- You can update a user's profile information using the \`updateUserProfile\` tool.
-- You can start or update an application draft with event details using the \`startOrUpdateApplicationDraft\` tool.
+- You can update a user's profile information (like name, address, or phone number) using the \`updateUserProfile\` tool.
 - You can answer general questions about the application process, pages (Home, Apply, Profile, Support), and how to get support.
 
 **Conversational Flow**:
-1.  **Listen and Extract**: When a user provides information (e.g., "I'm John Doe, I live in Charlotte, NC, was affected by the recent flood and need $1500"), extract the entities (\`firstName: "John"\`, \`lastName: "Doe"\`, \`primaryAddress: { city: "Charlotte", state: "NC" }\`, \`event: "Flood"\`, \`requestedAmount: 1500\`).
-2.  **Use Your Tools**: Call the appropriate tool(s) with the extracted information. You can call multiple tools at once if the user provides enough information.
-3.  **Confirm Your Actions**: After you call a tool, you MUST confirm what you've done. For example: "Thanks, John. I've updated your name and location, and started a draft application for the 'Flood' event with a requested amount of $1,500."
-4.  **Ask Clarifying Questions**: If information is missing, ask for it. For example, if a user says "I was in a tornado," respond with something like: "I'm sorry to hear that. I've noted the event as 'Tornado'. What was the date of the event, and how much financial assistance are you requesting?"
-5.  **Be Helpful**: If the user just wants to ask a question, answer it based on the application context below.
+1.  **Identify Intent**: Listen to the user's request.
+2.  **Application Intent**: If the user wants to apply for relief (e.g., "I need help," "I was in a flood," "how do I apply?"), respond by guiding them to the "AI Apply" page. For example: "It sounds like you're ready to apply for relief. The best place for that is the 'AI Apply' page, where a dedicated assistant can guide you through the process step-by-step."
+3.  **Profile Update Intent**: If the user provides new personal information (e.g., "My new phone number is..."), use the \`updateUserProfile\` tool to save it. After the tool call, confirm your action: "Thanks, I've updated your profile with the new phone number."
+4.  **General Question**: If the user asks a question, answer it concisely based on the application context below.
 
 ---
 **Application Context for Q&A**:
-- **Purpose**: The app allows users to apply for financial assistance during times of need.
+- **Purpose**: The app allows users to apply for financial assistance during times of need. To start an application, users should go to the "AI Apply" page.
 - **Support Info**: Email is support@e4erelief.example, Phone is (800) 555-0199.
 - **Fund Details**: For any questions about what events are covered or what the grant limits are, you MUST use the information provided under "Current Fund Information" and not your general knowledge.
 
@@ -132,26 +173,34 @@ Your **PRIMARY GOAL** is to proactively help users start or update their relief 
 
 const getAIApplyContext = (userProfile: UserProfile | null, applicationDraft: Partial<ApplicationFormData> | null): string => {
     let dynamicContext = `
-You are the E4E Relief AI assistant, with a special focus for this page.
+You are the E4E Relief AI assistant, with a single, highly-focused mission on this page.
 
-Your GOAL is to help the user complete their application by having a natural conversation to fill in the 'Missing Information' below.
+**Your ONLY GOAL**: Help the user complete their application by asking questions to fill the 'Missing Information' list below.
 
-**IMPORTANT**: The list of 'Missing Information' is dynamic. Answering one question (e.g., confirming they evacuated) may reveal new, more specific questions that need to be answered. Always refer to the most up-to-date list I provide in each turn to determine the next logical question to ask.
+**!! STRICT GUARDRAILS - YOU MUST OBEY !!**
+- **DO NOT ANSWER USER QUESTIONS.** Your only function is to ask for the next piece of missing information.
+- **NEVER REVEAL LOGIC.** Do not explain why information is needed or what makes someone eligible or ineligible.
+- **NEVER DISCUSS ELIGIBILITY.** If the user asks if they are eligible, if an event is covered, about grant amounts, or any other policy question, you MUST respond with: "My role is to help you complete the application. For questions about eligibility or fund rules, please see the 'Support' page."
+- **FOCUS ON THE CURRENT SECTION.** The application has multiple sections: **Additional Details**, **Profile Acknowledgements**, **Event Details**, **Expenses**, and **Final Agreements**. You must complete them **IN ORDER**. Do not jump ahead.
 
 **Your Process**:
 1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
-2.  **Act**: Use your tools (\`updateUserProfile\` or \`startOrUpdateApplicationDraft\`) to save ALL the information you can gather from the user's message in a single turn.
-3.  **Confirm**: After a successful tool call, briefly confirm what you saved.
-4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing. Do NOT ask for information that is already known.
-5.  **Guide**: If a user asks a question outside of this scope, gently guide them back to completing the application.
-6.  **Complete**: Once all information is gathered, inform the user they are ready for the next step.
+2.  **Act**: Use your tools (\`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, \`updateAgreements\`) to save ALL the information you can gather from the user's message in a single turn.
+3.  **Confirm**: After a successful tool call, briefly confirm what you saved. Example: "Thanks, I've noted the event date."
+4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing from the CURRENT section. Be direct. Example: "What was the date of the event?"
+5.  **Transition**: Once a section is complete, tell the user you will now move on to the next section.
+    - **Example**: "Great, that's all for the event details. Now let's talk about your expenses."
+    - **CRITICAL RULE**: Do NOT say you are moving on to expenses if the 'Event Details' list under 'Missing Information' is NOT empty. If the user says they evacuated, you MUST ask the required follow-up questions (like 'Are you evacuating from your primary residence?') from the list before you can talk about expenses.
+    - **IMPORTANT - EXPENSE SECTION**: After transitioning to expenses, you MUST ask for the amount for each expense type ONE BY ONE. Do NOT ask a general question like "What expenses did you have?". Your first question MUST be for the first expense in the 'Expense Details' list. Example: "What was your total for Basic Disaster Supplies?"
+6.  **Complete & Hand-off**: When the 'Missing Information to Collect' list shows 'All details are complete', your final task is to instruct the user to perform the manual submission steps. Your final message MUST clearly tell them to go to the 'Agreements & Submission' section, check the box to agree to the 'Terms of Acceptance', and then click the 'Submit Application' button.
 
-You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft\` tools.
+You have access to the \`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, and \`updateAgreements\` tools.
 ---
 `;
     // Combine the base user profile with any data already entered in the current application draft.
     const combinedProfile = { ...userProfile, ...(applicationDraft?.profileData || {}) };
     const combinedEvent = { ...(applicationDraft?.eventData || {}) };
+    const combinedAgreements = { ...(applicationDraft?.agreementData || {}) };
 
     const currentProfileInfo: string[] = [];
     if (combinedProfile.employmentStartDate) currentProfileInfo.push(`Employment Start Date: ${combinedProfile.employmentStartDate}`);
@@ -160,6 +209,9 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
     if (combinedProfile.householdSize) currentProfileInfo.push(`Household Size: ${combinedProfile.householdSize}`);
     if (combinedProfile.homeowner) currentProfileInfo.push(`Homeowner: ${combinedProfile.homeowner}`);
     if (combinedProfile.preferredLanguage) currentProfileInfo.push(`Preferred Language: ${combinedProfile.preferredLanguage}`);
+    if (combinedProfile.ackPolicies) currentProfileInfo.push(`Policies Agreed: Yes`);
+    if (combinedProfile.commConsent) currentProfileInfo.push(`Comm Consent: Yes`);
+    if (combinedProfile.infoCorrect) currentProfileInfo.push(`Info Correct: Yes`);
     
     const currentEventInfo: string[] = [];
     if (combinedEvent.event) currentEventInfo.push(`Event Type: ${combinedEvent.event}`);
@@ -173,6 +225,11 @@ You have access to the \`updateUserProfile\` and \`startOrUpdateApplicationDraft
     if (combinedEvent.stayedWithFamilyOrFriend) currentEventInfo.push(`Stayed with Family/Friend: ${combinedEvent.stayedWithFamilyOrFriend}`);
     if (combinedEvent.evacuationStartDate) currentEventInfo.push(`Evacuation Start Date: ${combinedEvent.evacuationStartDate}`);
     if (combinedEvent.evacuationNights) currentEventInfo.push(`Evacuation Nights: ${combinedEvent.evacuationNights}`);
+    if (combinedEvent.expenses && combinedEvent.expenses.length > 0) {
+        const expenseList = combinedEvent.expenses.map(e => `${e.type}: $${e.amount}`).join('; ');
+        currentEventInfo.push(`Expenses: ${expenseList}`);
+    }
+
 
     if ([...currentProfileInfo, ...currentEventInfo].length > 0) {
         dynamicContext += `
@@ -183,34 +240,76 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
 `;
     }
 
-    const missingProfileFields: string[] = [];
-    if (!combinedProfile.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
-    if (!combinedProfile.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
-    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
-    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
-    if (!combinedProfile.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
-    if (!combinedProfile.preferredLanguage) missingProfileFields.push('Preferred Language');
+    const missingBasicProfileFields: string[] = [];
+    if (!combinedProfile.employmentStartDate) missingBasicProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
+    if (!combinedProfile.eligibilityType) missingBasicProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
+    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingBasicProfileFields.push('Estimated Annual Household Income (as a number)');
+    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingBasicProfileFields.push('Number of people in household (as a number)');
+    if (!combinedProfile.homeowner) missingBasicProfileFields.push('Homeowner status (Yes or No)');
+    if (!combinedProfile.preferredLanguage) missingBasicProfileFields.push('Preferred Language');
     
-    const missingEventFields: string[] = [];
-    if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
-    if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
-    if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
-    if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
-    if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
-    if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
-    if (combinedEvent.evacuated === 'Yes') {
-        if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
-        if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
-        if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
-        if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
-        if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+    const basicProfileComplete = missingBasicProfileFields.length === 0;
+
+    const missingAcknowledgementFields: string[] = [];
+    // Strictly verify acknowledgements only after basic profile is complete to ensure sequencing
+    if (basicProfileComplete) {
+        if (!combinedProfile.ackPolicies) missingAcknowledgementFields.push('Agreement to Privacy Policy and Cookie Policy (ackPolicies: true)');
+        if (!combinedProfile.commConsent) missingAcknowledgementFields.push('Consent to receive emails and texts (commConsent: true)');
+        if (!combinedProfile.infoCorrect) missingAcknowledgementFields.push('Confirmation that all information is accurate (infoCorrect: true)');
     }
 
-    if ([...missingProfileFields, ...missingEventFields].length > 0) {
+    const allProfileComplete = basicProfileComplete && missingAcknowledgementFields.length === 0;
+
+    const missingEventFields: string[] = [];
+    // Only move to event details if ALL profile sections (basic + acknowledgements) are done
+    if (allProfileComplete) {
+        if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
+        if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
+        if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
+        if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
+        if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
+        if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
+        if (combinedEvent.evacuated === 'Yes') {
+            if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
+            if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
+            if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
+            if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
+            if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+        }
+    }
+
+    const allEventFieldsComplete = allProfileComplete && missingEventFields.length === 0;
+
+    const missingExpenseFields: string[] = [];
+    if (allEventFieldsComplete) {
+        const knownExpenseTypes = new Set((combinedEvent.expenses || []).map(e => e.type));
+        expenseTypes.forEach(type => {
+            if (!knownExpenseTypes.has(type)) {
+                missingExpenseFields.push(`Amount for '${type}'`);
+            }
+        });
+    }
+
+    const allExpensesComplete = allEventFieldsComplete && missingExpenseFields.length === 0;
+    
+    const missingAgreementFields: string[] = [];
+    if (allExpensesComplete) {
+        if (combinedAgreements.shareStory === null || combinedAgreements.shareStory === undefined) {
+            missingAgreementFields.push("If they are willing to share their story (shareStory: true or false)");
+        }
+        if (combinedAgreements.receiveAdditionalInfo === null || combinedAgreements.receiveAdditionalInfo === undefined) {
+            missingAgreementFields.push("If they are interested in receiving additional information (receiveAdditionalInfo: true or false)");
+        }
+    }
+
+    if ([...missingBasicProfileFields, ...missingAcknowledgementFields, ...missingEventFields, ...missingExpenseFields, ...missingAgreementFields].length > 0) {
         dynamicContext += `
 **Missing Information to Collect**:
-${missingProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingProfileFields.join('\n- ') : ''}
+${missingBasicProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingBasicProfileFields.join('\n- ') : ''}
+${missingAcknowledgementFields.length > 0 ? `\n*Profile Acknowledgements*\n- ` + missingAcknowledgementFields.join('\n- ') : ''}
 ${missingEventFields.length > 0 ? `\n*Event Details*\n- ` + missingEventFields.join('\n- ') : ''}
+${missingExpenseFields.length > 0 ? `\n*Expense Details*\n- ` + missingExpenseFields.join('\n- ') : ''}
+${missingAgreementFields.length > 0 ? `\n*Final Agreements*\n- ` + missingAgreementFields.join('\n- ') : ''}
 `;
     } else {
         dynamicContext += `
@@ -248,10 +347,10 @@ export function createChatSession(
 
   if (context === 'aiApply') {
     dynamicContext = getAIApplyContext(userProfile, applicationDraft);
-    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
+    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool, addOrUpdateExpenseTool, updateAgreementsTool] }];
   } else {
     dynamicContext = applicationContext;
-    tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool] }];
+    tools = [{ functionDeclarations: [updateUserProfileTool] }];
   }
 
   // Personalize the chat experience by instructing the model to respond in the user's preferred language.
@@ -259,17 +358,20 @@ export function createChatSession(
     dynamicContext += `\n**User's Language Preference**: The user's preferred language is ${userProfile.preferredLanguage}. You MUST respond in ${userProfile.preferredLanguage}.`;
   }
   
-  // If an active fund is available, inject its specific details (name, limits, covered events) into the prompt.
-  // This grounds the model in the correct data and prevents it from hallucinating or using general knowledge.
-  if (activeFund) {
-    dynamicContext = dynamicContext.replace(
-      "for the 'E4E Relief' application",
-      `for the '${activeFund.name}' application`
-    );
-    const limits = activeFund.limits;
-    const allCoveredEvents = [...activeFund.eligibleDisasters, ...activeFund.eligibleHardships];
+  // For the general assistant, provide fund-specific and historical context.
+  // The AI Apply assistant is strictly firewalled from this information to keep it focused on data collection.
+  if (context !== 'aiApply') {
+      // If an active fund is available, inject its specific details (name, limits, covered events) into the prompt.
+      // This grounds the model in the correct data and prevents it from hallucinating or using general knowledge.
+      if (activeFund) {
+        dynamicContext = dynamicContext.replace(
+          "for the 'E4E Relief' application",
+          `for the '${activeFund.name}' application`
+        );
+        const limits = activeFund.limits;
+        const allCoveredEvents = [...activeFund.eligibleDisasters, ...activeFund.eligibleHardships];
 
-    const fundDetails = `
+        const fundDetails = `
 **Current Fund Information (${activeFund.name})**:
 - Single Request Maximum: $${limits.singleRequestMax.toLocaleString()}
 - 12-Month Maximum: $${limits.twelveMonthMax.toLocaleString()}
@@ -279,37 +381,38 @@ export function createChatSession(
 The ${activeFund.name} covers a variety of events, including:
 - ${allCoveredEvents.join('\n- ')}
 `;
-    dynamicContext += fundDetails;
-  }
-
-  // Provide the user's application history so the AI can answer questions about past submissions.
-  if (applications && applications.length > 0) {
-    const applicationList = applications.map(app => {
-      const submittedDate = new Date(app.submittedDate);
-      const formattedDate = submittedDate.toLocaleString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-          timeZone: 'America/New_York' // Standardize to a common timezone for consistent output
-      });
-      let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nStatus: ${app.status}`;
-      if (app.reasons && (app.status === 'Declined' || app.status === 'Submitted')) {
-        appDetails += `\nDecision Reasons: ${app.reasons.join(' ')}`;
+        dynamicContext += fundDetails;
       }
-      return appDetails;
-    }).join('\n---\n');
 
-    dynamicContext += `
+      // Provide the user's application history so the AI can answer questions about past submissions.
+      if (applications && applications.length > 0) {
+        const applicationList = applications.map(app => {
+          const submittedDate = new Date(app.submittedDate);
+          const formattedDate = submittedDate.toLocaleString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+              timeZone: 'America/New_York' // Standardize to a common timezone for consistent output
+          });
+          let appDetails = `Application ID: ${app.id}\nEvent: ${app.event}\nAmount: $${app.requestedAmount}\nStatus: ${app.status}`;
+          if (app.reasons && (app.status === 'Declined' || app.status === 'Submitted')) {
+            appDetails += `\nDecision Reasons: ${app.reasons.join(' ')}`;
+          }
+          return appDetails;
+        }).join('\n---\n');
+
+        dynamicContext += `
 **User's Application History**:
 You have access to the user's submitted applications. If they ask about one, use this data. 
 If an application status is 'Declined' or 'Submitted' (which means 'Under Review'), you MUST use the 'Decision Reasons' provided to explain why. Be direct and clear.
 ${applicationList}
 `;
-  } else {
-    dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
+      } else {
+        dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
+      }
   }
   
   // FIX: Use the latest recommended model 'gemini-2.5-flash'.

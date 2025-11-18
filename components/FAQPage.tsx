@@ -12,20 +12,9 @@ type FaqItem = {
     answer: string | string[];
 };
 
-const FAQItem: React.FC<{ faq: FaqItem, faqKey: string, isOpen: boolean, onClick: () => void }> = ({ faq, faqKey, isOpen, onClick }) => {
+const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> = ({ faq, isOpen, onClick }) => {
     
     const renderAnswer = () => {
-        // Handle specific case with an embedded link using Trans component
-        if (faqKey === 'donorFaqs.10') {
-            return (
-                <p>
-                    <Trans i18nKey="faqPage.donorFaqs.10.answer">
-                        For information about other ways to give, please contact E4E Relief Donor Services at 704-973-4564 or <a href="mailto:donorservices@e4erelief.org" className="text-[#ff8400] hover:underline">donorservices@e4erelief.org</a>.
-                    </Trans>
-                </p>
-            );
-        }
-
         if (Array.isArray(faq.answer)) {
             const content: React.ReactNode[] = [];
             let listItems: React.ReactNode[] = [];
@@ -58,7 +47,24 @@ const FAQItem: React.FC<{ faq: FaqItem, faqKey: string, isOpen: boolean, onClick
             return <div className="space-y-3">{content}</div>;
         }
 
-        return <p>{faq.answer}</p>;
+        if (typeof faq.answer === 'string') {
+            // Use Trans to correctly render links. This is safer than dangerouslySetInnerHTML.
+            // The component will replace placeholders like <1>...</1> with the provided React components.
+            const emailMatch = faq.answer.match(/<1>(.*?)<\/1>/);
+            
+            return (
+                <p>
+                    <Trans
+                        defaults={faq.answer}
+                        components={{
+                            1: emailMatch ? <a href={`mailto:${emailMatch[1]}`} className="text-[#ff8400] hover:underline" /> : <span />,
+                        }}
+                    />
+                </p>
+            );
+        }
+
+        return null;
     };
 
     return (
@@ -82,7 +88,7 @@ const FAQItem: React.FC<{ faq: FaqItem, faqKey: string, isOpen: boolean, onClick
     );
 };
 
-const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; faqKeyPrefix: string; isOpen: boolean; onToggleSection: () => void }> = ({ title, faqs, faqKeyPrefix, isOpen, onToggleSection }) => {
+const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; isOpen: boolean; onToggleSection: () => void }> = ({ title, faqs, isOpen, onToggleSection }) => {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
     
     useEffect(() => {
@@ -113,7 +119,6 @@ const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; faqKeyPrefix: strin
                         <FAQItem 
                             key={index} 
                             faq={faq} 
-                            faqKey={`${faqKeyPrefix}.${index}`}
                             isOpen={openIndex === index} 
                             onClick={() => handleToggle(index)}
                         />
@@ -131,8 +136,12 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
         return saved ? JSON.parse(saved) : null;
     });
 
-    const applicantFaqs = t('faqPage.applicantFaqs', { returnObjects: true }) as FaqItem[];
-    const donorFaqs = t('faqPage.donorFaqs', { returnObjects: true }) as FaqItem[];
+    const applicantFaqsData = t('faqPage.applicantFaqs', { returnObjects: true });
+    const donorFaqsData = t('faqPage.donorFaqs', { returnObjects: true });
+
+    // Guard against t() returning a string before translations are loaded.
+    const applicantFaqs: FaqItem[] = Array.isArray(applicantFaqsData) ? applicantFaqsData : [];
+    const donorFaqs: FaqItem[] = Array.isArray(donorFaqsData) ? donorFaqsData : [];
 
     useEffect(() => {
         localStorage.setItem('faqPage_openSection', JSON.stringify(openSection));
@@ -146,7 +155,7 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-4xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-8">
-            <button onClick={() => navigate('support')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('faqPage.backToSupport')}>
+            <button onClick={() => navigate('support')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity md:hidden" aria-label={t('faqPage.backToSupport')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
@@ -159,7 +168,6 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
         <FAQSection
             title={t('faqPage.applicantTitle')}
             faqs={applicantFaqs}
-            faqKeyPrefix="applicantFaqs"
             isOpen={openSection === 'applicant'}
             onToggleSection={() => handleToggleSection('applicant')}
         />
@@ -167,7 +175,6 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
         <FAQSection
             title={t('faqPage.donorTitle')}
             faqs={donorFaqs}
-            faqKeyPrefix="donorFaqs"
             isOpen={openSection === 'donor'}
             onToggleSection={() => handleToggleSection('donor')}
         />

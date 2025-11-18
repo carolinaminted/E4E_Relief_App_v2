@@ -19,19 +19,29 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
   const [searchTerm, setSearchTerm] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+    };
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   useEffect(() => {
     setSearchTerm(value);
   }, [value]);
 
   const filteredOptions = useMemo(() => {
-    if (!searchTerm) {
+    if (!searchTerm || isMobile) {
       return options;
     }
     return options.filter(option =>
       option.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, options]);
+  }, [searchTerm, options, isMobile]);
 
   const handleSelect = (option: string) => {
     setSearchTerm(option);
@@ -40,6 +50,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isMobile) return;
     setSearchTerm(e.target.value);
     if (!isOpen) setIsOpen(true);
   };
@@ -51,17 +62,21 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
         // When clicking away, check if the current input is a valid option (case-insensitive).
         // If it is, ensure the parent state is updated with the correctly cased version.
         // If it's not, revert the input to the last valid value from the parent.
-        const foundOption = options.find(option => option.toLowerCase() === searchTerm.toLowerCase());
-        if (foundOption) {
-            // A valid option was typed, possibly with different casing.
-            if (foundOption !== value) {
-                // Update parent with the correctly cased value from the options list.
-                onUpdate(foundOption);
+        if (!isMobile) {
+            const foundOption = options.find(option => option.toLowerCase() === searchTerm.toLowerCase());
+            if (foundOption) {
+                // A valid option was typed, possibly with different casing.
+                if (foundOption !== value) {
+                    // Update parent with the correctly cased value from the options list.
+                    onUpdate(foundOption);
+                }
+                // Also, update the local search term to reflect the correct casing.
+                setSearchTerm(foundOption);
+            } else {
+                // Revert to the last valid value from the parent if the typed text is not a match.
+                setSearchTerm(value);
             }
-            // Also, update the local search term to reflect the correct casing.
-            setSearchTerm(foundOption);
         } else {
-            // Revert to the last valid value from the parent if the typed text is not a match.
             setSearchTerm(value);
         }
       }
@@ -70,7 +85,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [wrapperRef, searchTerm, value, options, onUpdate]);
+  }, [wrapperRef, searchTerm, value, options, onUpdate, isMobile]);
   
   const baseInputClasses = "w-full text-base text-white focus:outline-none focus:ring-0";
   const variantClasses = {
@@ -89,6 +104,7 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
         value={searchTerm}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
+        readOnly={isMobile}
         className={`${baseInputClasses} ${variantClasses[variant]} disabled:opacity-60 disabled:cursor-not-allowed`}
         autoComplete="off"
         required={required}
