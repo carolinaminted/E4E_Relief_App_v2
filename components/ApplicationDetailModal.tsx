@@ -16,11 +16,25 @@ const statusStyles: Record<Application['status'], string> = {
 };
 
 const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ application, onClose }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot) return null;
 
   const eventDisplay = application.event === 'My disaster is not listed' ? application.otherEvent : application.event;
+
+  const getTranslatedStatus = (status: Application['status']) => {
+      return t(`applicationStatus.${status}`);
+  }
+
+  const getTranslatedExpenseType = (type: string) => {
+      const map: Record<string, string> = {
+          'Basic Disaster Supplies': 'BasicDisasterSupplies',
+          'Food Spoilage': 'FoodSpoilage',
+          'Meals': 'Meals'
+      };
+      const key = map[type];
+      return key ? t(`applyExpensesPage.expenseTypes.${key}`) : type;
+  };
 
   return createPortal(
     <div 
@@ -52,16 +66,16 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
                 </div>
                 <div>
                     <p className="text-sm text-gray-300 uppercase tracking-wider mb-1">{t('modals.applicationDetail.status', 'Status')}</p>
-                    <p className={`font-bold ${statusStyles[application.status]}`}>{application.status}</p>
+                    <p className={`font-bold ${statusStyles[application.status]}`}>{getTranslatedStatus(application.status)}</p>
                 </div>
                 <div>
                     <p className="text-sm text-gray-300 uppercase tracking-wider mb-1">{t('modals.applicationDetail.submittedDate', 'Submitted Date')}</p>
-                    <p className="text-white">{new Date(application.submittedDate).toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })}</p>
+                    <p className="text-white">{new Date(application.submittedDate).toLocaleString(i18n.language, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                 </div>
                 {application.decisionedDate && (
                     <div>
                         <p className="text-sm text-gray-300 uppercase tracking-wider mb-1">{t('modals.applicationDetail.decisionedDate', 'Decisioned Date')}</p>
-                        <p className="text-white">{new Date(application.decisionedDate).toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })}</p>
+                        <p className="text-white">{new Date(application.decisionedDate).toLocaleString(i18n.language, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                     </div>
                 )}
                 <div className="md:col-span-2">
@@ -92,7 +106,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
                         {application.expenses.map((expense, index) => (
                             <div key={index} className="bg-[#004b8d]/50 p-3 rounded-md flex justify-between items-center">
                                 <div>
-                                    <p className="text-white font-medium">{expense.type}</p>
+                                    <p className="text-white font-medium">{getTranslatedExpenseType(expense.type)}</p>
                                     {expense.fileName && (
                                         <a href={expense.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#ff8400] hover:underline flex items-center gap-1 mt-1">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

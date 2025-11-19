@@ -17,6 +17,11 @@
     "eligible": "Eligible",
     "ineligible": "Ineligible"
   },
+  "applicationStatus": {
+    "Submitted": "Submitted",
+    "Awarded": "Awarded",
+    "Declined": "Declined"
+  },
   "sessionTimeout": {
     "title": "Session Expiring",
     "body": "For security, your session will time out in:",
@@ -364,7 +369,9 @@
       "decisionedDate": "Decisioned Date:",
       "eventType": "Event Type:",
       "requestedAmount": "Requested Amount:",
-      "reasons": "Decision Reasons:"
+      "reasons": "Decision Reasons:",
+      "expensesTitle": "Expenses",
+      "decisionNotes": "Decision Notes"
     },
     "terms": {
       "title": "Terms of Acceptance",

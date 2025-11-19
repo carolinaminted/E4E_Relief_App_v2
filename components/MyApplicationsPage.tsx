@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Application, Page, UserProfile } from '../types';
@@ -17,7 +18,7 @@ const statusStyles: Record<Application['status'], string> = {
 };
 
 const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, applications, userProfile, onAddIdentity }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
 
@@ -31,7 +32,7 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
     }
     const lowercasedFilter = searchTerm.toLowerCase();
     return sortedApplications.filter(app => {
-        const submittedDateTime = `${new Date(app.submittedDate).toLocaleDateString('en-CA')} at ${new Date(app.submittedDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', hour12: true })}`;
+        const submittedDateTime = `${new Date(app.submittedDate).toLocaleDateString(i18n.language)} at ${new Date(app.submittedDate).toLocaleTimeString(i18n.language, { hour: 'numeric', minute: '2-digit', hour12: true })}`;
         return (
             app.event.toLowerCase().includes(lowercasedFilter) ||
             (app.otherEvent && app.otherEvent.toLowerCase().includes(lowercasedFilter)) ||
@@ -40,7 +41,7 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
             submittedDateTime.toLowerCase().includes(lowercasedFilter)
         );
     });
-  }, [sortedApplications, searchTerm]);
+  }, [sortedApplications, searchTerm, i18n.language]);
 
   return (
     <>
@@ -77,11 +78,11 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
               <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
                 <div>
                   <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event === 'My disaster is not listed' ? app.otherEvent : app.event}</p>
-                  <p className="text-sm text-gray-300">{t('profilePage.submitted')}: {new Date(app.submittedDate).toLocaleDateString('en-CA')} at {new Date(app.submittedDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', hour12: true })}</p>
+                  <p className="text-sm text-gray-300">{t('profilePage.submitted')}: {new Date(app.submittedDate).toLocaleDateString(i18n.language)} at {new Date(app.submittedDate).toLocaleTimeString(i18n.language, { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
-                  <p className="text-sm text-gray-300">{t('profilePage.status')}: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
+                  <p className="text-sm text-gray-300">{t('profilePage.status')}: <span className={`font-medium ${statusStyles[app.status]}`}>{t(`applicationStatus.${app.status}`)}</span></p>
                 </div>
               </button>
             ))
