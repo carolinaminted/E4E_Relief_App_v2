@@ -3,15 +3,17 @@ import { useTranslation } from 'react-i18next';
 import type { EligibilityStatus, ClassVerificationStatus } from '../types';
 import EligibilityIndicator from './EligibilityIndicator';
 import EligibilityInfoModal from './EligibilityInfoModal';
+import { LANGUAGE_LABELS } from '../data/appData';
 
 interface HeaderProps {
   userName: string;
   onLogout: () => void;
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
+  supportedLanguages?: string[];
 }
 
-const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus }) => {
+const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
   const { t, i18n } = useTranslation();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -48,21 +50,26 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
     setIsEligibilityModalOpen(true);
   };
 
-  const changeLanguage = (lng: 'en' | 'es') => {
+  const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     setIsLangDropdownOpen(false);
   };
+
+  // Filter supported languages to ensure we have labels, fallback to ['en']
+  const languagesToRender = supportedLanguages.length > 0 ? supportedLanguages : ['en'];
+  const showLangSwitcher = languagesToRender.length > 1;
 
   return (
     <>
       <header className="flex md:hidden items-center justify-between w-full h-20 bg-[#003a70] px-4 flex-shrink-0 z-30 pt-[env(safe-area-inset-top)]">
         <div className="relative" ref={langDropdownRef}>
           <button
-            onClick={() => setIsLangDropdownOpen(prev => !prev)}
-            className="transition-opacity duration-200 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1"
+            onClick={() => showLangSwitcher && setIsLangDropdownOpen(prev => !prev)}
+            className={`transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1 ${showLangSwitcher ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'}`}
             aria-label="Select language"
-            aria-haspopup="true"
+            aria-haspopup={showLangSwitcher}
             aria-expanded={isLangDropdownOpen}
+            disabled={!showLangSwitcher}
           >
             <img
               src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy"
@@ -71,28 +78,21 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
             />
           </button>
 
-          {isLangDropdownOpen && (
+          {isLangDropdownOpen && showLangSwitcher && (
             <div className="absolute left-0 mt-2 w-40 bg-[#004b8d] border border-[#005ca0] rounded-md shadow-lg z-50 py-1">
-              <button
-                onClick={() => changeLanguage('en')}
-                className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                  i18n.language.startsWith('en')
-                    ? 'text-[#ff8400] font-bold'
-                    : 'text-white hover:bg-[#005ca0]'
-                }`}
-              >
-                English
-              </button>
-              <button
-                onClick={() => changeLanguage('es')}
-                className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                  i18n.language.startsWith('es')
-                    ? 'text-[#ff8400] font-bold'
-                    : 'text-white hover:bg-[#005ca0]'
-                }`}
-              >
-                Español
-              </button>
+              {languagesToRender.map((lang) => (
+                 <button
+                    key={lang}
+                    onClick={() => changeLanguage(lang)}
+                    className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                      i18n.language.startsWith(lang)
+                        ? 'text-[#ff8400] font-bold'
+                        : 'text-white hover:bg-[#005ca0]'
+                    }`}
+                  >
+                    {LANGUAGE_LABELS[lang] || lang.toUpperCase()}
+                  </button>
+              ))}
             </div>
           )}
         </div>

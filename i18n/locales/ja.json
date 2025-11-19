@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "profile": "プロフィール",
+    "apply": "申請",
+    "aiApply": "AI申請",
+    "support": "サポート",
+    "donate": "寄付",
+    "fundPortal": "基金ポータル",
+    "logout": "ログアウト",
+    "welcome": "ようこそ、{{name}}"
+  },
+  "loginPage": {
+    "signInButton": "サインイン"
+  }
+}

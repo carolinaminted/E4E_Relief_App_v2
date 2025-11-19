@@ -95,7 +95,7 @@ function App() {
             // Set language based on user profile preference
             if (profile.preferredLanguage) {
               const langCode = profile.preferredLanguage.toLowerCase().slice(0, 2);
-              if ((langCode === 'en' || langCode === 'es') && i18n.language !== langCode) {
+              if ((langCode === 'en' || langCode === 'es' || langCode === 'ja') && i18n.language !== langCode) {
                 i18n.changeLanguage(langCode);
               }
             }
@@ -761,6 +761,9 @@ function App() {
     }
     
     if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
+    
+    // Determine available languages for current fund, defaulting to full list if not specified to prevent UI hiding issues
+    const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
     switch (page) {
       case 'reliefQueue':
@@ -794,7 +797,6 @@ function App() {
                     onSetActiveIdentity={handleSetActiveIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
-                    activeFund={activeFund}
                 />;
       case 'myApplications':
         return <MyApplicationsPage 
@@ -870,6 +872,9 @@ function App() {
         </div>
     );
   }
+  
+  // Determine available languages for current fund, defaulting to full list if not specified
+  const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
   return (
     <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
@@ -883,6 +888,7 @@ function App() {
         canApply={canApply}
         eligibilityStatus={currentUser.eligibilityStatus}
         cvStatus={currentUser.classVerificationStatus}
+        supportedLanguages={supportedLanguages}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -891,6 +897,7 @@ function App() {
             onLogout={handleLogout}
             eligibilityStatus={currentUser.eligibilityStatus}
             cvStatus={currentUser.classVerificationStatus}
+            supportedLanguages={supportedLanguages}
         />
         <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
           <div className="hidden md:block">

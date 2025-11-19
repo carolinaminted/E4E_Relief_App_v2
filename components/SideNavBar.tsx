@@ -15,6 +15,7 @@ interface SideNavBarProps {
   canApply: boolean;
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
+  supportedLanguages?: string[];
 }
 
 interface NavItemType {
@@ -38,7 +39,7 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
   const { t } = useTranslation();
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   
@@ -87,7 +88,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
               </div>
             </div>
              <div className="mt-4 px-2 space-y-2">
-                <LanguageSwitcher variant="sideNav" />
+                <LanguageSwitcher variant="sideNav" supportedLanguages={supportedLanguages} />
                 <button
                     onClick={onLogout}
                     className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"

@@ -65,7 +65,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, switchToLogin }
             />
         </div>
         <div className="flex justify-center mb-6">
-            <LanguageSwitcher />
+            <LanguageSwitcher supportedLanguages={['en', 'es', 'ja']} />
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-4">

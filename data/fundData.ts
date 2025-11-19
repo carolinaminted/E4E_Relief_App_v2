@@ -35,4 +35,5 @@ export interface Fund {
   eligibleStorms?: string[];
   supportEmail?: string;
   supportPhone?: string;
+  supportedLanguages?: string[];
 }
