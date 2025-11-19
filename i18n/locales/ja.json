@@ -95,9 +95,12 @@
     "title": "AI申請",
     "backToHome": "ホームに戻る",
     "greeting": "こんにちは！申請の質問を確認し、あなたの状況について教えてください。私たちがサポートします！",
+    "progressTitle": "申請の進捗状況",
     "additionalDetailsPreviewTitle": "追加詳細",
     "profileAcknowledgementsPreviewTitle": "プロフィールの確認",
     "eventDetailsPreviewTitle": "イベント詳細",
+    "expensesPreviewTitle": "経費",
+    "agreementsPreviewTitle": "合意と送信",
     "previewSubtitle": "このリストはアシスタントに答えると更新されます。",
     "eligibilityNotice": "現在、申請の対象ではありません。確認ステータスと助成金の上限を確認するには、プロフィールページをご覧ください。"
   },

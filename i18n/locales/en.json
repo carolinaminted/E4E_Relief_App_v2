@@ -95,9 +95,12 @@
     "title": "AI Apply",
     "backToHome": "Back to Home",
     "greeting": "Hello! Review the application questions and let me know about your situation. We are here to help!",
+    "progressTitle": "Application Progress",
     "additionalDetailsPreviewTitle": "Additional Details",
     "profileAcknowledgementsPreviewTitle": "Profile Acknowledgements",
     "eventDetailsPreviewTitle": "Event Details",
+    "expensesPreviewTitle": "Expenses",
+    "agreementsPreviewTitle": "Agreements & Submission",
     "previewSubtitle": "This list updates as you answer the assistant.",
     "eligibilityNotice": "You are not currently eligible to apply. Please visit your Profile page to check your verification status and grant limits."
   },

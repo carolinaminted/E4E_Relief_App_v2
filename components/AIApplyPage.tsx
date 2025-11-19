@@ -214,7 +214,7 @@ const AIApplyPreviewPane: React.FC<{
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
             <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center flex-shrink-0">
-                Application Progress
+                {t('aiApplyPage.progressTitle')}
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4 flex-shrink-0">{t('aiApplyPage.previewSubtitle')}</p>
             <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
@@ -299,7 +299,7 @@ const AIApplyPreviewPane: React.FC<{
 
                 {/* Expenses Section */}
                 <div className={`bg-[#004b8d]/30 rounded-md ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
-                    <SectionHeader title="Expenses" isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
+                    <SectionHeader title={t('aiApplyPage.expensesPreviewTitle')} isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'expenses' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
                             <AIApplyExpenses
@@ -316,7 +316,7 @@ const AIApplyPreviewPane: React.FC<{
 
                 {/* Agreements Section */}
                 <div className={`bg-[#004b8d]/30 rounded-md ${!isExpensesComplete ? 'opacity-50' : ''}`}>
-                    <SectionHeader title="Agreements & Submission" isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
+                    <SectionHeader title={t('aiApplyPage.agreementsPreviewTitle')} isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'agreements' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
                             <AIApplyAgreements

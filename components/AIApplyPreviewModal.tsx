@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +26,7 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, chil
             >
                 <header className="flex justify-between items-center border-b border-[#005ca0] p-4 flex-shrink-0">
                     <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        Application Progress
+                        {t('aiApplyPage.progressTitle')}
                     </h2>
                     <button 
                         onClick={onClose}
