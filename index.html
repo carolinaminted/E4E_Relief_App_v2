@@ -11,6 +11,13 @@
         /* Prevents automatic text size adjustment on mobile browsers (like Safari on iOS), ensuring consistent layout. */
         -webkit-text-size-adjust: 100%;
       }
+      
+      /* Hide native password reveal button in Edge/IE to prevent duplicate icons with custom toggle */
+      input::-ms-reveal,
+      input::-ms-clear {
+        display: none;
+      }
+
       /* Styles for the 3D flip card animation */
       .flip-container {
         perspective: 1000px;
