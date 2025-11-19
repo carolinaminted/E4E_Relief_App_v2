@@ -25,6 +25,9 @@ interface Tile {
 const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) => {
     const { t } = useTranslation();
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+    
+    // Determine full eligibility (verified identity + fund eligibility) for access control
+    const isFullyEligible = userProfile.classVerificationStatus === 'passed' && userProfile.eligibilityStatus === 'Eligible';
 
     const tiles: Tile[] = [
         { 
@@ -44,7 +47,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
             disabledTooltipKey: userProfile.classVerificationStatus !== 'passed' ? "homePage.applyTooltipVerification" : "homePage.applyTooltipLimits"
         },
         { key: 'profile', titleKey: 'nav.profile', icon: <ProfileIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('profile') },
-        { key: 'support', titleKey: 'nav.support', icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('support') },
+        { 
+            key: 'support', 
+            titleKey: 'nav.support', 
+            icon: <SupportIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
+            onClick: () => navigate('support'),
+            disabled: !isFullyEligible,
+            disabledTooltipKey: "homePage.applyTooltipVerification"
+        },
         
     ];
 
@@ -55,9 +65,22 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
             icon: <DashboardIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
             onClick: () => navigate('fundPortal'),
         });
-         tiles.push({ key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, onClick: () => navigate('donate') });
+         tiles.push({ 
+             key: 'donate', 
+             titleKey: 'nav.donate', 
+             icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
+             onClick: () => navigate('donate')
+        });
     } else {
-        tiles.push({ key: 'donate', titleKey: 'nav.donate', icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, colSpan: 'col-span-2', onClick: () => navigate('donate') });
+        tiles.push({ 
+            key: 'donate', 
+            titleKey: 'nav.donate', 
+            icon: <DonateIcon className="h-9 w-9 sm:h-12 sm:w-12 mb-2 sm:mb-4" />, 
+            colSpan: 'col-span-2', 
+            onClick: () => navigate('donate'),
+            disabled: !isFullyEligible,
+            disabledTooltipKey: "homePage.applyTooltipVerification"
+        });
     }
 
   return (

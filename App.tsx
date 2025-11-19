@@ -298,18 +298,49 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: GlobalPage) => {
-    if (page === 'reliefQueue' && targetPage !== 'classVerification') {
-        console.log("Gating navigation. User is in relief queue.");
+    // 1. Auth pages always allowed
+    if (['login', 'register', 'forgotPassword'].includes(targetPage)) {
+        setPage(targetPage);
         return;
     }
 
-    if (targetPage === 'apply' && !isVerifiedAndEligible) {
-        console.log("Gating 'apply' page. User not verified or not eligible.");
-        setPage('classVerification');
-    } else {
+    // 2. Admin bypass
+    if (currentUser?.role === 'Admin') {
         setPage(targetPage);
+        return;
     }
-  }, [isVerifiedAndEligible, page]);
+
+    // 3. Relief Queue Trap
+    if (page === 'reliefQueue') {
+        if (targetPage === 'classVerification' || targetPage === 'home' || targetPage === 'profile') {
+             setPage(targetPage);
+        }
+        return;
+    }
+
+    // 4. General Ineligibility Guard
+    if (!isVerifiedAndEligible) {
+        const allowedIneligiblePages: GlobalPage[] = [
+            'home', 
+            'classVerification', 
+            'reliefQueue', 
+            'profile', 
+            'eligibility'
+        ];
+        
+        if (!allowedIneligiblePages.includes(targetPage)) {
+            console.warn(`Access denied to ${targetPage} for ineligible user.`);
+            // If the user is trying to access a blocked page (like Support or Donate),
+            // we keep them on the current page (likely Home) or redirect to Home if they are somewhere weird.
+            if (page !== 'home' && page !== 'profile' && page !== 'classVerification') {
+                 setPage('home');
+            }
+            return;
+        }
+    }
+
+    setPage(targetPage);
+  }, [isVerifiedAndEligible, page, currentUser]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;

@@ -44,6 +44,8 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   
   const isEligible = eligibilityStatus === 'Eligible';
+  const isVerifiedAndEligible = isEligible && cvStatus === 'passed';
+
   const eligibilityMessage = isEligible
     ? t('eligibilityIndicator.eligibleMessage')
     : t('eligibilityIndicator.verificationNeededMessage');
@@ -57,8 +59,8 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
     { page: 'profile', labelKey: 'nav.profile', icon: <ProfileIcon className="h-6 w-6" /> },
     { page: 'apply', labelKey: 'nav.apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
     { page: 'aiApply', labelKey: 'nav.aiApply', icon: <SparklesIcon className="h-6 w-6" />, disabled: !canApply },
-    { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" /> },
-    { page: 'donate', labelKey: 'nav.donate', icon: <DonateIcon className="h-6 w-6" /> },
+    { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" />, disabled: !isVerifiedAndEligible },
+    { page: 'donate', labelKey: 'nav.donate', icon: <DonateIcon className="h-6 w-6" />, disabled: !isVerifiedAndEligible },
   ];
 
   const navItems = [...baseNavItems];
