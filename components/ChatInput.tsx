@@ -1,5 +1,6 @@
 import React, { useState, KeyboardEvent, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AI_GUARDRAILS } from '../config/aiGuardrails';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -50,36 +51,47 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(({ onSendMessa
     }
   };
 
+  const charsRemaining = AI_GUARDRAILS.MAX_CHAT_MESSAGE_CHARS - input.length;
+  const isNearLimit = charsRemaining < 100;
+
   return (
-    <div className="flex items-center space-x-2">
-      {showPreviewButton && (
+    <div className="flex flex-col w-full">
+        <div className="flex items-end space-x-2">
+        {showPreviewButton && (
+            <button
+                onClick={onPreviewClick}
+                disabled={isLoading}
+                className="md:hidden bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold rounded-md transition-colors duration-200 w-[50px] h-10 flex items-center justify-center flex-shrink-0 mb-[1px]"
+                aria-label="Show application progress"
+            >
+                <PreviewIcon disabled={isLoading} />
+            </button>
+        )}
+        <div className="flex-1 flex flex-col">
+             <textarea
+                ref={ref}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder={t('chatbotWidget.placeholder')}
+                rows={1}
+                disabled={isLoading || disabled}
+                readOnly={disabled}
+                maxLength={AI_GUARDRAILS.MAX_CHAT_MESSAGE_CHARS}
+                className="w-full bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2 read-only:cursor-not-allowed"
+            />
+        </div>
         <button
-            onClick={onPreviewClick}
-            disabled={isLoading}
-            className="md:hidden bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold rounded-md transition-colors duration-200 w-[50px] h-10 flex items-center justify-center flex-shrink-0"
-            aria-label="Show application progress"
+            onClick={handleSubmit}
+            disabled={isLoading || !input.trim() || disabled}
+            className="bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold rounded-md transition-colors duration-200 w-[50px] h-10 flex items-center justify-center flex-shrink-0 mb-[1px]"
         >
-            <PreviewIcon disabled={isLoading} />
+            <SendIcon disabled={isLoading || !input.trim() || disabled} />
         </button>
-      )}
-      <textarea
-        ref={ref}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyPress}
-        placeholder={t('chatbotWidget.placeholder')}
-        rows={1}
-        disabled={isLoading || disabled}
-        readOnly={disabled}
-        className="flex-1 bg-white text-black text-base placeholder-gray-500 rounded-md focus:outline-none resize-none px-3 py-2 read-only:cursor-not-allowed"
-      />
-      <button
-        onClick={handleSubmit}
-        disabled={isLoading || !input.trim() || disabled}
-        className="bg-white hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold rounded-md transition-colors duration-200 w-[50px] h-10 flex items-center justify-center"
-      >
-        <SendIcon disabled={isLoading || !input.trim() || disabled} />
-      </button>
+        </div>
+        <div className={`text-[10px] text-right mt-1 pr-14 ${isNearLimit ? 'text-orange-300' : 'text-gray-400'}`}>
+            {input.length}/{AI_GUARDRAILS.MAX_CHAT_MESSAGE_CHARS}
+        </div>
     </div>
   );
 });

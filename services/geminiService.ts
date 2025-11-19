@@ -3,6 +3,7 @@ import type { Application, Address, UserProfile, ApplicationFormData, EventData,
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes, languages, expenseTypes } from '../data/appData';
+import { AI_GUARDRAILS } from '../config/aiGuardrails';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -738,6 +739,10 @@ const addressJsonSchema = {
  */
 export async function parseAddressWithGemini(addressString: string, forUser?: UserProfile | null): Promise<Partial<Address>> {
   if (!addressString) return {};
+  
+  if (addressString.length > AI_GUARDRAILS.MAX_ADDRESS_CHARS) {
+      throw new Error(`Address too long. Max ${AI_GUARDRAILS.MAX_ADDRESS_CHARS} characters.`);
+  }
 
   const prompt = `
     Parse the provided address string into a structured JSON object.
@@ -837,6 +842,10 @@ export async function parseApplicationDetailsWithGemini(
   applicantProfile?: UserProfile | null
 ): Promise<Partial<ApplicationFormData>> {
   if (!description) return {};
+
+  if (description.length > AI_GUARDRAILS.MAX_APPLICATION_DESCRIPTION_CHARS) {
+      throw new Error(`Description too long. Max ${AI_GUARDRAILS.MAX_APPLICATION_DESCRIPTION_CHARS} characters.`);
+  }
 
   const instruction = isProxy
     ? `You are parsing a description submitted by a proxy on behalf of an applicant. Your task is to extract the **applicant's** details from the text. The applicant is the person who experienced the hardship.`

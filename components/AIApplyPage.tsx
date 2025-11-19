@@ -186,6 +186,26 @@ const AIApplyPreviewPane: React.FC<{
         const value = applicationDraft.eventData[key];
         return value !== undefined && value !== null && value !== '';
     };
+    
+    const getProfileValue = (key: string) => {
+        const draftVal = applicationDraft?.profileData?.[key as keyof UserProfile];
+        if (draftVal !== undefined && draftVal !== null && draftVal !== '') {
+            if (typeof draftVal === 'boolean') return null;
+            return String(draftVal);
+        }
+        const profileVal = userProfile?.[key as keyof UserProfile];
+        if (profileVal !== undefined && profileVal !== null && profileVal !== '') {
+            if (typeof profileVal === 'boolean') return null;
+            return String(profileVal);
+        }
+        return null;
+    };
+
+    const getEventValue = (key: keyof EventData) => {
+        const val = applicationDraft?.eventData?.[key];
+        if (val !== undefined && val !== null && val !== '') return String(val);
+        return null;
+    };
 
     const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(applicationDraft?.eventData || {}));
 
@@ -202,16 +222,27 @@ const AIApplyPreviewPane: React.FC<{
                     <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSection === 'additional'} onToggle={() => toggleSection('additional')} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'additional' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
-                            {baseChecklistItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                                    <div className="flex-shrink-0 w-5 h-5">
-                                        {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                            {baseChecklistItems.map(item => {
+                                const isComplete = isProfileItemComplete(item.key);
+                                const value = getProfileValue(item.key);
+                                return (
+                                    <div key={item.key} className="p-2 bg-[#004b8d]/50 rounded-md flex flex-col">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-5 h-5">
+                                                {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
+                                            </div>
+                                            <span className={`text-sm ${isComplete ? 'text-gray-400' : 'text-white'}`}>
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        {value && (
+                                            <div className="ml-8 mt-1 text-sm text-[#ff8400] font-medium break-words">
+                                                {value}
+                                            </div>
+                                        )}
                                     </div>
-                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -226,7 +257,7 @@ const AIApplyPreviewPane: React.FC<{
                                     <div className="flex-shrink-0 w-5 h-5">
                                         {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
                                     </div>
-                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400' : 'text-white'}`}>
                                         {item.label}
                                     </span>
                                 </div>
@@ -240,16 +271,27 @@ const AIApplyPreviewPane: React.FC<{
                      <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAcknowledgementsComplete} />
                      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
-                            {visibleEventItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                                    <div className="flex-shrink-0 w-5 h-5">
-                                        {isEventItemComplete(item.key as keyof EventData) ? <CheckmarkIcon /> : <CircleIcon />}
+                            {visibleEventItems.map(item => {
+                                const isComplete = isEventItemComplete(item.key as keyof EventData);
+                                const value = getEventValue(item.key as keyof EventData);
+                                return (
+                                    <div key={item.key} className="p-2 bg-[#004b8d]/50 rounded-md flex flex-col">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-5 h-5">
+                                                {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
+                                            </div>
+                                            <span className={`text-sm ${isComplete ? 'text-gray-400' : 'text-white'}`}>
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        {value && (
+                                            <div className="ml-8 mt-1 text-sm text-[#ff8400] font-medium break-words">
+                                                {value}
+                                            </div>
+                                        )}
                                     </div>
-                                    <span className={`text-sm ${isEventItemComplete(item.key as keyof EventData) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

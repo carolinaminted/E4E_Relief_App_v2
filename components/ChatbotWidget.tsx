@@ -10,6 +10,7 @@ import { createChatSession } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
+import { AI_GUARDRAILS } from '../config/aiGuardrails';
 import { useTranslation } from 'react-i18next';
 
 interface ChatbotWidgetProps {
@@ -36,6 +37,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   const [isButtonVisible, setIsButtonVisible] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const lastScrollY = useRef(0);
+  const [sessionTurns, setSessionTurns] = useState(0);
+  const hasSessionEnded = sessionTurns >= AI_GUARDRAILS.MAX_CHAT_TURNS_PER_SESSION;
 
   useEffect(() => {
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
@@ -91,7 +94,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   }, [isOpen, scrollContainerRef]);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
-    if (!userInput.trim() || isLoading) return;
+    if (!userInput.trim() || isLoading || hasSessionEnded) return;
 
     setIsLoading(true);
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
@@ -150,6 +153,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
               sessionId: chatTokenSessionIdRef.current,
           });
       }
+      
+      setSessionTurns(prev => prev + 1);
 
     } catch (error) {
       console.error(error);
@@ -161,7 +166,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages]);
+  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages, hasSessionEnded]);
 
   const toggleChat = () => setIsOpen(!isOpen);
   
@@ -181,9 +186,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">
         <ChatWindow messages={messages} isLoading={isLoading} />
+        {hasSessionEnded && (
+            <div className="p-2 bg-red-900/50 text-red-200 text-xs text-center">
+                Session limit reached. Please refresh the page to start a new chat.
+            </div>
+        )}
       </main>
       <footer className="p-4 bg-[#003a70]/50 border-t border-[#002a50] rounded-b-lg flex-shrink-0">
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={hasSessionEnded} />
       </footer>
     </div>
 
