@@ -16,7 +16,7 @@ if (!API_KEY) {
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // Define the model to use for all AI operations.
-const MODEL_NAME = 'gemini-3-pro-preview';
+export const MODEL_NAME = 'gemini-3-pro-preview';
 
 /**
  * Generates a unique session ID for tracking a series of related AI interactions,

@@ -6,7 +6,7 @@ import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 // FIX: Added UserProfile to type import
 import type { ChatMessage, Application, UserProfile } from '../types';
-import { createChatSession } from '../services/geminiService';
+import { createChatSession, MODEL_NAME } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
@@ -147,7 +147,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       if (chatTokenSessionIdRef.current) {
           logTokenEvent({
               feature: 'AI Assistant',
-              model: 'gemini-3-pro-preview',
+              model: MODEL_NAME,
               inputTokens: totalInputTokens,
               outputTokens: totalOutputTokens,
               sessionId: chatTokenSessionIdRef.current,

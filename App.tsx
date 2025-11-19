@@ -653,14 +653,18 @@ function App() {
     setPage('submissionSuccess');
   }, [currentUser, authState.claims.admin, activeFund]);
 
-  const handleDraftUpdate = useCallback((partialDraft: Partial<ApplicationFormData>) => {
+  const handleDraftUpdate = useCallback((partialDraft: {
+      profileData?: Partial<UserProfile>;
+      eventData?: Partial<EventData>;
+      agreementData?: Partial<ApplicationFormData['agreementData']>;
+  }) => {
     if (!currentUser) return;
     
     setApplicationDraft(prevDraft => {
         // Deep merge the new partial draft into the previous state, ensuring profileData is always seeded.
         const newDraft: Partial<ApplicationFormData> = {
             ...prevDraft,
-            ...partialDraft,
+            ...(partialDraft as Partial<ApplicationFormData>),
             profileData: {
                 ...currentUser,
                 ...(prevDraft?.profileData || {}),
@@ -671,6 +675,8 @@ function App() {
                 ...(partialDraft.eventData || {}),
             } as EventData,
             agreementData: {
+                shareStory: null,
+                receiveAdditionalInfo: null,
                 ...(prevDraft?.agreementData || {}),
                 ...(partialDraft.agreementData || {}),
             },

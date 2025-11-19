@@ -3,7 +3,7 @@ import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData, EventData } from '../types';
-import { createChatSession } from '../services/geminiService';
+import { createChatSession, MODEL_NAME } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
@@ -406,6 +406,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
     setMessages(prev => [...prev, userMessage]);
     
+    const inputTokens = estimateTokens(userInput); // Count tokens for user input
+
     // Capture the session at the beginning of the turn to avoid race conditions.
     const currentTurnSession = chatSessionRef.current;
 
@@ -421,12 +423,25 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       if (!functionCalls || functionCalls.length === 0) {
         if (response1.text) {
           setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response1.text }]);
+          const outputTokens = estimateTokens(response1.text); // Count tokens for model text response
+          
+          if (chatTokenSessionIdRef.current) {
+             logTokenEvent({
+                 feature: 'AI Apply Chat',
+                 model: MODEL_NAME,
+                 inputTokens,
+                 outputTokens,
+                 sessionId: chatTokenSessionIdRef.current
+             });
+          }
         }
         // Even if the response is empty, the turn is over.
         return;
       }
       
       // If there are function calls, execute them and then send the results back to the model.
+      // We also count tokens for the function call response from the model (treated as output).
+      let intermediateOutputTokens = estimateTokens(JSON.stringify(functionCalls));
       
       // This will trigger a re-render and update the application draft state in the parent.
       // A new `chatSessionRef` will be created for the *next* turn, which is the desired behavior.
@@ -435,15 +450,31 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       const functionResponses = functionCalls.map(call => {
         return { functionResponse: { name: call.name, response: { result: 'ok' } } };
       });
+      
+      // Count tokens for the function response we send back (treated as input for the 2nd call)
+      let intermediateInputTokens = estimateTokens(JSON.stringify(functionResponses));
 
       // SECOND API CALL: Send tool responses back using the *same session* from this turn.
       const response2 = await currentTurnSession.sendMessage({ message: functionResponses });
       
+      let finalOutputTokens = 0;
+
       // The final text response comes from the second call.
       if (response2.text) {
         setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response2.text }]);
+        finalOutputTokens = estimateTokens(response2.text);
       }
-      // It's possible for the model to just execute a tool and say nothing. In that case, we don't add an empty bubble.
+      
+      // Log the total tokens for this turn sequence
+      if (chatTokenSessionIdRef.current) {
+          logTokenEvent({
+              feature: 'AI Apply Chat',
+              model: MODEL_NAME,
+              inputTokens: inputTokens + intermediateInputTokens,
+              outputTokens: intermediateOutputTokens + finalOutputTokens,
+              sessionId: chatTokenSessionIdRef.current
+          });
+      }
       
     } catch (error) {
       console.error("Error during AI Apply chat turn:", error);
