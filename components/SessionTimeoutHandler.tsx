@@ -100,12 +100,23 @@ const SessionTimeoutHandler: React.FC<SessionTimeoutHandlerProps> = ({ children,
       {children}
       {showWarning && isActive && modalRoot && createPortal(
         <div 
-            className="fixed inset-0 bg-black bg-opacity-80 z-[100] flex justify-center items-center p-4 backdrop-blur-sm"
+            className="fixed inset-0 bg-black bg-opacity-80 z-[100] flex justify-center items-start pt-24 p-4 backdrop-blur-sm"
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="session-timeout-title"
         >
-            <div className="bg-[#003a70] rounded-lg shadow-2xl p-8 w-full max-w-md border-2 border-[#ff8400] text-center relative overflow-hidden">
+            <style>
+              {`
+                @keyframes slideDown {
+                  from { transform: translateY(-100%); opacity: 0; }
+                  to { transform: translateY(0); opacity: 1; }
+                }
+              `}
+            </style>
+            <div 
+                className="bg-[#003a70] rounded-lg shadow-2xl p-8 w-full max-w-md border-2 border-[#ff8400] text-center relative overflow-hidden"
+                style={{ animation: 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+            >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ff8400] to-[#edda26]"></div>
                 
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-[#ff8400] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
