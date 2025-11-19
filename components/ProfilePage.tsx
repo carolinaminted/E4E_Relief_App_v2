@@ -52,10 +52,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSection, setOpenSection] = useState<ProfileSection | null>(() => {
-    const saved = localStorage.getItem('profilePage_openSection');
-    return saved ? JSON.parse(saved) : 'applications';
-  });
+  const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
@@ -65,10 +62,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
   const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    localStorage.setItem('profilePage_openSection', JSON.stringify(openSection));
-  }, [openSection]);
   
   useLayoutEffect(() => {
     const calculateHeight = () => {
