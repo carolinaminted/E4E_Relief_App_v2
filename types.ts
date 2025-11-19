@@ -222,6 +222,25 @@ export interface ChatMessage {
   content: string;
 }
 
+// --- AI Configuration Types ---
+
+/**
+ * Defines the configuration for a specific AI feature model.
+ */
+export interface ModelConfig {
+  model: string;
+  maxTokens?: number;
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+}
+
+/**
+ * Keys for the different AI features available in the application.
+ */
+export type FeatureId = 'AI_APPLY' | 'AI_DECISIONING' | 'AI_ASSISTANT' | 'ADDRESS_PARSING' | 'APP_PARSING';
+
+
 // --- Token Usage Analytics Types ---
 
 /**
@@ -246,7 +265,7 @@ export interface TokenEvent {
   userName: string; // The user's full name, denormalized for easier display.
   timestamp: string; // ISO 8601 timestamp string.
   feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision' | 'AI Apply Chat';
-  model: 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-3-pro-preview';
+  model: 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-3-pro-preview' | string; // String allowing for future models
   inputTokens: number;
   cachedInputTokens: number;
   outputTokens: number;

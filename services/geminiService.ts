@@ -1,9 +1,14 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
-import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense } from '../types';
+import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense, FeatureId } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes, languages, expenseTypes } from '../data/appData';
 import { AI_GUARDRAILS } from '../config/aiGuardrails';
+import { modelConfigService } from './modelConfigurationService';
+
+// Default model name used for generic logging or when specific feature config isn't retrievable.
+// This resolves import errors in components that rely on this constant.
+export const MODEL_NAME = 'gemini-2.5-flash';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -14,9 +19,6 @@ if (!API_KEY) {
 
 // Initialize the Google Gemini AI client.
 const ai = new GoogleGenAI({ apiKey: API_KEY });
-
-// Define the model to use for all AI operations.
-export const MODEL_NAME = 'gemini-3-pro-preview';
 
 /**
  * Generates a unique session ID for tracking a series of related AI interactions,
@@ -352,13 +354,16 @@ export function createChatSession(
 ): Chat {
   let dynamicContext;
   let tools;
+  let featureId: FeatureId;
 
   if (context === 'aiApply') {
     dynamicContext = getAIApplyContext(userProfile, applicationDraft);
     tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool, addOrUpdateExpenseTool, updateAgreementsTool] }];
+    featureId = 'AI_APPLY';
   } else {
     dynamicContext = applicationContext;
     tools = [{ functionDeclarations: [updateUserProfileTool] }];
+    featureId = 'AI_ASSISTANT';
   }
 
   // Personalize the chat experience by instructing the model to respond in the user's preferred language.
@@ -431,13 +436,17 @@ ${applicationList}
       role: message.role,
       parts: [{ text: message.content }],
     }));
+  
+  const modelConfig = modelConfigService.getModelConfig(featureId);
 
   return ai.chats.create({
-    model: MODEL_NAME,
+    model: modelConfig.model,
     history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
       tools: tools,
+      maxOutputTokens: modelConfig.maxTokens,
+      temperature: modelConfig.temperature,
     },
   });
 }
@@ -674,19 +683,22 @@ export async function getAIAssistedDecision(
     
     const inputTokens = estimateTokens(prompt);
     const sessionId = generateSessionId('ai-decisioning');
+    const modelConfig = modelConfigService.getModelConfig('AI_DECISIONING');
 
     try {
         const response = await ai.models.generateContent({
-            model: MODEL_NAME,
+            model: modelConfig.model,
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: finalDecisionSchema,
+                maxOutputTokens: modelConfig.maxTokens,
+                temperature: modelConfig.temperature,
             },
         });
         
         const outputTokens = estimateTokens(response.text);
-        logTokenEvent({ feature: 'Final Decision', model: MODEL_NAME, inputTokens, outputTokens, sessionId }, applicantProfile);
+        logTokenEvent({ feature: 'Final Decision', model: modelConfig.model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
         const jsonString = response.text.trim();
         const aiResponse = JSON.parse(jsonString) as { finalDecision: 'Approved' | 'Denied', finalReason: string, finalAward: number };
@@ -764,19 +776,22 @@ export async function parseAddressWithGemini(addressString: string, forUser?: Us
   
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-address-parsing');
+  const modelConfig = modelConfigService.getModelConfig('ADDRESS_PARSING');
 
   try {
     const response = await ai.models.generateContent({
-      model: MODEL_NAME,
+      model: modelConfig.model,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: addressJsonSchema,
+        maxOutputTokens: modelConfig.maxTokens,
+        temperature: modelConfig.temperature,
       },
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Address Parsing', model: MODEL_NAME, inputTokens, outputTokens, sessionId }, forUser);
+    logTokenEvent({ feature: 'Address Parsing', model: modelConfig.model, inputTokens, outputTokens, sessionId }, forUser);
 
     const jsonString = response.text.trim();
     if (jsonString) {
@@ -879,19 +894,22 @@ export async function parseApplicationDetailsWithGemini(
   
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-app-parsing');
+  const modelConfig = modelConfigService.getModelConfig('APP_PARSING');
 
   try {
     const response = await ai.models.generateContent({
-      model: MODEL_NAME,
+      model: modelConfig.model,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: applicationDetailsJsonSchema,
+        maxOutputTokens: modelConfig.maxTokens,
+        temperature: modelConfig.temperature,
       },
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Application Parsing', model: MODEL_NAME, inputTokens, outputTokens, sessionId }, applicantProfile);
+    logTokenEvent({ feature: 'Application Parsing', model: modelConfig.model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
     const jsonString = response.text.trim();
     if (jsonString) {

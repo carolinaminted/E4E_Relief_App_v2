@@ -72,7 +72,7 @@ export function estimateTokens(text: string): number {
 export async function logEvent(
   data: {
     feature: TokenEvent['feature'];
-    model: TokenEvent['model'];
+    model: string;
     inputTokens: number;
     outputTokens: number;
     cachedInputTokens?: number;
