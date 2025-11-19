@@ -81,8 +81,8 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 const IdentitySwitchToast: React.FC<{ message: string; isVisible: boolean }> = ({ message, isVisible }) => {
     return (
         <div 
-            className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
-                isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'
+            className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
+                isVisible ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'
             }`}
         >
             <div className="bg-[#003a70]/90 backdrop-blur-md border border-[#ff8400] text-white px-6 py-3 rounded-full shadow-[0_0_15px_rgba(255,132,0,0.3)] flex items-center gap-3 min-w-[300px] justify-center">
@@ -119,7 +119,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
           const newIdentity = identities.find(i => i.id === activeIdentity.id);
           if (newIdentity) {
               setToast({ message: `Active fund switched to ${newIdentity.fundName}`, visible: true });
-              const timer = setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
+              const timer = setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 5000);
               return () => clearTimeout(timer);
           }
       }
