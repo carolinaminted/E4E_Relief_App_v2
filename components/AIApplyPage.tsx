@@ -333,7 +333,7 @@ const AIApplyPreviewPane: React.FC<{
 };
 
 const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -367,6 +367,17 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       initDoneForUser.current = userProfile.uid;
     }
   }, [sessionKey, greetingMessage, userProfile]);
+
+  // Effect to update the initial greeting if the language changes and no conversation has started
+  useEffect(() => {
+     if (messages.length === 1 && messages[0].role === MessageRole.MODEL) {
+        const newGreeting = t('aiApplyPage.greeting');
+        if (messages[0].content !== newGreeting) {
+            setMessages([{ role: MessageRole.MODEL, content: newGreeting }]);
+            chatSessionRef.current = null;
+        }
+     }
+  }, [i18n.language, t, messages]);
 
   useEffect(() => {
     if (sessionKey && messages.length > 0) {

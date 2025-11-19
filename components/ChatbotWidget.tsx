@@ -26,7 +26,7 @@ interface ChatbotWidgetProps {
 }
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }
   ]);
@@ -51,6 +51,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
   }, [isOpen, applications, activeFund, userProfile, messages]);
+
+  // Effect to update the initial greeting if the language changes and no conversation has started
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === MessageRole.MODEL) {
+        const newGreeting = t('chatbotWidget.greeting');
+        if (messages[0].content !== newGreeting) {
+            setMessages([{ role: MessageRole.MODEL, content: newGreeting }]);
+            // Reset the session ref so it re-initializes with the new language context if needed
+            chatSessionRef.current = null;
+        }
+    }
+  }, [i18n.language, t, messages]);
   
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {
