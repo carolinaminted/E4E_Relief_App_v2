@@ -4,7 +4,25 @@ import RequiredIndicator from './RequiredIndicator';
 import CountrySelector from './CountrySelector';
 import AddressHelper from './AddressHelper';
 
-export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => {
+export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string, required?: boolean, error?: string }> = ({ label, id, required, error, onClick, ...props }) => {
+    
+    const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+        if (props.type === 'date') {
+            try {
+                // showPicker is supported in modern browsers
+                if ('showPicker' in e.currentTarget) {
+                    (e.currentTarget as any).showPicker();
+                }
+            } catch (err) {
+                // Ignore errors if showPicker fails or is not supported
+                console.debug('showPicker not supported', err);
+            }
+        }
+        if (onClick) {
+            onClick(e);
+        }
+    };
+
     return (
         <div>
             {label && (
@@ -14,6 +32,7 @@ export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
             )}
             <input
                 id={id}
+                onClick={handleClick}
                 {...props}
                 className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`}
             />
@@ -22,6 +41,15 @@ export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
     );
 };
 
+export const FormTextarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string, required?: boolean, error?: string }> = ({ label, id, required, error, ...props }) => (
+    <div>
+        <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
+            {label} <RequiredIndicator required={required} isMet={!!props.value} />
+        </label>
+        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
+        {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+    </div>
+);
 
 export const FormRadioGroup: React.FC<{ legend: string, name: string, options: string[], value: string, onChange: (value: any) => void, required?: boolean, error?: string }> = ({ legend, name, options, value, onChange, required, error }) => (
     <div>
