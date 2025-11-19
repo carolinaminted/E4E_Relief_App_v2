@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import type { Fund } from '../data/fundData';
 import ApplicationDetailModal from './ApplicationDetailModal';
@@ -9,6 +9,7 @@ import { formatPhoneNumber } from '../utils/formatting';
 import RequiredIndicator from './RequiredIndicator';
 import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import PolicyModal from './PolicyModal';
+import EligibilityIndicator from './EligibilityIndicator';
 
 interface ProfilePageProps {
   navigate: (page: 'home' | 'apply' | 'classVerification') => void;
@@ -43,60 +44,6 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClick: () => void }> = ({ cvStatus, onClick }) => {
-    const hasPassedCV = cvStatus === 'passed';
-
-    const baseClasses = "text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors";
-    const passedClasses = "bg-green-800/50 text-green-300";
-    const neededClasses = "bg-yellow-800/50 text-yellow-300 cursor-pointer hover:bg-yellow-800/80";
-
-    const handleClick = () => {
-        if (!hasPassedCV) {
-             console.log("[Telemetry] verification_needed_cta_clicked");
-             onClick();
-        }
-    };
-
-    const text = hasPassedCV ? 'Eligible to apply' : 'Verification needed';
-    
-    return (
-        <button
-            onClick={handleClick}
-            disabled={hasPassedCV}
-            role={hasPassedCV ? 'status' : 'button'}
-            aria-label={text}
-            className={`${baseClasses} ${hasPassedCV ? passedClasses : neededClasses}`}
-        >
-            {!hasPassedCV && (
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-            )}
-            <span>{text}</span>
-        </button>
-    );
-};
-
-const IdentitySwitchToast: React.FC<{ message: string; isVisible: boolean }> = ({ message, isVisible }) => {
-    return (
-        <div 
-            className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
-                isVisible ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'
-            }`}
-        >
-            <div className="bg-[#003a70]/90 backdrop-blur-md border border-[#ff8400] text-white px-6 py-3 rounded-full shadow-[0_0_15px_rgba(255,132,0,0.3)] flex items-center gap-3 min-w-[300px] justify-center">
-                <div className="bg-[#ff8400] rounded-full p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                </div>
-                <span className="font-medium text-sm text-center">{message}</span>
-            </div>
-        </div>
-    );
-};
-
 
 type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
@@ -109,29 +56,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [newFundCode, setNewFundCode] = useState('');
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
-  // Toast Notification State
-  const prevActiveIdentityId = useRef<string | null>(activeIdentity?.id || null);
-  const [toast, setToast] = useState<{ message: string, visible: boolean }>({ message: '', visible: false });
-
-  useEffect(() => {
-      // Check if activeIdentity changed from a previous non-null value (to avoid toast on initial load)
-      if (prevActiveIdentityId.current && activeIdentity && prevActiveIdentityId.current !== activeIdentity.id) {
-          const newIdentity = identities.find(i => i.id === activeIdentity.id);
-          if (newIdentity) {
-              setToast({ message: `Active fund switched to ${newIdentity.fundName}`, visible: true });
-              const timer = setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 5000);
-              return () => clearTimeout(timer);
-          }
-      }
-      prevActiveIdentityId.current = activeIdentity?.id || null;
-  }, [activeIdentity, identities]);
-
-
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
       return {
-        twelveMonthRemaining: activeFund?.limits.twelveMonthMax ?? 10000,
-        lifetimeRemaining: activeFund?.limits.lifetimeMax ?? 50000,
+        twelveMonthRemaining: 10000,
+        lifetimeRemaining: 50000,
       };
     }
 
@@ -142,7 +71,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
       twelveMonthRemaining: latestApplication.twelveMonthGrantRemaining,
       lifetimeRemaining: latestApplication.lifetimeGrantRemaining,
     };
-  }, [applications, activeFund]);
+  }, [applications]);
 
   // Create a reversed list for display so newest applications appear first
   const sortedApplicationsForDisplay = useMemo(() => {
@@ -200,11 +129,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     }
     setFormData(prev => ({ ...prev, [field]: finalValue }));
 
-    // FIX: Used type assertion to prevent 'symbol' cannot be used as an index type error.
     if (errors[field as string]) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        // FIX: Used type assertion for deleting property.
         delete newErrors[field as string];
         return newErrors;
       });
@@ -219,7 +146,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             [field]: value
         }
     }));
-    // FIX: Explicitly convert `field` to a string to avoid runtime errors with symbols.
     const errorKey = `${addressType}.${String(field)}`;
     if (errors[errorKey]) {
       setErrors(prev => {
@@ -340,8 +266,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
-      <IdentitySwitchToast message={toast.message} isVisible={toast.visible} />
-
       <div className="relative flex justify-center items-center mb-8 md:hidden">
         <div className="text-center">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
@@ -352,6 +276,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
                 <EligibilityIndicator 
                   cvStatus={currentActiveFullIdentity.classVerificationStatus} 
+                  eligibilityStatus={currentActiveFullIdentity.eligibilityStatus}
                   onClick={() => onAddIdentity(currentActiveFullIdentity.fundCode)} 
                 />
               </div>
@@ -387,7 +312,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
+                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
@@ -445,7 +370,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
-                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} onClick={() => onAddIdentity(identity.fundCode)} />
+                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} eligibilityStatus={identity.eligibilityStatus} onClick={() => onAddIdentity(identity.fundCode)} />
                                         {isActive && <span className="text-xs font-bold text-green-300">(Active)</span>}
                                     </div>
                                 </div>
@@ -693,22 +618,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">All information I have provided is accurate. <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
                 </div>
-                {openSection === 'consent' && (
-                    <div className="flex justify-end pt-4">
-                        <button
-                            type="button"
-                            onClick={() => toggleSection('consent')}
-                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
-                            aria-controls="consent-section"
-                            aria-expanded="true"
-                        >
-                            Collapse
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
             </div>
         </fieldset>
 
