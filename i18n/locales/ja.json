@@ -15,7 +15,8 @@
     "aiApplyingDetails": "詳細を申請書に適用しています。",
     "close": "閉じる",
     "eligible": "対象",
-    "ineligible": "対象外"
+    "ineligible": "対象外",
+    "collapse": "折りたたむ"
   },
   "applicationStatus": {
     "Submitted": "送信済み",
@@ -406,7 +407,13 @@
     "submitDescription": "説明を送信",
     "aiParseError": "詳細を抽出できませんでした。もう一度試すか、手動でフィールドに入力してください。",
     "aiSuccess": "成功！見つかった詳細でフォームを事前に入力しました。",
-    "aiDisclaimer": "AI生成コンテンツは不正確な場合があります。この機能を使用することで、<1>AI利用規約</1> および <2>プライバシーポリシー</2> に同意したことになります。"
+    "aiDisclaimer": "AI生成コンテンツは不正確な場合があります。この機能を使用することで、<1>AI利用規約</1> および <2>プライバシーポリシー</2> に同意したことになります。",
+    "street1": "住所1",
+    "street2": "住所2",
+    "city": "市区町村",
+    "state": "都道府県",
+    "zip": "郵便番号",
+    "letAIFill": "AIにフィールドを入力を任せる"
   },
   "validation": {
     "required": "このフィールドに入力してください。",

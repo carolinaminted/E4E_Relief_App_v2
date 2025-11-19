@@ -15,7 +15,8 @@
     "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora.",
     "close": "Cerrar",
     "eligible": "Elegible",
-    "ineligible": "No Elegible"
+    "ineligible": "No Elegible",
+    "collapse": "Ocultar"
   },
   "applicationStatus": {
     "Submitted": "Enviado",
@@ -406,7 +407,13 @@
     "submitDescription": "Enviar Descripción",
     "aiParseError": "No se pudieron extraer los detalles. Por favor, inténtalo de nuevo o llena los campos manualmente.",
     "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos.",
-    "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>."
+    "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>.",
+    "street1": "Calle 1",
+    "street2": "Calle 2",
+    "city": "Ciudad",
+    "state": "Estado / Provincia",
+    "zip": "Código Postal",
+    "letAIFill": "Deja que la IA complete los campos por ti"
   },
   "validation": {
     "required": "Por favor, rellena este campo.",

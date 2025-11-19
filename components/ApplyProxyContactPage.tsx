@@ -158,7 +158,7 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
     try {
       // The `isProxy=true` flag tells the Gemini service to use a specific prompt
       // tailored for extracting the applicant's details from a third-person description.
-      const parsedDetails = await parseApplicationDetailsWithGemini(description, true, formData);
+      const parsedDetails = await parseApplicationDetailsWithGemini(description, true);
       onAIParsed(parsedDetails);
     } catch (e) {
       console.error("AI Parsing failed in parent component:", e);
@@ -254,6 +254,20 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
             <div className={`transition-all duration-500 ease-in-out ${openSection === 'aiStarter' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <AIApplicationStarter onParse={handleAIParse} isLoading={isAIParsing} variant="underline" />
             </div>
+            {openSection === 'aiStarter' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('aiStarter')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                        >
+                            {t('applyContactPage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
         </fieldset>
 
         <fieldset className="border-b border-[#005ca0] pb-4">
@@ -272,6 +286,20 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                         <FormInput label="Applicant's Email" id="applicantEmail" type="email" required value={formData.email} onChange={e => handleFormUpdate({ email: e.target.value })} error={errors.email} />
                     </div>
                 </div>
+                {openSection === 'applicantDetails' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('applicantDetails')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                        >
+                            {t('applyContactPage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
             </div>
         </fieldset>
         
@@ -304,6 +332,20 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                     <FormInput label="Email" id="email" required value={formData.email} disabled />
                     <FormInput label="Mobile Number" id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormUpdate({ mobileNumber: e.target.value })} error={errors.mobileNumber} placeholder="(555) 555-5555" />
                 </div>
+                {openSection === 'contact' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('contact')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                        >
+                            {t('applyContactPage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
             </div>
         </fieldset>
 
@@ -349,18 +391,26 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                         </div>
                     </div>
                 </div>
+                {openSection === 'addresses' && (
+                    <div className="flex justify-end pt-4">
+                        <button type="button" onClick={() => toggleSection('addresses')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                            {t('applyContactPage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                        </button>
+                    </div>
+                )}
             </div>
         </fieldset>
 
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'}>
+            <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Additional Details</h2>
                     {sectionHasErrors.additionalDetails && openSection !== 'additionalDetails' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'additionalDetails'} />
             </button>
-            <div className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="details-section" className={`transition-all duration-500 ease-in-out ${openSection === 'additionalDetails' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-6 pt-4">
                     <div className="grid grid-cols-2 gap-6">
                         <FormInput type="date" label="Employment Start Date" id="employmentStartDate" required value={formData.employmentStartDate} onChange={e => handleFormUpdate({ employmentStartDate: e.target.value })} error={errors.employmentStartDate} />
@@ -375,18 +425,34 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                         <SearchableSelector label="Preferred Language" id="preferredLanguage" value={formData.preferredLanguage || ''} options={languages} onUpdate={value => handleFormUpdate({ preferredLanguage: value })} variant="underline"/>
                     </div>
                 </div>
+                {openSection === 'additionalDetails' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('additionalDetails')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="details-section"
+                            aria-expanded="true"
+                        >
+                            {t('applyContactPage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
             </div>
         </fieldset>
 
         <fieldset className="pb-4">
-            <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'consent'}>
+            <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'consent'} aria-controls="consent-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">Consent & Acknowledgement</h2>
                     {sectionHasErrors.consent && openSection !== 'consent' && <NotificationIcon />}
                 </div>
                 <ChevronIcon isOpen={openSection === 'consent'} />
             </button>
-            <div className={`transition-all duration-500 ease-in-out ${openSection === 'consent' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSection === 'consent' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-3 pt-4">
                     {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
                     <div className="flex items-start">
@@ -404,6 +470,22 @@ const ApplyProxyContactPage: React.FC<ApplyProxyContactPageProps> = ({ formData,
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">All information I have provided is accurate. <RequiredIndicator required isMet={formData.infoCorrect} /></label>
                     </div>
                 </div>
+                {openSection === 'consent' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('consent')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="consent-section"
+                            aria-expanded="true"
+                        >
+                            {t('applyContactPage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
             </div>
         </fieldset>
       

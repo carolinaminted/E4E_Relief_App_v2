@@ -15,7 +15,8 @@
     "aiApplyingDetails": "We are applying your details to the application now.",
     "close": "Close",
     "eligible": "Eligible",
-    "ineligible": "Ineligible"
+    "ineligible": "Ineligible",
+    "collapse": "Collapse"
   },
   "applicationStatus": {
     "Submitted": "Submitted",
@@ -406,7 +407,13 @@
     "submitDescription": "Submit Description",
     "aiParseError": "Could not extract details. Please try again or fill fields manually.",
     "aiSuccess": "Success! We've pre-filled the form with any details we found.",
-    "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>."
+    "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>.",
+    "street1": "Street 1",
+    "street2": "Street 2",
+    "city": "City",
+    "state": "State / Province",
+    "zip": "ZIP / Postal",
+    "letAIFill": "Let AI fill in the fields for you"
   },
   "validation": {
     "required": "Please fill out this field.",

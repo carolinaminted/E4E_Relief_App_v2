@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Address, UserProfile } from '../types';
 import RequiredIndicator from './RequiredIndicator';
 import CountrySelector from './CountrySelector';
@@ -68,18 +69,21 @@ export const FormRadioGroup: React.FC<{ legend: string, name: string, options: s
     </div>
 );
 
-export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof Address, value: string) => void, onBulkUpdate: (parsedAddress: Partial<Address>) => void, prefix: string, errors: Record<string, string>, forUser?: UserProfile | null }> = ({ address, onUpdate, onBulkUpdate, prefix, errors, forUser }) => (
-    <>
-        <AddressHelper onAddressParsed={onBulkUpdate} variant="underline" forUser={forUser} />
-        <CountrySelector id={`${prefix}Country`} required value={address.country} onUpdate={value => onUpdate('country', value)} variant="underline" error={errors.country}/>
-        <FormInput label="Street 1" id={`${prefix}Street1`} required value={address.street1} onChange={e => onUpdate('street1', e.target.value)} error={errors.street1} />
-        <div className="grid grid-cols-2 gap-x-6">
-            <FormInput label="Street 2" id={`${prefix}Street2`} value={address.street2 || ''} onChange={e => onUpdate('street2', e.target.value)} />
-            <FormInput label="City" id={`${prefix}City`} required value={address.city} onChange={e => onUpdate('city', e.target.value)} error={errors.city} />
-        </div>
-        <div className="grid grid-cols-2 gap-x-6">
-            <FormInput label="State / Province" id={`${prefix}State`} required value={address.state} onChange={e => onUpdate('state', e.target.value)} error={errors.state} />
-            <FormInput label="ZIP / Postal" id={`${prefix}Zip`} required value={address.zip} onChange={e => onUpdate('zip', e.target.value)} error={errors.zip} />
-        </div>
-    </>
-);
+export const AddressFields: React.FC<{ address: Address, onUpdate: (field: keyof Address, value: string) => void, onBulkUpdate: (parsedAddress: Partial<Address>) => void, prefix: string, errors: Record<string, string>, forUser?: UserProfile | null }> = ({ address, onUpdate, onBulkUpdate, prefix, errors, forUser }) => {
+    const { t } = useTranslation();
+    return (
+        <>
+            <AddressHelper onAddressParsed={onBulkUpdate} variant="underline" forUser={forUser} />
+            <CountrySelector id={`${prefix}Country`} required value={address.country} onUpdate={value => onUpdate('country', value)} variant="underline" error={errors.country}/>
+            <FormInput label={t('formControls.street1')} id={`${prefix}Street1`} required value={address.street1} onChange={e => onUpdate('street1', e.target.value)} error={errors.street1} />
+            <div className="grid grid-cols-2 gap-x-6">
+                <FormInput label={t('formControls.street2')} id={`${prefix}Street2`} value={address.street2 || ''} onChange={e => onUpdate('street2', e.target.value)} />
+                <FormInput label={t('formControls.city')} id={`${prefix}City`} required value={address.city} onChange={e => onUpdate('city', e.target.value)} error={errors.city} />
+            </div>
+            <div className="grid grid-cols-2 gap-x-6">
+                <FormInput label={t('formControls.state')} id={`${prefix}State`} required value={address.state} onChange={e => onUpdate('state', e.target.value)} error={errors.state} />
+                <FormInput label={t('formControls.zip')} id={`${prefix}Zip`} required value={address.zip} onChange={e => onUpdate('zip', e.target.value)} error={errors.zip} />
+            </div>
+        </>
+    );
+};
