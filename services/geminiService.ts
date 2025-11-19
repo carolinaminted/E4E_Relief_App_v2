@@ -1,8 +1,14 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
-import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense } from '../types';
+import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense, FeatureId } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
 import { allEventTypes, employmentTypes, languages, expenseTypes } from '../data/appData';
+import { AI_GUARDRAILS } from '../config/aiGuardrails';
+import { modelConfigService } from './modelConfigurationService';
+
+// Default model name used for generic logging or when specific feature config isn't retrievable.
+// This resolves import errors in components that rely on this constant.
+export const MODEL_NAME = 'gemini-2.5-flash';
 
 // Ensure the API key is available from the environment variables.
 const API_KEY = process.env.API_KEY;
@@ -61,6 +67,9 @@ const updateUserProfileTool: FunctionDeclaration = {
       householdSize: { type: Type.NUMBER, description: 'The number of people in the user\'s household.' },
       homeowner: { type: Type.STRING, description: 'Whether the user owns their home.', enum: ['Yes', 'No'] },
       preferredLanguage: { type: Type.STRING, description: "The user's preferred language for communication.", enum: languages },
+      ackPolicies: { type: Type.BOOLEAN, description: "User confirms they have read and agree to the Privacy Policy and Cookie Policy." },
+      commConsent: { type: Type.BOOLEAN, description: "User consents to receive emails and text messages regarding their application." },
+      infoCorrect: { type: Type.BOOLEAN, description: "User confirms that all information provided is accurate." },
     },
   },
 };
@@ -178,16 +187,19 @@ You are the E4E Relief AI assistant, with a single, highly-focused mission on th
 - **DO NOT ANSWER USER QUESTIONS.** Your only function is to ask for the next piece of missing information.
 - **NEVER REVEAL LOGIC.** Do not explain why information is needed or what makes someone eligible or ineligible.
 - **NEVER DISCUSS ELIGIBILITY.** If the user asks if they are eligible, if an event is covered, about grant amounts, or any other policy question, you MUST respond with: "My role is to help you complete the application. For questions about eligibility or fund rules, please see the 'Support' page."
-- **FOCUS ON THE CURRENT SECTION.** The application has multiple sections: Additional Details, Event Details, Expenses, and Agreements. You must complete them IN ORDER. Do not ask for expenses until all event details are collected.
+- **FOCUS ON THE CURRENT SECTION.** The application has multiple sections: **Additional Details**, **Profile Acknowledgements**, **Event Details**, **Expenses**, and **Final Agreements**. You must complete them **IN ORDER**. Do not jump ahead.
+- **PROFILE ACKNOWLEDGEMENTS:** This is a MANDATORY section. Even if you just updated the Additional Details, you **MUST STOP** and ask the user to confirm the acknowledgement statements (Privacy Policy, Communication Consent, and Accuracy) before asking about the Event. The checkboxes in the UI are for display only; the user must confirm with you.
 
 **Your Process**:
 1.  **Analyze & Infer**: The user's message may contain answers to one or more questions. For example, if a user mentions "hurricane," you MUST infer the 'event' field is 'Tropical Storm/Hurricane' in addition to extracting the 'eventName'. Be proactive.
 2.  **Act**: Use your tools (\`updateUserProfile\`, \`startOrUpdateApplicationDraft\`, \`addOrUpdateExpense\`, \`updateAgreements\`) to save ALL the information you can gather from the user's message in a single turn.
 3.  **Confirm**: After a successful tool call, briefly confirm what you saved. Example: "Thanks, I've noted the event date."
 4.  **Ask**: Look at the updated 'Missing Information' list. Ask for the single NEXT item that is still missing from the CURRENT section. Be direct. Example: "What was the date of the event?"
+    - **Sequence Rule**: You MUST collect 'Additional Details' first. Once those are done, you MUST collect 'Profile Acknowledgements'. Only when ALL acknowledgements are confirmed can you move to 'Event Details'.
 5.  **Transition**: Once a section is complete, tell the user you will now move on to the next section.
-    - **Example**: "Great, that's all for the event details. Now let's talk about your expenses."
-    - **CRITICAL RULE**: Do NOT say you are moving on to expenses if the 'Event Details' list under 'Missing Information' is NOT empty. If the user says they evacuated, you MUST ask the required follow-up questions (like 'Are you evacuating from your primary residence?') from the list before you can talk about expenses.
+    - **Example (Profile -> Acknowledgements)**: "That completes your profile details. Next, please confirm the following acknowledgements."
+    - **Example (Acknowledgements -> Event)**: "Thank you for confirming. Now let's talk about your Event Details."
+    - **CRITICAL RULE**: Do NOT say you are moving on to expenses if the 'Event Details' list under 'Missing Information' is NOT empty.
     - **IMPORTANT - EXPENSE SECTION**: After transitioning to expenses, you MUST ask for the amount for each expense type ONE BY ONE. Do NOT ask a general question like "What expenses did you have?". Your first question MUST be for the first expense in the 'Expense Details' list. Example: "What was your total for Basic Disaster Supplies?"
 6.  **Complete & Hand-off**: When the 'Missing Information to Collect' list shows 'All details are complete', your final task is to instruct the user to perform the manual submission steps. Your final message MUST clearly tell them to go to the 'Agreements & Submission' section, check the box to agree to the 'Terms of Acceptance', and then click the 'Submit Application' button.
 
@@ -206,6 +218,9 @@ You have access to the \`updateUserProfile\`, \`startOrUpdateApplicationDraft\`,
     if (combinedProfile.householdSize) currentProfileInfo.push(`Household Size: ${combinedProfile.householdSize}`);
     if (combinedProfile.homeowner) currentProfileInfo.push(`Homeowner: ${combinedProfile.homeowner}`);
     if (combinedProfile.preferredLanguage) currentProfileInfo.push(`Preferred Language: ${combinedProfile.preferredLanguage}`);
+    if (combinedProfile.ackPolicies) currentProfileInfo.push(`Policies Agreed: Yes`);
+    if (combinedProfile.commConsent) currentProfileInfo.push(`Comm Consent: Yes`);
+    if (combinedProfile.infoCorrect) currentProfileInfo.push(`Info Correct: Yes`);
     
     const currentEventInfo: string[] = [];
     if (combinedEvent.event) currentEventInfo.push(`Event Type: ${combinedEvent.event}`);
@@ -234,33 +249,49 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
 `;
     }
 
-    const missingProfileFields: string[] = [];
-    if (!combinedProfile.employmentStartDate) missingProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
-    if (!combinedProfile.eligibilityType) missingProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
-    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingProfileFields.push('Estimated Annual Household Income (as a number)');
-    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingProfileFields.push('Number of people in household (as a number)');
-    if (!combinedProfile.homeowner) missingProfileFields.push('Homeowner status (Yes or No)');
-    if (!combinedProfile.preferredLanguage) missingProfileFields.push('Preferred Language');
+    const missingBasicProfileFields: string[] = [];
+    if (!combinedProfile.employmentStartDate) missingBasicProfileFields.push('Employment Start Date (YYYY-MM-DD format)');
+    if (!combinedProfile.eligibilityType) missingBasicProfileFields.push(`Eligibility Type (one of: ${employmentTypes.join(', ')})`);
+    if (combinedProfile.householdIncome === '' || combinedProfile.householdIncome === undefined || combinedProfile.householdIncome === null) missingBasicProfileFields.push('Estimated Annual Household Income (as a number)');
+    if (combinedProfile.householdSize === '' || combinedProfile.householdSize === undefined || combinedProfile.householdSize === null) missingBasicProfileFields.push('Number of people in household (as a number)');
+    if (!combinedProfile.homeowner) missingBasicProfileFields.push('Homeowner status (Yes or No)');
+    if (!combinedProfile.preferredLanguage) missingBasicProfileFields.push('Preferred Language');
     
+    // Note: we check basicProfileComplete later to decide if we can move to Events, 
+    // but we ALWAYS list the missing acknowledgements so the AI knows they are part of the required flow.
+    // This prevents the AI from jumping straight to Event details if it thinks "Basic Profile" is the only part of "Profile".
+
+    const missingAcknowledgementFields: string[] = [];
+    if (!combinedProfile.ackPolicies) missingAcknowledgementFields.push('Agreement to Privacy Policy and Cookie Policy (ackPolicies: true)');
+    if (!combinedProfile.commConsent) missingAcknowledgementFields.push('Consent to receive emails and texts (commConsent: true)');
+    if (!combinedProfile.infoCorrect) missingAcknowledgementFields.push('Confirmation that all information is accurate (infoCorrect: true)');
+
+    // Logic for transitions
+    const basicProfileComplete = missingBasicProfileFields.length === 0;
+    const allProfileComplete = basicProfileComplete && missingAcknowledgementFields.length === 0;
+
     const missingEventFields: string[] = [];
-    if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
-    if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
-    if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
-    if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
-    if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
-    if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
-    if (combinedEvent.evacuated === 'Yes') {
-        if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
-        if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
-        if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
-        if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
-        if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+    // Only move to event details if ALL profile sections (basic + acknowledgements) are done
+    if (allProfileComplete) {
+        if (!combinedEvent.event) missingEventFields.push('The type of disaster experienced (event)');
+        if (combinedEvent.event === 'Tropical Storm/Hurricane' && !combinedEvent.eventName) missingEventFields.push("The name of the event (eventName), *only if it's a Tropical Storm/Hurricane*");
+        if (!combinedEvent.eventDate) missingEventFields.push("Date of the event (eventDate)");
+        if (!combinedEvent.powerLoss) missingEventFields.push("If they lost power for more than 4 hours (powerLoss: 'Yes' or 'No')");
+        if (combinedEvent.powerLoss === 'Yes' && (!combinedEvent.powerLossDays || combinedEvent.powerLossDays <= 0)) missingEventFields.push("How many days they were without power (powerLossDays), *only if powerLoss is 'Yes'*");
+        if (!combinedEvent.evacuated) missingEventFields.push("If they evacuated or plan to (evacuated: 'Yes' or 'No')");
+        if (combinedEvent.evacuated === 'Yes') {
+            if (!combinedEvent.evacuatingFromPrimary) missingEventFields.push("If they are evacuating from their primary residence (evacuatingFromPrimary), *only if evacuated is 'Yes'*");
+            if (combinedEvent.evacuatingFromPrimary === 'No' && !combinedEvent.evacuationReason) missingEventFields.push("The reason for evacuation if not from primary residence (evacuationReason)");
+            if (!combinedEvent.stayedWithFamilyOrFriend) missingEventFields.push("Did they stay with family or a friend (stayedWithFamilyOrFriend), *only if evacuated is 'Yes'*");
+            if (!combinedEvent.evacuationStartDate) missingEventFields.push("Evacuation start date (evacuationStartDate), *only if evacuated is 'Yes'*");
+            if (!combinedEvent.evacuationNights || combinedEvent.evacuationNights <= 0) missingEventFields.push("How many nights they were evacuated (evacuationNights), *only if evacuated is 'Yes'*");
+        }
     }
 
-    const allBaseFieldsComplete = missingProfileFields.length === 0 && missingEventFields.length === 0;
+    const allEventFieldsComplete = allProfileComplete && missingEventFields.length === 0;
 
     const missingExpenseFields: string[] = [];
-    if (allBaseFieldsComplete) {
+    if (allEventFieldsComplete) {
         const knownExpenseTypes = new Set((combinedEvent.expenses || []).map(e => e.type));
         expenseTypes.forEach(type => {
             if (!knownExpenseTypes.has(type)) {
@@ -269,7 +300,7 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
         });
     }
 
-    const allExpensesComplete = allBaseFieldsComplete && missingExpenseFields.length === 0;
+    const allExpensesComplete = allEventFieldsComplete && missingExpenseFields.length === 0;
     
     const missingAgreementFields: string[] = [];
     if (allExpensesComplete) {
@@ -281,10 +312,11 @@ ${currentEventInfo.length > 0 ? `\n*Event Details*\n- ` + currentEventInfo.join(
         }
     }
 
-    if ([...missingProfileFields, ...missingEventFields, ...missingExpenseFields, ...missingAgreementFields].length > 0) {
+    if ([...missingBasicProfileFields, ...missingAcknowledgementFields, ...missingEventFields, ...missingExpenseFields, ...missingAgreementFields].length > 0) {
         dynamicContext += `
 **Missing Information to Collect**:
-${missingProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingProfileFields.join('\n- ') : ''}
+${missingBasicProfileFields.length > 0 ? `\n*Additional Details*\n- ` + missingBasicProfileFields.join('\n- ') : ''}
+${missingAcknowledgementFields.length > 0 ? `\n*Profile Acknowledgements* (ASK THESE NEXT if Additional Details are empty)\n- ` + missingAcknowledgementFields.join('\n- ') : ''}
 ${missingEventFields.length > 0 ? `\n*Event Details*\n- ` + missingEventFields.join('\n- ') : ''}
 ${missingExpenseFields.length > 0 ? `\n*Expense Details*\n- ` + missingExpenseFields.join('\n- ') : ''}
 ${missingAgreementFields.length > 0 ? `\n*Final Agreements*\n- ` + missingAgreementFields.join('\n- ') : ''}
@@ -322,13 +354,16 @@ export function createChatSession(
 ): Chat {
   let dynamicContext;
   let tools;
+  let featureId: FeatureId;
 
   if (context === 'aiApply') {
     dynamicContext = getAIApplyContext(userProfile, applicationDraft);
     tools = [{ functionDeclarations: [updateUserProfileTool, startOrUpdateApplicationDraftTool, addOrUpdateExpenseTool, updateAgreementsTool] }];
+    featureId = 'AI_APPLY';
   } else {
     dynamicContext = applicationContext;
     tools = [{ functionDeclarations: [updateUserProfileTool] }];
+    featureId = 'AI_ASSISTANT';
   }
 
   // Personalize the chat experience by instructing the model to respond in the user's preferred language.
@@ -392,22 +427,26 @@ ${applicationList}
         dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
       }
   }
-  
-  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-  const model = 'gemini-2.5-flash';
 
   // Map the application's ChatMessage format to the format required by the Gemini SDK.
-  const mappedHistory: Content[] | undefined = history?.map(message => ({
-    role: message.role,
-    parts: [{ text: message.content }],
-  }));
+  // Filter out 'error' role messages as Gemini SDK only accepts 'user' and 'model'.
+  const mappedHistory: Content[] | undefined = history
+    ?.filter(m => m.role === 'user' || m.role === 'model')
+    .map(message => ({
+      role: message.role,
+      parts: [{ text: message.content }],
+    }));
+  
+  const modelConfig = modelConfigService.getModelConfig(featureId);
 
   return ai.chats.create({
-    model: model,
+    model: modelConfig.model,
     history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
       tools: tools,
+      maxOutputTokens: modelConfig.maxTokens,
+      temperature: modelConfig.temperature,
     },
   });
 }
@@ -431,6 +470,10 @@ export function evaluateApplicationEligibility(
   }
 ): EligibilityDecision {
   const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax, eligibleEvents } = appData;
+  
+  // Capture the exact decision time before manipulating date objects for logic
+  const decisionTimestamp = new Date().toISOString();
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -568,7 +611,7 @@ export function evaluateApplicationEligibility(
       evacuated: eventData.evacuated || '',
       powerLossDays: normalizedPowerLossDays
     },
-    decisionedDate: today.toISOString()
+    decisionedDate: decisionTimestamp
   };
 }
 
@@ -637,23 +680,25 @@ export async function getAIAssistedDecision(
         ${JSON.stringify(preliminaryDecision, null, 2)}
         ---
     `;
-    // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-    const model = 'gemini-2.5-flash';
+    
     const inputTokens = estimateTokens(prompt);
     const sessionId = generateSessionId('ai-decisioning');
+    const modelConfig = modelConfigService.getModelConfig('AI_DECISIONING');
 
     try {
         const response = await ai.models.generateContent({
-            model: model,
+            model: modelConfig.model,
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: finalDecisionSchema,
+                maxOutputTokens: modelConfig.maxTokens,
+                temperature: modelConfig.temperature,
             },
         });
         
         const outputTokens = estimateTokens(response.text);
-        logTokenEvent({ feature: 'Final Decision', model, inputTokens, outputTokens, sessionId }, applicantProfile);
+        logTokenEvent({ feature: 'Final Decision', model: modelConfig.model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
         const jsonString = response.text.trim();
         const aiResponse = JSON.parse(jsonString) as { finalDecision: 'Approved' | 'Denied', finalReason: string, finalAward: number };
@@ -712,6 +757,10 @@ const addressJsonSchema = {
  */
 export async function parseAddressWithGemini(addressString: string, forUser?: UserProfile | null): Promise<Partial<Address>> {
   if (!addressString) return {};
+  
+  if (addressString.length > AI_GUARDRAILS.MAX_ADDRESS_CHARS) {
+      throw new Error(`Address too long. Max ${AI_GUARDRAILS.MAX_ADDRESS_CHARS} characters.`);
+  }
 
   const prompt = `
     Parse the provided address string into a structured JSON object.
@@ -724,23 +773,25 @@ export async function parseAddressWithGemini(addressString: string, forUser?: Us
     
     Address to parse: "${addressString}"
   `;
-  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-  const model = 'gemini-2.5-flash';
+  
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-address-parsing');
+  const modelConfig = modelConfigService.getModelConfig('ADDRESS_PARSING');
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model: modelConfig.model,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: addressJsonSchema,
+        maxOutputTokens: modelConfig.maxTokens,
+        temperature: modelConfig.temperature,
       },
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Address Parsing', model, inputTokens, outputTokens, sessionId }, forUser);
+    logTokenEvent({ feature: 'Address Parsing', model: modelConfig.model, inputTokens, outputTokens, sessionId }, forUser);
 
     const jsonString = response.text.trim();
     if (jsonString) {
@@ -812,6 +863,10 @@ export async function parseApplicationDetailsWithGemini(
 ): Promise<Partial<ApplicationFormData>> {
   if (!description) return {};
 
+  if (description.length > AI_GUARDRAILS.MAX_APPLICATION_DESCRIPTION_CHARS) {
+      throw new Error(`Description too long. Max ${AI_GUARDRAILS.MAX_APPLICATION_DESCRIPTION_CHARS} characters.`);
+  }
+
   const instruction = isProxy
     ? `You are parsing a description submitted by a proxy on behalf of an applicant. Your task is to extract the **applicant's** details from the text. The applicant is the person who experienced the hardship.`
     : `Parse the user's description of their situation into a structured JSON object for a relief application.`;
@@ -836,23 +891,25 @@ export async function parseApplicationDetailsWithGemini(
 
     User's description: "${description}"
   `;
-  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-  const model = 'gemini-2.5-flash';
+  
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-app-parsing');
+  const modelConfig = modelConfigService.getModelConfig('APP_PARSING');
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model: modelConfig.model,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: applicationDetailsJsonSchema,
+        maxOutputTokens: modelConfig.maxTokens,
+        temperature: modelConfig.temperature,
       },
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Application Parsing', model, inputTokens, outputTokens, sessionId }, applicantProfile);
+    logTokenEvent({ feature: 'Application Parsing', model: modelConfig.model, inputTokens, outputTokens, sessionId }, applicantProfile);
 
     const jsonString = response.text.trim();
     if (jsonString) {

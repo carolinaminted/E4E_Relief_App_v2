@@ -19,6 +19,10 @@ const MODEL_PRICING: ModelPricing = {
     input: 0.0035,
     output: 0.0070,
   },
+  'gemini-3-pro-preview': {
+    input: 0.0035, // Estimated using Pro pricing
+    output: 0.0070,
+  },
 };
 
 // --- Core Functions ---
@@ -68,7 +72,7 @@ export function estimateTokens(text: string): number {
 export async function logEvent(
   data: {
     feature: TokenEvent['feature'];
-    model: TokenEvent['model'];
+    model: string;
     inputTokens: number;
     outputTokens: number;
     cachedInputTokens?: number;

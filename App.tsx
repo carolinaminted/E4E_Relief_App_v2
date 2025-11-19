@@ -40,6 +40,7 @@ import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
 import ReliefQueuePage from './components/ReliefQueuePage';
 import ChatbotWidget from './components/ChatbotWidget';
+import SessionTimeoutHandler from './components/SessionTimeoutHandler';
 
 type AuthState = {
     status: 'loading' | 'signedIn' | 'signedOut';
@@ -95,7 +96,7 @@ function App() {
             // Set language based on user profile preference
             if (profile.preferredLanguage) {
               const langCode = profile.preferredLanguage.toLowerCase().slice(0, 2);
-              if ((langCode === 'en' || langCode === 'es') && i18n.language !== langCode) {
+              if ((langCode === 'en' || langCode === 'es' || langCode === 'ja') && i18n.language !== langCode) {
                 i18n.changeLanguage(langCode);
               }
             }
@@ -298,18 +299,49 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: GlobalPage) => {
-    if (page === 'reliefQueue' && targetPage !== 'classVerification') {
-        console.log("Gating navigation. User is in relief queue.");
+    // 1. Auth pages always allowed
+    if (['login', 'register', 'forgotPassword'].includes(targetPage)) {
+        setPage(targetPage);
         return;
     }
 
-    if (targetPage === 'apply' && !isVerifiedAndEligible) {
-        console.log("Gating 'apply' page. User not verified or not eligible.");
-        setPage('classVerification');
-    } else {
+    // 2. Admin bypass
+    if (currentUser?.role === 'Admin') {
         setPage(targetPage);
+        return;
     }
-  }, [isVerifiedAndEligible, page]);
+
+    // 3. Relief Queue Trap
+    if (page === 'reliefQueue') {
+        if (targetPage === 'classVerification' || targetPage === 'home' || targetPage === 'profile') {
+             setPage(targetPage);
+        }
+        return;
+    }
+
+    // 4. General Ineligibility Guard
+    if (!isVerifiedAndEligible) {
+        const allowedIneligiblePages: GlobalPage[] = [
+            'home', 
+            'classVerification', 
+            'reliefQueue', 
+            'profile', 
+            'eligibility'
+        ];
+        
+        if (!allowedIneligiblePages.includes(targetPage)) {
+            console.warn(`Access denied to ${targetPage} for ineligible user.`);
+            // If the user is trying to access a blocked page (like Support or Donate),
+            // we keep them on the current page (likely Home) or redirect to Home if they are somewhere weird.
+            if (page !== 'home' && page !== 'profile' && page !== 'classVerification') {
+                 setPage('home');
+            }
+            return;
+        }
+    }
+
+    setPage(targetPage);
+  }, [isVerifiedAndEligible, page, currentUser]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
@@ -621,14 +653,18 @@ function App() {
     setPage('submissionSuccess');
   }, [currentUser, authState.claims.admin, activeFund]);
 
-  const handleDraftUpdate = useCallback((partialDraft: Partial<ApplicationFormData>) => {
+  const handleDraftUpdate = useCallback((partialDraft: {
+      profileData?: Partial<UserProfile>;
+      eventData?: Partial<EventData>;
+      agreementData?: Partial<ApplicationFormData['agreementData']>;
+  }) => {
     if (!currentUser) return;
     
     setApplicationDraft(prevDraft => {
         // Deep merge the new partial draft into the previous state, ensuring profileData is always seeded.
         const newDraft: Partial<ApplicationFormData> = {
             ...prevDraft,
-            ...partialDraft,
+            ...(partialDraft as Partial<ApplicationFormData>),
             profileData: {
                 ...currentUser,
                 ...(prevDraft?.profileData || {}),
@@ -639,6 +675,8 @@ function App() {
                 ...(partialDraft.eventData || {}),
             } as EventData,
             agreementData: {
+                shareStory: null,
+                receiveAdditionalInfo: null,
                 ...(prevDraft?.agreementData || {}),
                 ...(partialDraft.agreementData || {}),
             },
@@ -687,7 +725,8 @@ function App() {
     }
 
     if (functionName === 'addOrUpdateExpense') {
-        const prevEventData = applicationDraft?.eventData || {};
+        // FIX: Ensure prevEventData has expenses array to avoid property access error
+        const prevEventData = applicationDraft?.eventData || { expenses: [] };
         const newExpenses: Expense[] = [...(prevEventData.expenses || [])];
         
         if (args.expenses && Array.isArray(args.expenses)) {
@@ -723,12 +762,12 @@ function App() {
     }
 
     if (functionName === 'updateAgreements') {
-        const agreementUpdates = { ...args };
+        const updates = args as { shareStory?: boolean; receiveAdditionalInfo?: boolean };
+        const currentAgreements = applicationDraft?.agreementData;
+
         newDraft.agreementData = {
-            shareStory: null,
-            receiveAdditionalInfo: null,
-            ...applicationDraft?.agreementData,
-            ...agreementUpdates,
+            shareStory: updates.shareStory !== undefined ? updates.shareStory : (currentAgreements?.shareStory ?? null),
+            receiveAdditionalInfo: updates.receiveAdditionalInfo !== undefined ? updates.receiveAdditionalInfo : (currentAgreements?.receiveAdditionalInfo ?? null),
         };
     }
     
@@ -761,6 +800,9 @@ function App() {
     }
     
     if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
+    
+    // Determine available languages for current fund, defaulting to full list if not specified to prevent UI hiding issues
+    const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
     switch (page) {
       case 'reliefQueue':
@@ -794,7 +836,7 @@ function App() {
                     onSetActiveIdentity={handleSetActiveIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
-                    activeFund={activeFund}
+                    activeFund={activeFund} // FIX: Add missing prop
                 />;
       case 'myApplications':
         return <MyApplicationsPage 
@@ -865,74 +907,83 @@ function App() {
         <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
             <IconDefs />
             <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
-                {renderPage()}
+                <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
+                    {renderPage()}
+                </SessionTimeoutHandler>
             </main>
         </div>
     );
   }
+  
+  // Determine available languages for current fund, defaulting to full list if not specified
+  const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
   return (
-    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
-      <IconDefs />
-      <SideNavBar 
-        navigate={navigate}
-        currentPage={page}
-        userRole={currentUser.role}
-        userName={currentUser.firstName}
-        onLogout={handleLogout}
-        canApply={canApply}
-        eligibilityStatus={currentUser.eligibilityStatus}
-        cvStatus={currentUser.classVerificationStatus}
-      />
-
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <Header 
-            userName={currentUser.firstName}
-            onLogout={handleLogout}
-            eligibilityStatus={currentUser.eligibilityStatus}
-            cvStatus={currentUser.classVerificationStatus}
-        />
-        <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
-          <div className="hidden md:block">
-            {page === 'profile' && (
-               <div className="relative flex justify-center items-center my-8">
-                  <div className="text-center">
-                      <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {t('profilePage.title')}
-                      </h1>
-                      {activeIdentity && (
-                        <div className="mt-2 flex flex-col items-center gap-2">
-                          <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
-                        </div>
-                      )}
-                  </div>
-              </div>
-            )}
-          </div>
-          {renderPage()}
-          {!pagesWithoutFooter.includes(page) && <Footer />}
-        </main>
-        
-        <BottomNavBar
+    <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
+          <IconDefs />
+          <SideNavBar 
             navigate={navigate}
             currentPage={page}
             userRole={currentUser.role}
+            userName={currentUser.firstName}
+            onLogout={handleLogout}
             canApply={canApply}
-        />
-
-        {!pagesWithoutChatbot.includes(page) && (
-          <ChatbotWidget
-            userProfile={currentUser}
-            applications={userApplications}
-            onChatbotAction={handleChatbotAction}
-            isOpen={isChatbotOpen}
-            setIsOpen={setIsChatbotOpen}
-            scrollContainerRef={mainRef}
-            activeFund={activeFund}
+            eligibilityStatus={currentUser.eligibilityStatus}
+            cvStatus={currentUser.classVerificationStatus}
+            supportedLanguages={supportedLanguages}
           />
-        )}
-      </div>
-    </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            <Header 
+                userName={currentUser.firstName}
+                onLogout={handleLogout}
+                eligibilityStatus={currentUser.eligibilityStatus}
+                cvStatus={currentUser.classVerificationStatus}
+                supportedLanguages={supportedLanguages}
+            />
+            <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
+              <div className="hidden md:block">
+                {page === 'profile' && (
+                   <div className="relative flex justify-center items-center my-8">
+                      <div className="text-center">
+                          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                            {t('profilePage.title')}
+                          </h1>
+                          {activeIdentity && (
+                            <div className="mt-2 flex flex-col items-center gap-2">
+                              <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
+                            </div>
+                          )}
+                      </div>
+                  </div>
+                )}
+              </div>
+              {renderPage()}
+              {!pagesWithoutFooter.includes(page) && <Footer />}
+            </main>
+            
+            <BottomNavBar
+                navigate={navigate}
+                currentPage={page}
+                userRole={currentUser.role}
+                canApply={canApply}
+            />
+
+            {!pagesWithoutChatbot.includes(page) && (
+              <ChatbotWidget
+                userProfile={currentUser}
+                applications={userApplications}
+                onChatbotAction={handleChatbotAction}
+                isOpen={isChatbotOpen}
+                setIsOpen={setIsChatbotOpen}
+                scrollContainerRef={mainRef}
+                activeFund={activeFund}
+              />
+            )}
+          </div>
+        </div>
+    </SessionTimeoutHandler>
   );
 }
 

@@ -54,6 +54,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data, onSort, sortCon
             <SortableTh sortKey="fundName" onSort={onSort} sortConfig={sortConfig}>Fund</SortableTh>
             <SortableTh sortKey="date" onSort={onSort} sortConfig={sortConfig}>Date</SortableTh>
             <SortableTh sortKey="feature" onSort={onSort} sortConfig={sortConfig}>Feature</SortableTh>
+            <SortableTh sortKey="model" onSort={onSort} sortConfig={sortConfig}>Model</SortableTh>
             <SortableTh sortKey="input" onSort={onSort} sortConfig={sortConfig} className="text-right">Input</SortableTh>
             <SortableTh sortKey="cached" onSort={onSort} sortConfig={sortConfig} className="text-right">Cached</SortableTh>
             <SortableTh sortKey="output" onSort={onSort} sortConfig={sortConfig} className="text-right">Output</SortableTh>
@@ -64,11 +65,12 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data, onSort, sortCon
         <tbody>
           {data.length > 0 ? (
               data.map((row, index) => (
-                  <tr key={`${row.user}-${row.session}-${row.feature}-${index}`} className="border-b border-[#005ca0] hover:bg-[#004b8d]/50">
+                  <tr key={`${row.user}-${row.session}-${row.feature}-${row.model}-${index}`} className="border-b border-[#005ca0] hover:bg-[#004b8d]/50">
                       <td className="px-4 py-2 font-medium text-white truncate" title={row.user}>{row.userName}</td>
                       <td className="px-4 py-2 text-white">{row.fundName}</td>
                       <td className="px-4 py-2 text-white">{row.date}</td>
                       <td className="px-4 py-2 text-white">{row.feature}</td>
+                      <td className="px-4 py-2 text-white font-mono text-xs">{row.model}</td>
                       <td className="px-4 py-2 text-white text-right">{row.input.toLocaleString()}</td>
                       <td className="px-4 py-2 text-white text-right">{row.cached.toLocaleString()}</td>
                       <td className="px-4 py-2 text-white text-right">{row.output.toLocaleString()}</td>
@@ -78,7 +80,7 @@ const TokenUsageTable: React.FC<TokenUsageTableProps> = ({ data, onSort, sortCon
               ))
           ) : (
               <tr>
-                  <td colSpan={9} className="text-center py-8 text-white">
+                  <td colSpan={10} className="text-center py-8 text-white">
                       No token usage data found for the current search criteria.
                   </td>
               </tr>

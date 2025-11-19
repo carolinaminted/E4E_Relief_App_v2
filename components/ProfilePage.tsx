@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import type { Application, UserProfile, Address, FundIdentity, ActiveIdentity } from '../types';
+
+import React, { useState, useMemo } from 'react';
+import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import type { Fund } from '../data/fundData';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
@@ -11,12 +11,13 @@ import RequiredIndicator from './RequiredIndicator';
 import { FormInput, FormRadioGroup, AddressFields } from './FormControls';
 import PolicyModal from './PolicyModal';
 import EligibilityIndicator from './EligibilityIndicator';
+import { useTranslation } from 'react-i18next';
 
 interface ProfilePageProps {
-  navigate: (page: 'home' | 'apply' | 'classVerification' | 'myApplications') => void;
+  navigate: (page: 'home' | 'apply' | 'classVerification') => void;
   applications: Application[];
   userProfile: UserProfile;
-  onProfileUpdate: (updatedProfile: UserProfile, options?: { silent?: boolean }) => Promise<void>;
+  onProfileUpdate: (updatedProfile: UserProfile) => Promise<void>;
   identities: FundIdentity[];
   activeIdentity: ActiveIdentity | null;
   onSetActiveIdentity: (identityId: string) => void;
@@ -45,77 +46,40 @@ const NotificationIcon: React.FC = () => (
     </span>
 );
 
-type ProfileSection = 'identities' | 'applications' | 'contact' | 'addresses' | 'additionalDetails' | 'consent';
+
+type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity, activeFund }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [openSection, setOpenSection] = useState<ProfileSection | null>(() => {
-    const saved = localStorage.getItem('profilePage_openSection');
-    return saved ? JSON.parse(saved) : 'applications';
-  });
+  const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
-  const [showAllIdentities, setShowAllIdentities] = useState(false);
   
-  const [showMailingAddress, setShowMailingAddress] = useState(false);
-  const frontRef = useRef<HTMLDivElement>(null);
-  const backRef = useRef<HTMLDivElement>(null);
-  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    localStorage.setItem('profilePage_openSection', JSON.stringify(openSection));
-  }, [openSection]);
-  
-  useLayoutEffect(() => {
-    const calculateHeight = () => {
-        if (openSection === 'addresses') {
-            const frontHeight = frontRef.current?.scrollHeight ?? 0;
-            const backHeight = backRef.current?.scrollHeight ?? 0;
-            if (formData.isMailingAddressSame) {
-                setCardHeight(frontHeight > 0 ? frontHeight : undefined);
-            } else {
-                setCardHeight(Math.max(frontHeight, backHeight) > 0 ? Math.max(frontHeight, backHeight) : undefined);
-            }
-        }
-    };
-    calculateHeight();
-    const timer = setTimeout(calculateHeight, 100); // Recalculate after render
-    window.addEventListener('resize', calculateHeight);
-    return () => {
-        window.removeEventListener('resize', calculateHeight);
-        clearTimeout(timer);
-    };
-}, [openSection, formData.isMailingAddressSame, showMailingAddress]);
-
-
-  const yes = t('common.yes');
-  const no = t('common.no');
-
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
       return {
-        twelveMonthRemaining: activeFund?.limits.twelveMonthMax ?? 0,
-        lifetimeRemaining: activeFund?.limits.lifetimeMax ?? 0,
+        twelveMonthRemaining: 10000,
+        lifetimeRemaining: 50000,
       };
     }
 
+    // The most recent application is the last one in the array, which reflects the latest state.
     const latestApplication = applications[applications.length - 1];
     
     return {
       twelveMonthRemaining: latestApplication.twelveMonthGrantRemaining,
       lifetimeRemaining: latestApplication.lifetimeGrantRemaining,
     };
-  }, [applications, activeFund]);
+  }, [applications]);
 
+  // Create a reversed list for display so newest applications appear first
   const sortedApplicationsForDisplay = useMemo(() => {
     return [...applications].reverse();
   }, [applications]);
-
-  const applicationsToShow = sortedApplicationsForDisplay.slice(0, 2);
 
   const currentActiveFullIdentity = useMemo(() => {
     if (!activeIdentity) return null;
@@ -126,29 +90,32 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     return [...identities].sort((a, b) => new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime());
   }, [identities]);
 
-  const identitiesToDisplay = useMemo(() => {
-    return showAllIdentities ? sortedIdentities : sortedIdentities.slice(0, 2);
-  }, [sortedIdentities, showAllIdentities]);
-
   const sectionHasErrors = useMemo(() => {
+    // Contact
     const contactHasBlanks = !formData.firstName || !formData.lastName || !formData.mobileNumber;
     
+    // Primary Address
     const primaryAddressHasBlanks = !formData.primaryAddress.country || !formData.primaryAddress.street1 || !formData.primaryAddress.city || !formData.primaryAddress.state || !formData.primaryAddress.zip;
+    
+    // Additional Details
+    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
+    
+    // Mailing Address
     let mailingAddressHasBlanks = false;
     if (formData.isMailingAddressSame === null) {
         mailingAddressHasBlanks = true;
     } else if (!formData.isMailingAddressSame) {
         mailingAddressHasBlanks = !formData.mailingAddress?.country || !formData.mailingAddress?.street1 || !formData.mailingAddress?.city || !formData.mailingAddress?.state || !formData.mailingAddress?.zip;
     }
-    
-    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
-    
+
+    // Consent
     const consentHasBlanks = !formData.ackPolicies || !formData.commConsent || !formData.infoCorrect;
 
     return {
         contact: contactHasBlanks,
-        addresses: primaryAddressHasBlanks || mailingAddressHasBlanks,
+        primaryAddress: primaryAddressHasBlanks,
         additionalDetails: additionalDetailsHasBlanks,
+        mailingAddress: mailingAddressHasBlanks,
         consent: consentHasBlanks,
     };
   }, [formData]);
@@ -163,10 +130,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     if (field === 'mobileNumber') {
       finalValue = formatPhoneNumber(value);
     }
-    if (field === 'isMailingAddressSame') {
-        setShowMailingAddress(!value);
-    }
-
     setFormData(prev => ({ ...prev, [field]: finalValue }));
 
     if (errors[field as string]) {
@@ -182,7 +145,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     setFormData(prev => ({
         ...prev,
         [addressType]: {
-            ...(prev[addressType] || { country: '', street1: '', city: '', state: '', zip: '' }),
+            ...(prev[addressType] || { country: '', street1: '', city: '', state: '', zip: '' }), // Ensure mailingAddress is not undefined
             [field]: value
         }
     }));
@@ -204,6 +167,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             ...parsedAddress
         }
     }));
+    // Clear related errors
     setErrors(prev => {
       const newErrors = { ...prev };
       Object.keys(parsedAddress).forEach(field => {
@@ -219,54 +183,66 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const validate = () => {
     const newErrors: Record<string, any> = {};
 
-    if (!formData.firstName) newErrors.firstName = t('validation.firstNameRequired');
-    if (!formData.lastName) newErrors.lastName = t('validation.lastNameRequired');
+    // Contact Info
+    if (!formData.firstName) newErrors.firstName = 'First name is required.';
+    if (!formData.lastName) newErrors.lastName = 'Last name is required.';
     if (!formData.mobileNumber) {
-        newErrors.mobileNumber = t('validation.mobileNumberRequired');
+        newErrors.mobileNumber = 'Mobile number is required.';
     } else {
         const digitCount = formData.mobileNumber.replace(/[^\d]/g, '').length;
         if (digitCount < 7) {
-            newErrors.mobileNumber = t('validation.mobileNumberInvalid');
+            newErrors.mobileNumber = 'Please enter a valid phone number (at least 7 digits).';
         }
     }
 
+    // Primary Address
     const primaryAddrErrors: Record<string, string> = {};
-    if (!formData.primaryAddress.country) primaryAddrErrors.country = t('validation.countryRequired');
-    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = t('validation.street1Required');
-    if (!formData.primaryAddress.city) primaryAddrErrors.city = t('validation.cityRequired');
-    if (!formData.primaryAddress.state) primaryAddrErrors.state = t('validation.stateRequired');
-    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = t('validation.zipRequired');
+    if (!formData.primaryAddress.country) primaryAddrErrors.country = 'Country is required.';
+    if (!formData.primaryAddress.street1) primaryAddrErrors.street1 = 'Street 1 is required.';
+    if (!formData.primaryAddress.city) primaryAddrErrors.city = 'City is required.';
+    if (!formData.primaryAddress.state) primaryAddrErrors.state = 'State is required.';
+    if (!formData.primaryAddress.zip) primaryAddrErrors.zip = 'ZIP code is required.';
     if (Object.keys(primaryAddrErrors).length > 0) newErrors.primaryAddress = primaryAddrErrors;
 
-    if (!formData.employmentStartDate) newErrors.employmentStartDate = t('validation.employmentStartDateRequired');
-    if (!formData.eligibilityType) newErrors.eligibilityType = t('validation.eligibilityTypeRequired');
-    if (formData.householdIncome === '') newErrors.householdIncome = t('validation.householdIncomeRequired');
-    if (formData.householdSize === '') newErrors.householdSize = t('validation.householdSizeRequired');
-    if (!formData.homeowner) newErrors.homeowner = t('validation.homeownerRequired');
+    // Additional Details
+    if (!formData.employmentStartDate) newErrors.employmentStartDate = 'Employment start date is required.';
+    if (!formData.eligibilityType) newErrors.eligibilityType = 'Eligibility type is required.';
+    if (formData.householdIncome === '') newErrors.householdIncome = 'Household income is required.';
+    if (formData.householdSize === '') newErrors.householdSize = 'Household size is required.';
+    if (!formData.homeowner) newErrors.homeowner = 'Homeowner status is required.';
     
+    // Mailing Address (if applicable)
     if (formData.isMailingAddressSame === null) {
-        newErrors.isMailingAddressSame = t('validation.mailingAddressSameRequired');
+        newErrors.isMailingAddressSame = 'Please select an option for the mailing address.';
     } else if (!formData.isMailingAddressSame) {
         const mailingAddrErrors: Record<string, string> = {};
-        if (!formData.mailingAddress?.country) mailingAddrErrors.country = t('validation.countryRequired');
-        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = t('validation.street1Required');
-        if (!formData.mailingAddress?.city) mailingAddrErrors.city = t('validation.cityRequired');
-        if (!formData.mailingAddress?.state) mailingAddrErrors.state = t('validation.stateRequired');
-        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = t('validation.zipRequired');
+        if (!formData.mailingAddress?.country) mailingAddrErrors.country = 'Country is required.';
+        if (!formData.mailingAddress?.street1) mailingAddrErrors.street1 = 'Street 1 is required.';
+        if (!formData.mailingAddress?.city) mailingAddrErrors.city = 'City is required.';
+        if (!formData.mailingAddress?.state) mailingAddrErrors.state = 'State is required.';
+        if (!formData.mailingAddress?.zip) mailingAddrErrors.zip = 'ZIP code is required.';
         if (Object.keys(mailingAddrErrors).length > 0) newErrors.mailingAddress = mailingAddrErrors;
     }
 
-    if (!formData.ackPolicies) newErrors.ackPolicies = t('validation.ackPoliciesRequired');
-    if (!formData.commConsent) newErrors.commConsent = t('validation.commConsentRequired');
-    if (!formData.infoCorrect) newErrors.infoCorrect = t('validation.infoCorrectRequired');
+    // Consent
+    if (!formData.ackPolicies) newErrors.ackPolicies = 'You must agree to the policies.';
+    if (!formData.commConsent) newErrors.commConsent = 'You must consent to communications.';
+    if (!formData.infoCorrect) newErrors.infoCorrect = 'You must confirm your information is correct.';
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
         let firstErrorSection: ProfileSection | null = null;
-        if (newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) firstErrorSection = 'contact';
-        else if (newErrors.primaryAddress || newErrors.mailingAddress || newErrors.isMailingAddressSame) firstErrorSection = 'addresses';
-        else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) firstErrorSection = 'additionalDetails';
-        else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) firstErrorSection = 'consent';
+        if (newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) {
+            firstErrorSection = 'contact';
+        } else if (newErrors.primaryAddress) {
+            firstErrorSection = 'primaryAddress';
+        } else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) {
+            firstErrorSection = 'mailingAddress';
+        } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
+            firstErrorSection = 'additionalDetails';
+        } else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) {
+            firstErrorSection = 'consent';
+        }
         
         if (firstErrorSection) {
             setOpenSection(firstErrorSection);
@@ -301,11 +277,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             {currentActiveFullIdentity && (
               <div className="mt-2 flex flex-col items-center gap-2">
                 <p className="text-lg text-gray-300">{currentActiveFullIdentity.fundName} ({currentActiveFullIdentity.fundCode})</p>
+                <EligibilityIndicator 
+                  cvStatus={currentActiveFullIdentity.classVerificationStatus} 
+                  eligibilityStatus={currentActiveFullIdentity.eligibilityStatus}
+                  onClick={() => onAddIdentity(currentActiveFullIdentity.fundCode)} 
+                />
               </div>
             )}
         </div>
       </div>
       
+      {/* Applications Section */}
         <section className="border-b border-[#005ca0] pb-4 mb-4">
             <button type="button" onClick={() => toggleSection('applications')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'applications'}>
                 <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.myApplicationsTitle')}</h2>
@@ -329,29 +311,24 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <div className="space-y-4">
                 {applications.length > 0 ? (
                     <>
-                        {applicationsToShow.map(app => (
+                        {sortedApplicationsForDisplay.map(app => (
                         <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{app.event}</p>
-                            <p className="text-sm text-gray-300">{t('profilePage.submitted')}: {new Date(app.submittedDate).toLocaleDateString('en-CA')} at {new Date(app.submittedDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', hour12: true })}</p>
+                            <p className="text-sm text-gray-300">{t('profilePage.submitted')}: {new Date(app.submittedDate).toLocaleString(i18n.language, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${app.requestedAmount.toFixed(2)}</p>
-                            <p className="text-sm text-gray-300">{t('profilePage.status')}: <span className={`font-medium ${statusStyles[app.status]}`}>{app.status}</span></p>
+                            <p className="text-sm text-gray-300">{t('profilePage.status')}: <span className={`font-medium ${statusStyles[app.status]}`}>{t(`applicationStatus.${app.status}`)}</span></p>
                             </div>
                         </button>
                         ))}
-                        {sortedApplicationsForDisplay.length > 2 && (
-                            <button onClick={() => navigate('myApplications')} className="w-full text-center bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
-                                {t('profilePage.seeAllApplications')}
-                            </button>
-                        )}
                         <div className="flex justify-center pt-4">
                             <button 
                                 onClick={() => navigate('apply')} 
                                 className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
                                 disabled={userProfile.eligibilityStatus !== 'Eligible'}
-                                title={userProfile.eligibilityStatus !== 'Eligible' ? "Class Verification required to access applications." : ""}
+                                title={userProfile.eligibilityStatus !== 'Eligible' ? t('homePage.applyTooltipVerification') : ""}
                             >
                                 {t('profilePage.applyNow')}
                             </button>
@@ -364,7 +341,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                             onClick={() => navigate('apply')} 
                             className="mt-4 bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed"
                             disabled={userProfile.eligibilityStatus !== 'Eligible'}
-                            title={userProfile.eligibilityStatus !== 'Eligible' ? "Class Verification required to access applications." : ""}
+                            title={userProfile.eligibilityStatus !== 'Eligible' ? t('homePage.applyTooltipVerification') : ""}
                         >
                             {t('profilePage.applyNow')}
                         </button>
@@ -374,6 +351,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </section>
 
+      {/* Identities Section */}
       <section className="border-b border-[#005ca0] pb-4 mb-4">
         <button type="button" onClick={() => toggleSection('identities')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'identities'}>
             <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.fundIdentitiesTitle')}</h2>
@@ -384,9 +362,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 {t('profilePage.fundIdentitiesDescription')}
             </p>
             <div className="space-y-4">
-                {identitiesToDisplay.map(identity => {
+                {sortedIdentities.map(identity => {
                     const isActive = activeIdentity?.id === identity.id;
-                    const isEligible = identity.eligibilityStatus === 'Eligible';
                     return (
                         <div key={identity.id} className={`bg-[#004b8d] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[#ff8400]' : 'border-transparent'}`}>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -396,36 +373,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
-                                        <EligibilityIndicator eligibilityStatus={identity.eligibilityStatus} cvStatus={identity.classVerificationStatus} />
+                                        <EligibilityIndicator cvStatus={identity.classVerificationStatus} eligibilityStatus={identity.eligibilityStatus} onClick={() => onAddIdentity(identity.fundCode)} />
+                                        {isActive && <span className="text-xs font-bold text-green-300">({t('profilePage.active')})</span>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
-                                     {!isEligible && (
-                                        <button
-                                            onClick={() => onAddIdentity(identity.fundCode)}
-                                            className="bg-yellow-800/50 text-yellow-300 text-sm font-semibold py-2 px-3 rounded-md transition-colors duration-200 hover:bg-yellow-700/50"
-                                        >
-                                            Re-verify
-                                        </button>
-                                    )}
                                     {identities.length > 1 && (
-                                        isActive ? (
-                                            <span className="bg-green-800/50 text-green-300 text-sm font-semibold py-2 px-3 rounded-md flex items-center gap-2 cursor-default">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                </svg>
-                                                {t('profilePage.active')}
-                                            </span>
-                                        ) : (
-                                            <button
-                                                onClick={() => onSetActiveIdentity(identity.id)}
-                                                disabled={!isEligible}
-                                                className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                                aria-label={`Set ${identity.fundName} as active identity`}
-                                            >
-                                                {t('profilePage.setActive')}
-                                            </button>
-                                        )
+                                        <button
+                                            onClick={() => onSetActiveIdentity(identity.id)}
+                                            disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
+                                            className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                            aria-label={`Set ${identity.fundName} as active identity`}
+                                        >
+                                            {t('profilePage.setActive')}
+                                        </button>
                                     )}
                                      <button
                                         onClick={() => onRemoveIdentity(identity.id)}
@@ -440,39 +401,33 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         </div>
                     )
                 })}
-            </div>
-            
-            {!isAddingIdentity ? (
-                <div className="mt-4 flex flex-col sm:flex-row gap-4">
-                    {sortedIdentities.length > 2 && (
-                        <button onClick={() => setShowAllIdentities(prev => !prev)} className="flex-1 text-center bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
-                            {showAllIdentities ? t('profilePage.showLess', 'Show Less') : t('profilePage.seeAll', 'See All')}
-                        </button>
-                    )}
-                    <button onClick={() => setIsAddingIdentity(true)} className="flex-1 bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
+                {!isAddingIdentity ? (
+                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
                         {t('profilePage.addNewIdentity')}
                     </button>
-                </div>
-            ) : (
-                <div className="mt-4 bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
-                    <h4 className="text-md font-semibold text-white mb-2">{t('profilePage.enterNewFundCode')}</h4>
-                    <div className="flex items-center gap-2">
-                        <input 
-                            type="text"
-                            value={newFundCode}
-                            onChange={e => setNewFundCode(e.target.value)}
-                            className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
-                            placeholder="e.g., JHH"
-                        />
-                         <button onClick={() => { setIsAddingIdentity(false); setNewFundCode(''); }} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.cancel')}</button>
-                        <button onClick={handleAddIdentitySubmit} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.verify')}</button>
+                ) : (
+                    <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+                        <h4 className="text-md font-semibold text-white mb-2">{t('profilePage.enterNewFundCode')}</h4>
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="text"
+                                value={newFundCode}
+                                onChange={e => setNewFundCode(e.target.value)}
+                                className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[#ff8400]"
+                                placeholder="e.g., JHH"
+                                autoFocus
+                            />
+                             <button onClick={() => { setIsAddingIdentity(false); setNewFundCode(''); }} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.cancel')}</button>
+                            <button onClick={handleAddIdentitySubmit} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.verify')}</button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
       </section>
 
-      <form onSubmit={handleSave} noValidate className="space-y-4">
+      <form onSubmit={handleSave} className="space-y-4">
+        {/* 1a Contact Information */}
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'contact'} aria-controls="contact-section">
                 <div className="flex items-center gap-3">
@@ -482,29 +437,23 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <ChevronIcon isOpen={openSection === 'contact'} />
             </button>
             <div id="contact-section" className={`transition-all duration-500 ease-in-out ${openSection === 'contact' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 pt-4">
-                    <div className="grid grid-cols-5 gap-x-4">
-                        <div className="col-span-3">
-                            <FormInput label={t('profilePage.firstName')} id="firstName" required value={formData.firstName} onChange={e => handleFormChange('firstName', e.target.value)} error={errors.firstName} />
-                        </div>
-                        <div className="col-span-2">
-                            <FormInput label={t('profilePage.middleName')} id="middleName" value={formData.middleName || ''} onChange={e => handleFormChange('middleName', e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-5 gap-x-4">
-                        <div className="col-span-3">
-                             <FormInput label={t('profilePage.lastName')} id="lastName" required value={formData.lastName} onChange={e => handleFormChange('lastName', e.target.value)} error={errors.lastName} />
-                        </div>
-                        <div className="col-span-2">
-                            <FormInput label={t('profilePage.suffix')} id="suffix" value={formData.suffix || ''} onChange={e => handleFormChange('suffix', e.target.value)} />
-                        </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <FormInput label={t('profilePage.firstName')} id="firstName" required value={formData.firstName} onChange={e => handleFormChange('firstName', e.target.value)} error={errors.firstName} />
+                    <FormInput label={t('profilePage.middleName')} id="middleName" value={formData.middleName || ''} onChange={e => handleFormChange('middleName', e.target.value)} />
+                    <FormInput label={t('profilePage.lastName')} id="lastName" required value={formData.lastName} onChange={e => handleFormChange('lastName', e.target.value)} error={errors.lastName} />
+                    <FormInput label={t('profilePage.suffix')} id="suffix" value={formData.suffix || ''} onChange={e => handleFormChange('suffix', e.target.value)} />
                     <FormInput label={t('profilePage.email')} id="email" required value={formData.email} disabled />
                     <FormInput label={t('profilePage.mobileNumber')} id="mobileNumber" required value={formData.mobileNumber} onChange={e => handleFormChange('mobileNumber', e.target.value)} error={errors.mobileNumber} placeholder="(555) 555-5555" />
                 </div>
                 {openSection === 'contact' && (
                     <div className="flex justify-end pt-4">
-                        <button type="button" onClick={() => toggleSection('contact')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity" aria-controls="contact-section" aria-expanded="true">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('contact')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="contact-section"
+                            aria-expanded="true"
+                        >
                             {t('profilePage.collapse')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -515,67 +464,84 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </fieldset>
 
+        {/* 1b Primary Address */}
         <fieldset className="border-b border-[#005ca0] pb-4">
-            <button type="button" onClick={() => toggleSection('addresses')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'addresses'}>
+            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.addresses')}</h2>
-                    {sectionHasErrors.addresses && openSection !== 'addresses' && <NotificationIcon />}
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.primaryAddressTitle')}</h2>
+                    {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSection === 'addresses'} />
+                <ChevronIcon isOpen={openSection === 'primaryAddress'} />
             </button>
-            <div className={`transition-all duration-500 ease-in-out ${openSection === 'addresses' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="pt-4" aria-live="polite">
-                    <div className="mb-6">
-                        <FormRadioGroup 
-                            legend={t('profilePage.mailingAddressSame')} 
-                            name="isMailingAddressSame" 
-                            options={[yes, no]} 
-                            value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? yes : no)} 
-                            onChange={value => handleFormChange('isMailingAddressSame', value === yes)} 
-                            required 
-                            error={errors.isMailingAddressSame} 
-                        />
-                    </div>
-                    <div className="flip-container">
-                        <div className={`flipper ${!formData.isMailingAddressSame && showMailingAddress ? 'is-flipped' : ''}`} style={{ height: cardHeight ? `${cardHeight}px` : 'auto' }}>
-                            <div className="flip-front" ref={frontRef}>
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.primaryAddressTitle')}</h3>
-                                        {!formData.isMailingAddressSame && (
-                                            <button type="button" onClick={() => setShowMailingAddress(true)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
-                                                {t('profilePage.viewMailingAddress')}
-                                            </button>
-                                        )}
-                                    </div>
-                                    <AddressFields forUser={formData} address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
-                                </div>
-                            </div>
-                            <div className="flip-back" ref={backRef}>
-                                 <div className="space-y-6">
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.mailingAddressTitle')}</h3>
-                                        <button type="button" onClick={() => setShowMailingAddress(false)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
-                                            {t('profilePage.viewPrimaryAddress')}
-                                        </button>
-                                    </div>
-                                    <AddressFields forUser={formData} address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'primaryAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="space-y-6 pt-4">
+                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
                 </div>
-                {openSection === 'addresses' && (
+                {openSection === 'primaryAddress' && (
                     <div className="flex justify-end pt-4">
-                        <button type="button" onClick={() => toggleSection('addresses')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('primaryAddress')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="address-section"
+                            aria-expanded="true"
+                        >
                             {t('profilePage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+            </div>
+        </fieldset>
+        
+        {/* 1d Mailing Address */}
+        <fieldset className="border-b border-[#005ca0] pb-4">
+            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
+                <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('profilePage.mailingAddressTitle')}</h2>
+                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
+                </div>
+                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
+            </button>
+            <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="space-y-4 pt-4">
+                    <FormRadioGroup 
+                        legend={t('profilePage.mailingAddressSame')} 
+                        name="isMailingAddressSame" 
+                        options={[t('common.yes'), t('common.no')]} 
+                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? t('common.yes') : t('common.no'))} 
+                        onChange={value => handleFormChange('isMailingAddressSame', value === t('common.yes'))} 
+                        required
+                        error={errors.isMailingAddressSame}
+                    />
+                    {!formData.isMailingAddressSame && (
+                        <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
+                            <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
+                        </div>
+                    )}
+                </div>
+                {openSection === 'mailingAddress' && (
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('mailingAddress')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="mailing-section"
+                            aria-expanded="true"
+                        >
+                            {t('profilePage.collapse')}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
                         </button>
                     </div>
                 )}
             </div>
         </fieldset>
 
+        {/* 1c Additional Details */}
         <fieldset className="border-b border-[#005ca0] pb-4">
             <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
                 <div className="flex items-center gap-3">
@@ -599,7 +565,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                     />
                     <FormInput type="number" label={t('profilePage.householdIncome')} id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormChange('householdIncome', parseFloat(e.target.value) || '')} error={errors.householdIncome} />
                     <FormInput type="number" label={t('profilePage.householdSize')} id="householdSize" required value={formData.householdSize} onChange={e => handleFormChange('householdSize', parseInt(e.target.value, 10) || '')} error={errors.householdSize} />
-                    <FormRadioGroup legend={t('profilePage.homeowner')} name="homeowner" options={[yes, no]} value={formData.homeowner === 'Yes' ? yes : formData.homeowner === 'No' ? no : ''} onChange={value => handleFormChange('homeowner', value === yes ? 'Yes' : 'No')} required error={errors.homeowner} />
+                    <FormRadioGroup legend={t('profilePage.homeowner')} name="homeowner" options={[t('common.yes'), t('common.no')]} value={formData.homeowner === 'Yes' ? t('common.yes') : formData.homeowner === 'No' ? t('common.no') : ''} onChange={value => handleFormChange('homeowner', value === t('common.yes') ? 'Yes' : 'No')} required error={errors.homeowner} />
                     <SearchableSelector
                         label={t('profilePage.preferredLanguage')}
                         id="preferredLanguage"
@@ -611,15 +577,24 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 </div>
                 {openSection === 'additionalDetails' && (
                     <div className="flex justify-end pt-4">
-                        <button type="button" onClick={() => toggleSection('additionalDetails')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity" aria-controls="details-section" aria-expanded="true">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('additionalDetails')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="details-section"
+                            aria-expanded="true"
+                        >
                             {t('profilePage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
                         </button>
                     </div>
                 )}
             </div>
         </fieldset>
 
+        {/* 1e Consent and Acknowledgement */}
         <fieldset className="pb-4">
             <button type="button" onClick={() => toggleSection('consent')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'consent'} aria-controls="consent-section">
                 <div className="flex items-center gap-3">
@@ -630,17 +605,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </button>
             <div id="consent-section" className={`transition-all duration-500 ease-in-out ${openSection === 'consent' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-3 pt-4">
-                    {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
+                     {errors.ackPolicies && <p className="text-red-400 text-xs">{errors.ackPolicies}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="ackPolicies" required checked={formData.ackPolicies} onChange={e => handleFormChange('ackPolicies', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="ackPolicies" className="flex items-center ml-3 text-sm text-white">{t('profilePage.ackPolicies')} <RequiredIndicator required isMet={formData.ackPolicies} /></label>
                     </div>
-                    {errors.commConsent && <p className="text-red-400 text-xs">{errors.commConsent}</p>}
+                     {errors.commConsent && <p className="text-red-400 text-xs">{errors.commConsent}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="commConsent" required checked={formData.commConsent} onChange={e => handleFormChange('commConsent', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="commConsent" className="flex items-center ml-3 text-sm text-white">{t('profilePage.commConsent')} <RequiredIndicator required isMet={formData.commConsent} /></label>
                     </div>
-                    {errors.infoCorrect && <p className="text-red-400 text-xs">{errors.infoCorrect}</p>}
+                     {errors.infoCorrect && <p className="text-red-400 text-xs">{errors.infoCorrect}</p>}
                     <div className="flex items-start">
                         <input type="checkbox" id="infoCorrect" required checked={formData.infoCorrect} onChange={e => handleFormChange('infoCorrect', e.target.checked)} className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1" />
                         <label htmlFor="infoCorrect" className="flex items-center ml-3 text-sm text-white">{t('profilePage.infoCorrect')} <RequiredIndicator required isMet={formData.infoCorrect} /></label>
@@ -648,9 +623,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 </div>
                 {openSection === 'consent' && (
                     <div className="flex justify-end pt-4">
-                        <button type="button" onClick={() => toggleSection('consent')} className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity" aria-controls="consent-section" aria-expanded="true">
+                        <button
+                            type="button"
+                            onClick={() => toggleSection('consent')}
+                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity"
+                            aria-controls="consent-section"
+                            aria-expanded="true"
+                        >
                             {t('profilePage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[#ff8400]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
                         </button>
                     </div>
                 )}
@@ -664,16 +647,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 </div>
             )}
             <button type="submit" className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-8 rounded-md transition-colors duration-200">{t('profilePage.saveButton')}</button>
-            <button
-              type="button"
-              onClick={() => setIsPolicyModalOpen(true)}
-              className="text-xs text-[#898c8d] hover:text-white transition-colors duration-200 mt-4"
-            >
-              {t('homePage.poweredBy')}
-            </button>
         </div>
       </form>
       
+      <div className="text-center mt-6 md:hidden">
+          <button
+            onClick={() => setIsPolicyModalOpen(true)}
+            className="text-sm italic text-[#898c8d] hover:text-white transition-colors duration-200"
+          >
+            {t('modals.policy.title')}
+          </button>
+        </div>
+
       {selectedApplication && (
         <ApplicationDetailModal 
           application={selectedApplication} 

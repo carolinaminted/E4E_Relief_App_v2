@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { parseAddressWithGemini } from '../services/geminiService';
 import type { Address, UserProfile } from '../types';
+import { AI_GUARDRAILS } from '../config/aiGuardrails';
 
 interface AddressHelperProps {
   onAddressParsed: (parsedAddress: Partial<Address>) => void;
@@ -27,9 +28,9 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
       const parsedAddress = await parseAddressWithGemini(addressInput, forUser);
       onAddressParsed(parsedAddress);
       setAddressInput(''); // Clear after successful parse
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to parse address:", e);
-      setError(t('formControls.aiParseError'));
+      setError(e.message || t('formControls.aiParseError'));
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +53,7 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>Let AI fill in the fields for you</span>
+                <span>{t('formControls.letAIFill')}</span>
             </button>
         </div>
     );
@@ -68,21 +69,27 @@ const AddressHelper: React.FC<AddressHelperProps> = ({ onAddressParsed, variant 
           Collapse
         </button>
       </div>
-      <div className="flex flex-col md:flex-row gap-2">
-        <textarea
-          id="address-helper-input"
-          value={addressInput}
-          onChange={(e) => setAddressInput(e.target.value)}
-          placeholder={t('formControls.addressHelperPlaceholder')}
-          rows={2}
-          className={textareaClasses[variant]}
-          disabled={isLoading}
-        />
+      <div className="flex flex-col md:flex-row gap-2 items-start">
+        <div className="flex-1 w-full">
+             <textarea
+                id="address-helper-input"
+                value={addressInput}
+                onChange={(e) => setAddressInput(e.target.value)}
+                placeholder={t('formControls.addressHelperPlaceholder')}
+                rows={2}
+                maxLength={AI_GUARDRAILS.MAX_ADDRESS_CHARS}
+                className={textareaClasses[variant]}
+                disabled={isLoading}
+            />
+            <div className="text-[10px] text-gray-400 text-right mt-1">
+                {addressInput.length}/{AI_GUARDRAILS.MAX_ADDRESS_CHARS}
+            </div>
+        </div>
         <button
           type="button"
           onClick={handleParse}
           disabled={isLoading || !addressInput.trim()}
-          className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-wait min-w-[80px] flex items-center justify-center"
+          className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-wait min-w-[80px] flex items-center justify-center h-10 md:h-auto"
         >
           {isLoading ? (
             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

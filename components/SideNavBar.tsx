@@ -15,6 +15,7 @@ interface SideNavBarProps {
   canApply: boolean;
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
+  supportedLanguages?: string[];
 }
 
 interface NavItemType {
@@ -38,11 +39,13 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
   const { t } = useTranslation();
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   
   const isEligible = eligibilityStatus === 'Eligible';
+  const isVerifiedAndEligible = isEligible && cvStatus === 'passed';
+
   const eligibilityMessage = isEligible
     ? t('eligibilityIndicator.eligibleMessage')
     : t('eligibilityIndicator.verificationNeededMessage');
@@ -56,8 +59,8 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
     { page: 'profile', labelKey: 'nav.profile', icon: <ProfileIcon className="h-6 w-6" /> },
     { page: 'apply', labelKey: 'nav.apply', icon: <ApplyIcon className="h-6 w-6" />, disabled: !canApply },
     { page: 'aiApply', labelKey: 'nav.aiApply', icon: <SparklesIcon className="h-6 w-6" />, disabled: !canApply },
-    { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" /> },
-    { page: 'donate', labelKey: 'nav.donate', icon: <DonateIcon className="h-6 w-6" /> },
+    { page: 'support', labelKey: 'nav.support', icon: <SupportIcon className="h-6 w-6" />, disabled: !isVerifiedAndEligible },
+    { page: 'donate', labelKey: 'nav.donate', icon: <DonateIcon className="h-6 w-6" />, disabled: !isVerifiedAndEligible },
   ];
 
   const navItems = [...baseNavItems];
@@ -87,7 +90,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
               </div>
             </div>
              <div className="mt-4 px-2 space-y-2">
-                <LanguageSwitcher variant="sideNav" />
+                <LanguageSwitcher variant="sideNav" supportedLanguages={supportedLanguages} />
                 <button
                     onClick={onLogout}
                     className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"

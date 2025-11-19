@@ -1,4 +1,3 @@
-
 {
   "common": {
     "next": "Next",
@@ -16,10 +15,22 @@
     "aiApplyingDetails": "We are applying your details to the application now.",
     "close": "Close",
     "eligible": "Eligible",
-    "ineligible": "Ineligible"
+    "ineligible": "Ineligible",
+    "collapse": "Collapse"
+  },
+  "applicationStatus": {
+    "Submitted": "Submitted",
+    "Awarded": "Awarded",
+    "Declined": "Declined"
+  },
+  "sessionTimeout": {
+    "title": "Session Expiring",
+    "body": "For security, your session will time out in:",
+    "logoutButton": "Logout Now",
+    "extendButton": "Extend Session"
   },
   "reliefQueue": {
-    "helpRoster": "Your company provides E4E Relief a roster of eligible employees. Please make sure your eligibility criteria is entered exactly as your employer may have it their HR system.",
+    "helpRoster": "Your company provides E4E Relief a roster of eligible employees. Please make sure your eligibility criteria is entered exactly as your employer has it on record.",
     "helpDomain": "Your employer enforces an email domain allow list in order to register for this application. Please make sure to register a new account with your company provided email address.",
     "helpSSO": "Your employer supports SSO. If you have reached the relief Queue after successfully authenticating with your employer than reach out to our <phoneLink>{{phone}}</phoneLink> or <emailLink>{{email}}</emailLink>."
   },
@@ -84,9 +95,13 @@
   "aiApplyPage": {
     "title": "AI Apply",
     "backToHome": "Back to Home",
-    "greeting": "Hello! Please review the application questions. Message me when you are ready.",
-    "additionalDetailsPreviewTitle": "Additional Details Preview",
-    "eventDetailsPreviewTitle": "Event Details Preview",
+    "greeting": "Hello! Review the application questions and let me know about your situation. We are here to help!",
+    "progressTitle": "Application Progress",
+    "additionalDetailsPreviewTitle": "Additional Details",
+    "profileAcknowledgementsPreviewTitle": "Profile Acknowledgements",
+    "eventDetailsPreviewTitle": "Event Details",
+    "expensesPreviewTitle": "Expenses",
+    "agreementsPreviewTitle": "Agreements & Submission",
     "previewSubtitle": "This list updates as you answer the assistant.",
     "eligibilityNotice": "You are not currently eligible to apply. Please visit your Profile page to check your verification status and grant limits."
   },
@@ -358,7 +373,9 @@
       "decisionedDate": "Decisioned Date:",
       "eventType": "Event Type:",
       "requestedAmount": "Requested Amount:",
-      "reasons": "Decision Reasons:"
+      "reasons": "Decision Reasons:",
+      "expensesTitle": "Expenses",
+      "decisionNotes": "Decision Notes"
     },
     "terms": {
       "title": "Terms of Acceptance",
@@ -390,7 +407,13 @@
     "submitDescription": "Submit Description",
     "aiParseError": "Could not extract details. Please try again or fill fields manually.",
     "aiSuccess": "Success! We've pre-filled the form with any details we found.",
-    "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>."
+    "aiDisclaimer": "AI-generated content may be inaccurate. By using this feature, you agree to our <1>AI Terms</1> and <2>Privacy Policy</2>.",
+    "street1": "Street 1",
+    "street2": "Street 2",
+    "city": "City",
+    "state": "State / Province",
+    "zip": "ZIP / Postal",
+    "letAIFill": "Let AI fill in the fields for you"
   },
   "validation": {
     "required": "Please fill out this field.",

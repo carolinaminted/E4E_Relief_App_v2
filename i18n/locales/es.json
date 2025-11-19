@@ -1,4 +1,3 @@
-
 {
   "common": {
     "next": "Siguiente",
@@ -12,10 +11,23 @@
     "success": "Éxito",
     "yes": "Sí",
     "no": "No",
+    "unknownError": "Ocurrió un error desconocido.",
     "aiApplyingDetails": "Estamos aplicando los detalles a la solicitud ahora.",
     "close": "Cerrar",
     "eligible": "Elegible",
-    "ineligible": "No Elegible"
+    "ineligible": "No Elegible",
+    "collapse": "Ocultar"
+  },
+  "applicationStatus": {
+    "Submitted": "Enviado",
+    "Awarded": "Adjudicado",
+    "Declined": "Rechazado"
+  },
+  "sessionTimeout": {
+    "title": "Sesión a punto de expirar",
+    "body": "Por seguridad, su sesión se cerrará en:",
+    "logoutButton": "Cerrar sesión ahora",
+    "extendButton": "Extender sesión"
   },
   "reliefQueue": {
     "helpRoster": "Su empresa proporciona a E4E Relief una lista de empleados elegibles. Asegúrese de que sus criterios de elegibilidad se ingresen exactamente como su empleador los tiene en su sistema de recursos humanos.",
@@ -83,9 +95,13 @@
   "aiApplyPage": {
     "title": "Solicitud con IA",
     "backToHome": "Volver a Inicio",
-    "greeting": "¡Hola! Por favor, revisa las preguntas de la solicitud. Envíame un mensaje cuando estés listo.",
-    "additionalDetailsPreviewTitle": "Vista Previa de Detalles Adicionales",
-    "eventDetailsPreviewTitle": "Vista Previa de Detalles del Evento",
+    "greeting": "¡Hola! Revisa las preguntas de la solicitud y déjame saber sobre tu situación. ¡Estamos aquí para ayudar!",
+    "progressTitle": "Progreso de la Solicitud",
+    "additionalDetailsPreviewTitle": "Detalles Adicionales",
+    "profileAcknowledgementsPreviewTitle": "Confirmación de Perfil",
+    "eventDetailsPreviewTitle": "Detalles del Evento",
+    "expensesPreviewTitle": "Gastos",
+    "agreementsPreviewTitle": "Acuerdos y Envío",
     "previewSubtitle": "Esta lista se actualiza a medida que respondes al asistente.",
     "eligibilityNotice": "Actualmente no eres elegible para solicitar. Por favor, visita tu página de Perfil para verificar tu estado de verificación y los límites de tu subvención."
   },
@@ -168,6 +184,8 @@
     "noFileChosen": "Ningún archivo elegido",
     "removeReceipt": "Eliminar recibo",
     "uploadFailedError": "La subida falló. Por favor, inténtalo de nuevo.",
+    "uploadFailedUnauthorized": "Permiso denegado. Por favor, verifica tus reglas de seguridad de Firebase Storage.",
+    "uploadFailedGeneric": "La subida falló: {{message}}",
     "totalExpensesLabel": "Gastos Totales",
     "errorAmount": "El monto debe ser mayor a cero.",
     "expenseTypes": {
@@ -236,6 +254,7 @@
     "householdSize": "Número de personas en el hogar",
     "homeowner": "¿Eres propietario de tu vivienda?",
     "preferredLanguage": "Idioma de Preferencia",
+    "consentTitle": "Consentimiento y Reconocimiento",
     "ackPolicies": "He leído y acepto la Política de Privacidad y la Política de Cookies de E4E Relief.",
     "commConsent": "Doy mi consentimiento para recibir correos electrónicos y mensajes de texto sobre mi solicitud.",
     "infoCorrect": "Toda la información que he proporcionado es precisa.",
@@ -354,7 +373,9 @@
       "decisionedDate": "Fecha de Decisión:",
       "eventType": "Tipo de Evento:",
       "requestedAmount": "Monto Solicitado:",
-      "reasons": "Razones de la Decisión:"
+      "reasons": "Razones de la Decisión:",
+      "expensesTitle": "Gastos",
+      "decisionNotes": "Notas de Decisión"
     },
     "terms": {
       "title": "Términos de Aceptación",
@@ -386,7 +407,13 @@
     "submitDescription": "Enviar Descripción",
     "aiParseError": "No se pudieron extraer los detalles. Por favor, inténtalo de nuevo o llena los campos manualmente.",
     "aiSuccess": "¡Éxito! Hemos pre-llenado el formulario con los detalles que encontramos.",
-    "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>."
+    "aiDisclaimer": "El contenido generado por IA puede ser inexacto. Al usar esta función, aceptas nuestros <1>Términos de IA</1> y <2>Política de Privacidad</2>.",
+    "street1": "Calle 1",
+    "street2": "Calle 2",
+    "city": "Ciudad",
+    "state": "Estado / Provincia",
+    "zip": "Código Postal",
+    "letAIFill": "Deja que la IA complete los campos por ti"
   },
   "validation": {
     "required": "Por favor, rellena este campo.",

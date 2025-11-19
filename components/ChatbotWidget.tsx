@@ -6,10 +6,11 @@ import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 // FIX: Added UserProfile to type import
 import type { ChatMessage, Application, UserProfile } from '../types';
-import { createChatSession } from '../services/geminiService';
+import { createChatSession, MODEL_NAME } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
+import { AI_GUARDRAILS } from '../config/aiGuardrails';
 import { useTranslation } from 'react-i18next';
 
 interface ChatbotWidgetProps {
@@ -25,7 +26,7 @@ interface ChatbotWidgetProps {
 }
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }
   ]);
@@ -36,6 +37,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   const [isButtonVisible, setIsButtonVisible] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const lastScrollY = useRef(0);
+  const [sessionTurns, setSessionTurns] = useState(0);
+  const hasSessionEnded = sessionTurns >= AI_GUARDRAILS.MAX_CHAT_TURNS_PER_SESSION;
 
   useEffect(() => {
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
@@ -48,6 +51,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
         chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
     }
   }, [isOpen, applications, activeFund, userProfile, messages]);
+
+  // Effect to update the initial greeting if the language changes and no conversation has started
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === MessageRole.MODEL) {
+        const newGreeting = t('chatbotWidget.greeting');
+        if (messages[0].content !== newGreeting) {
+            setMessages([{ role: MessageRole.MODEL, content: newGreeting }]);
+            // Reset the session ref so it re-initializes with the new language context if needed
+            chatSessionRef.current = null;
+        }
+    }
+  }, [i18n.language, t, messages]);
   
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {
@@ -91,7 +106,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   }, [isOpen, scrollContainerRef]);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
-    if (!userInput.trim() || isLoading) return;
+    if (!userInput.trim() || isLoading || hasSessionEnded) return;
 
     setIsLoading(true);
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
@@ -144,12 +159,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       if (chatTokenSessionIdRef.current) {
           logTokenEvent({
               feature: 'AI Assistant',
-              model: 'gemini-2.5-flash',
+              model: MODEL_NAME,
               inputTokens: totalInputTokens,
               outputTokens: totalOutputTokens,
               sessionId: chatTokenSessionIdRef.current,
           });
       }
+      
+      setSessionTurns(prev => prev + 1);
 
     } catch (error) {
       console.error(error);
@@ -161,7 +178,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages]);
+  }, [isLoading, applications, onChatbotAction, activeFund, userProfile, t, messages, hasSessionEnded]);
 
   const toggleChat = () => setIsOpen(!isOpen);
   
@@ -181,9 +198,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">
         <ChatWindow messages={messages} isLoading={isLoading} />
+        {hasSessionEnded && (
+            <div className="p-2 bg-red-900/50 text-red-200 text-xs text-center">
+                Session limit reached. Please refresh the page to start a new chat.
+            </div>
+        )}
       </main>
       <footer className="p-4 bg-[#003a70]/50 border-t border-[#002a50] rounded-b-lg flex-shrink-0">
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={hasSessionEnded} />
       </footer>
     </div>
 

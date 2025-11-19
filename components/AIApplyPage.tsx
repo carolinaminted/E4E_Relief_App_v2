@@ -1,9 +1,10 @@
+
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData, EventData } from '../types';
-import { createChatSession } from '../services/geminiService';
+import { createChatSession, MODEL_NAME } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
@@ -65,7 +66,7 @@ const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: bool
     </button>
 );
 
-type SectionKey = 'additional' | 'event' | 'expenses' | 'agreements';
+type SectionKey = 'additional' | 'acknowledgements' | 'event' | 'expenses' | 'agreements';
 
 const AIApplyPreviewPane: React.FC<{
     userProfile: UserProfile | null;
@@ -83,6 +84,12 @@ const AIApplyPreviewPane: React.FC<{
       { key: 'householdSize', label: t('applyContactPage.householdSize') },
       { key: 'homeowner', label: t('applyContactPage.homeowner') },
       { key: 'preferredLanguage', label: t('applyContactPage.preferredLanguage') },
+    ], [t]);
+    
+    const acknowledgementChecklistItems = useMemo(() => [
+        { key: 'ackPolicies', label: t('applyContactPage.ackPolicies') },
+        { key: 'commConsent', label: t('applyContactPage.commConsent') },
+        { key: 'infoCorrect', label: t('applyContactPage.infoCorrect') },
     ], [t]);
 
     const eventChecklistItems = useMemo(() => [
@@ -110,6 +117,20 @@ const AIApplyPreviewPane: React.FC<{
             return profileValue !== undefined && profileValue !== null && profileValue !== '';
         });
     }, [userProfile, applicationDraft, baseChecklistItems]);
+    
+    const isAcknowledgementsComplete = useMemo(() => {
+        if (!userProfile) return false;
+        return acknowledgementChecklistItems.every(item => {
+            const key = item.key as keyof UserProfile;
+            // Check in draft first
+            const draftValue = applicationDraft?.profileData?.[key];
+            if (draftValue === true) return true;
+            
+            // Check in profile
+            const profileValue = userProfile?.[key];
+            return profileValue === true;
+        });
+    }, [userProfile, applicationDraft, acknowledgementChecklistItems]);
 
     const isEventDetailsComplete = useMemo(() => {
         const eventData = applicationDraft?.eventData;
@@ -140,18 +161,24 @@ const AIApplyPreviewPane: React.FC<{
         setOpenSection(prev => (prev === section ? null : section));
     };
 
-    // Effect to auto-open the next incomplete section
+    // Effect to auto-open the next incomplete section, but NOT the agreements section automatically
     useEffect(() => {
         if (!isAdditionalDetailsComplete) setOpenSection('additional');
+        else if (!isAcknowledgementsComplete) setOpenSection('acknowledgements');
         else if (!isEventDetailsComplete) setOpenSection('event');
         else if (!isExpensesComplete) setOpenSection('expenses');
-        else setOpenSection('agreements');
-    }, [isAdditionalDetailsComplete, isEventDetailsComplete, isExpensesComplete]);
+        // Explicitly do not auto-open agreements to avoid jumping.
+    }, [isAdditionalDetailsComplete, isAcknowledgementsComplete, isEventDetailsComplete, isExpensesComplete]);
     
     const isProfileItemComplete = (key: string) => {
         const draftValue = applicationDraft?.profileData?.[key as keyof UserProfile];
-        if (draftValue !== undefined && draftValue !== null && draftValue !== '') return true;
+        if (draftValue !== undefined && draftValue !== null && draftValue !== '') {
+             // For booleans, check explicitly if true for acknowledgements, though checklist logic handles existence.
+             if (typeof draftValue === 'boolean') return draftValue === true;
+             return true;
+        }
         const profileValue = userProfile?.[key as keyof UserProfile];
+        if (typeof profileValue === 'boolean') return profileValue === true;
         return profileValue !== undefined && profileValue !== null && profileValue !== '';
     };
 
@@ -160,6 +187,26 @@ const AIApplyPreviewPane: React.FC<{
         const value = applicationDraft.eventData[key];
         return value !== undefined && value !== null && value !== '';
     };
+    
+    const getProfileValue = (key: string) => {
+        const draftVal = applicationDraft?.profileData?.[key as keyof UserProfile];
+        if (draftVal !== undefined && draftVal !== null && draftVal !== '') {
+            if (typeof draftVal === 'boolean') return null;
+            return String(draftVal);
+        }
+        const profileVal = userProfile?.[key as keyof UserProfile];
+        if (profileVal !== undefined && profileVal !== null && profileVal !== '') {
+            if (typeof profileVal === 'boolean') return null;
+            return String(profileVal);
+        }
+        return null;
+    };
+
+    const getEventValue = (key: keyof EventData) => {
+        const val = applicationDraft?.eventData?.[key];
+        if (val !== undefined && val !== null && val !== '') return String(val);
+        return null;
+    };
 
     const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(applicationDraft?.eventData || {}));
 
@@ -167,7 +214,7 @@ const AIApplyPreviewPane: React.FC<{
     return (
         <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
             <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center flex-shrink-0">
-                Application Progress
+                {t('aiApplyPage.progressTitle')}
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4 flex-shrink-0">{t('aiApplyPage.previewSubtitle')}</p>
             <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
@@ -176,30 +223,42 @@ const AIApplyPreviewPane: React.FC<{
                     <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSection === 'additional'} onToggle={() => toggleSection('additional')} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'additional' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
-                            {baseChecklistItems.map(item => (
+                            {baseChecklistItems.map(item => {
+                                const isComplete = isProfileItemComplete(item.key);
+                                const value = getProfileValue(item.key);
+                                return (
+                                    <div key={item.key} className="p-2 bg-[#004b8d]/50 rounded-md flex flex-col">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-5 h-5">
+                                                {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
+                                            </div>
+                                            <span className={`text-sm ${isComplete ? 'text-gray-400' : 'text-white'}`}>
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        {value && (
+                                            <div className="ml-8 mt-1 text-sm text-[#ff8400] font-medium break-words">
+                                                {value}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Profile Acknowledgements Section */}
+                <div className={`bg-[#004b8d]/30 rounded-md ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
+                    <SectionHeader title={t('aiApplyPage.profileAcknowledgementsPreviewTitle')} isComplete={isAcknowledgementsComplete} isOpen={openSection === 'acknowledgements'} onToggle={() => toggleSection('acknowledgements')} disabled={!isAdditionalDetailsComplete} />
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'acknowledgements' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="p-3 space-y-2">
+                            {acknowledgementChecklistItems.map(item => (
                                 <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
                                     <div className="flex-shrink-0 w-5 h-5">
                                         {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
                                     </div>
-                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                {/* Event Details Section */}
-                <div className={`bg-[#004b8d]/30 rounded-md ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
-                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAdditionalDetailsComplete} />
-                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <div className="p-3 space-y-2">
-                            {visibleEventItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                                    <div className="flex-shrink-0 w-5 h-5">
-                                        {isEventItemComplete(item.key as keyof EventData) ? <CheckmarkIcon /> : <CircleIcon />}
-                                    </div>
-                                    <span className={`text-sm ${isEventItemComplete(item.key as keyof EventData) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400' : 'text-white'}`}>
                                         {item.label}
                                     </span>
                                 </div>
@@ -208,16 +267,48 @@ const AIApplyPreviewPane: React.FC<{
                     </div>
                 </div>
 
+                {/* Event Details Section */}
+                <div className={`bg-[#004b8d]/30 rounded-md ${!isAcknowledgementsComplete ? 'opacity-50' : ''}`}>
+                     <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAcknowledgementsComplete} />
+                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="p-3 space-y-2">
+                            {visibleEventItems.map(item => {
+                                const isComplete = isEventItemComplete(item.key as keyof EventData);
+                                const value = getEventValue(item.key as keyof EventData);
+                                return (
+                                    <div key={item.key} className="p-2 bg-[#004b8d]/50 rounded-md flex flex-col">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-5 h-5">
+                                                {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
+                                            </div>
+                                            <span className={`text-sm ${isComplete ? 'text-gray-400' : 'text-white'}`}>
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        {value && (
+                                            <div className="ml-8 mt-1 text-sm text-[#ff8400] font-medium break-words">
+                                                {value}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Expenses Section */}
                 <div className={`bg-[#004b8d]/30 rounded-md ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
-                    <SectionHeader title="Expenses" isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
+                    <SectionHeader title={t('aiApplyPage.expensesPreviewTitle')} isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'expenses' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
                             <AIApplyExpenses
                                 formData={applicationDraft?.eventData || {expenses: []} as EventData}
                                 userProfile={userProfile}
-                                updateFormData={(data) => onDraftUpdate({ eventData: data })}
+                                // FIX: Cast data to EventData to match onDraftUpdate signature
+                                updateFormData={(data) => onDraftUpdate({ eventData: data as EventData })}
                                 disabled={!canApply}
+                                onNext={() => setOpenSection('agreements')}
                             />
                         )}
                     </div>
@@ -225,12 +316,13 @@ const AIApplyPreviewPane: React.FC<{
 
                 {/* Agreements Section */}
                 <div className={`bg-[#004b8d]/30 rounded-md ${!isExpensesComplete ? 'opacity-50' : ''}`}>
-                    <SectionHeader title="Agreements & Submission" isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
+                    <SectionHeader title={t('aiApplyPage.agreementsPreviewTitle')} isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'agreements' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
                             <AIApplyAgreements
                                 formData={applicationDraft?.agreementData || { shareStory: null, receiveAdditionalInfo: null }}
-                                updateFormData={(data) => onDraftUpdate({ agreementData: data })}
+                                // FIX: Cast data to agreementData type to match onDraftUpdate signature
+                                updateFormData={(data) => onDraftUpdate({ agreementData: data as ApplicationFormData['agreementData'] })}
                                 onSubmit={() => onSubmit(applicationDraft as ApplicationFormData)}
                                 disabled={!canApply}
                             />
@@ -243,7 +335,7 @@ const AIApplyPreviewPane: React.FC<{
 };
 
 const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -277,6 +369,17 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       initDoneForUser.current = userProfile.uid;
     }
   }, [sessionKey, greetingMessage, userProfile]);
+
+  // Effect to update the initial greeting if the language changes and no conversation has started
+  useEffect(() => {
+     if (messages.length === 1 && messages[0].role === MessageRole.MODEL) {
+        const newGreeting = t('aiApplyPage.greeting');
+        if (messages[0].content !== newGreeting) {
+            setMessages([{ role: MessageRole.MODEL, content: newGreeting }]);
+            chatSessionRef.current = null;
+        }
+     }
+  }, [i18n.language, t, messages]);
 
   useEffect(() => {
     if (sessionKey && messages.length > 0) {
@@ -316,6 +419,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
     setMessages(prev => [...prev, userMessage]);
     
+    const inputTokens = estimateTokens(userInput); // Count tokens for user input
+
     // Capture the session at the beginning of the turn to avoid race conditions.
     const currentTurnSession = chatSessionRef.current;
 
@@ -331,12 +436,25 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       if (!functionCalls || functionCalls.length === 0) {
         if (response1.text) {
           setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response1.text }]);
+          const outputTokens = estimateTokens(response1.text); // Count tokens for model text response
+          
+          if (chatTokenSessionIdRef.current) {
+             logTokenEvent({
+                 feature: 'AI Apply Chat',
+                 model: MODEL_NAME,
+                 inputTokens,
+                 outputTokens,
+                 sessionId: chatTokenSessionIdRef.current
+             });
+          }
         }
         // Even if the response is empty, the turn is over.
         return;
       }
       
       // If there are function calls, execute them and then send the results back to the model.
+      // We also count tokens for the function call response from the model (treated as output).
+      let intermediateOutputTokens = estimateTokens(JSON.stringify(functionCalls));
       
       // This will trigger a re-render and update the application draft state in the parent.
       // A new `chatSessionRef` will be created for the *next* turn, which is the desired behavior.
@@ -345,15 +463,31 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       const functionResponses = functionCalls.map(call => {
         return { functionResponse: { name: call.name, response: { result: 'ok' } } };
       });
+      
+      // Count tokens for the function response we send back (treated as input for the 2nd call)
+      let intermediateInputTokens = estimateTokens(JSON.stringify(functionResponses));
 
       // SECOND API CALL: Send tool responses back using the *same session* from this turn.
       const response2 = await currentTurnSession.sendMessage({ message: functionResponses });
       
+      let finalOutputTokens = 0;
+
       // The final text response comes from the second call.
       if (response2.text) {
         setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response2.text }]);
+        finalOutputTokens = estimateTokens(response2.text);
       }
-      // It's possible for the model to just execute a tool and say nothing. In that case, we don't add an empty bubble.
+      
+      // Log the total tokens for this turn sequence
+      if (chatTokenSessionIdRef.current) {
+          logTokenEvent({
+              feature: 'AI Apply Chat',
+              model: MODEL_NAME,
+              inputTokens: inputTokens + intermediateInputTokens,
+              outputTokens: intermediateOutputTokens + finalOutputTokens,
+              sessionId: chatTokenSessionIdRef.current
+          });
+      }
       
     } catch (error) {
       console.error("Error during AI Apply chat turn:", error);
@@ -375,7 +509,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
   return (
     <>
-    <div className="absolute inset-0 top-20 bottom-16 md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
+    <div className="absolute inset-0 top-20 bottom-[calc(4rem+env(safe-area-inset-bottom))] md:relative md:top-auto md:bottom-auto flex flex-col md:h-full">
         <div className="flex-1 flex flex-col p-4 pt-0 md:p-8 md:pt-2 md:pb-4 min-h-0">
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
                 <div className="relative flex justify-center items-center mb-4 md:mb-6">
