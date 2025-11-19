@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
@@ -40,6 +41,7 @@ import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
 import ReliefQueuePage from './components/ReliefQueuePage';
 import ChatbotWidget from './components/ChatbotWidget';
+import SessionTimeoutHandler from './components/SessionTimeoutHandler';
 
 type AuthState = {
     status: 'loading' | 'signedIn' | 'signedOut';
@@ -718,7 +720,8 @@ function App() {
     }
 
     if (functionName === 'addOrUpdateExpense') {
-        const prevEventData = applicationDraft?.eventData || {};
+        // FIX: Ensure prevEventData has expenses array to avoid property access error
+        const prevEventData = applicationDraft?.eventData || { expenses: [] };
         const newExpenses: Expense[] = [...(prevEventData.expenses || [])];
         
         if (args.expenses && Array.isArray(args.expenses)) {
@@ -754,12 +757,12 @@ function App() {
     }
 
     if (functionName === 'updateAgreements') {
-        const agreementUpdates = { ...args };
+        const updates = args as { shareStory?: boolean; receiveAdditionalInfo?: boolean };
+        const currentAgreements = applicationDraft?.agreementData;
+
         newDraft.agreementData = {
-            shareStory: null,
-            receiveAdditionalInfo: null,
-            ...applicationDraft?.agreementData,
-            ...agreementUpdates,
+            shareStory: updates.shareStory !== undefined ? updates.shareStory : (currentAgreements?.shareStory ?? null),
+            receiveAdditionalInfo: updates.receiveAdditionalInfo !== undefined ? updates.receiveAdditionalInfo : (currentAgreements?.receiveAdditionalInfo ?? null),
         };
     }
     
@@ -828,6 +831,7 @@ function App() {
                     onSetActiveIdentity={handleSetActiveIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
+                    activeFund={activeFund} // FIX: Add missing prop
                 />;
       case 'myApplications':
         return <MyApplicationsPage 
@@ -898,7 +902,9 @@ function App() {
         <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
             <IconDefs />
             <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
-                {renderPage()}
+                <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
+                    {renderPage()}
+                </SessionTimeoutHandler>
             </main>
         </div>
     );
@@ -908,69 +914,71 @@ function App() {
   const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
   return (
-    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
-      <IconDefs />
-      <SideNavBar 
-        navigate={navigate}
-        currentPage={page}
-        userRole={currentUser.role}
-        userName={currentUser.firstName}
-        onLogout={handleLogout}
-        canApply={canApply}
-        eligibilityStatus={currentUser.eligibilityStatus}
-        cvStatus={currentUser.classVerificationStatus}
-        supportedLanguages={supportedLanguages}
-      />
-
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <Header 
-            userName={currentUser.firstName}
-            onLogout={handleLogout}
-            eligibilityStatus={currentUser.eligibilityStatus}
-            cvStatus={currentUser.classVerificationStatus}
-            supportedLanguages={supportedLanguages}
-        />
-        <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
-          <div className="hidden md:block">
-            {page === 'profile' && (
-               <div className="relative flex justify-center items-center my-8">
-                  <div className="text-center">
-                      <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {t('profilePage.title')}
-                      </h1>
-                      {activeIdentity && (
-                        <div className="mt-2 flex flex-col items-center gap-2">
-                          <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
-                        </div>
-                      )}
-                  </div>
-              </div>
-            )}
-          </div>
-          {renderPage()}
-          {!pagesWithoutFooter.includes(page) && <Footer />}
-        </main>
-        
-        <BottomNavBar
+    <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
+          <IconDefs />
+          <SideNavBar 
             navigate={navigate}
             currentPage={page}
             userRole={currentUser.role}
+            userName={currentUser.firstName}
+            onLogout={handleLogout}
             canApply={canApply}
-        />
-
-        {!pagesWithoutChatbot.includes(page) && (
-          <ChatbotWidget
-            userProfile={currentUser}
-            applications={userApplications}
-            onChatbotAction={handleChatbotAction}
-            isOpen={isChatbotOpen}
-            setIsOpen={setIsChatbotOpen}
-            scrollContainerRef={mainRef}
-            activeFund={activeFund}
+            eligibilityStatus={currentUser.eligibilityStatus}
+            cvStatus={currentUser.classVerificationStatus}
+            supportedLanguages={supportedLanguages}
           />
-        )}
-      </div>
-    </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            <Header 
+                userName={currentUser.firstName}
+                onLogout={handleLogout}
+                eligibilityStatus={currentUser.eligibilityStatus}
+                cvStatus={currentUser.classVerificationStatus}
+                supportedLanguages={supportedLanguages}
+            />
+            <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
+              <div className="hidden md:block">
+                {page === 'profile' && (
+                   <div className="relative flex justify-center items-center my-8">
+                      <div className="text-center">
+                          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                            {t('profilePage.title')}
+                          </h1>
+                          {activeIdentity && (
+                            <div className="mt-2 flex flex-col items-center gap-2">
+                              <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
+                            </div>
+                          )}
+                      </div>
+                  </div>
+                )}
+              </div>
+              {renderPage()}
+              {!pagesWithoutFooter.includes(page) && <Footer />}
+            </main>
+            
+            <BottomNavBar
+                navigate={navigate}
+                currentPage={page}
+                userRole={currentUser.role}
+                canApply={canApply}
+            />
+
+            {!pagesWithoutChatbot.includes(page) && (
+              <ChatbotWidget
+                userProfile={currentUser}
+                applications={userApplications}
+                onChatbotAction={handleChatbotAction}
+                isOpen={isChatbotOpen}
+                setIsOpen={setIsChatbotOpen}
+                scrollContainerRef={mainRef}
+                activeFund={activeFund}
+              />
+            )}
+          </div>
+        </div>
+    </SessionTimeoutHandler>
   );
 }
 

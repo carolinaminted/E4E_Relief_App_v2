@@ -15,6 +15,9 @@ if (!API_KEY) {
 // Initialize the Google Gemini AI client.
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+// Define the model to use for all AI operations.
+const MODEL_NAME = 'gemini-3-pro-preview';
+
 /**
  * Generates a unique session ID for tracking a series of related AI interactions,
  * such as a single chat conversation or an application parsing event.
@@ -419,18 +422,18 @@ ${applicationList}
         dynamicContext += `\nThe user currently has no submitted applications for this fund.`;
       }
   }
-  
-  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-  const model = 'gemini-2.5-flash';
 
   // Map the application's ChatMessage format to the format required by the Gemini SDK.
-  const mappedHistory: Content[] | undefined = history?.map(message => ({
-    role: message.role,
-    parts: [{ text: message.content }],
-  }));
+  // Filter out 'error' role messages as Gemini SDK only accepts 'user' and 'model'.
+  const mappedHistory: Content[] | undefined = history
+    ?.filter(m => m.role === 'user' || m.role === 'model')
+    .map(message => ({
+      role: message.role,
+      parts: [{ text: message.content }],
+    }));
 
   return ai.chats.create({
-    model: model,
+    model: MODEL_NAME,
     history: mappedHistory,
     config: {
       systemInstruction: dynamicContext,
@@ -664,14 +667,13 @@ export async function getAIAssistedDecision(
         ${JSON.stringify(preliminaryDecision, null, 2)}
         ---
     `;
-    // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-    const model = 'gemini-2.5-flash';
+    
     const inputTokens = estimateTokens(prompt);
     const sessionId = generateSessionId('ai-decisioning');
 
     try {
         const response = await ai.models.generateContent({
-            model: model,
+            model: MODEL_NAME,
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -680,7 +682,7 @@ export async function getAIAssistedDecision(
         });
         
         const outputTokens = estimateTokens(response.text);
-        logTokenEvent({ feature: 'Final Decision', model, inputTokens, outputTokens, sessionId }, applicantProfile);
+        logTokenEvent({ feature: 'Final Decision', model: MODEL_NAME, inputTokens, outputTokens, sessionId }, applicantProfile);
 
         const jsonString = response.text.trim();
         const aiResponse = JSON.parse(jsonString) as { finalDecision: 'Approved' | 'Denied', finalReason: string, finalAward: number };
@@ -755,14 +757,13 @@ export async function parseAddressWithGemini(addressString: string, forUser?: Us
     
     Address to parse: "${addressString}"
   `;
-  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-  const model = 'gemini-2.5-flash';
+  
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-address-parsing');
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -771,7 +772,7 @@ export async function parseAddressWithGemini(addressString: string, forUser?: Us
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Address Parsing', model, inputTokens, outputTokens, sessionId }, forUser);
+    logTokenEvent({ feature: 'Address Parsing', model: MODEL_NAME, inputTokens, outputTokens, sessionId }, forUser);
 
     const jsonString = response.text.trim();
     if (jsonString) {
@@ -871,14 +872,13 @@ export async function parseApplicationDetailsWithGemini(
 
     User's description: "${description}"
   `;
-  // FIX: Use the latest recommended model 'gemini-2.5-flash'.
-  const model = 'gemini-2.5-flash';
+  
   const inputTokens = estimateTokens(prompt);
   const sessionId = generateSessionId('ai-app-parsing');
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -887,7 +887,7 @@ export async function parseApplicationDetailsWithGemini(
     });
 
     const outputTokens = estimateTokens(response.text);
-    logTokenEvent({ feature: 'Application Parsing', model, inputTokens, outputTokens, sessionId }, applicantProfile);
+    logTokenEvent({ feature: 'Application Parsing', model: MODEL_NAME, inputTokens, outputTokens, sessionId }, applicantProfile);
 
     const jsonString = response.text.trim();
     if (jsonString) {

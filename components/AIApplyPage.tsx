@@ -304,7 +304,8 @@ const AIApplyPreviewPane: React.FC<{
                             <AIApplyExpenses
                                 formData={applicationDraft?.eventData || {expenses: []} as EventData}
                                 userProfile={userProfile}
-                                updateFormData={(data) => onDraftUpdate({ eventData: data })}
+                                // FIX: Cast data to EventData to match onDraftUpdate signature
+                                updateFormData={(data) => onDraftUpdate({ eventData: data as EventData })}
                                 disabled={!canApply}
                             />
                         )}
@@ -318,7 +319,8 @@ const AIApplyPreviewPane: React.FC<{
                         {userProfile && (
                             <AIApplyAgreements
                                 formData={applicationDraft?.agreementData || { shareStory: null, receiveAdditionalInfo: null }}
-                                updateFormData={(data) => onDraftUpdate({ agreementData: data })}
+                                // FIX: Cast data to agreementData type to match onDraftUpdate signature
+                                updateFormData={(data) => onDraftUpdate({ agreementData: data as ApplicationFormData['agreementData'] })}
                                 onSubmit={() => onSubmit(applicationDraft as ApplicationFormData)}
                                 disabled={!canApply}
                             />

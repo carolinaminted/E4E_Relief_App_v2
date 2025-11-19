@@ -245,7 +245,7 @@ export interface TokenEvent {
   userName: string; // The user's full name, denormalized for easier display.
   timestamp: string; // ISO 8601 timestamp string.
   feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision' | 'AI Apply Chat';
-  model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+  model: 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-3-pro-preview';
   inputTokens: number;
   cachedInputTokens: number;
   outputTokens: number;

@@ -1,3 +1,4 @@
+
 {
   "common": {
     "next": "Siguiente",
@@ -16,6 +17,12 @@
     "close": "Cerrar",
     "eligible": "Elegible",
     "ineligible": "No Elegible"
+  },
+  "sessionTimeout": {
+    "title": "Sesión a punto de expirar",
+    "body": "Por seguridad, su sesión se cerrará en:",
+    "logoutButton": "Cerrar sesión ahora",
+    "extendButton": "Extender sesión"
   },
   "reliefQueue": {
     "helpRoster": "Su empresa proporciona a E4E Relief una lista de empleados elegibles. Asegúrese de que sus criterios de elegibilidad se ingresen exactamente como su empleador los tiene en su sistema de recursos humanos.",

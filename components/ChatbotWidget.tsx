@@ -147,7 +147,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       if (chatTokenSessionIdRef.current) {
           logTokenEvent({
               feature: 'AI Assistant',
-              model: 'gemini-2.5-flash',
+              model: 'gemini-3-pro-preview',
               inputTokens: totalInputTokens,
               outputTokens: totalOutputTokens,
               sessionId: chatTokenSessionIdRef.current,

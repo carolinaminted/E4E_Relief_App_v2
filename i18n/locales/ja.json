@@ -1,3 +1,4 @@
+
 {
   "common": {
     "next": "次へ",
@@ -16,6 +17,12 @@
     "close": "閉じる",
     "eligible": "対象",
     "ineligible": "対象外"
+  },
+  "sessionTimeout": {
+    "title": "セッションの有効期限が近づいています",
+    "body": "セキュリティのため、セッションはまもなくタイムアウトします。残り時間：",
+    "logoutButton": "今すぐログアウト",
+    "extendButton": "セッションを延長"
   },
   "reliefQueue": {
     "helpRoster": "あなたの会社はE4E Reliefに対象従業員の名簿を提供しています。資格基準が雇用主の人事システムと正確に一致していることを確認してください。",

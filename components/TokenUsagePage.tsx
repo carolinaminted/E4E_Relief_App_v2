@@ -14,6 +14,7 @@ interface TokenUsagePageProps {
 const MODEL_PRICING: ModelPricing = {
   'gemini-2.5-flash': { input: 0.00035, output: 0.00070 },
   'gemini-2.5-pro': { input: 0.0035, output: 0.0070 },
+  'gemini-3-pro-preview': { input: 0.0035, output: 0.0070 },
 };
 
 // Types for sorting

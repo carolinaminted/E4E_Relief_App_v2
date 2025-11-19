@@ -9,11 +9,15 @@ const MODEL_PRICING: ModelPricing = {
     input: 0.0035,
     output: 0.0070,
   },
+  'gemini-3-pro-preview': {
+    input: 0.0035,
+    output: 0.0070,
+  },
 };
 
 const MOCK_USERS = ['user@example.com', 'admin@example.com', 'test@example.com'];
 const MOCK_FEATURES: TokenEvent['feature'][] = ['AI Assistant', 'Address Parsing', 'Application Parsing', 'Final Decision', 'AI Apply Chat'];
-const MOCK_MODELS: TokenEvent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+const MOCK_MODELS: TokenEvent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-pro-preview'];
 const MOCK_FUND_CODES = ['E4E', 'JHH', 'SQRT', 'DOM', 'ROST'];
 // FIX: Added a mock fund map to provide fund names for mock data, resolving the missing 'fundName' property error.
 const MOCK_FUND_MAP = new Map([

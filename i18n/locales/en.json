@@ -1,3 +1,4 @@
+
 {
   "common": {
     "next": "Next",
@@ -16,6 +17,12 @@
     "close": "Close",
     "eligible": "Eligible",
     "ineligible": "Ineligible"
+  },
+  "sessionTimeout": {
+    "title": "Session Expiring",
+    "body": "For security, your session will time out in:",
+    "logoutButton": "Logout Now",
+    "extendButton": "Extend Session"
   },
   "reliefQueue": {
     "helpRoster": "Your company provides E4E Relief a roster of eligible employees. Please make sure your eligibility criteria is entered exactly as your employer may have it their HR system.",

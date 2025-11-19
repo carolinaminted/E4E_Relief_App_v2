@@ -19,6 +19,10 @@ const MODEL_PRICING: ModelPricing = {
     input: 0.0035,
     output: 0.0070,
   },
+  'gemini-3-pro-preview': {
+    input: 0.0035, // Estimated using Pro pricing
+    output: 0.0070,
+  },
 };
 
 // --- Core Functions ---
