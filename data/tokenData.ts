@@ -82,11 +82,11 @@ export async function getTokenUsageTableData(filters: TokenUsageFilters, current
         (filters.environment === 'all' || event.environment === filters.environment)
     );
 
-    // FIX: Changed aggregation to be by feature within a session to match the expected TokenUsageTableRow structure.
-    const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
+    // FIX: Changed aggregation to be by feature AND model within a session
+    const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature' | 'model'> } = {};
 
     for (const event of filteredEvents) {
-        const key = `${event.userId}|${event.sessionId}|${event.feature}`;
+        const key = `${event.userId}|${event.sessionId}|${event.feature}|${event.model}`;
         if (!usageByFeatureInSession[key]) {
             // FIX: The 'date' property was missing, which is required by the TokenUsageTableRow type.
             // Added logic to extract and format the date from the event timestamp.
@@ -121,8 +121,8 @@ export async function getTokenUsageTableData(filters: TokenUsageFilters, current
     }
 
     return Object.entries(usageByFeatureInSession).map(([key, data]) => {
-        const [user, session, feature] = key.split('|');
-        return { user, session, feature, ...data };
+        const [user, session, feature, model] = key.split('|');
+        return { user, session, feature, model, ...data };
     });
 }
 
@@ -134,7 +134,7 @@ export async function getTopSessionData(filters: TokenUsageFilters, currentUserE
     const tableData = await getTokenUsageTableData(filters, currentUserEmail);
     if (tableData.length === 0) return null;
 
-    // FIX: Re-aggregate by session to find the true top session, as tableData is now granular by feature.
+    // FIX: Re-aggregate by session to find the true top session, as tableData is now granular by feature/model.
     const usageBySession: { [sessionId: string]: TopSessionData } = {};
     for (const row of tableData) {
         if (!usageBySession[row.session]) {

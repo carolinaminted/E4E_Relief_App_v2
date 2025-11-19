@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.

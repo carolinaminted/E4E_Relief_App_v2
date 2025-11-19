@@ -98,9 +98,10 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
   }, [allFunds]);
 
   const tableData = useMemo((): TokenUsageTableRow[] => {
-    const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature'> } = {};
+    // Aggregate data by User, Session, Feature AND Model
+    const usageByFeatureInSession: { [key: string]: Omit<TokenUsageTableRow, 'user' | 'session' | 'feature' | 'model'> } = {};
     for (const event of allEvents) {
-        const key = `${event.userId}|${event.sessionId}|${event.feature}`;
+        const key = `${event.userId}|${event.sessionId}|${event.feature}|${event.model}`;
         if (!usageByFeatureInSession[key]) {
             const eventDate = new Date(event.timestamp);
             const formattedDate = eventDate.toLocaleDateString('en-US', {
@@ -130,8 +131,8 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         usageByFeatureInSession[key].cost += eventCost;
     }
     return Object.entries(usageByFeatureInSession).map(([key, data]) => {
-        const [user, session, feature] = key.split('|');
-        return { user, session, feature, ...data };
+        const [user, session, feature, model] = key.split('|');
+        return { user, session, feature, model, ...data };
     }) as TokenUsageTableRow[];
   }, [allEvents, fundMap]);
   
@@ -181,7 +182,8 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
     return sortedData.filter(row => 
         row.userName.toLowerCase().includes(lowercasedSearchTerm) ||
         row.fundName.toLowerCase().includes(lowercasedSearchTerm) ||
-        row.feature.toLowerCase().includes(lowercasedSearchTerm)
+        row.feature.toLowerCase().includes(lowercasedSearchTerm) ||
+        row.model.toLowerCase().includes(lowercasedSearchTerm)
     );
   }, [recentTableData, searchTerm, sortConfig]);
 
@@ -263,7 +265,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
 
   const handleExportCSV = () => {
     if (processedTableData.length === 0) return;
-    const headers = ['User Name', 'Email', 'Fund', 'Date', 'Session ID', 'Feature', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
+    const headers = ['User Name', 'Email', 'Fund', 'Date', 'Session ID', 'Feature', 'Model', 'Input Tokens', 'Cached Tokens', 'Output Tokens', 'Total Tokens', 'Cost (USD)'];
     const rows = processedTableData.map(row => 
       [
         `"${row.userName}"`,
@@ -272,6 +274,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
         row.date,
         row.session,
         row.feature,
+        row.model,
         row.input,
         row.cached,
         row.output,
@@ -406,7 +409,7 @@ const TokenUsagePage: React.FC<TokenUsagePageProps> = ({ navigate, currentUser }
                                     type="search"
                                     id="token-search"
                                     className="block w-full p-3 pl-10 text-sm text-white bg-[#004b8d]/50 border border-[#005ca0] rounded-lg focus:ring-[#ff8400] focus:border-[#ff8400]"
-                                    placeholder="Search by user, fund, or feature..."
+                                    placeholder="Search by user, fund, feature, or model..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     aria-label="Search token usage table"

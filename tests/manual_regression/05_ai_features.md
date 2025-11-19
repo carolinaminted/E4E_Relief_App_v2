@@ -43,3 +43,17 @@
 | 5 | Click Submit. | AI extracts email and event. |
 | 6 | **Check:** Search Result | "Applicant Found: Pikachu Raichu" appears below. |
 | 7 | Click "Start Application for this User". | Wizard loads with "House Fire" pre-selected in Step 2. |
+
+## TC-014: Verify Token Analytics Logging
+**Objective:** Confirm that the AI interactions in TC-011, TC-012, and TC-013 generated token logs.
+
+| Step | Action | Expected Result |
+| :--- | :--- | :--- |
+| 1 | Log in as **Admin**. Navigate to **Fund Portal**. | |
+| 2 | Click "Tokens". | Token Usage Dashboard loads. |
+| 3 | **Check:** Top Metrics | "Cost" and "Tokens Used" cards display non-zero values. |
+| 4 | **Check:** "Session Tokens (Last Hour)" | Chart shows bars/points indicating recent activity. |
+| 5 | Scroll to "Detailed Token Usage" table. | |
+| 6 | **Verify:** AI Starter Event | Look for a row with Feature: `Application Parsing` (from TC-011/013). |
+| 7 | **Verify:** Chat Events | Look for rows with Feature: `AI Assistant` (from TC-012). |
+| 8 | **Verify:** Decision Event | Look for a row with Feature: `Final Decision` (triggered upon submission in TC-012). |

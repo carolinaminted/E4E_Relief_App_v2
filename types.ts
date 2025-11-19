@@ -265,6 +265,7 @@ export interface TokenUsageTableRow {
   date: string;
   session: string;
   feature: string;
+  model: string; // Model used for this session/feature interaction
   fundCode: string;
   fundName: string;
   input: number;
