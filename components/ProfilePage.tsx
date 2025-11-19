@@ -52,6 +52,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
+  // Default to 'applications' expanded on load, no persistence.
   const [openSection, setOpenSection] = useState<ProfileSection | null>('applications');
   const [isAddingIdentity, setIsAddingIdentity] = useState(false);
   const [newFundCode, setNewFundCode] = useState('');
