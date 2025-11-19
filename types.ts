@@ -106,6 +106,7 @@ export interface UserProfile {
   ackPolicies: boolean;
   commConsent: boolean;
   infoCorrect: boolean;
+  reliefQueueTicket?: string; // Unique ticket number for users in the relief queue.
   // --- Denormalized fields from the active FundIdentity for quick access ---
   fundCode: string; // The fund code of the *active* identity.
   fundName?: string; // The fund name of the *active* identity.

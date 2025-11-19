@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // FIX: Changed import for `Fund` type to its source file `data/fundData` to resolve export error.
 import type { Page, UserProfile } from '../types';
 import type { Fund } from '../data/fundData';
@@ -16,22 +16,23 @@ interface ReliefQueuePageProps {
 
 const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFund, onUpdateProfile, onReattemptVerification, onLogout }) => {
   const { t } = useTranslation();
-  const [firstName, setFirstName] = useState(userProfile.firstName);
-  const [lastName, setLastName] = useState(userProfile.lastName);
   const [reattemptFundCode, setReattemptFundCode] = useState(userProfile.fundCode || '');
   const [isReattempting, setIsReattempting] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [generationInitiated, setGenerationInitiated] = useState(false);
 
-  const handleSave = async () => {
-    if (!firstName || !lastName) {
-      alert("First and last name cannot be empty.");
-      return;
+  // Generate a unique ticket number if one doesn't exist
+  useEffect(() => {
+    if (!userProfile.reliefQueueTicket && !generationInitiated) {
+      setGenerationInitiated(true);
+      // Generate a pseudo-unique ticket: RQ-[TimestampSection]-[Random]
+      const timestampPart = Date.now().toString().slice(-6); 
+      const randomPart = Math.floor(1000 + Math.random() * 9000);
+      const newTicket = `#RQ-${timestampPart}-${randomPart}`;
+      
+      // Update profile silently to store the ticket in Firestore
+      onUpdateProfile({ ...userProfile, reliefQueueTicket: newTicket }, { silent: true });
     }
-    setSaveStatus('saving');
-    await onUpdateProfile({ ...userProfile, firstName, lastName });
-    setSaveStatus('saved');
-    setTimeout(() => setSaveStatus('idle'), 2000);
-  };
+  }, [userProfile.reliefQueueTicket, generationInitiated, userProfile, onUpdateProfile]);
 
   const handleReattempt = () => {
     if (!reattemptFundCode.trim()) {
@@ -97,29 +98,19 @@ const ReliefQueuePage: React.FC<ReliefQueuePageProps> = ({ userProfile, activeFu
           <p className="text-md text-gray-400 mt-1">{userProfile.email}</p>
         </div>
 
+        {userProfile.reliefQueueTicket && (
+          <div className="bg-white/10 border-2 border-dashed border-[#ff8400] p-4 rounded-lg animate-[fadeIn_0.5s_ease-out]">
+              <p className="text-[#ff8400] text-xs font-bold uppercase tracking-widest mb-1">Support Ticket Number</p>
+              <p className="text-3xl text-white font-mono font-bold tracking-wider select-all">{userProfile.reliefQueueTicket}</p>
+              <p className="text-gray-400 text-xs mt-2">Please quote this number when contacting support.</p>
+          </div>
+        )}
+
         <div className="flex justify-center">
             <EligibilityIndicator eligibilityStatus={userProfile.eligibilityStatus} cvStatus={userProfile.classVerificationStatus} />
         </div>
 
         {renderHelpText()}
-
-        <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-left">
-            <h2 className="text-xl font-semibold text-white mb-4 text-center">Update Your Information</h2>
-            <p className="text-sm text-gray-300 mb-6 text-center">If your verification failed due to a typo in your name, you can correct it here and save before re-attempting.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormInput label="First Name" id="firstName" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                <FormInput label="Last Name" id="lastName" value={lastName} onChange={e => setLastName(e.target.value)} />
-            </div>
-            <div className="flex justify-end mt-4">
-                <button
-                    onClick={handleSave}
-                    disabled={saveStatus === 'saving'}
-                    className="bg-[#005ca0] hover:bg-[#006ab3] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50"
-                >
-                    {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
-                </button>
-            </div>
-        </div>
         
         <div className="bg-[#004b8d]/50 p-6 rounded-lg border border-[#005ca0] text-center">
             {!isReattempting ? (
