@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
@@ -160,13 +161,13 @@ const AIApplyPreviewPane: React.FC<{
         setOpenSection(prev => (prev === section ? null : section));
     };
 
-    // Effect to auto-open the next incomplete section
+    // Effect to auto-open the next incomplete section, but NOT the agreements section automatically
     useEffect(() => {
         if (!isAdditionalDetailsComplete) setOpenSection('additional');
         else if (!isAcknowledgementsComplete) setOpenSection('acknowledgements');
         else if (!isEventDetailsComplete) setOpenSection('event');
         else if (!isExpensesComplete) setOpenSection('expenses');
-        else setOpenSection('agreements');
+        // Explicitly do not auto-open agreements to avoid jumping.
     }, [isAdditionalDetailsComplete, isAcknowledgementsComplete, isEventDetailsComplete, isExpensesComplete]);
     
     const isProfileItemComplete = (key: string) => {
@@ -307,6 +308,7 @@ const AIApplyPreviewPane: React.FC<{
                                 // FIX: Cast data to EventData to match onDraftUpdate signature
                                 updateFormData={(data) => onDraftUpdate({ eventData: data as EventData })}
                                 disabled={!canApply}
+                                onNext={() => setOpenSection('agreements')}
                             />
                         )}
                     </div>

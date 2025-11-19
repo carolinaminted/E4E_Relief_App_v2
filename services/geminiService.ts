@@ -461,6 +461,10 @@ export function evaluateApplicationEligibility(
   }
 ): EligibilityDecision {
   const { eventData, currentTwelveMonthRemaining, currentLifetimeRemaining, employmentStartDate, singleRequestMax, eligibleEvents } = appData;
+  
+  // Capture the exact decision time before manipulating date objects for logic
+  const decisionTimestamp = new Date().toISOString();
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -598,7 +602,7 @@ export function evaluateApplicationEligibility(
       evacuated: eventData.evacuated || '',
       powerLossDays: normalizedPowerLossDays
     },
-    decisionedDate: today.toISOString()
+    decisionedDate: decisionTimestamp
   };
 }
 
