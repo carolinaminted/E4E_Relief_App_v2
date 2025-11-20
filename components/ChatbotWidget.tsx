@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { Chat } from '@google/genai';
 // FIX: Separated type and value imports for ChatMessage, MessageRole, and Application.
@@ -23,9 +24,10 @@ interface ChatbotWidgetProps {
   scrollContainerRef: React.RefObject<HTMLElement>;
   // FIX: Added missing activeFund prop.
   activeFund: Fund | null;
+  logoUrl: string;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund }) => {
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications, onChatbotAction, isOpen, setIsOpen, scrollContainerRef, activeFund, logoUrl }) => {
   const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: MessageRole.MODEL, content: t('chatbotWidget.greeting') }
@@ -293,7 +295,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       <div 
         style={desktopStyle}
         className={`
-          fixed z-50 flex flex-col bg-[#004b8d] shadow-2xl border border-[#002a50]
+          fixed z-50 flex flex-col bg-[var(--theme-bg-secondary)] shadow-2xl border border-[var(--theme-bg-primary)]
           /* Transition Control: Disable transitions during drag/resize to prevent lag */
           ${isDragging || isResizing ? 'transition-none' : 'transition-all duration-300 ease-in-out'}
           
@@ -310,12 +312,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       >
        <header 
         onMouseDown={handleMouseDown}
-        className="bg-[#003a70]/90 backdrop-blur-md p-4 border-b border-[#002a50] shadow-lg flex-shrink-0 md:rounded-t-lg cursor-default md:cursor-move select-none"
+        className="bg-[var(--theme-bg-primary)]/90 backdrop-blur-md p-4 border-b border-[var(--theme-border)] shadow-lg flex-shrink-0 md:rounded-t-lg cursor-default md:cursor-move select-none"
        >
         <div className="flex justify-between items-start pointer-events-none"> 
             {/* pointer-events-none on children so header captures drag, but enable buttons specifically */}
             <div className="pointer-events-auto max-w-[80%]">
-                <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                 {t('chatbotWidget.title')}
                 </h1>
                 <p className="text-xs text-gray-400 italic mt-1" onMouseDown={(e) => e.stopPropagation()}>
@@ -330,7 +332,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
-                className="text-gray-300 hover:text-white p-2 -mr-2 -mt-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff8400] pointer-events-auto"
+                className="text-gray-300 hover:text-white p-2 -mr-2 -mt-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] pointer-events-auto"
                 aria-label="Close chat"
                 onMouseDown={(e) => e.stopPropagation()} // Prevent drag start on close button
             >
@@ -341,14 +343,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
         </div>
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">
-        <ChatWindow messages={messages} isLoading={isLoading} />
+        <ChatWindow messages={messages} isLoading={isLoading} logoUrl={logoUrl} />
         {hasSessionEnded && (
             <div className="p-2 bg-red-900/50 text-red-200 text-xs text-center">
                 Session limit reached. Please refresh the page to start a new chat.
             </div>
         )}
       </main>
-      <footer className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-4 bg-[#003a70]/50 border-t border-[#002a50] md:rounded-b-lg flex-shrink-0 relative">
+      <footer className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--theme-bg-primary)]/50 border-t border-[var(--theme-border)] md:rounded-b-lg flex-shrink-0 relative">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={hasSessionEnded} />
         
         {/* Resize Handle (Desktop Only) */}
@@ -356,7 +358,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
             className="resize-handle hidden md:block absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize z-50 opacity-50 hover:opacity-100 transition-opacity"
             onMouseDown={handleResizeMouseDown}
         >
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full text-[#ff8400]">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full text-[var(--theme-accent)]">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 19L19 5M19 19L5 19" />
              </svg>
         </div>
@@ -366,7 +368,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     <button
         onClick={toggleChat}
         className={`
-            fixed left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-8
+            fixed left-8 bg-[var(--theme-accent)] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--theme-accent-hover)] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] focus:ring-opacity-50 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-8
             ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} 
             ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}
             /* Hide trigger button when open */

@@ -1,3 +1,4 @@
+
 import React from 'react';
 // FIX: Separated type and value imports for ChatMessage and MessageRole.
 import { MessageRole } from '../types';
@@ -5,17 +6,18 @@ import type { ChatMessage } from '../types';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
+  logoUrl: string;
 }
 
 const UserIcon: React.FC = () => (
-  <div className="w-8 h-8 rounded-full bg-[#ff8400] flex items-center justify-center font-bold text-white flex-shrink-0">
+  <div className="w-8 h-8 rounded-full bg-[var(--theme-accent)] flex items-center justify-center font-bold text-white flex-shrink-0">
     U
   </div>
 );
 
-const ModelIcon: React.FC = () => (
+const ModelIcon: React.FC<{ logoUrl: string }> = ({ logoUrl }) => (
   <img
-    src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy"
+    src={logoUrl}
     alt="Relief Assistant Logo"
     className="w-8 h-8 rounded-full flex-shrink-0"
   />
@@ -30,14 +32,14 @@ const ErrorIcon: React.FC = () => (
 );
 
 
-const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
+const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message, logoUrl }) => {
   const isUser = message.role === MessageRole.USER;
   const isError = message.role === MessageRole.ERROR;
 
   const bubbleAlignment = isUser ? 'justify-end' : 'justify-start';
-  const bubbleColor = isUser ? 'bg-[#003a70] text-white' : isError ? 'bg-red-900/50 text-red-200' : 'bg-[#ff8400] text-white';
+  const bubbleColor = isUser ? 'bg-[var(--theme-bg-primary)] text-white' : isError ? 'bg-red-900/50 text-red-200' : 'bg-[var(--theme-accent)] text-white';
   
-  const Icon = isUser ? UserIcon : isError ? ErrorIcon : ModelIcon;
+  const Icon = isUser ? UserIcon : isError ? ErrorIcon : () => <ModelIcon logoUrl={logoUrl} />;
 
   // By conditionally rendering the icon, we can simplify the flexbox logic.
   // 'justify-end' will correctly push the user's message to the right.

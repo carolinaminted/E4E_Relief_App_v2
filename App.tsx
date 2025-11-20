@@ -235,7 +235,7 @@ function App() {
     };
 
     // Check if we should apply a specific fund theme
-    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions'];
+    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply'];
     if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
         applyTheme(fundThemes[activeFund.code]);
     } else {
@@ -866,6 +866,7 @@ function App() {
                     onSubmit={handleApplicationSubmit}
                     canApply={canApply}
                     onResetDraft={handleResetDraft}
+                    logoUrl={currentLogo} // Add this line
                 />;
       case 'profile':
         return <ProfilePage 
@@ -973,6 +974,7 @@ function App() {
             eligibilityStatus={currentUser.eligibilityStatus}
             cvStatus={currentUser.classVerificationStatus}
             supportedLanguages={supportedLanguages}
+            logoUrl={currentLogo}
           />
 
           <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -982,6 +984,7 @@ function App() {
                 eligibilityStatus={currentUser.eligibilityStatus}
                 cvStatus={currentUser.classVerificationStatus}
                 supportedLanguages={supportedLanguages}
+                logoUrl={currentLogo}
             />
             <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
               <div className="hidden md:block">
@@ -1020,6 +1023,7 @@ function App() {
                 setIsOpen={setIsChatbotOpen}
                 scrollContainerRef={mainRef}
                 activeFund={activeFund}
+                logoUrl={currentLogo}
               />
             )}
           </div>
