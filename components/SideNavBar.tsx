@@ -32,12 +32,12 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-primary)] focus:ring-[var(--theme-accent)] ${
-      isActive ? 'bg-[var(--theme-accent)]/30 text-white border border-[var(--theme-accent)]/50' : 'text-gray-200 hover:bg-[var(--theme-bg-secondary)]'
+    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-primary)] focus:ring-[var(--theme-accent)] ${
+      isActive ? 'bg-[var(--theme-accent)]/20 text-white font-semibold' : 'text-gray-300 hover:bg-[var(--theme-bg-secondary)] hover:text-white'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
      aria-current={isActive ? 'page' : undefined}
   >
-    <div className="w-6 h-6 mr-3">{icon}</div>
+    <div className={`w-6 h-6 mr-3 ${isActive ? 'text-[var(--theme-accent)]' : ''}`}>{icon}</div>
     <span>{label}</span>
   </button>
 );
