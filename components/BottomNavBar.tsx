@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomeIcon, ProfileIcon, SupportIcon, DashboardIcon, ApplyIcon, SparklesIcon } from './Icons';
@@ -22,7 +23,7 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
     onClick={onClick}
     disabled={disabled}
     className={`flex flex-col items-center justify-center flex-1 p-2 text-xs transition-colors duration-200 ${
-      isActive ? 'text-[#ff8400]' : 'text-gray-300 hover:text-white'
+      isActive ? 'text-[var(--theme-accent)]' : 'text-gray-300 hover:text-white'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     aria-current={isActive ? 'page' : undefined}
   >
@@ -33,23 +34,9 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, userRole, canApply }) => {
   const { t } = useTranslation();
-
-  // We infer eligibility from canApply somewhat, but it's safer to check verified status if available.
-  // Since we don't have full profile here, we rely on the fact that 'canApply' is false if not eligible.
-  // However, 'canApply' is also false if limits reached.
-  // Ideally, BottomNavBar should receive isEligible prop. 
-  // For now, we will assume if canApply is false, we might want to restrict Support if it's due to verification?
-  // Actually, let's look at App.tsx. It doesn't pass eligibilityStatus to BottomNavBar.
-  // I will rely on the navigate guard in App.tsx to actually block the navigation, 
-  // but visually, without the prop, we can't disable it accurately here unless we change the signature.
-  // Given the constraints of the XML output, I will modify App.tsx to pass the prop first? No, I can't change signature easily across files without modifying App.tsx too.
-  // Wait, I am modifying App.tsx in this turn.
-  
-  // Let's look at App.tsx again. It passes: navigate, currentPage, userRole, canApply.
-  // I will add `isVerified` or similar to BottomNavBar props in App.tsx and here.
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#003a70] border-t border-[#005ca0] md:hidden z-40 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--theme-bg-primary)] border-t border-[var(--theme-border)] md:hidden z-40 pb-[env(safe-area-inset-bottom)] transition-colors duration-500">
       <div className="flex h-16 w-full">
         <NavItem
             label={t('nav.home')}
@@ -82,9 +69,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
             icon={<SupportIcon className="h-6 w-6" />}
             onClick={() => navigate('support')}
             isActive={currentPage === 'support'}
-            // Note: Visual disabling is skipped here because we lack the exact prop, 
-            // but the navigation guard in App.tsx will prevent access.
-            // Ideally we would update the interface but that requires cascading changes.
         />
         {userRole === 'Admin' && (
             <NavItem

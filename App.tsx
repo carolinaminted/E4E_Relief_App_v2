@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
@@ -8,6 +9,7 @@ import { init as initTokenTracker, reset as resetTokenTracker } from './services
 import { authClient } from './services/firebaseAuthClient';
 import { usersRepo, identitiesRepo, applicationsRepo, fundsRepo } from './services/firestoreRepo';
 import { useTranslation } from 'react-i18next';
+import { fundThemes, defaultTheme } from './data/fundThemes';
 
 // Page Components
 import LoginPage from './components/LoginPage';
@@ -214,6 +216,29 @@ function App() {
     };
     fetchActiveFund();
   }, [activeIdentity, currentUser?.fundCode]);
+
+  // Theme Application Logic
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyTheme = (theme: typeof defaultTheme) => {
+      root.style.setProperty('--theme-bg-primary', theme.primary);
+      root.style.setProperty('--theme-bg-secondary', theme.secondary);
+      root.style.setProperty('--theme-border', theme.border);
+      root.style.setProperty('--theme-accent', theme.accent);
+      root.style.setProperty('--theme-accent-hover', theme.accentHover);
+      root.style.setProperty('--theme-gradient-start', theme.gradientStart);
+      root.style.setProperty('--theme-gradient-end', theme.gradientEnd);
+    };
+
+    // Check if we should apply a specific fund theme
+    if ((page === 'home' || page === 'profile') && activeFund && fundThemes[activeFund.code]) {
+        applyTheme(fundThemes[activeFund.code]);
+    } else {
+        // Revert to default if not on target pages or no specific theme found
+        applyTheme(defaultTheme);
+    }
+
+  }, [page, activeFund]);
 
   const userIdentities = useMemo(() => {
     if (!currentUser) return [];
@@ -848,7 +873,6 @@ function App() {
                     onSetActiveIdentity={handleSetActiveIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
-                    activeFund={activeFund} // FIX: Add missing prop
                 />;
       case 'myApplications':
         return <MyApplicationsPage 
@@ -905,7 +929,7 @@ function App() {
   // Logged out view is handled inside renderPage()
   if (!currentUser) {
       return (
-          <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+          <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
               <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
                   {renderPage()}
               </main>
@@ -916,7 +940,7 @@ function App() {
   // Relief Queue view (special logged-in state without nav)
   if (page === 'reliefQueue') {
     return (
-        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
             <IconDefs />
             <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
                 <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
@@ -932,7 +956,7 @@ function App() {
 
   return (
     <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
-        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
           <IconDefs />
           <SideNavBar 
             navigate={navigate}
@@ -959,7 +983,7 @@ function App() {
                 {page === 'profile' && (
                    <div className="relative flex justify-center items-center my-8">
                       <div className="text-center">
-                          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                             {t('profilePage.title')}
                           </h1>
                           {activeIdentity && (

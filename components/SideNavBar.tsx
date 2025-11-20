@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon, SparklesIcon } from './Icons';
@@ -29,8 +30,8 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] ${
-      isActive ? 'bg-[#ff8400]/30 text-white border border-[#ff8400]/50' : 'text-gray-200 hover:bg-[#005ca0]'
+    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-primary)] focus:ring-[var(--theme-accent)] ${
+      isActive ? 'bg-[var(--theme-accent)]/30 text-white border border-[var(--theme-accent)]/50' : 'text-gray-200 hover:bg-[var(--theme-bg-secondary)]'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
      aria-current={isActive ? 'page' : undefined}
   >
@@ -74,7 +75,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
 
   return (
     <>
-      <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#002a50] p-4">
+      <nav className="hidden md:flex flex-col w-64 bg-[var(--theme-bg-primary)] border-r border-[var(--theme-border)] p-4 transition-colors duration-500">
         <div className="mb-6 text-center">
             <div className="flex justify-center items-center mb-4">
                 <img
@@ -93,7 +94,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
                 <LanguageSwitcher variant="sideNav" supportedLanguages={supportedLanguages} />
                 <button
                     onClick={onLogout}
-                    className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
+                    className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -103,7 +104,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
             </div>
         </div>
 
-        <div className="flex-grow border-t border-[#002a50] pt-4">
+        <div className="flex-grow border-t border-[var(--theme-border)] pt-4">
           {navItems.map(item => (
             <NavItem
               key={item.page}
