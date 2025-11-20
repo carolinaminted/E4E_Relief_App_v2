@@ -11,7 +11,7 @@ import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
 import { AI_GUARDRAILS } from '../config/aiGuardrails';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface ChatbotWidgetProps {
   // FIX: Added missing userProfile prop.
@@ -106,9 +106,32 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       if (isDragging) {
         const dx = e.clientX - dragStartRef.current.x;
         const dy = e.clientY - dragStartRef.current.y;
+        
+        let newX = positionStartRef.current.x + dx;
+        let newY = positionStartRef.current.y + dy;
+
+        // Boundary Constraints (Desktop only: md:left-8 = 32px, md:bottom-24 = 96px)
+        const initialLeft = 32; 
+        const initialBottom = 96;
+
+        // Constrain X: Prevent moving off left or right screen edges
+        // Left edge: x >= -initialLeft (so actual left >= 0)
+        // Right edge: x <= windowWidth - initialLeft - width
+        const minX = -initialLeft;
+        const maxX = window.innerWidth - initialLeft - size.width;
+        newX = Math.max(minX, Math.min(maxX, newX));
+
+        // Constrain Y: Prevent moving off top or bottom screen edges
+        // Top edge: y >= -(windowHeight - initialBottom - height)
+        // Bottom edge: y <= initialBottom (so actual bottom >= 0)
+        const initialTop = window.innerHeight - initialBottom - size.height;
+        const minY = -initialTop;
+        const maxY = initialBottom;
+        newY = Math.max(minY, Math.min(maxY, newY));
+
         setPosition({
-            x: positionStartRef.current.x + dx,
-            y: positionStartRef.current.y + dy,
+            x: newX,
+            y: newY,
         });
       } else if (isResizing) {
         const dx = e.clientX - resizeStartRef.current.x;
@@ -289,16 +312,25 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
         onMouseDown={handleMouseDown}
         className="bg-[#003a70]/90 backdrop-blur-md p-4 border-b border-[#002a50] shadow-lg flex-shrink-0 md:rounded-t-lg cursor-default md:cursor-move select-none"
        >
-        <div className="flex justify-between items-start">
-            <div>
+        <div className="flex justify-between items-start pointer-events-none"> 
+            {/* pointer-events-none on children so header captures drag, but enable buttons specifically */}
+            <div className="pointer-events-auto max-w-[80%]">
                 <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
                 {t('chatbotWidget.title')}
                 </h1>
-                <p className="text-xs text-gray-400 italic mt-1">*AI Agent preview using generative responses</p>
+                <p className="text-xs text-gray-400 italic mt-1" onMouseDown={(e) => e.stopPropagation()}>
+                    <Trans 
+                        i18nKey="chatbotWidget.disclaimer" 
+                        components={{ 
+                            1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 
+                            2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> 
+                        }} 
+                    />
+                </p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
-                className="text-gray-300 hover:text-white p-2 -mr-2 -mt-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff8400]"
+                className="text-gray-300 hover:text-white p-2 -mr-2 -mt-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff8400] pointer-events-auto"
                 aria-label="Close chat"
                 onMouseDown={(e) => e.stopPropagation()} // Prevent drag start on close button
             >
