@@ -150,7 +150,7 @@ const RosterVerificationView: React.FC<RosterVerificationViewProps> = ({ user, f
                     <FormInput label="Birth Day (1-31)" type="number" id="birthDay" value={formData.birthDay} onChange={handleChange} required min="1" max="31" />
                 </div>
                 {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-                <button type="submit" disabled={isLoading} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
+                <button type="submit" disabled={isLoading} className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
                     {isLoading ? <LoadingSpinner /> : 'Verify'}
                 </button>
             </form>
@@ -189,7 +189,7 @@ const SSOVerificationView: React.FC<{ onVerified: () => void, onVerificationFail
              <h3 className="text-xl font-semibold mb-4 text-white">Verifying with SSO</h3>
              <p className="text-gray-300 mb-6">Click the button below to link your company's SSO account to complete verification. This will open a new window.</p>
              {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
-             <button onClick={handleLink} disabled={isLoading} className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
+             <button onClick={handleLink} disabled={isLoading} className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 h-12 flex items-center justify-center">
                  {isLoading ? <LoadingSpinner /> : 'Link SSO Account'}
              </button>
         </div>
@@ -254,7 +254,7 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
                     <h3 className="text-2xl font-bold mb-2 text-white">Verification Complete!</h3>
                     <p className="text-white mb-8">You are now eligible to apply for relief for this fund.</p>
                     <div className="mt-8 flex justify-center">
-                        <button onClick={handleNavigate} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-16 rounded-md transition-colors duration-200">
+                        <button onClick={handleNavigate} className="bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-16 rounded-md transition-colors duration-200">
                             Next
                         </button>
                     </div>
@@ -283,7 +283,7 @@ const ClassVerificationPage: React.FC<ClassVerificationPageProps> = ({ user, onV
 
    return (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-            <div className="w-full max-w-2xl bg-[#003a70] p-8 md:p-12 rounded-lg shadow-2xl border border-[#005ca0]">
+            <div className="w-full max-w-2xl bg-[var(--theme-bg-primary)] p-8 md:p-12 rounded-lg shadow-2xl border border-[var(--theme-border)]" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
                 {renderContent()}
             </div>
         </div>

@@ -233,17 +233,25 @@ function App() {
       setCurrentLogo(theme.logoUrl);
     };
 
-    // Check if we should apply a specific fund theme
-    // Added 'apply' and 'applyExpenses' to themedPages
-    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply', 'myApplications', 'myProxyApplications', 'apply', 'applyExpenses', 'submissionSuccess'];
-    if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
-        applyTheme(fundThemes[activeFund.code]);
+    // Determine the target theme based on the current page and context
+    let targetTheme = defaultTheme;
+
+    if (page === 'classVerification') {
+        // Priority 1: Explicitly verifying a specific fund code (e.g. Add Identity flow)
+        const targetFundCode = verifyingFundCode || currentUser?.fundCode;
+        if (targetFundCode && fundThemes[targetFundCode]) {
+            targetTheme = fundThemes[targetFundCode];
+        }
     } else {
-        // Revert to default if not on target pages or no specific theme found
-        applyTheme(defaultTheme);
+        const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply', 'myApplications', 'myProxyApplications', 'apply', 'applyExpenses', 'submissionSuccess'];
+        if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
+            targetTheme = fundThemes[activeFund.code];
+        }
     }
 
-  }, [page, activeFund]);
+    applyTheme(targetTheme);
+
+  }, [page, activeFund, verifyingFundCode, currentUser]);
 
   const userIdentities = useMemo(() => {
     if (!currentUser) return [];
