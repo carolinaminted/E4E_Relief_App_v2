@@ -112,7 +112,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
 
   return (
     <div className="space-y-8 p-4 md:p-8">
-      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">{t('applyEventPage.title')}</h2>
+      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center">{t('applyEventPage.title')}</h2>
         <div className="space-y-6">
             <SearchableSelector
                 label={t('applyEventPage.disasterLabel')}
@@ -186,7 +186,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 error={errors.evacuated}
             />
             {formData.evacuated === 'Yes' && (
-                <div className="space-y-6 pl-4 border-l-2 border-[#ff8400]/50">
+                <div className="space-y-6 pl-4 border-l-2 border-[var(--theme-accent)]/50">
                     <FormRadioGroup
                         legend={t('applyEventPage.evacuatingFromPrimaryLabel')}
                         name="evacuatingFromPrimary"
@@ -249,7 +249,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           {t('common.back')}
         </button>
-        <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+        <button onClick={handleNext} className="bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           {t('common.next')}
         </button>
       </div>

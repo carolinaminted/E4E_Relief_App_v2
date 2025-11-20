@@ -156,16 +156,16 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
 
   return (
     <div className="space-y-8">
-       <div className="border-b border-[#005ca0] pb-8 flex justify-center items-center">
+       <div className="border-b border-[var(--theme-border)] pb-8 flex justify-center items-center">
           <div className="text-center">
               <p className="text-sm text-white uppercase tracking-wider">{t('applyExpensesPage.totalExpensesLabel')}</p>
-              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                   ${totalExpenses.toFixed(2)}
               </p>
           </div>
       </div>
 
-      <div className="divide-y divide-[#005ca0]/50">
+      <div className="divide-y divide-[var(--theme-border)]/50">
         {expenseTypes.map((type) => {
           const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
           const expense = formData.expenses.find(e => e.type === type);
@@ -191,7 +191,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                 />
                 <div>
                   <div className="flex items-center gap-2">
-                    <label className={`bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <label className={`bg-[var(--theme-border)] hover:bg-[var(--theme-border)]/80 text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>
                       <input id={`receipt-${type}`} type="file" className="hidden" onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)} disabled={isUploading} accept="image/jpeg,image/png,application/pdf" />
                     </label>
@@ -218,7 +218,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
           {t('common.back')}
         </button>
         <div className="flex flex-col items-end">
-            <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+            <button onClick={handleNext} className="bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
               {t('common.next')}
             </button>
         </div>

@@ -166,14 +166,14 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
   if (!canApply && userProfile.eligibilityStatus === 'Eligible') {
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto w-full text-center flex-1 flex flex-col items-center justify-center">
-        <div className="bg-[#004b8d]/50 p-10 rounded-lg shadow-lg border border-[#005ca0]">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyPage.limitsReachedTitle')}</h1>
+        <div className="bg-[var(--theme-bg-secondary)] p-10 rounded-lg shadow-lg border border-[var(--theme-border)]">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('applyPage.limitsReachedTitle')}</h1>
             <p className="text-white mt-4 max-w-md">{t('applyPage.limitsReachedBody')}</p>
             <p className="text-white mt-4">
                 {t('applyPage.limitsReachedCta', {
                     profileLink: ''
                 })}
-                <button onClick={() => navigate('profile')} className="font-semibold text-[#ff8400] hover:underline">{t('applyPage.profileLink')}</button>
+                <button onClick={() => navigate('profile')} className="font-semibold text-[var(--theme-accent)] hover:underline">{t('applyPage.profileLink')}</button>
             </p>
         </div>
       </div>
@@ -184,7 +184,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
       <div className="relative flex justify-center items-center mb-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('applyPage.title')}</h1>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('applyPage.title')}</h1>
           {userProfile ? (
             <div className="mt-2 flex flex-col items-center gap-2">
                 {userProfile.fundName && userProfile.fundCode ? (
