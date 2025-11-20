@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
@@ -235,7 +234,7 @@ function App() {
     };
 
     // Check if we should apply a specific fund theme
-    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply'];
+    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply', 'myApplications', 'myProxyApplications'];
     if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
         applyTheme(fundThemes[activeFund.code]);
     } else {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_LABELS } from '../data/appData';
@@ -23,7 +24,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'header',
     i18n.changeLanguage(lng);
   };
 
-  const activeClasses = 'font-bold text-[#ff8400]';
+  const activeClasses = 'font-bold text-[var(--theme-accent)]';
   const inactiveClasses = 'text-gray-300 hover:text-white';
   const baseClasses = 'px-2 py-1 text-sm transition-colors';
 
