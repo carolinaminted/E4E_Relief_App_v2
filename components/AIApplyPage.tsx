@@ -24,6 +24,7 @@ interface AIApplyPageProps {
   onDraftUpdate: (draft: Partial<ApplicationFormData>) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   canApply: boolean;
+  onResetDraft: () => void;
 }
 
 const CheckmarkIcon: React.FC = () => (
@@ -34,6 +35,12 @@ const CheckmarkIcon: React.FC = () => (
 
 const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
+);
+
+const ResetIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
 );
 
 const FirstTimeUserGuide: React.FC = () => (
@@ -334,7 +341,7 @@ const AIApplyPreviewPane: React.FC<{
     );
 };
 
-const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply }) => {
+const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply, onResetDraft }) => {
   const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -411,6 +418,25 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         }
       }
     }, [isLoading]); // This effect runs whenever isLoading changes.
+    
+    const handleReset = () => {
+        if (window.confirm("Are you sure you want to clear your application draft and restart the chat?")) {
+            if (sessionKey) {
+                sessionStorage.removeItem(sessionKey);
+            }
+            setMessages([{ role: MessageRole.MODEL, content: greetingMessage }]);
+            
+            onResetDraft();
+            
+            // Re-init session
+            if (userProfile) {
+                chatSessionRef.current = createChatSession(userProfile, activeFund, applications, [], 'aiApply', null); 
+                if (chatTokenSessionIdRef.current) {
+                    chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
+                }
+            }
+        }
+    };
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (!userInput.trim() || isLoading) return;
@@ -533,11 +559,14 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                     {/* --- MOBILE VIEW --- */}
                     <div className="md:hidden flex-1 flex flex-col min-h-0">
                         <main className="w-full h-full flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
-                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0 flex justify-between items-start">
                                 <div>
                                     <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
                                     <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
                                 </div>
+                                <button onClick={handleReset} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-[#004b8d]" title="Clear Draft & Restart">
+                                    <ResetIcon />
+                                </button>
                             </header>
                             <div className="flex-1 overflow-hidden flex flex-col">
                                 <ChatWindow messages={messages} isLoading={isLoading} />
@@ -554,11 +583,15 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                     {/* --- DESKTOP VIEW --- */}
                     <div className="hidden md:flex flex-1 flex-row gap-8 min-h-0">
                         <main className="w-3/5 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] min-h-0">
-                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0 flex justify-between items-start">
                                 <div>
                                     <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
                                     <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
                                 </div>
+                                <button onClick={handleReset} className="text-gray-400 hover:text-white p-1.5 rounded-full hover:bg-[#004b8d] flex items-center gap-1 transition-colors" title="Clear Draft & Restart">
+                                    <span className="text-xs font-semibold">Clear Draft</span>
+                                    <ResetIcon />
+                                </button>
                             </header>
                             <div className="flex-1 overflow-hidden flex flex-col">
                                 <ChatWindow messages={messages} isLoading={isLoading} />

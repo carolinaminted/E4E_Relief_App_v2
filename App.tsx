@@ -692,6 +692,17 @@ function App() {
     });
   }, [currentUser]);
 
+  const handleResetDraft = useCallback(() => {
+      if (!currentUser) return;
+      const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
+      try {
+          localStorage.removeItem(draftKey);
+      } catch (e) {
+          console.error("Failed to clear draft from local storage", e);
+      }
+      setApplicationDraft(null);
+  }, [currentUser]);
+
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
     if (!currentUser) return;
     console.log(`Executing tool: ${functionName}`, args);
@@ -824,6 +835,7 @@ function App() {
                     onDraftUpdate={handleDraftUpdate}
                     onSubmit={handleApplicationSubmit}
                     canApply={canApply}
+                    onResetDraft={handleResetDraft}
                 />;
       case 'profile':
         return <ProfilePage 
