@@ -6,6 +6,7 @@ import type { Page, EligibilityStatus, ClassVerificationStatus } from '../types'
 import LanguageSwitcher from './LanguageSwitcher';
 import EligibilityIndicator from './EligibilityIndicator';
 import EligibilityInfoModal from './EligibilityInfoModal';
+import { defaultTheme } from '../data/fundThemes';
 
 interface SideNavBarProps {
   navigate: (page: Page) => void;
@@ -17,6 +18,7 @@ interface SideNavBarProps {
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
   supportedLanguages?: string[];
+  logoUrl?: string;
 }
 
 interface NavItemType {
@@ -40,7 +42,7 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl }) => {
   const { t } = useTranslation();
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   
@@ -79,8 +81,8 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
         <div className="mb-6 text-center">
             <div className="flex justify-center items-center mb-4">
                 <img
-                  src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy"
-                  alt="E4E Relief Logo"
+                  src={logoUrl}
+                  alt="Relief Fund Logo"
                   className="h-12 w-auto"
                 />
             </div>

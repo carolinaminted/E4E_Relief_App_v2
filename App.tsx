@@ -66,6 +66,7 @@ function App() {
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [currentLogo, setCurrentLogo] = useState(defaultTheme.logoUrl);
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -228,10 +229,14 @@ function App() {
       root.style.setProperty('--theme-accent-hover', theme.accentHover);
       root.style.setProperty('--theme-gradient-start', theme.gradientStart);
       root.style.setProperty('--theme-gradient-end', theme.gradientEnd);
+      
+      // Update logo
+      setCurrentLogo(theme.logoUrl);
     };
 
     // Check if we should apply a specific fund theme
-    if ((page === 'home' || page === 'profile') && activeFund && fundThemes[activeFund.code]) {
+    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions'];
+    if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
         applyTheme(fundThemes[activeFund.code]);
     } else {
         // Revert to default if not on target pages or no specific theme found

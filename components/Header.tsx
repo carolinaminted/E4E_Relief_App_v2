@@ -5,6 +5,7 @@ import type { EligibilityStatus, ClassVerificationStatus } from '../types';
 import EligibilityIndicator from './EligibilityIndicator';
 import EligibilityInfoModal from './EligibilityInfoModal';
 import { LANGUAGE_LABELS } from '../data/appData';
+import { defaultTheme } from '../data/fundThemes';
 
 interface HeaderProps {
   userName: string;
@@ -12,9 +13,10 @@ interface HeaderProps {
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
   supportedLanguages?: string[];
+  logoUrl?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
+const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl }) => {
   const { t, i18n } = useTranslation();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -73,8 +75,8 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
             disabled={!showLangSwitcher}
           >
             <img
-              src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy"
-              alt="E4E Relief Logo"
+              src={logoUrl}
+              alt="Relief Fund Logo"
               className="h-11 w-auto"
             />
           </button>

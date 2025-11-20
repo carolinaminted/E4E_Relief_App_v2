@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus, Page } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
@@ -93,7 +93,7 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, eligib
 };
 
 
-type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
+type ProfileSection = 'identities' | 'applications' | 'contact' | 'addresses' | 'additionalDetails' | 'consent';
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
   const { t, i18n } = useTranslation();
@@ -105,6 +105,33 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
   const [newFundCode, setNewFundCode] = useState('');
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
+  // Flip card state
+  const [showMailingAddress, setShowMailingAddress] = useState(false);
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const calculateHeight = () => {
+        if (openSection === 'addresses') {
+            const frontHeight = frontRef.current?.scrollHeight ?? 0;
+            const backHeight = backRef.current?.scrollHeight ?? 0;
+            if (formData.isMailingAddressSame) {
+                setCardHeight(frontHeight > 0 ? frontHeight : undefined);
+            } else {
+                setCardHeight(Math.max(frontHeight, backHeight) > 0 ? Math.max(frontHeight, backHeight) : undefined);
+            }
+        }
+    };
+    calculateHeight();
+    const timer = setTimeout(calculateHeight, 100); // Recalculate after render
+    window.addEventListener('resize', calculateHeight);
+    return () => {
+        window.removeEventListener('resize', calculateHeight);
+        clearTimeout(timer);
+    };
+  }, [openSection, formData.isMailingAddressSame, showMailingAddress]);
+
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
     if (applications.length === 0) {
       return {
@@ -145,28 +172,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     // Contact
     const contactHasBlanks = !formData.firstName || !formData.lastName || !formData.mobileNumber;
     
-    // Primary Address
+    // Addresses (Primary + Mailing)
     const primaryAddressHasBlanks = !formData.primaryAddress.country || !formData.primaryAddress.street1 || !formData.primaryAddress.city || !formData.primaryAddress.state || !formData.primaryAddress.zip;
-    
-    // Additional Details
-    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
-    
-    // Mailing Address
     let mailingAddressHasBlanks = false;
     if (formData.isMailingAddressSame === null) {
         mailingAddressHasBlanks = true;
     } else if (!formData.isMailingAddressSame) {
         mailingAddressHasBlanks = !formData.mailingAddress?.country || !formData.mailingAddress?.street1 || !formData.mailingAddress?.city || !formData.mailingAddress?.state || !formData.mailingAddress?.zip;
     }
-
+    
+    // Additional Details
+    const additionalDetailsHasBlanks = !formData.employmentStartDate || !formData.eligibilityType || formData.householdIncome === '' || formData.householdSize === '' || !formData.homeowner;
+    
     // Consent
     const consentHasBlanks = !formData.ackPolicies || !formData.commConsent || !formData.infoCorrect;
 
     return {
         contact: contactHasBlanks,
-        primaryAddress: primaryAddressHasBlanks,
+        addresses: primaryAddressHasBlanks || mailingAddressHasBlanks,
         additionalDetails: additionalDetailsHasBlanks,
-        mailingAddress: mailingAddressHasBlanks,
         consent: consentHasBlanks,
     };
   }, [formData]);
@@ -181,6 +205,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     if (field === 'mobileNumber') {
       finalValue = formatPhoneNumber(value);
     }
+    
+    if (field === 'isMailingAddressSame') {
+        setShowMailingAddress(!value);
+    }
+
     setFormData(prev => ({ ...prev, [field]: finalValue }));
 
     if (errors[field as string]) {
@@ -255,13 +284,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     if (!formData.primaryAddress.zip) primaryAddrErrors.zip = 'ZIP code is required.';
     if (Object.keys(primaryAddrErrors).length > 0) newErrors.primaryAddress = primaryAddrErrors;
 
-    // Additional Details
-    if (!formData.employmentStartDate) newErrors.employmentStartDate = 'Employment start date is required.';
-    if (!formData.eligibilityType) newErrors.eligibilityType = 'Eligibility type is required.';
-    if (formData.householdIncome === '') newErrors.householdIncome = 'Household income is required.';
-    if (formData.householdSize === '') newErrors.householdSize = 'Household size is required.';
-    if (!formData.homeowner) newErrors.homeowner = 'Homeowner status is required.';
-    
     // Mailing Address (if applicable)
     if (formData.isMailingAddressSame === null) {
         newErrors.isMailingAddressSame = 'Please select an option for the mailing address.';
@@ -275,6 +297,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         if (Object.keys(mailingAddrErrors).length > 0) newErrors.mailingAddress = mailingAddrErrors;
     }
 
+    // Additional Details
+    if (!formData.employmentStartDate) newErrors.employmentStartDate = 'Employment start date is required.';
+    if (!formData.eligibilityType) newErrors.eligibilityType = 'Eligibility type is required.';
+    if (formData.householdIncome === '') newErrors.householdIncome = 'Household income is required.';
+    if (formData.householdSize === '') newErrors.householdSize = 'Household size is required.';
+    if (!formData.homeowner) newErrors.homeowner = 'Homeowner status is required.';
+
     // Consent
     if (!formData.ackPolicies) newErrors.ackPolicies = 'You must agree to the policies.';
     if (!formData.commConsent) newErrors.commConsent = 'You must consent to communications.';
@@ -285,10 +314,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         let firstErrorSection: ProfileSection | null = null;
         if (newErrors.firstName || newErrors.lastName || newErrors.mobileNumber) {
             firstErrorSection = 'contact';
-        } else if (newErrors.primaryAddress) {
-            firstErrorSection = 'primaryAddress';
-        } else if (newErrors.mailingAddress || newErrors.isMailingAddressSame) {
-            firstErrorSection = 'mailingAddress';
+        } else if (newErrors.primaryAddress || newErrors.mailingAddress || newErrors.isMailingAddressSame) {
+            firstErrorSection = 'addresses';
         } else if (newErrors.employmentStartDate || newErrors.eligibilityType || newErrors.householdIncome || newErrors.householdSize || newErrors.homeowner) {
             firstErrorSection = 'additionalDetails';
         } else if (newErrors.ackPolicies || newErrors.commConsent || newErrors.infoCorrect) {
@@ -525,24 +552,62 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </fieldset>
 
-        {/* 1b Primary Address */}
+        {/* 1b Addresses (Primary + Mailing) */}
         <fieldset className="border-b border-[var(--theme-border)] pb-4">
-            <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
+            <button type="button" onClick={() => toggleSection('addresses')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'addresses'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('profilePage.primaryAddressTitle')}</h2>
-                    {sectionHasErrors.primaryAddress && openSection !== 'primaryAddress' && <NotificationIcon />}
+                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('profilePage.addresses')}</h2>
+                    {sectionHasErrors.addresses && openSection !== 'addresses' && <NotificationIcon />}
                 </div>
-                <ChevronIcon isOpen={openSection === 'primaryAddress'} />
+                <ChevronIcon isOpen={openSection === 'addresses'} />
             </button>
-            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'primaryAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-6 pt-4">
-                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
+            <div id="address-section" className={`transition-all duration-500 ease-in-out ${openSection === 'addresses' ? 'max-h-[2000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="pt-4" aria-live="polite">
+                    <div className="mb-6">
+                        <FormRadioGroup 
+                            legend={t('profilePage.mailingAddressSame')} 
+                            name="isMailingAddressSame" 
+                            options={[t('common.yes'), t('common.no')]} 
+                            value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? t('common.yes') : t('common.no'))} 
+                            onChange={value => handleFormChange('isMailingAddressSame', value === t('common.yes'))} 
+                            required
+                            error={errors.isMailingAddressSame}
+                        />
+                    </div>
+                    <div className="flip-container">
+                        <div className={`flipper ${!formData.isMailingAddressSame && showMailingAddress ? 'is-flipped' : ''}`} style={{ height: cardHeight ? `${cardHeight}px` : 'auto' }}>
+                            <div className="flip-front" ref={frontRef}>
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.primaryAddressTitle')}</h3>
+                                        {!formData.isMailingAddressSame && (
+                                            <button type="button" onClick={() => setShowMailingAddress(true)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                                                {t('profilePage.viewMailingAddress')}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <AddressFields address={formData.primaryAddress} onUpdate={(field, value) => handleAddressChange('primaryAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('primaryAddress', parsed)} prefix="primary" errors={errors.primaryAddress || {}} />
+                                </div>
+                            </div>
+                            <div className="flip-back" ref={backRef}>
+                                 <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold text-white">{t('profilePage.mailingAddressTitle')}</h3>
+                                        <button type="button" onClick={() => setShowMailingAddress(false)} className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 transition-opacity">
+                                            {t('profilePage.viewPrimaryAddress')}
+                                        </button>
+                                    </div>
+                                    <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                {openSection === 'primaryAddress' && (
+                {openSection === 'addresses' && (
                     <div className="flex justify-end pt-4">
                         <button
                             type="button"
-                            onClick={() => toggleSection('primaryAddress')}
+                            onClick={() => toggleSection('addresses')}
                             className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] hover:opacity-80 transition-opacity"
                             aria-controls="address-section"
                             aria-expanded="true"
@@ -557,51 +622,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             </div>
         </fieldset>
         
-        {/* 1d Mailing Address */}
-        <fieldset className="border-b border-[var(--theme-border)] pb-4">
-            <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('profilePage.mailingAddressTitle')}</h2>
-                    {sectionHasErrors.mailingAddress && openSection !== 'mailingAddress' && <NotificationIcon />}
-                </div>
-                <ChevronIcon isOpen={openSection === 'mailingAddress'} />
-            </button>
-            <div id="mailing-section" className={`transition-all duration-500 ease-in-out ${openSection === 'mailingAddress' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-4 pt-4">
-                    <FormRadioGroup 
-                        legend={t('profilePage.mailingAddressSame')} 
-                        name="isMailingAddressSame" 
-                        options={[t('common.yes'), t('common.no')]} 
-                        value={formData.isMailingAddressSame === null ? '' : (formData.isMailingAddressSame ? t('common.yes') : t('common.no'))} 
-                        onChange={value => handleFormChange('isMailingAddressSame', value === t('common.yes'))} 
-                        required
-                        error={errors.isMailingAddressSame}
-                    />
-                    {!formData.isMailingAddressSame && (
-                        <div className="pt-4 mt-4 border-t border-[#002a50] space-y-6">
-                            <AddressFields address={formData.mailingAddress || { country: '', street1: '', city: '', state: '', zip: '' }} onUpdate={(field, value) => handleAddressChange('mailingAddress', field, value)} onBulkUpdate={(parsed) => handleAddressBulkChange('mailingAddress', parsed)} prefix="mailing" errors={errors.mailingAddress || {}} />
-                        </div>
-                    )}
-                </div>
-                {openSection === 'mailingAddress' && (
-                    <div className="flex justify-end pt-4">
-                        <button
-                            type="button"
-                            onClick={() => toggleSection('mailingAddress')}
-                            className="flex items-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] hover:opacity-80 transition-opacity"
-                            aria-controls="mailing-section"
-                            aria-expanded="true"
-                        >
-                            {t('profilePage.collapse')}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 text-[var(--theme-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
-            </div>
-        </fieldset>
-
         {/* 1c Additional Details */}
         <fieldset className="border-b border-[var(--theme-border)] pb-4">
             <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
