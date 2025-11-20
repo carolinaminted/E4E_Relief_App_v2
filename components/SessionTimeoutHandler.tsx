@@ -39,7 +39,7 @@ const SessionTimeoutHandler: React.FC<SessionTimeoutHandlerProps> = ({ children,
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     
     // Throttle the event listener slightly to reduce overhead, though useRef is already fast
-    let throttleTimer: NodeJS.Timeout | null = null;
+    let throttleTimer: ReturnType<typeof setTimeout> | null = null;
     const handleEvent = () => {
         if (!throttleTimer) {
             updateActivity();
