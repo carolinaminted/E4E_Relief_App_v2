@@ -28,7 +28,7 @@ const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
 const NotificationIcon: React.FC = () => (
     <span className="relative flex h-3 w-3" title="Action required in this section">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--theme-accent)] opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--theme-accent)]/50"></span>
+        <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--theme-accent)]"></span>
     </span>
 );
 

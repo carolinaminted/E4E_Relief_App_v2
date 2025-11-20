@@ -165,7 +165,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
           </div>
       </div>
 
-      <div className="divide-y divide-[var(--theme-border)]/50">
+      <div className="flex flex-col gap-8">
         {expenseTypes.map((type) => {
           const expenseIdKey = `exp-${type.replace(/\s+/g, '-')}`;
           const expense = formData.expenses.find(e => e.type === type);
@@ -174,7 +174,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
           const translationKey = `applyExpensesPage.expenseTypes.${type.replace(/\s+/g, '')}`;
 
           return (
-            <div key={type} className="py-4 first:pt-0 last:pb-0">
+            <div key={type}>
               <h4 className="font-semibold text-lg text-white mb-2">{t(translationKey, type)}</h4>
               <div className="grid grid-cols-2 gap-4 items-start">
                 <FormInput
