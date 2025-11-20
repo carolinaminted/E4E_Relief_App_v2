@@ -40,6 +40,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   const [sessionTurns, setSessionTurns] = useState(0);
   const hasSessionEnded = sessionTurns >= AI_GUARDRAILS.MAX_CHAT_TURNS_PER_SESSION;
 
+  // Dragging State
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const positionStartRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
     setIsMounted(true);
@@ -64,11 +70,47 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     }
   }, [i18n.language, t, messages]);
   
+  // Drag Logic
+  const handleMouseDown = (e: React.MouseEvent<HTMLElement>) => {
+    // Only allow dragging on desktop
+    if (window.innerWidth < 768) return;
+    // Prevent dragging if clicking a button/interactive element
+    if ((e.target as HTMLElement).closest('button, input, textarea')) return;
+    
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    positionStartRef.current = { ...position };
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      setPosition({
+        x: positionStartRef.current.x + dx,
+        y: positionStartRef.current.y + dy,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {
     if (isOpen) {
-      // If the chat window is open, the button must be visible to allow closing it.
-      setIsButtonVisible(true);
+      // If the chat window is open, the button is hidden via CSS, but we keep logic consistent
       return;
     }
 
@@ -182,21 +224,35 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
 
   const toggleChat = () => setIsOpen(!isOpen);
   
+  // Calculate inline styles for desktop positioning and drag
+  const desktopTransformStyle = (isOpen && window.innerWidth >= 768) 
+    ? { transform: `translate(${position.x}px, ${position.y}px)` } 
+    : {};
+
   return (
     <>
       <div 
+        style={desktopTransformStyle}
         className={`
-          fixed z-50 flex flex-col bg-[#004b8d] shadow-2xl border border-[#002a50] transition-all duration-300 ease-in-out
+          fixed z-50 flex flex-col bg-[#004b8d] shadow-2xl border border-[#002a50]
+          /* Transition Control: Disable transitions during drag to prevent lag */
+          ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-in-out'}
+          
           /* Mobile: Full Screen Overlay */
           inset-0 w-full h-[100dvh] rounded-none
-          /* Desktop: Bottom Left Widget */
-          md:inset-auto md:left-8 md:bottom-24 md:w-full md:max-w-sm md:h-[calc(100vh-8rem)] md:max-h-[600px] md:rounded-lg
+          
+          /* Desktop: Floating Widget */
+          md:inset-auto md:left-8 md:bottom-24 md:w-[450px] md:h-[calc(100vh-8rem)] md:max-h-[650px] md:rounded-lg
+          
           /* Visibility State */
           ${isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}
         `}
         aria-hidden={!isOpen}
       >
-       <header className="bg-[#003a70]/90 backdrop-blur-md p-4 border-b border-[#002a50] shadow-lg flex-shrink-0 md:rounded-t-lg">
+       <header 
+        onMouseDown={handleMouseDown}
+        className="bg-[#003a70]/90 backdrop-blur-md p-4 border-b border-[#002a50] shadow-lg flex-shrink-0 md:rounded-t-lg cursor-default md:cursor-move select-none"
+       >
         <div className="flex justify-between items-start">
             <div>
                 <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
@@ -208,6 +264,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
                 onClick={() => setIsOpen(false)}
                 className="text-gray-300 hover:text-white p-2 -mr-2 -mt-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff8400]"
                 aria-label="Close chat"
+                onMouseDown={(e) => e.stopPropagation()} // Prevent drag start on close button
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -234,7 +291,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
             fixed left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-8
             ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} 
             ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}
-            ${isOpen ? 'hidden md:flex' : 'flex'}
+            /* Hide trigger button when open */
+            ${isOpen ? 'hidden' : 'flex'}
         `}
         aria-label={isOpen ? "Close Chat" : "Open Chat"}
       >
