@@ -40,11 +40,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   const [sessionTurns, setSessionTurns] = useState(0);
   const hasSessionEnded = sessionTurns >= AI_GUARDRAILS.MAX_CHAT_TURNS_PER_SESSION;
 
-  // Dragging State
+  // Dragging & Resizing State
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [size, setSize] = useState({ width: 450, height: 600 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  
   const dragStartRef = useRef({ x: 0, y: 0 });
   const positionStartRef = useRef({ x: 0, y: 0 });
+  
+  const resizeStartRef = useRef({ x: 0, y: 0 });
+  const sizeStartRef = useRef({ width: 0, height: 0 });
 
   useEffect(() => {
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
@@ -75,27 +81,53 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     // Only allow dragging on desktop
     if (window.innerWidth < 768) return;
     // Prevent dragging if clicking a button/interactive element
-    if ((e.target as HTMLElement).closest('button, input, textarea')) return;
+    if ((e.target as HTMLElement).closest('button, input, textarea, .resize-handle')) return;
     
     setIsDragging(true);
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     positionStartRef.current = { ...position };
   };
 
+  // Resize Logic
+  const handleResizeMouseDown = (e: React.MouseEvent<HTMLElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.innerWidth < 768) return;
+
+      setIsResizing(true);
+      resizeStartRef.current = { x: e.clientX, y: e.clientY };
+      sizeStartRef.current = { ...size };
+  };
+
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging && !isResizing) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      setPosition({
-        x: positionStartRef.current.x + dx,
-        y: positionStartRef.current.y + dy,
-      });
+      if (isDragging) {
+        const dx = e.clientX - dragStartRef.current.x;
+        const dy = e.clientY - dragStartRef.current.y;
+        setPosition({
+            x: positionStartRef.current.x + dx,
+            y: positionStartRef.current.y + dy,
+        });
+      } else if (isResizing) {
+        const dx = e.clientX - resizeStartRef.current.x;
+        const dy = e.clientY - resizeStartRef.current.y;
+        
+        // Apply min/max constraints
+        const newWidth = Math.max(320, Math.min(1000, sizeStartRef.current.width + dx));
+        const newHeight = Math.max(400, Math.min(900, sizeStartRef.current.height + dy));
+        
+        setSize({
+            width: newWidth,
+            height: newHeight
+        });
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      setIsResizing(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -105,7 +137,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, isResizing]);
 
   // Effect to handle scroll-based visibility for the chat button
   useEffect(() => {
@@ -224,25 +256,29 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
 
   const toggleChat = () => setIsOpen(!isOpen);
   
-  // Calculate inline styles for desktop positioning and drag
-  const desktopTransformStyle = (isOpen && window.innerWidth >= 768) 
-    ? { transform: `translate(${position.x}px, ${position.y}px)` } 
+  // Calculate inline styles for desktop positioning, drag, and resize
+  const desktopStyle = (isOpen && window.innerWidth >= 768) 
+    ? { 
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        width: `${size.width}px`,
+        height: `${size.height}px`
+      } 
     : {};
 
   return (
     <>
       <div 
-        style={desktopTransformStyle}
+        style={desktopStyle}
         className={`
           fixed z-50 flex flex-col bg-[#004b8d] shadow-2xl border border-[#002a50]
-          /* Transition Control: Disable transitions during drag to prevent lag */
-          ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-in-out'}
+          /* Transition Control: Disable transitions during drag/resize to prevent lag */
+          ${isDragging || isResizing ? 'transition-none' : 'transition-all duration-300 ease-in-out'}
           
           /* Mobile: Full Screen Overlay */
           inset-0 w-full h-[100dvh] rounded-none
           
-          /* Desktop: Floating Widget */
-          md:inset-auto md:left-8 md:bottom-24 md:w-[450px] md:h-[calc(100vh-8rem)] md:max-h-[650px] md:rounded-lg
+          /* Desktop: Floating Widget (Base positioning, dimensions controlled by inline styles) */
+          md:inset-auto md:left-8 md:bottom-24 md:rounded-lg
           
           /* Visibility State */
           ${isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}
@@ -280,8 +316,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
             </div>
         )}
       </main>
-      <footer className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-4 bg-[#003a70]/50 border-t border-[#002a50] md:rounded-b-lg flex-shrink-0">
+      <footer className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-4 bg-[#003a70]/50 border-t border-[#002a50] md:rounded-b-lg flex-shrink-0 relative">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={hasSessionEnded} />
+        
+        {/* Resize Handle (Desktop Only) */}
+        <div 
+            className="resize-handle hidden md:block absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize z-50 opacity-50 hover:opacity-100 transition-opacity"
+            onMouseDown={handleResizeMouseDown}
+        >
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full text-[#ff8400]">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 19L19 5M19 19L5 19" />
+             </svg>
+        </div>
       </footer>
     </div>
 
