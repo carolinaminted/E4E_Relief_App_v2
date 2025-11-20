@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +10,8 @@ interface ApplicationDetailModalProps {
 }
 
 const statusStyles: Record<Application['status'], string> = {
-    Submitted: 'text-[var(--theme-accent)]',
-    Awarded: 'text-[var(--theme-gradient-end)]',
+    Submitted: 'text-[#ff8400]',
+    Awarded: 'text-[#edda26]',
     Declined: 'text-red-400',
 };
 
@@ -43,11 +44,11 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
       aria-modal="true"
     >
       <div 
-        className="bg-[var(--theme-bg-primary)] rounded-lg shadow-xl w-full max-w-2xl m-4 relative border border-[var(--theme-border)] max-h-[90vh] flex flex-col"
+        className="bg-[#003a70] rounded-lg shadow-xl w-full max-w-2xl m-4 relative border border-[#002a50] max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-[var(--theme-border)] flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
+        <div className="p-6 border-b border-[#005ca0] flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
                 {t('modals.applicationDetail.title', 'Application Details')}
             </h2>
             <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -83,12 +84,12 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
                 </div>
                  <div className="md:col-span-2">
                     <p className="text-sm text-gray-300 uppercase tracking-wider mb-1">{t('modals.applicationDetail.requestedAmount', 'Requested Amount')}</p>
-                    <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">${application.requestedAmount.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">${application.requestedAmount.toFixed(2)}</p>
                 </div>
             </div>
 
             {application.reasons && application.reasons.length > 0 && (
-                 <div className="border-t border-[var(--theme-border)] pt-6">
+                 <div className="border-t border-[#005ca0] pt-6">
                     <h3 className="text-lg font-semibold text-white mb-2">{t('modals.applicationDetail.decisionNotes', 'Decision Notes')}</h3>
                     <ul className="list-disc list-inside text-gray-300 space-y-1">
                         {application.reasons.map((reason, idx) => (
@@ -99,15 +100,15 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             )}
 
             {application.expenses && application.expenses.length > 0 && (
-                <div className="border-t border-[var(--theme-border)] pt-6">
+                <div className="border-t border-[#005ca0] pt-6">
                     <h3 className="text-lg font-semibold text-white mb-4">{t('modals.applicationDetail.expensesTitle', 'Expenses')}</h3>
                     <div className="space-y-3">
                         {application.expenses.map((expense, index) => (
-                            <div key={index} className="bg-[var(--theme-bg-secondary)] p-3 rounded-md flex justify-between items-center">
+                            <div key={index} className="bg-[#004b8d]/50 p-3 rounded-md flex justify-between items-center">
                                 <div>
                                     <p className="text-white font-medium">{getTranslatedExpenseType(expense.type)}</p>
                                     {expense.fileName && (
-                                        <a href={expense.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--theme-accent)] hover:underline flex items-center gap-1 mt-1">
+                                        <a href={expense.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#ff8400] hover:underline flex items-center gap-1 mt-1">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                             </svg>
@@ -123,10 +124,10 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             )}
         </div>
         
-        <div className="p-6 border-t border-[var(--theme-border)] bg-[var(--theme-bg-primary)] rounded-b-lg">
+        <div className="p-6 border-t border-[#005ca0] bg-[#003a70] rounded-b-lg">
             <button 
                 onClick={onClose}
-                className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200"
+                className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200"
             >
                 {t('common.close', 'Close')}
             </button>

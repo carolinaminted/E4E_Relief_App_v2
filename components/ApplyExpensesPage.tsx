@@ -191,7 +191,7 @@ const ApplyExpensesPage: React.FC<ApplyExpensesPageProps> = ({ formData, userPro
                 />
                 <div>
                   <div className="flex items-center gap-2">
-                    <label className={`bg-[var(--theme-border)] hover:bg-[var(--theme-border)]/80 text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <label className={`bg-[var(--theme-border)] hover:bg-[#006ab3] text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors duration-200 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <span>{isUploading ? t('applyExpensesPage.uploadingButton') : t('applyExpensesPage.uploadButton')}</span>
                       <input id={`receipt-${type}`} type="file" className="hidden" onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)} disabled={isUploading} accept="image/jpeg,image/png,application/pdf" />
                     </label>

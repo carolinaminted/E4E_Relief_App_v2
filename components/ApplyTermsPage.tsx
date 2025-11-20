@@ -123,7 +123,7 @@ const ApplyTermsPage: React.FC<ApplyTermsPageProps> = ({ formData, updateFormDat
               <span className="text-white">.</span>
               <RequiredIndicator required isMet={termsAgreed} />
             </div>
-            {!termsViewed && <p className="text-xs text-[var(--theme-accent)] mt-1 italic">{t('applyTermsPage.termsViewNotice')}</p>}
+            {!termsViewed && <p className="text-xs text-yellow-400 mt-1 italic">{t('applyTermsPage.termsViewNotice')}</p>}
           </div>
         </div>
       </section>

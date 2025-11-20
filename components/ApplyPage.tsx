@@ -166,7 +166,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ navigate, onSubmit, userProfile, 
   if (!canApply && userProfile.eligibilityStatus === 'Eligible') {
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto w-full text-center flex-1 flex flex-col items-center justify-center">
-        <div className="bg-[var(--theme-bg-secondary)] p-10 rounded-lg shadow-lg border border-[var(--theme-border)]">
+        <div className="bg-[var(--theme-bg-secondary)]/50 p-10 rounded-lg shadow-lg border border-[var(--theme-border)]">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('applyPage.limitsReachedTitle')}</h1>
             <p className="text-white mt-4 max-w-md">{t('applyPage.limitsReachedBody')}</p>
             <p className="text-white mt-4">

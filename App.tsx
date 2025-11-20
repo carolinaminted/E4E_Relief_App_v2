@@ -234,7 +234,8 @@ function App() {
     };
 
     // Check if we should apply a specific fund theme
-    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply', 'myApplications', 'myProxyApplications'];
+    // Added 'apply' and 'applyExpenses' to themedPages
+    const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply', 'myApplications', 'myProxyApplications', 'apply', 'applyExpenses'];
     if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
         applyTheme(fundThemes[activeFund.code]);
     } else {
