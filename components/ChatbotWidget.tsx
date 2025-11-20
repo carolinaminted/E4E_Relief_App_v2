@@ -185,15 +185,34 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
   return (
     <>
       <div 
-        className={`fixed w-full max-w-sm h-[calc(100vh-8rem)] max-h-[600px] bg-[#004b8d] rounded-lg shadow-2xl flex flex-col z-50 border border-[#002a50] transition-all duration-300 ease-in-out left-1/2 -translate-x-1/2 md:left-8 md:-translate-x-0 bottom-[calc(10rem+env(safe-area-inset-bottom))] md:bottom-24 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        className={`
+          fixed z-50 flex flex-col bg-[#004b8d] shadow-2xl border border-[#002a50] transition-all duration-300 ease-in-out
+          /* Mobile: Full Screen Overlay */
+          inset-0 w-full h-[100dvh] rounded-none
+          /* Desktop: Bottom Left Widget */
+          md:inset-auto md:left-8 md:bottom-24 md:w-full md:max-w-sm md:h-[calc(100vh-8rem)] md:max-h-[600px] md:rounded-lg
+          /* Visibility State */
+          ${isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}
+        `}
         aria-hidden={!isOpen}
       >
-       <header className="bg-[#003a70]/70 p-4 border-b border-[#002a50] shadow-lg rounded-t-lg flex-shrink-0">
-        <div>
-            <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-              {t('chatbotWidget.title')}
-            </h1>
-            <p className="text-xs text-gray-400 italic mt-1">*AI Agent preview using generative responses</p>
+       <header className="bg-[#003a70]/90 backdrop-blur-md p-4 border-b border-[#002a50] shadow-lg flex-shrink-0 md:rounded-t-lg">
+        <div className="flex justify-between items-start">
+            <div>
+                <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                {t('chatbotWidget.title')}
+                </h1>
+                <p className="text-xs text-gray-400 italic mt-1">*AI Agent preview using generative responses</p>
+            </div>
+            <button 
+                onClick={() => setIsOpen(false)}
+                className="text-gray-300 hover:text-white p-2 -mr-2 -mt-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff8400]"
+                aria-label="Close chat"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
       </header>
        <main className="flex-1 overflow-hidden flex flex-col">
@@ -204,14 +223,19 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
             </div>
         )}
       </main>
-      <footer className="p-4 bg-[#003a70]/50 border-t border-[#002a50] rounded-b-lg flex-shrink-0">
+      <footer className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-4 bg-[#003a70]/50 border-t border-[#002a50] md:rounded-b-lg flex-shrink-0">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} disabled={hasSessionEnded} />
       </footer>
     </div>
 
     <button
         onClick={toggleChat}
-        className={`fixed left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-8 ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}`}
+        className={`
+            fixed left-8 bg-[#ff8400] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-[#e67700] transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#ff8400] focus:ring-opacity-50 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-8
+            ${isMounted ? 'transition-all duration-500 ease-in-out' : ''} 
+            ${isButtonVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'}
+            ${isOpen ? 'hidden md:flex' : 'flex'}
+        `}
         aria-label={isOpen ? "Close Chat" : "Open Chat"}
       >
         {isOpen ? (

@@ -982,7 +982,7 @@ function App() {
                 canApply={canApply}
             />
 
-            {!pagesWithoutChatbot.includes(page) && (
+            {!pagesWithoutChatbot.includes(page) && (isVerifiedAndEligible || currentUser.role === 'Admin') && (
               <ChatbotWidget
                 userProfile={currentUser}
                 applications={userApplications}
