@@ -26,12 +26,12 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="w-full max-w-3xl mx-auto">
         <div className="relative flex justify-center items-center mb-8">
-            <button onClick={() => navigate('support')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[var(--theme-accent)] hover:opacity-80 transition-opacity" aria-label="Back to Support Center">
+            <button onClick={() => navigate('support')} className="absolute left-0 z-10 text-[var(--theme-accent)] hover:opacity-80 transition-opacity" aria-label={t('donatePage.backToSupport')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
             </button>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center px-12 brightness-125">
               {t('paymentOptionsPage.title')}
             </h1>
         </div>

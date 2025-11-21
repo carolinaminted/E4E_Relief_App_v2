@@ -27,8 +27,9 @@ const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
       aria-labelledby="policy-modal-title"
     >
       <div 
-        className="bg-[#004b8d] rounded-lg shadow-xl p-8 w-full max-w-md m-4 relative border border-[#002a50]"
+        className="bg-[var(--theme-bg-secondary)] rounded-lg shadow-xl p-8 w-full max-w-md m-4 relative border border-[var(--theme-border)]"
         onClick={(e) => e.stopPropagation()}
+        style={{ backgroundColor: 'var(--theme-bg-secondary)', borderColor: 'var(--theme-border)' }}
       >
         <button 
           onClick={onClose}
@@ -39,7 +40,7 @@ const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 id="policy-modal-title" className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">
+        <h2 id="policy-modal-title" className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center">
           {t('modals.policy.title')}
         </h2>
         <div className="space-y-4">
@@ -49,7 +50,8 @@ const PolicyModal: React.FC<PolicyModalProps> = ({ onClose }) => {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center bg-[#005ca0] hover:bg-[#006ab3] text-white font-semibold py-3 px-4 rounded-md transition-colors duration-200"
+              className="block w-full text-center bg-[var(--theme-border)] hover:opacity-80 text-white font-semibold py-3 px-4 rounded-md transition-opacity duration-200"
+              style={{ backgroundColor: 'var(--theme-border)' }}
             >
               {link.name}
             </a>

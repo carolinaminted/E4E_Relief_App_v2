@@ -75,7 +75,7 @@ const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> 
                 className={`w-full flex justify-between items-center text-left py-3 px-4 rounded-lg transition-all duration-200 ${isOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
                 aria-expanded={isOpen}
             >
-                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-base sm:text-lg font-medium">
+                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-base sm:text-lg font-medium brightness-125">
                     {faq.question}
                 </h3>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,7 +111,7 @@ const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; isOpen: boolean; on
                 className="w-full flex justify-between items-center text-left p-6"
                 aria-expanded={isOpen}
             >
-                <h2 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{title}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125">{title}</h2>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -158,12 +158,12 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-4xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-8">
-            <button onClick={() => navigate('support')} className="absolute left-0 text-[var(--theme-accent)] hover:opacity-80 transition-opacity md:hidden" aria-label={t('faqPage.backToSupport')}>
+            <button onClick={() => navigate('support')} className="absolute left-0 z-10 text-[var(--theme-accent)] hover:opacity-80 transition-opacity" aria-label={t('faqPage.backToSupport')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
             </button>
-            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center px-10 md:px-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center px-12 brightness-125">
               {t('faqPage.title')}
             </h1>
         </div>

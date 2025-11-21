@@ -66,7 +66,7 @@ const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: bool
     >
         <div className="flex items-center gap-3">
             {isComplete && <CheckmarkIcon />}
-            <h2 className={`text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] ${isComplete ? 'opacity-60' : ''}`}>{title}</h2>
+            <h2 className={`text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125 ${isComplete ? 'opacity-60' : ''}`}>{title}</h2>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -221,7 +221,7 @@ const AIApplyPreviewPane: React.FC<{
 
     return (
         <div className="bg-[var(--theme-bg-primary)]/50 rounded-lg shadow-2xl flex flex-col p-4 flex-1 min-h-0">
-            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] mb-4 text-center flex-shrink-0">
+            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125 mb-4 text-center flex-shrink-0">
                 {t('aiApplyPage.progressTitle')}
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4 flex-shrink-0">{t('aiApplyPage.previewSubtitle')}</p>

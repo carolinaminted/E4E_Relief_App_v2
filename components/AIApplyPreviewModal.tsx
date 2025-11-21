@@ -26,7 +26,7 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, chil
                 style={{ backgroundColor: 'var(--theme-bg-primary)', borderColor: 'var(--theme-border)' }}
             >
                 <header className="flex justify-between items-center border-b border-[var(--theme-border)] p-4 flex-shrink-0">
-                    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
+                    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125">
                         {t('aiApplyPage.progressTitle')}
                     </h2>
                     <button 
