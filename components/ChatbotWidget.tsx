@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { Chat } from '@google/genai';
 // FIX: Separated type and value imports for ChatMessage, MessageRole, and Application.
@@ -7,7 +6,7 @@ import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 // FIX: Added UserProfile to type import
 import type { ChatMessage, Application, UserProfile } from '../types';
-import { createChatSession, MODEL_NAME } from '../services/geminiService';
+import { createChatSession, MODEL_NAME, sendMessageWithRetry } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
@@ -58,13 +57,16 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
     // This ensures CSS transitions are only applied after the initial render, preventing a "flash" on load.
     setIsMounted(true);
 
-    if (isOpen && userProfile) {
-        // FIX: Pass userProfile as the first argument to createChatSession.
+    // REMOVED 'isOpen' from dependency array. We only want to init once when profile/fund/apps load.
+    // This prevents the session from resetting every time the user minimizes/maximizes the chat.
+    if (userProfile) {
         const historyToSeed = messages.length > 1 ? messages.slice(-6) : [];
         chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed);
-        chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
+        if (!chatTokenSessionIdRef.current) {
+            chatTokenSessionIdRef.current = `ai-chat-${Math.random().toString(36).substr(2, 9)}`;
+        }
     }
-  }, [isOpen, applications, activeFund, userProfile, messages]);
+  }, [applications, activeFund, userProfile]); 
 
   // Effect to update the initial greeting if the language changes and no conversation has started
   useEffect(() => {
@@ -225,7 +227,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
       let totalOutputTokens = 0;
 
       // First API call
-      let response = await chatSessionRef.current.sendMessage({ message: userInput });
+      // Use retry wrapper to handle potential 429/503 errors
+      let response = await sendMessageWithRetry(chatSessionRef.current, userInput);
       
       const functionCalls = response.functionCalls;
 
@@ -242,8 +245,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ userProfile, applications
           // "Input" for second call is the function response
           totalInputTokens += estimateTokens(JSON.stringify(functionResponses));
 
-          // Second API call
-          response = await chatSessionRef.current.sendMessage({ message: functionResponses });
+          // Second API call (also wrapped with retry)
+          response = await sendMessageWithRetry(chatSessionRef.current, functionResponses);
       }
       
       // Final text response comes from either the first or second call

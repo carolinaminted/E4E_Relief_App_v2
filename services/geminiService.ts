@@ -1,4 +1,4 @@
-import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content } from "@google/genai";
+import { GoogleGenAI, Chat, FunctionDeclaration, Type, Content, GenerateContentResponse } from "@google/genai";
 import type { Application, Address, UserProfile, ApplicationFormData, EventData, EligibilityDecision, ChatMessage, Expense, FeatureId } from '../types';
 import type { Fund } from '../data/fundData';
 import { logEvent as logTokenEvent, estimateTokens } from './tokenTracker';
@@ -449,6 +449,46 @@ ${applicationList}
       temperature: modelConfig.temperature,
     },
   });
+}
+
+/**
+ * Sends a message to the chat session with automatic retry logic for rate limits (429) and server errors (503).
+ * @param chatSession - The initialized Chat object.
+ * @param message - The message payload to send (string or part array).
+ * @param maxRetries - Maximum number of retries (default 3).
+ * @param initialDelay - Initial delay in ms before the first retry (default 1000ms).
+ * @returns The GenerateContentResponse from the model.
+ */
+export async function sendMessageWithRetry(
+    chatSession: Chat,
+    message: string | Array<any>,
+    maxRetries: number = 3,
+    initialDelay: number = 1000
+): Promise<GenerateContentResponse> {
+    let attempt = 0;
+    let delay = initialDelay;
+
+    while (true) {
+        try {
+            // Use sendMessageStream if you prefer streaming, or sendMessage for simple request/response.
+            // Here we wrap sendMessage for simplicity as per the current usage pattern in the app.
+            // If streaming is needed, a similar wrapper for sendMessageStream would be required.
+            return await chatSession.sendMessage({ message });
+        } catch (error: any) {
+            const isRateLimit = error.status === 429 || error.message?.includes('429');
+            const isServerOverload = error.status === 503 || error.message?.includes('503');
+
+            if ((isRateLimit || isServerOverload) && attempt < maxRetries) {
+                console.warn(`API Error ${error.status || '429/503'}. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                attempt++;
+                delay *= 2; // Exponential backoff
+            } else {
+                // If it's not a retriable error or max retries reached, throw it.
+                throw error;
+            }
+        }
+    }
 }
 
 /**

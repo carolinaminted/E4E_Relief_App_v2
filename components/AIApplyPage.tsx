@@ -4,7 +4,7 @@ import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData, EventData } from '../types';
-import { createChatSession, MODEL_NAME } from '../services/geminiService';
+import { createChatSession, MODEL_NAME, sendMessageWithRetry } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
@@ -404,10 +404,14 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       if (!chatTokenSessionIdRef.current) {
         chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
       }
+      // REMOVED: 'messages' from history seeding logic here as well to prevent confusion.
+      // We should only seed history on initial session creation or explicit reset.
+      // Since this useEffect runs on `applicationDraft` changes, we need to be careful.
+      // We use current messages state to seed, but removing `messages` from dependency prevents the loop.
       const historyToSeed = messages.length > 1 ? messages.slice(-6) : [];
       chatSessionRef.current = createChatSession(userProfile, activeFund, applications, historyToSeed, 'aiApply', applicationDraft);
     }
-  }, [applications, activeFund, userProfile, applicationDraft, messages]);
+  }, [applications, activeFund, userProfile, applicationDraft]); // Removed 'messages' dependency
   
     useEffect(() => {
       // After a message is sent and a response is received (isLoading becomes false)
@@ -455,7 +459,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       if (!currentTurnSession) throw new Error("Chat session not initialized.");
       
       // FIRST API CALL: Send user message and get potential function calls
-      const response1 = await currentTurnSession.sendMessage({ message: userInput });
+      // Use retry wrapper to handle potential 429/503 errors
+      const response1 = await sendMessageWithRetry(currentTurnSession, userInput);
       
       const functionCalls = response1.functionCalls;
 
@@ -495,7 +500,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       let intermediateInputTokens = estimateTokens(JSON.stringify(functionResponses));
 
       // SECOND API CALL: Send tool responses back using the *same session* from this turn.
-      const response2 = await currentTurnSession.sendMessage({ message: functionResponses });
+      // Also wrapped with retry logic.
+      const response2 = await sendMessageWithRetry(currentTurnSession, functionResponses);
       
       let finalOutputTokens = 0;
 
