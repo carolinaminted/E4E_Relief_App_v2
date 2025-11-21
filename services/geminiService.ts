@@ -455,15 +455,15 @@ ${applicationList}
  * Sends a message to the chat session with automatic retry logic for rate limits (429) and server errors (503).
  * @param chatSession - The initialized Chat object.
  * @param message - The message payload to send (string or part array).
- * @param maxRetries - Maximum number of retries (default 3).
- * @param initialDelay - Initial delay in ms before the first retry (default 1000ms).
+ * @param maxRetries - Maximum number of retries (default 5).
+ * @param initialDelay - Initial delay in ms before the first retry (default 2000ms).
  * @returns The GenerateContentResponse from the model.
  */
 export async function sendMessageWithRetry(
     chatSession: Chat,
     message: string | Array<any>,
-    maxRetries: number = 3,
-    initialDelay: number = 1000
+    maxRetries: number = 5,
+    initialDelay: number = 2000
 ): Promise<GenerateContentResponse> {
     let attempt = 0;
     let delay = initialDelay;
@@ -485,6 +485,9 @@ export async function sendMessageWithRetry(
                 delay *= 2; // Exponential backoff
             } else {
                 // If it's not a retriable error or max retries reached, throw it.
+                if (isRateLimit) {
+                    console.error("Gemini API Rate Limit Exceeded. Please check quota.", error);
+                }
                 throw error;
             }
         }
