@@ -49,9 +49,9 @@ const FirstTimeUserGuide: React.FC = () => (
       className="absolute top-0 left-0 flex items-center justify-center h-full w-[50px] pointer-events-none"
       aria-hidden="true"
     >
-      <div className="bg-[var(--theme-accent)] text-white p-2 rounded-lg shadow-lg text-xs whitespace-nowrap absolute -top-14 left-0 animate-bounce">
+      <div className="bg-[var(--theme-accent)] text-white p-3 rounded-xl shadow-xl text-base font-bold whitespace-nowrap absolute -top-24 left-1/2 -translate-x-1/2 animate-bounce z-50">
         Click to see questions
-        <div className="absolute left-6 -translate-x-1/2 top-full w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-[var(--theme-accent)]"></div>
+        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--theme-accent)]"></div>
       </div>
     </div>
 );

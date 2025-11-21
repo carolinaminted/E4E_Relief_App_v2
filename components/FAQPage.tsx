@@ -75,7 +75,7 @@ const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> 
                 className={`w-full flex justify-between items-center text-left py-3 px-4 rounded-lg transition-all duration-200 ${isOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
                 aria-expanded={isOpen}
             >
-                <h3 className="text-base sm:text-lg font-medium text-[var(--theme-accent)]">
+                <h3 className="text-base sm:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                     {faq.question}
                 </h3>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
