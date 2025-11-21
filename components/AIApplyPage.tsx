@@ -49,9 +49,9 @@ const FirstTimeUserGuide: React.FC = () => (
       className="absolute top-0 left-0 flex items-center justify-center h-full w-[50px] pointer-events-none"
       aria-hidden="true"
     >
-      <div className="bg-[var(--theme-accent)] text-white p-3 rounded-xl shadow-xl text-base font-bold whitespace-nowrap absolute -top-24 left-1/2 -translate-x-1/2 animate-bounce z-50">
+      <div className="bg-[var(--theme-accent)] text-white p-3 rounded-xl shadow-xl text-base font-bold whitespace-nowrap absolute -top-16 left-0 animate-bounce z-50">
         Click to see questions
-        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--theme-accent)]"></div>
+        <div className="absolute left-[25px] -translate-x-1/2 top-full w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--theme-accent)]"></div>
       </div>
     </div>
 );
@@ -235,7 +235,7 @@ const AIApplyPreviewPane: React.FC<{
                                 const isComplete = isProfileItemComplete(item.key);
                                 const value = getProfileValue(item.key);
                                 return (
-                                    <div key={item.key} className="p-2 bg-[var(--theme-bg-secondary)]/50 rounded-md flex flex-col">
+                                    <div key={item.key} className="p-2 bg-black/20 rounded-md flex flex-col">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-shrink-0 w-5 h-5">
                                                 {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
@@ -262,7 +262,7 @@ const AIApplyPreviewPane: React.FC<{
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'acknowledgements' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
                             {acknowledgementChecklistItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[var(--theme-bg-secondary)]/50 rounded-md">
+                                <div key={item.key} className="flex items-center gap-3 p-2 bg-black/20 rounded-md">
                                     <div className="flex-shrink-0 w-5 h-5">
                                         {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
                                     </div>
@@ -284,7 +284,7 @@ const AIApplyPreviewPane: React.FC<{
                                 const isComplete = isEventItemComplete(item.key as keyof EventData);
                                 const value = getEventValue(item.key as keyof EventData);
                                 return (
-                                    <div key={item.key} className="p-2 bg-[var(--theme-bg-secondary)]/50 rounded-md flex flex-col">
+                                    <div key={item.key} className="p-2 bg-black/20 rounded-md flex flex-col">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-shrink-0 w-5 h-5">
                                                 {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
@@ -354,7 +354,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(() => {
     if (typeof window === 'undefined') return true;
     if (window.innerWidth >= 768) return true;
-    return sessionStorage.getItem('ai-apply-preview-interacted') === 'true';
+    return false; // Always show on new mount (new session)
   });
   const initDoneForUser = useRef<string | null>(null);
 
@@ -560,7 +560,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                     {/* --- MOBILE VIEW --- */}
                     <div className="md:hidden flex-1 flex flex-col min-h-0">
                         <main className="w-full h-full flex flex-col bg-[var(--theme-bg-secondary)]/50 rounded-lg shadow-2xl">
-                            <header className="p-4 flex-shrink-0 flex justify-between items-start">
+                            <header className="p-4 flex-shrink-0 flex justify-between items-start bg-black/20 rounded-t-lg">
                                 <div>
                                     <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('chatbotWidget.title')}</h2>
                                     <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
@@ -572,7 +572,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                             <div className="flex-1 overflow-hidden flex flex-col">
                                 <ChatWindow messages={messages} isLoading={isLoading} logoUrl={logoUrl} />
                             </div>
-                            <footer className="p-4 flex-shrink-0">
+                            <footer className="p-4 flex-shrink-0 bg-black/20 rounded-b-lg">
                                 <div className="relative">
                                     <ChatInput ref={inputRef} onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!canApply || !hasInteractedWithPreview} />
                                     {!hasInteractedWithPreview && canApply && <FirstTimeUserGuide />}
@@ -584,7 +584,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                     {/* --- DESKTOP VIEW --- */}
                     <div className="hidden md:flex flex-1 flex-row gap-8 min-h-0">
                         <main className="w-3/5 flex flex-col bg-[var(--theme-bg-secondary)]/50 rounded-lg shadow-2xl min-h-0">
-                            <header className="p-4 flex-shrink-0 flex justify-between items-start">
+                            <header className="p-4 flex-shrink-0 flex justify-between items-start bg-black/20 rounded-t-lg">
                                 <div>
                                     <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('chatbotWidget.title')}</h2>
                                     <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
@@ -597,7 +597,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                             <div className="flex-1 overflow-hidden flex flex-col">
                                 <ChatWindow messages={messages} isLoading={isLoading} logoUrl={logoUrl} />
                             </div>
-                            <footer className="p-4 flex-shrink-0">
+                            <footer className="p-4 flex-shrink-0 bg-black/20 rounded-b-lg">
                                 <ChatInput ref={inputRef} onSendMessage={handleSendMessage} isLoading={isLoading} disabled={!canApply} />
                             </footer>
                         </main>

@@ -75,7 +75,7 @@ const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> 
                 className={`w-full flex justify-between items-center text-left py-3 px-4 rounded-lg transition-all duration-200 ${isOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
                 aria-expanded={isOpen}
             >
-                <h3 className="text-base sm:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
+                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-base sm:text-lg font-medium">
                     {faq.question}
                 </h3>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +105,7 @@ const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; isOpen: boolean; on
     };
 
     return (
-        <div className="bg-[var(--theme-bg-secondary)]/90 backdrop-blur-md rounded-2xl shadow-xl mb-6 overflow-hidden">
+        <div className="bg-[var(--theme-bg-secondary)]/80 backdrop-blur-md rounded-2xl shadow-xl mb-6 overflow-hidden">
             <button
                 onClick={onToggleSection}
                 className="w-full flex justify-between items-center text-left p-6"
@@ -163,7 +163,7 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
             </button>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
+            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center px-10 md:px-0">
               {t('faqPage.title')}
             </h1>
         </div>
