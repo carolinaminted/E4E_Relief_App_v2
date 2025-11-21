@@ -333,6 +333,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
   const yes = t('common.yes');
   const no = t('common.no');
+  const householdSizeOptions = ['1', '2', '3', '4', '5', '6', '7+'];
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
@@ -614,8 +615,31 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         variant="underline"
                         error={errors.eligibilityType}
                     />
-                    <FormInput type="number" label="Estimated Annual Household Income" id="householdIncome" required value={formData.householdIncome} onChange={e => handleFormChange('householdIncome', parseFloat(e.target.value) || '')} error={errors.householdIncome} />
-                    <FormInput type="number" label="Number of people in household" id="householdSize" required value={formData.householdSize} onChange={e => handleFormChange('householdSize', parseInt(e.target.value, 10) || '')} error={errors.householdSize} />
+                    <FormInput
+                        label="Estimated Annual Household Income"
+                        id="householdIncome"
+                        required
+                        value={formData.householdIncome !== '' ? `$${Number(formData.householdIncome).toLocaleString('en-US')}` : ''}
+                        onChange={e => {
+                            const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                            handleFormChange('householdIncome', rawValue ? parseInt(rawValue, 10) : '');
+                        }}
+                        error={errors.householdIncome}
+                        placeholder="$0.00"
+                    />
+                    <SearchableSelector
+                        label="Number of people in household"
+                        id="householdSize"
+                        required
+                        value={formData.householdSize === 7 ? '7+' : (formData.householdSize ? String(formData.householdSize) : '')}
+                        options={householdSizeOptions}
+                        onUpdate={value => {
+                            const num = value === '7+' ? 7 : parseInt(value, 10);
+                            handleFormChange('householdSize', num || '');
+                        }}
+                        variant="underline"
+                        error={errors.householdSize}
+                    />
                     <FormRadioGroup legend="Do you own your own home?" name="homeowner" options={['Yes', 'No']} value={formData.homeowner} onChange={value => handleFormChange('homeowner', value)} required error={errors.homeowner} />
                     <SearchableSelector
                         label="Preferred Language"
