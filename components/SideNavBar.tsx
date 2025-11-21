@@ -78,7 +78,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
 
   return (
     <>
-      <nav className="hidden md:flex flex-col w-64 bg-[var(--theme-bg-primary)] border-r border-[var(--theme-border)] p-4 transition-colors duration-500">
+      <nav className="hidden md:flex flex-col w-64 bg-[var(--theme-bg-primary)] p-4 transition-colors duration-500">
         <div className="mb-6 text-center">
             <div className="flex justify-center items-center mb-4">
                 <img
@@ -107,7 +107,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
             </div>
         </div>
 
-        <div className="flex-grow border-t border-[var(--theme-border)] pt-4">
+        <div className="flex-grow pt-4">
           {navItems.map(item => (
             <NavItem
               key={item.page}

@@ -36,7 +36,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ navigate, currentPage, user
   const { t } = useTranslation();
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--theme-bg-primary)] border-t border-[var(--theme-border)] md:hidden z-40 pb-[env(safe-area-inset-bottom)] transition-colors duration-500">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--theme-bg-primary)] md:hidden z-40 pb-[env(safe-area-inset-bottom)] transition-colors duration-500">
       <div className="flex h-16 w-full">
         <NavItem
             label={t('nav.home')}

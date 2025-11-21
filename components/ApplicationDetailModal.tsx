@@ -44,11 +44,11 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
       aria-modal="true"
     >
       <div 
-        className="bg-[var(--theme-bg-primary)] rounded-lg shadow-xl w-full max-w-2xl m-4 relative border border-[var(--theme-border)] max-h-[90vh] flex flex-col"
+        className="bg-[var(--theme-bg-primary)] rounded-lg shadow-xl w-full max-w-2xl m-4 relative max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
-        style={{ backgroundColor: 'var(--theme-bg-primary)', borderColor: 'var(--theme-border)' }}
+        style={{ backgroundColor: 'var(--theme-bg-primary)' }}
       >
-        <div className="p-6 border-b border-[var(--theme-border)] flex justify-between items-center">
+        <div className="p-6 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                 {t('modals.applicationDetail.title', 'Application Details')}
             </h2>
@@ -90,7 +90,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             </div>
 
             {application.reasons && application.reasons.length > 0 && (
-                 <div className="border-t border-[var(--theme-border)] pt-6">
+                 <div className="pt-6">
                     <h3 className="text-lg font-semibold text-white mb-2">{t('modals.applicationDetail.decisionNotes', 'Decision Notes')}</h3>
                     <ul className="list-disc list-inside text-gray-300 space-y-1">
                         {application.reasons.map((reason, idx) => (
@@ -101,7 +101,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             )}
 
             {application.expenses && application.expenses.length > 0 && (
-                <div className="border-t border-[var(--theme-border)] pt-6">
+                <div className="pt-6">
                     <h3 className="text-lg font-semibold text-white mb-4">{t('modals.applicationDetail.expensesTitle', 'Expenses')}</h3>
                     <div className="space-y-3">
                         {application.expenses.map((expense, index) => (
@@ -125,7 +125,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
             )}
         </div>
         
-        <div className="p-6 border-t border-[var(--theme-border)] bg-[var(--theme-bg-primary)] rounded-b-lg" style={{ backgroundColor: 'var(--theme-bg-primary)', borderColor: 'var(--theme-border)' }}>
+        <div className="p-6 bg-[var(--theme-bg-primary)] rounded-b-lg" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
             <button 
                 onClick={onClose}
                 className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200"
