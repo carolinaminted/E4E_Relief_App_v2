@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
@@ -81,6 +82,7 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
+  const { i18n } = useTranslation();
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
@@ -347,7 +349,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-border)]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
+                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleString(i18n.language, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">${app.requestedAmount.toFixed(2)}</p>
@@ -414,7 +416,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <button
                                             onClick={() => onSetActiveIdentity(identity.id)}
                                             disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
-                                            className="bg-[var(--theme-bg-primary)] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[var(--theme-border)] disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                            className="bg-[var(--theme-border)] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
                                             aria-label={`Set ${identity.fundName} as active identity`}
                                         >
                                             Set Active
