@@ -13,7 +13,7 @@ interface MyApplicationsPageProps {
 
 const statusStyles: Record<Application['status'], string> = {
     Submitted: 'text-[var(--theme-accent)]',
-    Awarded: 'text-[#edda26]',
+    Awarded: 'text-[var(--theme-gradient-end)]',
     Declined: 'text-red-400',
 };
 
@@ -75,7 +75,7 @@ const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({ navigate, appli
         <div className="space-y-4">
           {filteredApplications.length > 0 ? (
             filteredApplications.map(app => (
-              <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-border)]/50 transition-colors duration-200">
+              <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-bg-primary)]/50 transition-colors duration-200">
                 <div>
                   <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{app.event === 'My disaster is not listed' ? app.otherEvent : app.event}</p>
                   <p className="text-sm text-gray-300">{t('profilePage.submitted')}: {new Date(app.submittedDate).toLocaleDateString(i18n.language)} at {new Date(app.submittedDate).toLocaleTimeString(i18n.language, { hour: 'numeric', minute: '2-digit', hour12: true })}</p>

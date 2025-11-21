@@ -11,7 +11,7 @@ interface MyProxyApplicationsPageProps {
 
 const statusStyles: Record<Application['status'], string> = {
     Submitted: 'text-[var(--theme-accent)]',
-    Awarded: 'text-[#edda26]',
+    Awarded: 'text-[var(--theme-gradient-end)]',
     Declined: 'text-red-400',
 };
 
@@ -74,7 +74,7 @@ const MyProxyApplicationsPage: React.FC<MyProxyApplicationsPageProps> = ({ navig
         <div className="space-y-4">
           {filteredApplications.length > 0 ? (
             filteredApplications.map(app => (
-              <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-border)]/50 transition-colors duration-200">
+              <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-bg-primary)]/50 transition-colors duration-200">
                 <div>
                   <p className="font-bold text-lg text-white">{app.profileSnapshot.firstName} {app.profileSnapshot.lastName}</p>
                   <p className="text-sm text-gray-300">Event: {app.event === 'My disaster is not listed' ? app.otherEvent : app.event}</p>

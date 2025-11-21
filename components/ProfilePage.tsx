@@ -162,11 +162,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
     }
     setFormData(prev => ({ ...prev, [field]: finalValue }));
 
-    // FIX: Used type assertion to prevent 'symbol' cannot be used as an index type error.
     if (errors[field as string]) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        // FIX: Used type assertion for deleting property.
         delete newErrors[field as string];
         return newErrors;
       });
@@ -181,7 +179,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
             [field]: value
         }
     }));
-    // FIX: Explicitly convert `field` to a string to avoid runtime errors with symbols.
     const errorKey = `${addressType}.${String(field)}`;
     if (errors[errorKey]) {
       setErrors(prev => {
@@ -326,7 +323,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 <ChevronIcon isOpen={openSection === 'applications'} />
             </button>
             <div className={`transition-all duration-500 ease-in-out ${openSection === 'applications' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="bg-[var(--theme-bg-secondary)]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center shadow-xl">
+                <div className="bg-[var(--theme-bg-primary)]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center border border-[var(--theme-border)]">
                     <div>
                         <p className="text-sm text-white uppercase tracking-wider">12-Month Remaining</p>
                         <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
@@ -344,7 +341,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 {applications.length > 0 ? (
                     <>
                         {sortedApplicationsForDisplay.map(app => (
-                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-border)]/50 transition-colors duration-200">
+                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-bg-primary)]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{app.event}</p>
                             <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
@@ -367,7 +364,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         </div>
                     </>
                 ) : (
-                    <div className="text-center py-8 bg-[var(--theme-bg-secondary)]/50 rounded-lg">
+                    <div className="text-center py-8 bg-[var(--theme-bg-primary)]/50 rounded-lg">
                         <p className="text-gray-300">You have not submitted any applications for this fund yet.</p>
                         <button 
                             onClick={() => navigate('apply')} 
@@ -434,11 +431,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                     )
                 })}
                 {!isAddingIdentity ? (
-                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[var(--theme-border)] text-white font-semibold py-3 px-4 rounded-md hover:bg-[var(--theme-bg-secondary)] hover:border-solid transition-all duration-200">
+                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[var(--theme-border)] text-white font-semibold py-3 px-4 rounded-md hover:bg-[var(--theme-border)]/50 hover:border-solid transition-all duration-200">
                         + Add New Identity
                     </button>
                 ) : (
-                    <div className="bg-[var(--theme-bg-secondary)]/50 p-4 rounded-lg border border-[var(--theme-border)]">
+                    <div className="bg-[var(--theme-bg-primary)]/50 p-4 rounded-lg border border-[var(--theme-border)]">
                         <h4 className="text-md font-semibold text-white mb-2">Enter New Fund Code</h4>
                         <div className="flex items-center gap-2">
                             <input 
