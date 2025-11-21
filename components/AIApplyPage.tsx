@@ -221,13 +221,13 @@ const AIApplyPreviewPane: React.FC<{
 
     return (
         <div className="bg-[var(--theme-bg-primary)]/50 rounded-lg shadow-2xl flex flex-col p-4 flex-1 min-h-0">
-            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125 mb-4 text-center flex-shrink-0">
+            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-150 drop-shadow-sm mb-4 text-center flex-shrink-0">
                 {t('aiApplyPage.progressTitle')}
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4 flex-shrink-0">{t('aiApplyPage.previewSubtitle')}</p>
             <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                 {/* Additional Details Section */}
-                <div className="bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-border)]/50">
+                <div className="bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50">
                     <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSection === 'additional'} onToggle={() => toggleSection('additional')} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'additional' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
@@ -257,7 +257,7 @@ const AIApplyPreviewPane: React.FC<{
                 </div>
 
                 {/* Profile Acknowledgements Section */}
-                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-border)]/50 ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
                     <SectionHeader title={t('aiApplyPage.profileAcknowledgementsPreviewTitle')} isComplete={isAcknowledgementsComplete} isOpen={openSection === 'acknowledgements'} onToggle={() => toggleSection('acknowledgements')} disabled={!isAdditionalDetailsComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'acknowledgements' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
@@ -276,7 +276,7 @@ const AIApplyPreviewPane: React.FC<{
                 </div>
 
                 {/* Event Details Section */}
-                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-border)]/50 ${!isAcknowledgementsComplete ? 'opacity-50' : ''}`}>
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isAcknowledgementsComplete ? 'opacity-50' : ''}`}>
                      <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAcknowledgementsComplete} />
                      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
@@ -306,7 +306,7 @@ const AIApplyPreviewPane: React.FC<{
                 </div>
 
                 {/* Expenses Section */}
-                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-border)]/50 ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
                     <SectionHeader title={t('aiApplyPage.expensesPreviewTitle')} isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'expenses' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
@@ -323,7 +323,7 @@ const AIApplyPreviewPane: React.FC<{
                 </div>
 
                 {/* Agreements Section */}
-                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-border)]/50 ${!isExpensesComplete ? 'opacity-50' : ''}`}>
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isExpensesComplete ? 'opacity-50' : ''}`}>
                     <SectionHeader title={t('aiApplyPage.agreementsPreviewTitle')} isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'agreements' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
