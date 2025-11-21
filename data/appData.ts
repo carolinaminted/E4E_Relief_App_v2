@@ -1,6 +1,12 @@
 // FIX: Import the Expense type to create a more specific type for expenseTypes.
 import type { Expense } from '../types';
 
+export const LANGUAGE_LABELS: Record<string, string> = {
+  en: "English",
+  es: "Español",
+  ja: "日本語",
+};
+
 // Extracted from image
 export const employmentTypes: string[] = [
     'Active Full Time',

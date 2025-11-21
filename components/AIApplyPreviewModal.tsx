@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -20,12 +21,13 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, chil
             aria-modal="true"
         >
             <div 
-                className="bg-[#003a70] rounded-lg shadow-xl p-0 w-full max-w-lg m-4 relative border border-[#002a50] max-h-[80vh] flex flex-col"
+                className="bg-[var(--theme-bg-primary)] rounded-lg shadow-xl p-0 w-full max-w-lg m-4 relative border border-[var(--theme-border)] max-h-[80vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
+                style={{ backgroundColor: 'var(--theme-bg-primary)', borderColor: 'var(--theme-border)' }}
             >
-                <header className="flex justify-between items-center border-b border-[#005ca0] p-4 flex-shrink-0">
-                    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        Application Progress
+                <header className="flex justify-between items-center border-b border-[var(--theme-border)] p-4 flex-shrink-0">
+                    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125">
+                        {t('aiApplyPage.progressTitle')}
                     </h2>
                     <button 
                         onClick={onClose}
@@ -40,10 +42,10 @@ const AIApplyPreviewModal: React.FC<AIApplyPreviewModalProps> = ({ onClose, chil
                 <div className="flex-1 flex flex-col min-h-0">
                      {children}
                 </div>
-                <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                <footer className="p-4 border-t border-[var(--theme-border)] flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200"
+                        className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200"
                     >
                         {t('common.close', 'Close')}
                     </button>

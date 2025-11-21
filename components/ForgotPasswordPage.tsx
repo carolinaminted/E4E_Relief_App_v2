@@ -39,7 +39,7 @@ const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onSendResetLink
             />
         </div>
         <div className="flex justify-center mb-6">
-          <LanguageSwitcher />
+          <LanguageSwitcher supportedLanguages={['en', 'es', 'ja']} />
         </div>
         <div className="text-center">
             <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-2">{t('forgotPasswordPage.title')}</h1>

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
@@ -8,6 +9,7 @@ import { init as initTokenTracker, reset as resetTokenTracker } from './services
 import { authClient } from './services/firebaseAuthClient';
 import { usersRepo, identitiesRepo, applicationsRepo, fundsRepo } from './services/firestoreRepo';
 import { useTranslation } from 'react-i18next';
+import { fundThemes, defaultTheme } from './data/fundThemes';
 
 // Page Components
 import LoginPage from './components/LoginPage';
@@ -40,6 +42,7 @@ import MyApplicationsPage from './components/MyApplicationsPage';
 import MyProxyApplicationsPage from './components/MyProxyApplicationsPage';
 import ReliefQueuePage from './components/ReliefQueuePage';
 import ChatbotWidget from './components/ChatbotWidget';
+import SessionTimeoutHandler from './components/SessionTimeoutHandler';
 
 type AuthState = {
     status: 'loading' | 'signedIn' | 'signedOut';
@@ -63,6 +66,7 @@ function App() {
   const [lastSubmittedApp, setLastSubmittedApp] = useState<Application | null>(null);
   const [applicationDraft, setApplicationDraft] = useState<Partial<ApplicationFormData> | null>(null);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [currentLogo, setCurrentLogo] = useState(defaultTheme.logoUrl);
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -95,7 +99,7 @@ function App() {
             // Set language based on user profile preference
             if (profile.preferredLanguage) {
               const langCode = profile.preferredLanguage.toLowerCase().slice(0, 2);
-              if ((langCode === 'en' || langCode === 'es') && i18n.language !== langCode) {
+              if ((langCode === 'en' || langCode === 'es' || langCode === 'ja') && i18n.language !== langCode) {
                 i18n.changeLanguage(langCode);
               }
             }
@@ -147,7 +151,9 @@ function App() {
             initTokenTracker(hydratedProfile);
 
             // Navigation logic based on the hydrated profile state
-            const isStuckInVerification = hydratedProfile.classVerificationStatus === 'failed' && hydratedProfile.role !== 'Admin';
+            // Logic Update: Only trap in relief queue if FAILED and NO OTHER ELIGIBLE identities.
+            const hasEligibleIdentity = identities.some(id => id.eligibilityStatus === 'Eligible');
+            const isStuckInVerification = hydratedProfile.classVerificationStatus === 'failed' && !hasEligibleIdentity && hydratedProfile.role !== 'Admin';
 
             if (isStuckInVerification) {
                 setPage('reliefQueue');
@@ -179,6 +185,15 @@ function App() {
         // --- User is signed out ---
         setAuthState({ status: 'signedOut', user: null, profile: null, claims: {} });
         setCurrentUser(null);
+        
+        // Fix: Clear data states to prevent "Missing permissions" errors from lingering effects
+        // triggering data fetches after auth is gone.
+        setActiveIdentity(null);
+        setAllIdentities([]);
+        setApplications([]);
+        setProxyApplications([]);
+        setVerifyingFundCode(null);
+        
         setPage('login');
         resetTokenTracker();
       }
@@ -214,6 +229,42 @@ function App() {
     fetchActiveFund();
   }, [activeIdentity, currentUser?.fundCode]);
 
+  // Theme Application Logic
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyTheme = (theme: typeof defaultTheme) => {
+      root.style.setProperty('--theme-bg-primary', theme.primary);
+      root.style.setProperty('--theme-bg-secondary', theme.secondary);
+      root.style.setProperty('--theme-border', theme.border);
+      root.style.setProperty('--theme-accent', theme.accent);
+      root.style.setProperty('--theme-accent-hover', theme.accentHover);
+      root.style.setProperty('--theme-gradient-start', theme.gradientStart);
+      root.style.setProperty('--theme-gradient-end', theme.gradientEnd);
+      
+      // Update logo
+      setCurrentLogo(theme.logoUrl);
+    };
+
+    // Determine the target theme based on the current page and context
+    let targetTheme = defaultTheme;
+
+    if (page === 'classVerification') {
+        // Priority 1: Explicitly verifying a specific fund code (e.g. Add Identity flow)
+        const targetFundCode = verifyingFundCode || currentUser?.fundCode;
+        if (targetFundCode && fundThemes[targetFundCode]) {
+            targetTheme = fundThemes[targetFundCode];
+        }
+    } else {
+        const themedPages: GlobalPage[] = ['home', 'profile', 'support', 'donate', 'faq', 'paymentOptions', 'aiApply', 'myApplications', 'myProxyApplications', 'apply', 'applyExpenses', 'submissionSuccess'];
+        if (themedPages.includes(page) && activeFund && fundThemes[activeFund.code]) {
+            targetTheme = fundThemes[activeFund.code];
+        }
+    }
+
+    applyTheme(targetTheme);
+
+  }, [page, activeFund, verifyingFundCode, currentUser]);
+
   const userIdentities = useMemo(() => {
     if (!currentUser) return [];
     return allIdentities.filter(id => id.uid === currentUser.uid);
@@ -237,6 +288,10 @@ function App() {
     if (!currentUser) return false;
     return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Eligible';
   }, [currentUser]);
+
+  const hasEligibleIdentity = useMemo(() => {
+      return allIdentities.some(id => id.eligibilityStatus === 'Eligible');
+  }, [allIdentities]);
 
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
       const sortedUserApps = [...userApplications].sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
@@ -298,18 +353,58 @@ function App() {
   };
   
   const navigate = useCallback((targetPage: GlobalPage) => {
-    if (page === 'reliefQueue' && targetPage !== 'classVerification') {
-        console.log("Gating navigation. User is in relief queue.");
+    // 1. Auth pages always allowed
+    if (['login', 'register', 'forgotPassword'].includes(targetPage)) {
+        setPage(targetPage);
         return;
     }
 
-    if (targetPage === 'apply' && !isVerifiedAndEligible) {
-        console.log("Gating 'apply' page. User not verified or not eligible.");
-        setPage('classVerification');
-    } else {
+    // 2. Admin bypass
+    if (currentUser?.role === 'Admin') {
         setPage(targetPage);
+        return;
     }
-  }, [isVerifiedAndEligible, page]);
+
+    // 3. Strict Lockdown for Failed Verification with No Identity (Relief Queue Trap)
+    // If user failed verification AND has no other eligible identities, they must stay in queue.
+    const isStuckInReliefQueue = currentUser?.classVerificationStatus === 'failed' && !hasEligibleIdentity;
+    
+    if (isStuckInReliefQueue) {
+        // Only allow pages necessary for re-verification
+        const allowedQueuePages: GlobalPage[] = ['reliefQueue', 'classVerification'];
+        
+        if (allowedQueuePages.includes(targetPage)) {
+             setPage(targetPage);
+        } else {
+             // Force redirect back to relief queue if trying to escape
+             setPage('reliefQueue');
+        }
+        return;
+    }
+
+    // 4. General Ineligibility Guard (For Pending users or those with mixed status)
+    if (!isVerifiedAndEligible) {
+        const allowedIneligiblePages: GlobalPage[] = [
+            'home', 
+            'classVerification', 
+            'reliefQueue', 
+            'profile', 
+            'eligibility'
+        ];
+        
+        if (!allowedIneligiblePages.includes(targetPage)) {
+            console.warn(`Access denied to ${targetPage} for ineligible user.`);
+            // If the user is trying to access a blocked page (like Support or Donate),
+            // we keep them on the current page (likely Home) or redirect to Home if they are somewhere weird.
+            if (page !== 'home' && page !== 'profile' && page !== 'classVerification') {
+                 setPage('home');
+            }
+            return;
+        }
+    }
+
+    setPage(targetPage);
+  }, [isVerifiedAndEligible, hasEligibleIdentity, page, currentUser]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
@@ -621,14 +716,18 @@ function App() {
     setPage('submissionSuccess');
   }, [currentUser, authState.claims.admin, activeFund]);
 
-  const handleDraftUpdate = useCallback((partialDraft: Partial<ApplicationFormData>) => {
+  const handleDraftUpdate = useCallback((partialDraft: {
+      profileData?: Partial<UserProfile>;
+      eventData?: Partial<EventData>;
+      agreementData?: Partial<ApplicationFormData['agreementData']>;
+  }) => {
     if (!currentUser) return;
     
     setApplicationDraft(prevDraft => {
         // Deep merge the new partial draft into the previous state, ensuring profileData is always seeded.
         const newDraft: Partial<ApplicationFormData> = {
             ...prevDraft,
-            ...partialDraft,
+            ...(partialDraft as Partial<ApplicationFormData>),
             profileData: {
                 ...currentUser,
                 ...(prevDraft?.profileData || {}),
@@ -639,6 +738,8 @@ function App() {
                 ...(partialDraft.eventData || {}),
             } as EventData,
             agreementData: {
+                shareStory: null,
+                receiveAdditionalInfo: null,
                 ...(prevDraft?.agreementData || {}),
                 ...(partialDraft.agreementData || {}),
             },
@@ -652,6 +753,17 @@ function App() {
         }
         return newDraft;
     });
+  }, [currentUser]);
+
+  const handleResetDraft = useCallback(() => {
+      if (!currentUser) return;
+      const draftKey = `applicationDraft-${currentUser.uid}-${currentUser.fundCode}`;
+      try {
+          localStorage.removeItem(draftKey);
+      } catch (e) {
+          console.error("Failed to clear draft from local storage", e);
+      }
+      setApplicationDraft(null);
   }, [currentUser]);
 
   const handleChatbotAction = useCallback((functionName: string, args: any) => {
@@ -687,7 +799,8 @@ function App() {
     }
 
     if (functionName === 'addOrUpdateExpense') {
-        const prevEventData = applicationDraft?.eventData || {};
+        // FIX: Ensure prevEventData has expenses array to avoid property access error
+        const prevEventData = applicationDraft?.eventData || { expenses: [] };
         const newExpenses: Expense[] = [...(prevEventData.expenses || [])];
         
         if (args.expenses && Array.isArray(args.expenses)) {
@@ -723,12 +836,12 @@ function App() {
     }
 
     if (functionName === 'updateAgreements') {
-        const agreementUpdates = { ...args };
+        const updates = args as { shareStory?: boolean; receiveAdditionalInfo?: boolean };
+        const currentAgreements = applicationDraft?.agreementData;
+
         newDraft.agreementData = {
-            shareStory: null,
-            receiveAdditionalInfo: null,
-            ...applicationDraft?.agreementData,
-            ...agreementUpdates,
+            shareStory: updates.shareStory !== undefined ? updates.shareStory : (currentAgreements?.shareStory ?? null),
+            receiveAdditionalInfo: updates.receiveAdditionalInfo !== undefined ? updates.receiveAdditionalInfo : (currentAgreements?.receiveAdditionalInfo ?? null),
         };
     }
     
@@ -761,6 +874,9 @@ function App() {
     }
     
     if (!currentUser) return <LoadingOverlay message={t('app.loadingProfile')} />;
+    
+    // Determine available languages for current fund, defaulting to full list if not specified to prevent UI hiding issues
+    const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
     switch (page) {
       case 'reliefQueue':
@@ -782,6 +898,8 @@ function App() {
                     onDraftUpdate={handleDraftUpdate}
                     onSubmit={handleApplicationSubmit}
                     canApply={canApply}
+                    onResetDraft={handleResetDraft}
+                    logoUrl={currentLogo} // Add this line
                 />;
       case 'profile':
         return <ProfilePage 
@@ -794,7 +912,6 @@ function App() {
                     onSetActiveIdentity={handleSetActiveIdentity}
                     onAddIdentity={handleStartAddIdentity}
                     onRemoveIdentity={handleRemoveIdentity}
-                    activeFund={activeFund}
                 />;
       case 'myApplications':
         return <MyApplicationsPage 
@@ -851,7 +968,7 @@ function App() {
   // Logged out view is handled inside renderPage()
   if (!currentUser) {
       return (
-          <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+          <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
               <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
                   {renderPage()}
               </main>
@@ -862,77 +979,91 @@ function App() {
   // Relief Queue view (special logged-in state without nav)
   if (page === 'reliefQueue') {
     return (
-        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col">
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
             <IconDefs />
             <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto">
-                {renderPage()}
+                <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
+                    {renderPage()}
+                </SessionTimeoutHandler>
             </main>
         </div>
     );
   }
+  
+  // Determine available languages for current fund, defaulting to full list if not specified
+  const supportedLanguages = activeFund?.supportedLanguages || ['en', 'es', 'ja'];
 
   return (
-    <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden">
-      <IconDefs />
-      <SideNavBar 
-        navigate={navigate}
-        currentPage={page}
-        userRole={currentUser.role}
-        userName={currentUser.firstName}
-        onLogout={handleLogout}
-        canApply={canApply}
-        eligibilityStatus={currentUser.eligibilityStatus}
-        cvStatus={currentUser.classVerificationStatus}
-      />
-
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <Header 
-            userName={currentUser.firstName}
-            onLogout={handleLogout}
-            eligibilityStatus={currentUser.eligibilityStatus}
-            cvStatus={currentUser.classVerificationStatus}
-        />
-        <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
-          <div className="hidden md:block">
-            {page === 'profile' && (
-               <div className="relative flex justify-center items-center my-8">
-                  <div className="text-center">
-                      <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
-                        {t('profilePage.title')}
-                      </h1>
-                      {activeIdentity && (
-                        <div className="mt-2 flex flex-col items-center gap-2">
-                          <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
-                        </div>
-                      )}
-                  </div>
-              </div>
-            )}
-          </div>
-          {renderPage()}
-          {!pagesWithoutFooter.includes(page) && <Footer />}
-        </main>
-        
-        <BottomNavBar
+    <SessionTimeoutHandler onLogout={handleLogout} isActive={true}>
+        <div className="bg-[#003a70] text-white h-screen font-sans flex flex-col md:flex-row overflow-hidden" style={{ backgroundColor: 'var(--theme-bg-primary)' }}>
+          <IconDefs />
+          <SideNavBar 
             navigate={navigate}
             currentPage={page}
             userRole={currentUser.role}
+            userName={currentUser.firstName}
+            onLogout={handleLogout}
             canApply={canApply}
-        />
-
-        {!pagesWithoutChatbot.includes(page) && (
-          <ChatbotWidget
-            userProfile={currentUser}
-            applications={userApplications}
-            onChatbotAction={handleChatbotAction}
-            isOpen={isChatbotOpen}
-            setIsOpen={setIsChatbotOpen}
-            scrollContainerRef={mainRef}
-            activeFund={activeFund}
+            eligibilityStatus={currentUser.eligibilityStatus}
+            cvStatus={currentUser.classVerificationStatus}
+            supportedLanguages={supportedLanguages}
+            logoUrl={currentLogo}
+            onReverify={() => handleStartAddIdentity(currentUser.fundCode)}
           />
-        )}
-      </div>
-    </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            <Header 
+                userName={currentUser.firstName}
+                onLogout={handleLogout}
+                eligibilityStatus={currentUser.eligibilityStatus}
+                cvStatus={currentUser.classVerificationStatus}
+                supportedLanguages={supportedLanguages}
+                logoUrl={currentLogo}
+                onReverify={() => handleStartAddIdentity(currentUser.fundCode)}
+            />
+            <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
+              <div className="hidden md:block">
+                {page === 'profile' && (
+                   <div className="relative flex justify-center items-center my-8">
+                      <div className="text-center">
+                          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
+                            {t('profilePage.title')}
+                          </h1>
+                          {activeIdentity && (
+                            <div className="mt-2 flex flex-col items-center gap-2">
+                              <p className="text-lg text-gray-300">{currentUser.fundName} ({currentUser.fundCode})</p>
+                            </div>
+                          )}
+                      </div>
+                  </div>
+                )}
+              </div>
+              {renderPage()}
+              {!pagesWithoutFooter.includes(page) && <Footer />}
+            </main>
+            
+            <BottomNavBar
+                navigate={navigate}
+                currentPage={page}
+                userRole={currentUser.role}
+                canApply={canApply}
+            />
+
+            {!pagesWithoutChatbot.includes(page) && (isVerifiedAndEligible || currentUser.role === 'Admin') && (
+              <ChatbotWidget
+                userProfile={currentUser}
+                applications={userApplications}
+                onChatbotAction={handleChatbotAction}
+                isOpen={isChatbotOpen}
+                setIsOpen={setIsChatbotOpen}
+                scrollContainerRef={mainRef}
+                activeFund={activeFund}
+                logoUrl={currentLogo}
+              />
+            )}
+          </div>
+        </div>
+    </SessionTimeoutHandler>
   );
 }
 

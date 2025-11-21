@@ -1,4 +1,3 @@
-
 {
   "funds": {
     "DOM": {
@@ -30,12 +29,13 @@
         ]
       },
       "eligibleStorms": [
-        "Hurricane Alpha",
-        "Tropical Storm Beta",
-        "Hurricane Gamma"
+        "Hurricane Kyogre",
+        "Tropical Storm Lugia",
+        "Typhoon Manaphy"
       ],
       "supportEmail": "dom-support@example.com",
-      "supportPhone": "(800) 555-1111"
+      "supportPhone": "(800) 555-1111",
+      "supportedLanguages": ["en", "es", "ja"]
     },
     "ROST": {
       "name": "Charizard Relief Fund",
@@ -73,7 +73,8 @@
         ]
       },
       "supportEmail": "rost-support@example.com",
-      "supportPhone": "(800) 555-2222"
+      "supportPhone": "(800) 555-2222",
+      "supportedLanguages": ["en", "es", "ja"]
     },
     "SSO": {
       "name": "Venusaur Relief Fund",
@@ -102,7 +103,8 @@
         "Part-Time on FMLA (U.S. only)"
       ],
       "supportEmail": "sso-support@example.com",
-      "supportPhone": "(800) 555-3333"
+      "supportPhone": "(800) 555-3333",
+      "supportedLanguages": ["en", "es", "ja"]
     }
   }
 }

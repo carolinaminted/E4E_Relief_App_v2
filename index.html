@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,10 +8,27 @@
     <title>Gemini Chat Bot</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      :root {
+        --theme-bg-primary: #003a70;
+        --theme-bg-secondary: #004b8d;
+        --theme-border: #005ca0;
+        --theme-accent: #ff8400;
+        --theme-accent-hover: #e67700;
+        --theme-gradient-start: #ff8400;
+        --theme-gradient-end: #edda26;
+      }
+
       html {
         /* Prevents automatic text size adjustment on mobile browsers (like Safari on iOS), ensuring consistent layout. */
         -webkit-text-size-adjust: 100%;
       }
+      
+      /* Hide native password reveal button in Edge/IE to prevent duplicate icons with custom toggle */
+      input::-ms-reveal,
+      input::-ms-clear {
+        display: none;
+      }
+
       /* Styles for the 3D flip card animation */
       .flip-container {
         perspective: 1000px;
@@ -89,7 +107,7 @@
 }
 </script>
 </head>
-  <body class="bg-[#003a70]">
+  <body class="bg-[#003a70]" style="background-color: var(--theme-bg-primary);">
     <div id="root"></div>
     <!-- A dedicated root for modals is a best practice to handle z-index and stacking contexts correctly. -->
     <div id="modal-root"></div>

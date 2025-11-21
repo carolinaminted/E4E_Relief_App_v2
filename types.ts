@@ -106,6 +106,7 @@ export interface UserProfile {
   ackPolicies: boolean;
   commConsent: boolean;
   infoCorrect: boolean;
+  reliefQueueTicket?: string; // Unique ticket number for users in the relief queue.
   // --- Denormalized fields from the active FundIdentity for quick access ---
   fundCode: string; // The fund code of the *active* identity.
   fundName?: string; // The fund name of the *active* identity.
@@ -221,6 +222,25 @@ export interface ChatMessage {
   content: string;
 }
 
+// --- AI Configuration Types ---
+
+/**
+ * Defines the configuration for a specific AI feature model.
+ */
+export interface ModelConfig {
+  model: string;
+  maxTokens?: number;
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+}
+
+/**
+ * Keys for the different AI features available in the application.
+ */
+export type FeatureId = 'AI_APPLY' | 'AI_DECISIONING' | 'AI_ASSISTANT' | 'ADDRESS_PARSING' | 'APP_PARSING';
+
+
 // --- Token Usage Analytics Types ---
 
 /**
@@ -245,7 +265,7 @@ export interface TokenEvent {
   userName: string; // The user's full name, denormalized for easier display.
   timestamp: string; // ISO 8601 timestamp string.
   feature: 'AI Assistant' | 'Address Parsing' | 'Application Parsing' | 'Final Decision' | 'AI Apply Chat';
-  model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+  model: 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-3-pro-preview' | string; // String allowing for future models
   inputTokens: number;
   cachedInputTokens: number;
   outputTokens: number;
@@ -265,6 +285,7 @@ export interface TokenUsageTableRow {
   date: string;
   session: string;
   feature: string;
+  model: string; // Model used for this session/feature interaction
   fundCode: string;
   fundName: string;
   input: number;

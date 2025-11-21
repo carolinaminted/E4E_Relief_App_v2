@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EventData, Expense, UserProfile } from '../types';
@@ -10,6 +11,7 @@ interface AIApplyExpensesProps {
   userProfile: UserProfile;
   updateFormData: (data: Partial<EventData>) => void;
   disabled?: boolean;
+  onNext: () => void;
 }
 
 // --- Icons ---
@@ -34,7 +36,7 @@ const UploadSpinner: React.FC = () => (
 );
 
 
-const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile, updateFormData, disabled = false }) => {
+const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile, updateFormData, disabled = false, onNext }) => {
   const { t } = useTranslation();
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
@@ -132,6 +134,16 @@ const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile
     }
   };
 
+  // Check if all expense types have a value greater than 0
+  const isComplete = useMemo(() => {
+      const expenses = formData.expenses || [];
+      // Assuming all presented types must be filled, matching logic in parent checklist
+      return expenseTypes.every(type => {
+          const expense = expenses.find(e => e.type === type);
+          return expense && expense.amount !== '' && Number(expense.amount) > 0;
+      });
+  }, [formData.expenses]);
+
   return (
     <div className="p-3 space-y-4">
        <div className="border-b border-[#005ca0] pb-4 flex justify-center items-center">
@@ -188,6 +200,16 @@ const AIApplyExpenses: React.FC<AIApplyExpensesProps> = ({ formData, userProfile
             </div>
           );
         })}
+      </div>
+
+      <div className="flex justify-center pt-4 border-t border-[#005ca0]/30">
+        <button
+            onClick={onNext}
+            disabled={disabled || !isComplete}
+            className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200 flex justify-center items-center h-12 disabled:bg-gray-600 disabled:cursor-not-allowed"
+        >
+            {t('common.next')}
+        </button>
       </div>
     </div>
   );

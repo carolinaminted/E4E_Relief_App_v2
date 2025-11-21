@@ -1,9 +1,10 @@
+
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Chat } from '@google/genai';
 import { MessageRole } from '../types';
 import type { Fund } from '../data/fundData';
 import type { ChatMessage, Application, UserProfile, Page, ApplicationFormData, EventData } from '../types';
-import { createChatSession } from '../services/geminiService';
+import { createChatSession, MODEL_NAME } from '../services/geminiService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import { logEvent as logTokenEvent, estimateTokens } from '../services/tokenTracker';
@@ -23,11 +24,13 @@ interface AIApplyPageProps {
   onDraftUpdate: (draft: Partial<ApplicationFormData>) => void;
   onSubmit: (formData: ApplicationFormData) => Promise<void>;
   canApply: boolean;
+  onResetDraft: () => void;
+  logoUrl: string;
 }
 
 const CheckmarkIcon: React.FC = () => (
     <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"></path>
     </svg>
 );
 
@@ -35,14 +38,20 @@ const CircleIcon: React.FC = () => (
     <div className="w-5 h-5 border-2 border-gray-500 rounded-full"></div>
 );
 
+const ResetIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+);
+
 const FirstTimeUserGuide: React.FC = () => (
     <div 
       className="absolute top-0 left-0 flex items-center justify-center h-full w-[50px] pointer-events-none"
       aria-hidden="true"
     >
-      <div className="bg-[#ff8400] text-white p-2 rounded-lg shadow-lg text-xs whitespace-nowrap absolute -top-14 left-0 animate-bounce">
+      <div className="bg-[var(--theme-accent)] text-white p-3 rounded-xl shadow-xl text-base font-bold whitespace-nowrap absolute -top-16 left-0 animate-bounce z-50">
         Click to see questions
-        <div className="absolute left-6 -translate-x-1/2 top-full w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-[#ff8400]"></div>
+        <div className="absolute left-[25px] -translate-x-1/2 top-full w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--theme-accent)]"></div>
       </div>
     </div>
 );
@@ -51,15 +60,15 @@ const FirstTimeUserGuide: React.FC = () => (
 const SectionHeader: React.FC<{ title: string; isComplete: boolean; isOpen: boolean; onToggle: () => void, disabled?: boolean }> = ({ title, isComplete, isOpen, onToggle, disabled }) => (
     <button
         onClick={onToggle}
-        className="w-full flex justify-between items-center text-left py-3 px-4 bg-[#004b8d]/50 rounded-t-md border-b border-[#005ca0] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full flex justify-between items-center text-left py-3 px-4 bg-[var(--theme-bg-secondary)]/50 rounded-t-md disabled:opacity-60 disabled:cursor-not-allowed"
         aria-expanded={isOpen}
         disabled={disabled}
     >
         <div className="flex items-center gap-3">
             {isComplete && <CheckmarkIcon />}
-            <h2 className={`text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] ${isComplete ? 'opacity-60' : ''}`}>{title}</h2>
+            <h2 className={`text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-150 drop-shadow-sm ${isComplete ? 'opacity-60' : ''}`}>{title}</h2>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
     </button>
@@ -160,13 +169,13 @@ const AIApplyPreviewPane: React.FC<{
         setOpenSection(prev => (prev === section ? null : section));
     };
 
-    // Effect to auto-open the next incomplete section
+    // Effect to auto-open the next incomplete section, but NOT the agreements section automatically
     useEffect(() => {
         if (!isAdditionalDetailsComplete) setOpenSection('additional');
         else if (!isAcknowledgementsComplete) setOpenSection('acknowledgements');
         else if (!isEventDetailsComplete) setOpenSection('event');
         else if (!isExpensesComplete) setOpenSection('expenses');
-        else setOpenSection('agreements');
+        // Explicitly do not auto-open agreements to avoid jumping.
     }, [isAdditionalDetailsComplete, isAcknowledgementsComplete, isEventDetailsComplete, isExpensesComplete]);
     
     const isProfileItemComplete = (key: string) => {
@@ -186,47 +195,78 @@ const AIApplyPreviewPane: React.FC<{
         const value = applicationDraft.eventData[key];
         return value !== undefined && value !== null && value !== '';
     };
+    
+    const getProfileValue = (key: string) => {
+        const draftVal = applicationDraft?.profileData?.[key as keyof UserProfile];
+        if (draftVal !== undefined && draftVal !== null && draftVal !== '') {
+            if (typeof draftVal === 'boolean') return null;
+            return String(draftVal);
+        }
+        const profileVal = userProfile?.[key as keyof UserProfile];
+        if (profileVal !== undefined && profileVal !== null && profileVal !== '') {
+            if (typeof profileVal === 'boolean') return null;
+            return String(profileVal);
+        }
+        return null;
+    };
+
+    const getEventValue = (key: keyof EventData) => {
+        const val = applicationDraft?.eventData?.[key];
+        if (val !== undefined && val !== null && val !== '') return String(val);
+        return null;
+    };
 
     const visibleEventItems = eventChecklistItems.filter(item => !item.condition || item.condition(applicationDraft?.eventData || {}));
 
 
     return (
-        <div className="bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] flex flex-col p-4 flex-1 min-h-0">
-            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] mb-4 text-center flex-shrink-0">
-                Application Progress
+        <div className="bg-[var(--theme-bg-primary)]/50 rounded-lg shadow-2xl flex flex-col p-4 flex-1 min-h-0">
+            <h2 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-150 drop-shadow-sm mb-4 text-center flex-shrink-0">
+                {t('aiApplyPage.progressTitle')}
             </h2>
             <p className="text-xs text-gray-400 text-center mb-4 flex-shrink-0">{t('aiApplyPage.previewSubtitle')}</p>
             <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                 {/* Additional Details Section */}
-                <div className="bg-[#004b8d]/30 rounded-md">
+                <div className="bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50">
                     <SectionHeader title={t('aiApplyPage.additionalDetailsPreviewTitle')} isComplete={isAdditionalDetailsComplete} isOpen={openSection === 'additional'} onToggle={() => toggleSection('additional')} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'additional' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
-                            {baseChecklistItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                                    <div className="flex-shrink-0 w-5 h-5">
-                                        {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
+                            {baseChecklistItems.map(item => {
+                                const isComplete = isProfileItemComplete(item.key);
+                                const value = getProfileValue(item.key);
+                                return (
+                                    <div key={item.key} className="p-2 bg-black/20 rounded-md flex flex-col">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-5 h-5">
+                                                {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
+                                            </div>
+                                            <span className={`text-sm ${isComplete ? 'text-gray-400' : 'text-white'}`}>
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        {value && (
+                                            <div className="ml-8 mt-1 text-sm text-[var(--theme-accent)] font-medium break-words">
+                                                {value}
+                                            </div>
+                                        )}
                                     </div>
-                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
 
                 {/* Profile Acknowledgements Section */}
-                <div className={`bg-[#004b8d]/30 rounded-md ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isAdditionalDetailsComplete ? 'opacity-50' : ''}`}>
                     <SectionHeader title={t('aiApplyPage.profileAcknowledgementsPreviewTitle')} isComplete={isAcknowledgementsComplete} isOpen={openSection === 'acknowledgements'} onToggle={() => toggleSection('acknowledgements')} disabled={!isAdditionalDetailsComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'acknowledgements' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
                             {acknowledgementChecklistItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
+                                <div key={item.key} className="flex items-center gap-3 p-2 bg-black/20 rounded-md">
                                     <div className="flex-shrink-0 w-5 h-5">
                                         {isProfileItemComplete(item.key) ? <CheckmarkIcon /> : <CircleIcon />}
                                     </div>
-                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                    <span className={`text-sm ${isProfileItemComplete(item.key) ? 'text-gray-400' : 'text-white'}`}>
                                         {item.label}
                                     </span>
                                 </div>
@@ -236,47 +276,61 @@ const AIApplyPreviewPane: React.FC<{
                 </div>
 
                 {/* Event Details Section */}
-                <div className={`bg-[#004b8d]/30 rounded-md ${!isAcknowledgementsComplete ? 'opacity-50' : ''}`}>
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isAcknowledgementsComplete ? 'opacity-50' : ''}`}>
                      <SectionHeader title={t('aiApplyPage.eventDetailsPreviewTitle')} isComplete={isEventDetailsComplete} isOpen={openSection === 'event'} onToggle={() => toggleSection('event')} disabled={!isAcknowledgementsComplete} />
                      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'event' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-3 space-y-2">
-                            {visibleEventItems.map(item => (
-                                <div key={item.key} className="flex items-center gap-3 p-2 bg-[#004b8d]/50 rounded-md">
-                                    <div className="flex-shrink-0 w-5 h-5">
-                                        {isEventItemComplete(item.key as keyof EventData) ? <CheckmarkIcon /> : <CircleIcon />}
+                            {visibleEventItems.map(item => {
+                                const isComplete = isEventItemComplete(item.key as keyof EventData);
+                                const value = getEventValue(item.key as keyof EventData);
+                                return (
+                                    <div key={item.key} className="p-2 bg-black/20 rounded-md flex flex-col">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-5 h-5">
+                                                {isComplete ? <CheckmarkIcon /> : <CircleIcon />}
+                                            </div>
+                                            <span className={`text-sm ${isComplete ? 'text-gray-400' : 'text-white'}`}>
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        {value && (
+                                            <div className="ml-8 mt-1 text-sm text-[var(--theme-accent)] font-medium break-words">
+                                                {value}
+                                            </div>
+                                        )}
                                     </div>
-                                    <span className={`text-sm ${isEventItemComplete(item.key as keyof EventData) ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
 
                 {/* Expenses Section */}
-                <div className={`bg-[#004b8d]/30 rounded-md ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
-                    <SectionHeader title="Expenses" isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isEventDetailsComplete ? 'opacity-50' : ''}`}>
+                    <SectionHeader title={t('aiApplyPage.expensesPreviewTitle')} isComplete={isExpensesComplete} isOpen={openSection === 'expenses'} onToggle={() => toggleSection('expenses')} disabled={!isEventDetailsComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'expenses' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
                             <AIApplyExpenses
                                 formData={applicationDraft?.eventData || {expenses: []} as EventData}
                                 userProfile={userProfile}
-                                updateFormData={(data) => onDraftUpdate({ eventData: data })}
+                                // FIX: Cast data to EventData to match onDraftUpdate signature
+                                updateFormData={(data) => onDraftUpdate({ eventData: data as EventData })}
                                 disabled={!canApply}
+                                onNext={() => setOpenSection('agreements')}
                             />
                         )}
                     </div>
                 </div>
 
                 {/* Agreements Section */}
-                <div className={`bg-[#004b8d]/30 rounded-md ${!isExpensesComplete ? 'opacity-50' : ''}`}>
-                    <SectionHeader title="Agreements & Submission" isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
+                <div className={`bg-[var(--theme-bg-secondary)]/30 rounded-md border border-[var(--theme-accent)]/50 ${!isExpensesComplete ? 'opacity-50' : ''}`}>
+                    <SectionHeader title={t('aiApplyPage.agreementsPreviewTitle')} isComplete={false} isOpen={openSection === 'agreements'} onToggle={() => toggleSection('agreements')} disabled={!isExpensesComplete} />
                     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${openSection === 'agreements' ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                         {userProfile && (
                             <AIApplyAgreements
                                 formData={applicationDraft?.agreementData || { shareStory: null, receiveAdditionalInfo: null }}
-                                updateFormData={(data) => onDraftUpdate({ agreementData: data })}
+                                // FIX: Cast data to agreementData type to match onDraftUpdate signature
+                                updateFormData={(data) => onDraftUpdate({ agreementData: data as ApplicationFormData['agreementData'] })}
                                 onSubmit={() => onSubmit(applicationDraft as ApplicationFormData)}
                                 disabled={!canApply}
                             />
@@ -288,8 +342,8 @@ const AIApplyPreviewPane: React.FC<{
     );
 };
 
-const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply }) => {
-  const { t } = useTranslation();
+const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, onChatbotAction, activeFund, navigate, applicationDraft, onDraftUpdate, onSubmit, canApply, onResetDraft, logoUrl }) => {
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -300,7 +354,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(() => {
     if (typeof window === 'undefined') return true;
     if (window.innerWidth >= 768) return true;
-    return sessionStorage.getItem('ai-apply-preview-interacted') === 'true';
+    return false; // Always show on new mount (new session)
   });
   const initDoneForUser = useRef<string | null>(null);
 
@@ -323,6 +377,17 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       initDoneForUser.current = userProfile.uid;
     }
   }, [sessionKey, greetingMessage, userProfile]);
+
+  // Effect to update the initial greeting if the language changes and no conversation has started
+  useEffect(() => {
+     if (messages.length === 1 && messages[0].role === MessageRole.MODEL) {
+        const newGreeting = t('aiApplyPage.greeting');
+        if (messages[0].content !== newGreeting) {
+            setMessages([{ role: MessageRole.MODEL, content: newGreeting }]);
+            chatSessionRef.current = null;
+        }
+     }
+  }, [i18n.language, t, messages]);
 
   useEffect(() => {
     if (sessionKey && messages.length > 0) {
@@ -354,6 +419,25 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
         }
       }
     }, [isLoading]); // This effect runs whenever isLoading changes.
+    
+    const handleReset = () => {
+        if (window.confirm("Are you sure you want to clear your application draft and restart the chat?")) {
+            if (sessionKey) {
+                sessionStorage.removeItem(sessionKey);
+            }
+            setMessages([{ role: MessageRole.MODEL, content: greetingMessage }]);
+            
+            onResetDraft();
+            
+            // Re-init session
+            if (userProfile) {
+                chatSessionRef.current = createChatSession(userProfile, activeFund, applications, [], 'aiApply', null); 
+                if (chatTokenSessionIdRef.current) {
+                    chatTokenSessionIdRef.current = `ai-apply-${Math.random().toString(36).substr(2, 9)}`;
+                }
+            }
+        }
+    };
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (!userInput.trim() || isLoading) return;
@@ -362,6 +446,8 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
     const userMessage: ChatMessage = { role: MessageRole.USER, content: userInput };
     setMessages(prev => [...prev, userMessage]);
     
+    const inputTokens = estimateTokens(userInput); // Count tokens for user input
+
     // Capture the session at the beginning of the turn to avoid race conditions.
     const currentTurnSession = chatSessionRef.current;
 
@@ -377,12 +463,25 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       if (!functionCalls || functionCalls.length === 0) {
         if (response1.text) {
           setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response1.text }]);
+          const outputTokens = estimateTokens(response1.text); // Count tokens for model text response
+          
+          if (chatTokenSessionIdRef.current) {
+             logTokenEvent({
+                 feature: 'AI Apply Chat',
+                 model: MODEL_NAME,
+                 inputTokens,
+                 outputTokens,
+                 sessionId: chatTokenSessionIdRef.current
+             });
+          }
         }
         // Even if the response is empty, the turn is over.
         return;
       }
       
       // If there are function calls, execute them and then send the results back to the model.
+      // We also count tokens for the function call response from the model (treated as output).
+      let intermediateOutputTokens = estimateTokens(JSON.stringify(functionCalls));
       
       // This will trigger a re-render and update the application draft state in the parent.
       // A new `chatSessionRef` will be created for the *next* turn, which is the desired behavior.
@@ -391,15 +490,31 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       const functionResponses = functionCalls.map(call => {
         return { functionResponse: { name: call.name, response: { result: 'ok' } } };
       });
+      
+      // Count tokens for the function response we send back (treated as input for the 2nd call)
+      let intermediateInputTokens = estimateTokens(JSON.stringify(functionResponses));
 
       // SECOND API CALL: Send tool responses back using the *same session* from this turn.
       const response2 = await currentTurnSession.sendMessage({ message: functionResponses });
       
+      let finalOutputTokens = 0;
+
       // The final text response comes from the second call.
       if (response2.text) {
         setMessages(prev => [...prev, { role: MessageRole.MODEL, content: response2.text }]);
+        finalOutputTokens = estimateTokens(response2.text);
       }
-      // It's possible for the model to just execute a tool and say nothing. In that case, we don't add an empty bubble.
+      
+      // Log the total tokens for this turn sequence
+      if (chatTokenSessionIdRef.current) {
+          logTokenEvent({
+              feature: 'AI Apply Chat',
+              model: MODEL_NAME,
+              inputTokens: inputTokens + intermediateInputTokens,
+              outputTokens: intermediateOutputTokens + finalOutputTokens,
+              sessionId: chatTokenSessionIdRef.current
+          });
+      }
       
     } catch (error) {
       console.error("Error during AI Apply chat turn:", error);
@@ -426,7 +541,7 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
             <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
                 <div className="relative flex justify-center items-center mb-4 md:mb-6">
                   <div className="text-center">
-                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                       {userProfile?.fundName && userProfile?.fundCode 
                         ? `${userProfile.fundName} (${userProfile.fundCode})` 
                         : t('aiApplyPage.title')}
@@ -444,17 +559,20 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
                 
                     {/* --- MOBILE VIEW --- */}
                     <div className="md:hidden flex-1 flex flex-col min-h-0">
-                        <main className="w-full h-full flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0]">
-                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                        <main className="w-full h-full flex flex-col bg-[var(--theme-bg-secondary)]/50 rounded-lg shadow-2xl">
+                            <header className="p-4 flex-shrink-0 flex justify-between items-start bg-black/20 rounded-t-lg">
                                 <div>
-                                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
+                                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('chatbotWidget.title')}</h2>
                                     <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{ 1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" /> }} /></p>
                                 </div>
+                                <button onClick={handleReset} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-[var(--theme-bg-primary)]" title="Clear Draft & Restart">
+                                    <ResetIcon />
+                                </button>
                             </header>
                             <div className="flex-1 overflow-hidden flex flex-col">
-                                <ChatWindow messages={messages} isLoading={isLoading} />
+                                <ChatWindow messages={messages} isLoading={isLoading} logoUrl={logoUrl} />
                             </div>
-                            <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                            <footer className="p-4 flex-shrink-0 bg-black/20 rounded-b-lg">
                                 <div className="relative">
                                     <ChatInput ref={inputRef} onSendMessage={handleSendMessage} isLoading={isLoading} showPreviewButton onPreviewClick={handlePreviewClick} disabled={!canApply || !hasInteractedWithPreview} />
                                     {!hasInteractedWithPreview && canApply && <FirstTimeUserGuide />}
@@ -465,17 +583,21 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
 
                     {/* --- DESKTOP VIEW --- */}
                     <div className="hidden md:flex flex-1 flex-row gap-8 min-h-0">
-                        <main className="w-3/5 flex flex-col bg-[#003a70]/50 rounded-lg shadow-2xl border border-[#005ca0] min-h-0">
-                            <header className="p-4 border-b border-[#005ca0] flex-shrink-0">
+                        <main className="w-3/5 flex flex-col bg-[var(--theme-bg-secondary)]/50 rounded-lg shadow-2xl min-h-0">
+                            <header className="p-4 flex-shrink-0 flex justify-between items-start bg-black/20 rounded-t-lg">
                                 <div>
-                                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('chatbotWidget.title')}</h2>
+                                    <h2 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('chatbotWidget.title')}</h2>
                                     <p className="text-[10px] leading-tight text-gray-400 italic mt-1"><Trans i18nKey="chatbotWidget.disclaimer" components={{1: <a href="https://www.e4erelief.org/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />, 2: <a href="https://www.e4erelief.org/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white" />}} /></p>
                                 </div>
+                                <button onClick={handleReset} className="text-gray-400 hover:text-white p-1.5 rounded-full hover:bg-[var(--theme-bg-primary)] flex items-center gap-1 transition-colors" title="Clear Draft & Restart">
+                                    <span className="text-xs font-semibold">Clear Draft</span>
+                                    <ResetIcon />
+                                </button>
                             </header>
                             <div className="flex-1 overflow-hidden flex flex-col">
-                                <ChatWindow messages={messages} isLoading={isLoading} />
+                                <ChatWindow messages={messages} isLoading={isLoading} logoUrl={logoUrl} />
                             </div>
-                            <footer className="p-4 border-t border-[#005ca0] flex-shrink-0">
+                            <footer className="p-4 flex-shrink-0 bg-black/20 rounded-b-lg">
                                 <ChatInput ref={inputRef} onSendMessage={handleSendMessage} isLoading={isLoading} disabled={!canApply} />
                             </footer>
                         </main>
