@@ -10,15 +10,8 @@ import { modelConfigService } from './modelConfigurationService';
 // This resolves import errors in components that rely on this constant.
 export const MODEL_NAME = 'gemini-2.5-flash';
 
-// Ensure the API key is available from the environment variables.
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-
 // Initialize the Google Gemini AI client.
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Generates a unique session ID for tracking a series of related AI interactions,
