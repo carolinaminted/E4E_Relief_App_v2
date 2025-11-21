@@ -1,6 +1,5 @@
 
 import React, { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import type { Application, UserProfile, Address, EligibilityStatus, FundIdentity, ActiveIdentity, ClassVerificationStatus } from '../types';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import CountrySelector from './CountrySelector';
@@ -82,7 +81,6 @@ const EligibilityIndicator: React.FC<{ cvStatus: ClassVerificationStatus, onClic
 type ProfileSection = 'identities' | 'applications' | 'contact' | 'primaryAddress' | 'additionalDetails' | 'mailingAddress' | 'consent';
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userProfile, onProfileUpdate, identities, activeIdentity, onSetActiveIdentity, onAddIdentity, onRemoveIdentity }) => {
-  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState<UserProfile>(userProfile);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
@@ -322,13 +320,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
       </div>
       
       {/* Applications Section */}
-        <section className="border-b border-[#005ca0] pb-4 mb-4">
+        <section className="border-b border-[var(--theme-border)] pb-4 mb-4">
             <button type="button" onClick={() => toggleSection('applications')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'applications'}>
                 <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">My Applications</h2>
                 <ChevronIcon isOpen={openSection === 'applications'} />
             </button>
             <div className={`transition-all duration-500 ease-in-out ${openSection === 'applications' ? 'max-h-[1000px] opacity-100 mt-4 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="bg-[#003a70]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center border border-[#005ca0]">
+                <div className="bg-[var(--theme-bg-secondary)]/50 p-4 rounded-lg mb-4 flex flex-col gap-4 sm:flex-row sm:justify-around text-center shadow-xl">
                     <div>
                         <p className="text-sm text-white uppercase tracking-wider">12-Month Remaining</p>
                         <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
@@ -346,10 +344,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 {applications.length > 0 ? (
                     <>
                         {sortedApplicationsForDisplay.map(app => (
-                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[#004b8d] p-4 rounded-md flex justify-between items-center hover:bg-[#005ca0]/50 transition-colors duration-200">
+                        <button key={app.id} onClick={() => setSelectedApplication(app)} className="w-full text-left bg-[var(--theme-bg-secondary)] p-4 rounded-md flex justify-between items-center hover:bg-[var(--theme-border)]/50 transition-colors duration-200">
                             <div>
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{app.event}</p>
-                            <p className="text-sm text-gray-300">Submitted: {new Date(app.submittedDate).toLocaleDateString(i18n.language)}</p>
+                            <p className="text-sm text-gray-300">Submitted: {app.submittedDate}</p>
                             </div>
                             <div className="text-right">
                             <p className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">${app.requestedAmount.toFixed(2)}</p>
@@ -369,7 +367,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                         </div>
                     </>
                 ) : (
-                    <div className="text-center py-8 bg-[#003a70]/50 rounded-lg">
+                    <div className="text-center py-8 bg-[var(--theme-bg-secondary)]/50 rounded-lg">
                         <p className="text-gray-300">You have not submitted any applications for this fund yet.</p>
                         <button 
                             onClick={() => navigate('apply')} 
@@ -386,7 +384,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </section>
 
       {/* Identities Section */}
-      <section className="border-b border-[#005ca0] pb-4 mb-4">
+      <section className="border-b border-[var(--theme-border)] pb-4 mb-4">
         <button type="button" onClick={() => toggleSection('identities')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'identities'}>
             <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">Fund Identities</h2>
             <ChevronIcon isOpen={openSection === 'identities'} />
@@ -399,12 +397,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                 {sortedIdentities.map(identity => {
                     const isActive = activeIdentity?.id === identity.id;
                     return (
-                        <div key={identity.id} className={`bg-[#004b8d] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[var(--theme-accent)]' : 'border-transparent'}`}>
+                        <div key={identity.id} className={`bg-[var(--theme-bg-secondary)] p-4 rounded-lg shadow-lg border-2 ${isActive ? 'border-[var(--theme-accent)]' : 'border-transparent'}`}>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div>
                                     <div className="flex items-center gap-3">
                                         <h3 className="font-bold text-lg text-white">{identity.fundName}</h3>
-                                        <span className="text-sm font-mono bg-[#003a70] px-2 py-0.5 rounded">{identity.fundCode}</span>
+                                        <span className="text-sm font-mono bg-[var(--theme-bg-primary)] px-2 py-0.5 rounded">{identity.fundCode}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-2">
                                         <EligibilityIndicator cvStatus={identity.classVerificationStatus} onClick={() => onAddIdentity(identity.fundCode)} />
@@ -416,7 +414,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                                         <button
                                             onClick={() => onSetActiveIdentity(identity.id)}
                                             disabled={isActive || identity.eligibilityStatus !== 'Eligible'}
-                                            className="bg-[#005ca0] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:bg-[#006ab3] disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                            className="bg-[var(--theme-border)] text-white text-sm font-semibold py-2 px-4 rounded-md transition-colors duration-200 hover:opacity-80 disabled:bg-gray-600 disabled:cursor-not-allowed"
                                             aria-label={`Set ${identity.fundName} as active identity`}
                                         >
                                             Set Active
@@ -436,18 +434,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
                     )
                 })}
                 {!isAddingIdentity ? (
-                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[#005ca0] text-white font-semibold py-3 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200">
+                     <button onClick={() => setIsAddingIdentity(true)} className="w-full bg-transparent border-2 border-dashed border-[var(--theme-border)] text-white font-semibold py-3 px-4 rounded-md hover:bg-[var(--theme-bg-secondary)] hover:border-solid transition-all duration-200">
                         + Add New Identity
                     </button>
                 ) : (
-                    <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+                    <div className="bg-[var(--theme-bg-secondary)]/50 p-4 rounded-lg border border-[var(--theme-border)]">
                         <h4 className="text-md font-semibold text-white mb-2">Enter New Fund Code</h4>
                         <div className="flex items-center gap-2">
                             <input 
                                 type="text"
                                 value={newFundCode}
                                 onChange={e => setNewFundCode(e.target.value)}
-                                className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[#005ca0] focus:border-[var(--theme-accent)]"
+                                className="flex-grow bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 border-[var(--theme-border)] focus:border-[var(--theme-accent)]"
                                 placeholder="e.g., JHH"
                                 autoFocus
                             />
@@ -462,7 +460,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
 
       <form onSubmit={handleSave} className="space-y-4">
         {/* 1a Contact Information */}
-        <fieldset className="border-b border-[#005ca0] pb-4">
+        <fieldset className="border-b border-[var(--theme-border)] pb-4">
             <button type="button" onClick={() => toggleSection('contact')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'contact'} aria-controls="contact-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">Contact Information</h2>
@@ -499,7 +497,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </fieldset>
 
         {/* 1b Primary Address */}
-        <fieldset className="border-b border-[#005ca0] pb-4">
+        <fieldset className="border-b border-[var(--theme-border)] pb-4">
             <button type="button" onClick={() => toggleSection('primaryAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'primaryAddress'} aria-controls="address-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">Primary Address</h2>
@@ -531,7 +529,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </fieldset>
         
         {/* 1d Mailing Address */}
-        <fieldset className="border-b border-[#005ca0] pb-4">
+        <fieldset className="border-b border-[var(--theme-border)] pb-4">
             <button type="button" onClick={() => toggleSection('mailingAddress')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'mailingAddress'} aria-controls="mailing-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">Mailing Address</h2>
@@ -576,7 +574,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ navigate, applications, userP
         </fieldset>
 
         {/* 1c Additional Details */}
-        <fieldset className="border-b border-[#005ca0] pb-4">
+        <fieldset className="border-b border-[var(--theme-border)] pb-4">
             <button type="button" onClick={() => toggleSection('additionalDetails')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'additionalDetails'} aria-controls="details-section">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">Additional Details</h2>
