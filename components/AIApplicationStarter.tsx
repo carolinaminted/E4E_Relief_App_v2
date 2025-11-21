@@ -41,8 +41,8 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
   };
   
   const textareaClasses = {
-    boxed: "w-full bg-[#005ca0] border border-[#005ca0] rounded-md p-2 text-base text-white placeholder-gray-400 focus:ring-2 focus:ring-[#ff8400] focus:border-[#ff8400]",
-    underline: "w-full bg-transparent border-0 border-b border-[#005ca0] p-2 text-base text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-[#ff8400]"
+    boxed: "w-full bg-[var(--theme-border)] border border-[var(--theme-border)] rounded-md p-2 text-base text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]",
+    underline: "w-full bg-transparent border-0 border-b border-[var(--theme-border)] p-2 text-base text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-[var(--theme-accent)]"
   };
   
   const charsRemaining = AI_GUARDRAILS.MAX_APPLICATION_DESCRIPTION_CHARS - descriptionInput.length;
@@ -53,7 +53,7 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
       <button
         type="button"
         onClick={() => setIsExpanded(true)}
-        className="w-full bg-transparent border-2 border-dashed border-[#005ca0] text-[#ff8400] font-semibold py-4 px-4 rounded-md hover:bg-[#005ca0]/50 hover:border-solid transition-all duration-200 flex items-center justify-center gap-2"
+        className="w-full bg-transparent border-2 border-dashed border-[var(--theme-border)] text-[var(--theme-accent)] font-semibold py-4 px-4 rounded-md hover:bg-[var(--theme-border)]/50 hover:border-solid transition-all duration-200 flex items-center justify-center gap-2"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -64,7 +64,7 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
   }
 
   return (
-    <div className="bg-[#003a70]/50 p-4 rounded-lg border border-[#005ca0]">
+    <div className="bg-[var(--theme-bg-primary)]/50 p-4 rounded-lg border border-[var(--theme-border)]">
       <div className="flex justify-between items-center mb-2">
         <p className="text-sm text-white">
           {t('formControls.aiStarter')}
@@ -89,7 +89,7 @@ const AIApplicationStarter: React.FC<AIApplicationStarterProps> = ({ onParse, is
             type="button"
             onClick={handleParse}
             disabled={isLoading || !descriptionInput.trim()}
-            className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-wait min-w-[80px] flex items-center justify-center h-10 md:h-auto"
+            className="bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-wait min-w-[80px] flex items-center justify-center h-10 md:h-auto"
             >
             {isLoading ? (
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

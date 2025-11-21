@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Address, UserProfile } from '../types';
@@ -35,7 +36,7 @@ export const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
                 id={id}
                 onClick={handleClick}
                 {...props}
-                className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`}
+                className={`w-full bg-transparent border-0 border-b p-2 text-base text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[var(--theme-border)] focus:border-[var(--theme-accent)]'} disabled:bg-transparent disabled:border-b disabled:border-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`}
             />
             {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
         </div>
@@ -47,7 +48,7 @@ export const FormTextarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaEle
         <label htmlFor={id} className="flex items-center text-sm font-medium text-white mb-1">
             {label} <RequiredIndicator required={required} isMet={!!props.value} />
         </label>
-        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`} />
+        <textarea id={id} {...props} className={`w-full bg-transparent border-0 border-b p-2 text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500' : 'border-[var(--theme-border)] focus:border-[var(--theme-accent)]'}`} />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
 );
@@ -60,7 +61,7 @@ export const FormRadioGroup: React.FC<{ legend: string, name: string, options: s
         <div className="flex gap-4 mt-2">
             {options.map(option => (
                 <label key={option} className="flex items-center cursor-pointer">
-                    <input type="radio" name={name} value={option} checked={value === option} onChange={(e) => onChange(e.target.value)} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400]" />
+                    <input type="radio" name={name} value={option} checked={value === option} onChange={(e) => onChange(e.target.value)} className="form-radio h-4 w-4 text-[var(--theme-accent)] bg-gray-700 border-gray-600 focus:ring-[var(--theme-accent)]" />
                     <span className="ml-2 text-white">{option}</span>
                 </label>
             ))}

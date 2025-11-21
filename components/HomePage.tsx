@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PolicyModal from './PolicyModal';
@@ -88,7 +89,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
       <div className="h-full flex flex-col items-center p-4 md:p-8 text-center">
         <div className="w-full flex-grow flex flex-col items-center"> {/* Content wrapper */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                 {t('homePage.title')}
             </h1>
             {userProfile ? (
@@ -109,12 +110,13 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, canApply, userProfile }) 
                     onClick={!tile.disabled ? tile.onClick : undefined}
                     title={tile.disabled && tile.disabledTooltipKey ? t(tile.disabledTooltipKey) : ""}
                     aria-disabled={!!tile.disabled}
-                    className={`bg-[#004b8d]/50 backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center justify-center text-center ${
-                        tile.disabled ? 'opacity-60 cursor-not-allowed' : 'md:hover:bg-[#005ca0]/80 cursor-pointer md:hover:scale-105'
+                    className={`bg-[var(--theme-bg-secondary)] backdrop-blur-lg border border-white/20 p-4 sm:p-6 rounded-lg shadow-lg transition-all duration-300 transform flex flex-col items-center justify-center text-center ${
+                        tile.disabled ? 'opacity-60 cursor-not-allowed' : 'md:hover:bg-white/10 cursor-pointer md:hover:scale-105'
                     } ${tile.colSpan || ''}`}
+                    style={{ backgroundColor: 'var(--theme-bg-secondary)' }}
                 >
                     {tile.icon}
-                    <h2 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+                    <h2 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
                         {t(tile.titleKey)}
                     </h2>
                 </div>

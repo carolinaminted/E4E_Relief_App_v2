@@ -64,11 +64,11 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
           <p className="text-xs text-gray-400 mb-2 italic">{t('applyTermsPage.shareStoryDisclaimer')}</p>
           <div className="flex gap-4">
             <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
-              <input type="radio" name="shareStory" checked={formData.shareStory === true} onChange={() => handleUpdate({ shareStory: true })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
+              <input type="radio" name="shareStory" checked={formData.shareStory === true} onChange={() => handleUpdate({ shareStory: true })} disabled={disabled} className="form-radio h-4 w-4 text-[var(--theme-accent)] bg-gray-700 border-gray-600 focus:ring-[var(--theme-accent)] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{yes}</span>
             </label>
             <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
-              <input type="radio" name="shareStory" checked={formData.shareStory === false} onChange={() => handleUpdate({ shareStory: false })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
+              <input type="radio" name="shareStory" checked={formData.shareStory === false} onChange={() => handleUpdate({ shareStory: false })} disabled={disabled} className="form-radio h-4 w-4 text-[var(--theme-accent)] bg-gray-700 border-gray-600 focus:ring-[var(--theme-accent)] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{no}</span>
             </label>
           </div>
@@ -80,11 +80,11 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
           </label>
           <div className="flex gap-4">
             <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
-              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === true} onChange={() => handleUpdate({ receiveAdditionalInfo: true })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
+              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === true} onChange={() => handleUpdate({ receiveAdditionalInfo: true })} disabled={disabled} className="form-radio h-4 w-4 text-[var(--theme-accent)] bg-gray-700 border-gray-600 focus:ring-[var(--theme-accent)] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{yes}</span>
             </label>
             <label className={`flex items-center text-sm ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
-              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === false} onChange={() => handleUpdate({ receiveAdditionalInfo: false })} disabled={disabled} className="form-radio h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 focus:ring-[#ff8400] disabled:cursor-not-allowed" />
+              <input type="radio" name="receiveInfo" checked={formData.receiveAdditionalInfo === false} onChange={() => handleUpdate({ receiveAdditionalInfo: false })} disabled={disabled} className="form-radio h-4 w-4 text-[var(--theme-accent)] bg-gray-700 border-gray-600 focus:ring-[var(--theme-accent)] disabled:cursor-not-allowed" />
               <span className="ml-2 text-white">{no}</span>
             </label>
           </div>
@@ -102,14 +102,14 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
                 if (error) setError('');
             }}
             disabled={!termsViewed || disabled}
-            className="h-4 w-4 text-[#ff8400] bg-gray-700 border-gray-600 rounded focus:ring-[#ff8400] mt-1 disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="h-4 w-4 text-[var(--theme-accent)] bg-gray-700 border-gray-600 rounded focus:ring-[var(--theme-accent)] mt-1 disabled:opacity-50 disabled:cursor-not-allowed" 
           />
           <div className="ml-3 text-sm">
             <label htmlFor="terms" className={`text-white ${!termsViewed ? 'opacity-60': ''}`}>
               {t('applyTermsPage.termsCheckboxLabel')}
             </label>
             <div className="mt-1 flex items-center">
-              <button type="button" onClick={handleOpenModal} className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-80 hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#004b8d] focus:ring-[#ff8400] rounded">
+              <button type="button" onClick={handleOpenModal} className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] hover:opacity-80 hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-secondary)] focus:ring-[var(--theme-accent)] rounded">
                 {t('applyTermsPage.termsLink')}
               </button>
               <span className="text-white">.</span>
@@ -126,7 +126,7 @@ const AIApplyAgreements: React.FC<AIApplyAgreementsProps> = ({ formData, updateF
         <button 
           onClick={handleFinalSubmit}
           disabled={!termsAgreed || isSubmitting || disabled}
-          className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200 flex justify-center items-center h-12 disabled:bg-[#898c8d] disabled:cursor-wait"
+          className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-6 rounded-md transition-colors duration-200 flex justify-center items-center h-12 disabled:bg-gray-600 disabled:cursor-wait"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">

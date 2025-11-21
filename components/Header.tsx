@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EligibilityStatus, ClassVerificationStatus } from '../types';
 import EligibilityIndicator from './EligibilityIndicator';
 import EligibilityInfoModal from './EligibilityInfoModal';
 import { LANGUAGE_LABELS } from '../data/appData';
+import { defaultTheme } from '../data/fundThemes';
 
 interface HeaderProps {
   userName: string;
@@ -11,9 +13,11 @@ interface HeaderProps {
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
   supportedLanguages?: string[];
+  logoUrl?: string;
+  onReverify?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
+const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl, onReverify }) => {
   const { t, i18n } = useTranslation();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -61,33 +65,33 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
 
   return (
     <>
-      <header className="flex md:hidden items-center justify-between w-full h-20 bg-[#003a70] px-4 flex-shrink-0 z-30 pt-[env(safe-area-inset-top)]">
+      <header className="flex md:hidden items-center justify-between w-full h-20 bg-[var(--theme-bg-primary)] px-4 flex-shrink-0 z-30 pt-[env(safe-area-inset-top)] transition-colors duration-500">
         <div className="relative" ref={langDropdownRef}>
           <button
             onClick={() => showLangSwitcher && setIsLangDropdownOpen(prev => !prev)}
-            className={`transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1 ${showLangSwitcher ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'}`}
+            className={`transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-primary)] focus:ring-[var(--theme-accent)] rounded-md p-1 ${showLangSwitcher ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'}`}
             aria-label="Select language"
             aria-haspopup={showLangSwitcher}
             aria-expanded={isLangDropdownOpen}
             disabled={!showLangSwitcher}
           >
             <img
-              src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy"
-              alt="E4E Relief Logo"
+              src={logoUrl}
+              alt="Relief Fund Logo"
               className="h-11 w-auto"
             />
           </button>
 
           {isLangDropdownOpen && showLangSwitcher && (
-            <div className="absolute left-0 mt-2 w-40 bg-[#004b8d] border border-[#005ca0] rounded-md shadow-lg z-50 py-1">
+            <div className="absolute left-0 mt-2 w-40 bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] rounded-md shadow-lg z-50 py-1">
               {languagesToRender.map((lang) => (
                  <button
                     key={lang}
                     onClick={() => changeLanguage(lang)}
                     className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                       i18n.language.startsWith(lang)
-                        ? 'text-[#ff8400] font-bold'
-                        : 'text-white hover:bg-[#005ca0]'
+                        ? 'text-[var(--theme-accent)] font-bold'
+                        : 'text-white hover:bg-[var(--theme-bg-primary)]'
                     }`}
                   >
                     {LANGUAGE_LABELS[lang] || lang.toUpperCase()}
@@ -101,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-              className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] rounded-md p-1"
+              className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-primary)] focus:ring-[var(--theme-accent)] rounded-md p-1"
               aria-haspopup="true"
               aria-expanded={isUserDropdownOpen}
             >
@@ -117,24 +121,24 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
             </button>
 
             {isUserDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#004b8d] border border-[#005ca0] rounded-md shadow-lg z-50 py-1">
+              <div className="absolute right-0 mt-2 w-48 bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] rounded-md shadow-lg z-50 py-1">
                  <button
                     onClick={() => {
                         handleEligibilityClick();
                         setIsUserDropdownOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#005ca0] flex justify-between items-center transition-colors"
+                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[var(--theme-bg-primary)] flex justify-between items-center transition-colors"
                 >
                     <span>Status</span>
                     <EligibilityIndicator eligibilityStatus={eligibilityStatus} cvStatus={cvStatus} />
                 </button>
-                <div className="border-t border-[#005ca0] my-1"></div>
+                <div className="border-t border-[var(--theme-border)] my-1"></div>
                 <button
                   onClick={() => {
                     onLogout();
                     setIsUserDropdownOpen(false); // Close dropdown on click
                   }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-300 hover:bg-[#ff8400]/20 hover:text-red-200 transition-colors"
+                  className="block w-full text-left px-4 py-2 text-sm text-red-300 hover:bg-[var(--theme-accent)]/20 hover:text-red-200 transition-colors"
                 >
                   {t('nav.logout')}
                 </button>
@@ -144,7 +148,11 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
         </div>
       </header>
       {isEligibilityModalOpen && (
-        <EligibilityInfoModal message={eligibilityMessage} onClose={() => setIsEligibilityModalOpen(false)} />
+        <EligibilityInfoModal 
+            message={eligibilityMessage} 
+            onClose={() => setIsEligibilityModalOpen(false)} 
+            onRetry={!isEligible ? onReverify : undefined}
+        />
       )}
     </>
   );

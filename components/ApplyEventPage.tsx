@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EventData } from '../types';
@@ -19,8 +20,6 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
 
   const eligibleEventsForFund = useMemo(() => {
     if (!activeFund) {
-      // Fallback to a minimal list if the fund configuration isn't loaded.
-      // The UI should ideally prevent reaching this state, but this is a safeguard.
       return ['My disaster is not listed'];
     }
     const allEvents = [
@@ -28,20 +27,37 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
       ...(activeFund.eligibleHardships || []),
       'My disaster is not listed'
     ];
-    // Use a Set to remove any potential duplicates from the configuration.
     return [...new Set(allEvents)];
   }, [activeFund]);
   
   const yes = t('common.yes');
   const no = t('common.no');
 
+  // Options for power loss days dropdown (1-10)
+  const powerLossDaysOptions = Array.from({ length: 10 }, (_, i) => String(i + 1));
+
+  // Helper to check if the selected event is a storm type that requires a name
+  const isStormEvent = (eventName: string | undefined) => {
+      if (!eventName) return false;
+      const lower = eventName.toLowerCase();
+      return lower.includes('tropical') || lower.includes('hurricane');
+  };
+
+  // Fallback options in case fund config is missing eligibleStorms
+  const stormOptions = activeFund?.eligibleStorms && activeFund.eligibleStorms.length > 0
+      ? activeFund.eligibleStorms
+      : ["Hurricane Rayquaza", "Tropical Storm Lugia", "Cyclone Ho-Oh"];
+
+  // Only show the event name field if the selected event IS a storm type.
+  const showEventNameField = isStormEvent(formData.event);
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.event) newErrors.event = t('applyEventPage.errorEvent');
     
-    // Conditional validation based on event type
     if (formData.event === 'My disaster is not listed' && !formData.otherEvent) newErrors.otherEvent = t('applyEventPage.errorOtherEvent');
-    if (formData.event === 'Tropical Storm/Hurricane' && activeFund?.eligibleStorms && activeFund.eligibleStorms.length > 0 && !formData.eventName) {
+    
+    if (showEventNameField && !formData.eventName) {
         newErrors.eventName = t('applyEventPage.errorEventName', 'Please select the storm name.');
     }
 
@@ -78,7 +94,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
 
     if (updatedField === 'event') {
         if (updatedValue !== 'My disaster is not listed') { newFormData.otherEvent = ''; }
-        if (updatedValue !== 'Tropical Storm/Hurricane') { newFormData.eventName = ''; }
+        if (!isStormEvent(updatedValue as string)) { newFormData.eventName = ''; }
     }
     if (updatedField === 'powerLoss' && updatedValue === 'No') {
         newFormData.powerLossDays = '';
@@ -112,30 +128,38 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
 
   return (
     <div className="space-y-8 p-4 md:p-8">
-      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26] text-center">{t('applyEventPage.title')}</h2>
+      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center">{t('applyEventPage.title')}</h2>
         <div className="space-y-6">
-            <SearchableSelector
-                label={t('applyEventPage.disasterLabel')}
-                id="event"
-                required
-                value={formData.event || ''}
-                options={eligibleEventsForFund}
-                onUpdate={value => handleUpdate({ event: value })}
-                variant="underline"
-                error={errors.event}
-            />
-            {formData.event === 'Tropical Storm/Hurricane' && activeFund?.eligibleStorms && activeFund.eligibleStorms.length > 0 && (
-                <SearchableSelector
-                    label="Select the storm name"
-                    id="eventName"
-                    required
-                    value={formData.eventName || ''}
-                    options={activeFund.eligibleStorms}
-                    onUpdate={value => handleUpdate({ eventName: value })}
-                    variant="underline"
-                    error={errors.eventName}
-                />
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={showEventNameField ? "md:col-span-1" : "md:col-span-2"}>
+                    <SearchableSelector
+                        label={t('applyEventPage.disasterLabel')}
+                        id="event"
+                        required
+                        value={formData.event || ''}
+                        options={eligibleEventsForFund}
+                        onUpdate={value => handleUpdate({ event: value })}
+                        variant="underline"
+                        error={errors.event}
+                    />
+                </div>
+                
+                {showEventNameField && (
+                    <div className="md:col-span-1 transition-opacity duration-300 ease-in-out opacity-100">
+                        <SearchableSelector
+                            label="Select the storm name"
+                            id="eventName"
+                            required
+                            value={formData.eventName || ''}
+                            options={stormOptions}
+                            onUpdate={value => handleUpdate({ eventName: value })}
+                            variant="underline"
+                            error={errors.eventName}
+                        />
+                    </div>
+                )}
+            </div>
+
             {formData.event === 'My disaster is not listed' && (
                 <FormInput 
                     label={t('applyEventPage.otherDisasterLabel')}
@@ -165,14 +189,14 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 error={errors.powerLoss}
             />
             {formData.powerLoss === 'Yes' && (
-                <FormInput
+                <SearchableSelector
                     label={t('applyEventPage.powerLossDaysLabel')}
                     id="powerLossDays"
-                    type="number"
-                    min="1"
                     required
-                    value={formData.powerLossDays || ''}
-                    onChange={e => handleUpdate({ powerLossDays: parseInt(e.target.value, 10) || '' })}
+                    value={formData.powerLossDays ? String(formData.powerLossDays) : ''}
+                    options={powerLossDaysOptions}
+                    onUpdate={value => handleUpdate({ powerLossDays: parseInt(value, 10) || '' })}
+                    variant="underline"
                     error={errors.powerLossDays}
                 />
             )}
@@ -186,7 +210,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
                 error={errors.evacuated}
             />
             {formData.evacuated === 'Yes' && (
-                <div className="space-y-6 pl-4 border-l-2 border-[#ff8400]/50">
+                <div className="space-y-6 pl-4 border-l-2 border-[var(--theme-accent)]/50">
                     <FormRadioGroup
                         legend={t('applyEventPage.evacuatingFromPrimaryLabel')}
                         name="evacuatingFromPrimary"
@@ -249,7 +273,7 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
         <button onClick={prevStep} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           {t('common.back')}
         </button>
-        <button onClick={handleNext} className="bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
+        <button onClick={handleNext} className="bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-6 rounded-md transition-colors duration-200">
           {t('common.next')}
         </button>
       </div>

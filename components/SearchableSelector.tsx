@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import RequiredIndicator from './RequiredIndicator';
@@ -89,8 +90,8 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
   
   const baseInputClasses = "w-full text-base text-white focus:outline-none focus:ring-0";
   const variantClasses = {
-      boxed: `bg-[#005ca0] border rounded-md p-2 ${error ? 'border-red-500' : 'border-[#005ca0]'}`,
-      underline: `bg-transparent border-0 border-b p-2 ${error ? 'border-red-500' : 'border-[#005ca0] focus:border-[#ff8400]'}`
+      boxed: `bg-[var(--theme-border)] border rounded-md p-2 ${error ? 'border-red-500' : 'border-[var(--theme-border)]'}`,
+      underline: `bg-transparent border-0 border-b p-2 ${error ? 'border-red-500' : 'border-[var(--theme-border)] focus:border-[var(--theme-accent)]'}`
   };
 
   return (
@@ -111,13 +112,13 @@ const SearchableSelector: React.FC<SearchableSelectorProps> = ({ id, label, valu
         disabled={disabled}
       />
       {isOpen && !disabled && (
-        <ul className="absolute z-10 w-full bg-[#003a70] border border-[#005ca0] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg custom-scrollbar">
+        <ul className="absolute z-10 w-full bg-[var(--theme-bg-primary)] border border-[var(--theme-border)] rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg custom-scrollbar">
           {filteredOptions.length > 0 ? (
             filteredOptions.map(option => (
               <li
                 key={option}
                 onClick={() => handleSelect(option)}
-                className="px-4 py-2 text-white cursor-pointer hover:bg-[#005ca0]"
+                className="px-4 py-2 text-white cursor-pointer hover:bg-[var(--theme-border)]"
               >
                 {option}
               </li>

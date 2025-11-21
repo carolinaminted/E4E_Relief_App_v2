@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 
@@ -57,7 +58,7 @@ const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> 
                     <Trans
                         defaults={faq.answer}
                         components={{
-                            1: emailMatch ? <a href={`mailto:${emailMatch[1]}`} className="text-[#ff8400] hover:underline" /> : <span />,
+                            1: emailMatch ? <a href={`mailto:${emailMatch[1]}`} className="text-[var(--theme-accent)] hover:underline" /> : <span />,
                         }}
                     />
                 </p>
@@ -68,19 +69,21 @@ const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> 
     };
 
     return (
-        <div className="border-b border-[#005ca0]">
+        <div className="mb-2">
             <button
                 onClick={onClick}
-                className="w-full flex justify-between items-center text-left py-4 px-2"
+                className={`w-full flex justify-between items-center text-left py-3 px-4 rounded-lg transition-all duration-200 ${isOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
                 aria-expanded={isOpen}
             >
-                <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{faq.question}</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-base sm:text-lg font-medium brightness-125">
+                    {faq.question}
+                </h3>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="p-4 text-white bg-[#003a70]/30">
+                <div className="p-4 pl-6 text-gray-200 leading-relaxed">
                     <div>{renderAnswer()}</div>
                 </div>
             </div>
@@ -102,19 +105,19 @@ const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; isOpen: boolean; on
     };
 
     return (
-        <div className="bg-[#004b8d]/80 rounded-lg shadow-2xl border border-[#005ca0]/50 mb-6">
+        <div className="bg-[var(--theme-bg-secondary)]/80 backdrop-blur-md rounded-2xl shadow-xl mb-6 overflow-hidden">
             <button
                 onClick={onToggleSection}
-                className="w-full flex justify-between items-center text-left p-4 md:p-6"
+                className="w-full flex justify-between items-center text-left p-6"
                 aria-expanded={isOpen}
             >
-                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{title}</h2>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <h2 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] brightness-125">{title}</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="p-4 md:p-6 pt-0">
+                <div className="p-4 pt-0 space-y-1">
                     {faqs.map((faq, index) => (
                         <FAQItem 
                             key={index} 
@@ -155,12 +158,12 @@ const FAQPage: React.FC<FAQPageProps> = ({ navigate }) => {
     <div className="flex-1 flex flex-col p-4 md:p-8">
       <div className="max-w-4xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-8">
-            <button onClick={() => navigate('support')} className="absolute left-0 text-[#ff8400] hover:opacity-80 transition-opacity md:hidden" aria-label={t('faqPage.backToSupport')}>
+            <button onClick={() => navigate('support')} className="absolute left-0 z-10 text-[var(--theme-accent)] hover:opacity-80 transition-opacity" aria-label={t('faqPage.backToSupport')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
             </button>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] text-center px-12 brightness-125">
               {t('faqPage.title')}
             </h1>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, KeyboardEvent, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AI_GUARDRAILS } from '../config/aiGuardrails';
@@ -15,7 +16,7 @@ const SendIcon: React.FC<{ disabled: boolean }> = ({ disabled }) => (
         xmlns="http://www.w3.org/2000/svg" 
         viewBox="0 0 24 24" 
         fill="currentColor" 
-        className={`w-6 h-6 ${disabled ? 'text-gray-500' : 'text-[#003a70]'}`}
+        className={`w-6 h-6 ${disabled ? 'text-gray-500' : 'text-[var(--theme-accent)]'}`}
     >
         <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
     </svg>
@@ -26,7 +27,7 @@ const PreviewIcon: React.FC<{ disabled: boolean }> = ({ disabled }) => (
         xmlns="http://www.w3.org/2000/svg" 
         viewBox="0 0 24 24" 
         fill="currentColor" 
-        className={`w-6 h-6 ${disabled ? 'text-gray-500' : 'text-[#003a70]'}`}
+        className={`w-6 h-6 ${disabled ? 'text-gray-500' : 'text-[var(--theme-accent)]'}`}
     >
         <path fillRule="evenodd" d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v14.25C1.5 20.16 2.339 21 3.375 21h17.25c1.035 0 1.875-.84 1.875-1.875V4.875C22.5 3.84 21.661 3 20.625 3H3.375zM9 6.75a.75.75 0 000 1.5h6a.75.75 0 000-1.5H9zm0 3.75a.75.75 0 000 1.5h6a.75.75 0 000-1.5H9zm0 3.75a.75.75 0 000 1.5h3a.75.75 0 000-1.5H9z" clipRule="evenodd" />
     </svg>

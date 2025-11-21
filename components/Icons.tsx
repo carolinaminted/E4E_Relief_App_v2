@@ -1,11 +1,12 @@
+
 import React from 'react';
 
 export const IconDefs: React.FC = () => (
   <svg width="0" height="0" style={{ position: 'absolute' }}>
     <defs>
       <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" style={{ stopColor: '#ff8400' }} />
-        <stop offset="100%" style={{ stopColor: '#edda26' }} />
+        <stop offset="0%" style={{ stopColor: 'var(--theme-gradient-start)' }} />
+        <stop offset="100%" style={{ stopColor: 'var(--theme-gradient-end)' }} />
       </linearGradient>
     </defs>
   </svg>

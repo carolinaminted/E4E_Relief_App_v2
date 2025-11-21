@@ -18,9 +18,9 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ message }) => {
       aria-busy="true"
     >
       <div className="flex items-center justify-center space-x-2 mb-4">
-        <div className="w-4 h-4 bg-[#ff8400] rounded-full animate-pulse [animation-delay:-0.3s]"></div>
-        <div className="w-4 h-4 bg-[#ff8400] rounded-full animate-pulse [animation-delay:-0.15s]"></div>
-        <div className="w-4 h-4 bg-[#ff8400] rounded-full animate-pulse"></div>
+        <div className="w-4 h-4 bg-[var(--theme-accent)] rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+        <div className="w-4 h-4 bg-[var(--theme-accent)] rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+        <div className="w-4 h-4 bg-[var(--theme-accent)] rounded-full animate-pulse"></div>
       </div>
       <p className="text-white text-lg font-semibold">{message}</p>
     </div>,

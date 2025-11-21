@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomeIcon, ProfileIcon, SupportIcon, DonateIcon, DashboardIcon, ApplyIcon, SparklesIcon } from './Icons';
@@ -5,6 +6,7 @@ import type { Page, EligibilityStatus, ClassVerificationStatus } from '../types'
 import LanguageSwitcher from './LanguageSwitcher';
 import EligibilityIndicator from './EligibilityIndicator';
 import EligibilityInfoModal from './EligibilityInfoModal';
+import { defaultTheme } from '../data/fundThemes';
 
 interface SideNavBarProps {
   navigate: (page: Page) => void;
@@ -16,6 +18,8 @@ interface SideNavBarProps {
   eligibilityStatus: EligibilityStatus;
   cvStatus: ClassVerificationStatus;
   supportedLanguages?: string[];
+  logoUrl?: string;
+  onReverify?: () => void;
 }
 
 interface NavItemType {
@@ -29,17 +33,17 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#003a70] focus:ring-[#ff8400] ${
-      isActive ? 'bg-[#ff8400]/30 text-white border border-[#ff8400]/50' : 'text-gray-200 hover:bg-[#005ca0]'
+    className={`flex items-center w-full p-3 my-1 text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-primary)] focus:ring-[var(--theme-accent)] ${
+      isActive ? 'bg-[var(--theme-accent)]/20 text-white font-semibold' : 'text-gray-300 hover:bg-[var(--theme-bg-secondary)] hover:text-white'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
      aria-current={isActive ? 'page' : undefined}
   >
-    <div className="w-6 h-6 mr-3">{icon}</div>
+    <div className={`w-6 h-6 mr-3 ${isActive ? 'text-[var(--theme-accent)]' : ''}`}>{icon}</div>
     <span>{label}</span>
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'] }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl, onReverify }) => {
   const { t } = useTranslation();
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   
@@ -74,12 +78,12 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
 
   return (
     <>
-      <nav className="hidden md:flex flex-col w-64 bg-[#003a70] border-r border-[#002a50] p-4">
+      <nav className="hidden md:flex flex-col w-64 bg-[var(--theme-bg-primary)] p-4 transition-colors duration-500">
         <div className="mb-6 text-center">
             <div className="flex justify-center items-center mb-4">
                 <img
-                  src="https://gateway.pinata.cloud/ipfs/bafkreigagdtmj6mbd7wgrimtl2zh3ygorbcvv3cagofbyespbtfmpn2nqy"
-                  alt="E4E Relief Logo"
+                  src={logoUrl}
+                  alt="Relief Fund Logo"
                   className="h-12 w-auto"
                 />
             </div>
@@ -93,7 +97,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
                 <LanguageSwitcher variant="sideNav" supportedLanguages={supportedLanguages} />
                 <button
                     onClick={onLogout}
-                    className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
+                    className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -103,7 +107,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
             </div>
         </div>
 
-        <div className="flex-grow border-t border-[#002a50] pt-4">
+        <div className="flex-grow pt-4">
           {navItems.map(item => (
             <NavItem
               key={item.page}
@@ -118,7 +122,11 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
         
       </nav>
       {isEligibilityModalOpen && (
-        <EligibilityInfoModal message={eligibilityMessage} onClose={() => setIsEligibilityModalOpen(false)} />
+        <EligibilityInfoModal 
+            message={eligibilityMessage} 
+            onClose={() => setIsEligibilityModalOpen(false)} 
+            onRetry={!isEligible ? onReverify : undefined}
+        />
       )}
     </>
   );

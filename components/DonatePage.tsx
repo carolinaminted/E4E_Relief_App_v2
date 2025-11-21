@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormInput } from './FormControls';
@@ -10,15 +11,15 @@ const predefinedAmounts = [25, 50, 100, 250];
 
 // --- UI Icons ---
 const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[#ff8400] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
 );
 
 const NotificationIcon: React.FC = () => (
     <span className="relative flex h-3 w-3" title="Action required in this section">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff8400] opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#ff9d33]"></span>
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--theme-accent)] opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--theme-accent)]"></span>
     </span>
 );
 
@@ -145,11 +146,11 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   if (isSuccess) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-full max-w-md bg-[#004b8d] p-10 rounded-lg shadow-lg">
+        <div className="w-full max-w-md bg-[var(--theme-bg-secondary)] p-10 rounded-lg shadow-lg">
           <svg className="w-16 h-16 text-[#edda26] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-[#edda26] to-[#ff8400]">
+          <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
             {t('donatePage.successTitle')}
           </h1>
           <p className="text-white mb-8">
@@ -157,7 +158,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
           </p>
           <button
             onClick={() => navigate('support')}
-            className="w-full bg-[#ff8400] hover:bg-[#e67700] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
+            className="w-full bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold py-3 px-4 rounded-md transition-colors duration-200"
           >
             {t('donatePage.backToSupport')}
           </button>
@@ -169,29 +170,29 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto w-full">
         <div className="relative flex justify-center items-center mb-6">
-            <button onClick={() => navigate('support')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[#ff8400] hover:opacity-80 transition-opacity" aria-label={t('faqPage.backToSupport')}>
+            <button onClick={() => navigate('support')} className="absolute left-0 md:left-auto md:right-full md:mr-8 text-[var(--theme-accent)] hover:opacity-80 transition-opacity" aria-label={t('faqPage.backToSupport')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
             </button>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">
               {t('donatePage.title')}
             </h1>
         </div>
         
-        <form onSubmit={handleSubmit} noValidate className="bg-[#004b8d]/50 p-6 md:p-8 rounded-lg border border-[#005ca0] grid grid-cols-1 lg:grid-cols-2 lg:gap-x-12">
+        <form onSubmit={handleSubmit} noValidate className="bg-[var(--theme-bg-secondary)] p-6 md:p-8 rounded-lg grid grid-cols-1 lg:grid-cols-2 lg:gap-x-12">
             {/* Left Column */}
-            <div className="lg:border-r lg:border-[#005ca0] lg:pr-8">
+            <div className="lg:pr-8">
                 {/* Static Amount Section */}
-                <div className="border-b border-[#005ca0] lg:border-b-0 pb-4">
+                <div className="pb-4">
                     <div className="flex items-center gap-3 py-2">
-                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('donatePage.chooseAmount')}</h2>
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('donatePage.chooseAmount')}</h2>
                     </div>
                     <p className="text-gray-300 text-sm mt-2 mb-4 hidden lg:block">{t('donatePage.description')}</p>
                     <div className="mt-4">
                         <div className="grid grid-cols-3 gap-2">
                             {predefinedAmounts.map(preAmount => (
-                                <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`py-2 px-3 rounded-md font-semibold text-sm transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'bg-[#003a70]/50 border-transparent hover:border-[#ff8400]'}`}>
+                                <button type="button" key={preAmount} onClick={() => handleAmountSelect(preAmount)} className={`py-2 px-3 rounded-md font-semibold text-sm transition-all duration-200 border-2 ${amount === preAmount ? 'bg-[var(--theme-accent)] text-white border-[var(--theme-accent)]' : 'bg-[var(--theme-bg-primary)] border-transparent hover:border-[var(--theme-accent)]'}`}>
                                     ${preAmount}
                                 </button>
                             ))}
@@ -201,7 +202,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                                 value={typeof amount === 'number' ? '' : amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 onFocus={() => handleAmountSelect('custom')}
-                                className={`py-2 px-3 rounded-md font-semibold text-base text-center bg-[#003a70]/50 border-2 focus:bg-[#ff8400] focus:text-white focus:border-[#ff8400] focus:outline-none focus:ring-0 col-span-2 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[#ff8400] text-white border-[#ff8400]' : 'border-transparent'}`}
+                                className={`py-2 px-3 rounded-md font-semibold text-base text-center bg-[var(--theme-bg-primary)] border-2 focus:bg-[var(--theme-accent)] focus:text-white focus:border-[var(--theme-accent)] focus:outline-none focus:ring-0 col-span-2 ${!predefinedAmounts.includes(Number(amount)) && amount !== '' ? 'bg-[var(--theme-accent)] text-white border-[var(--theme-accent)]' : 'border-transparent'}`}
                             />
                         </div>
                         {errors.amount && <p className="text-red-400 text-xs mt-2">{errors.amount}</p>}
@@ -212,10 +213,10 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
             {/* Right Column */}
             <div className="space-y-4 pt-4 lg:pt-0">
                 {/* Donor Information Section */}
-                <fieldset className="border-b border-[#005ca0] pb-4">
+                <fieldset className="pb-4">
                     <button type="button" onClick={() => toggleSection('donor')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'donor'}>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('donatePage.donorInfo')}</h2>
+                            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('donatePage.donorInfo')}</h2>
                             {sectionHasErrors.donor && openSection !== 'donor' && <NotificationIcon />}
                         </div>
                         <ChevronIcon isOpen={openSection === 'donor'} />
@@ -235,7 +236,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                 <fieldset className="pb-4">
                     <button type="button" onClick={() => toggleSection('payment')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'payment'}>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#ff8400] to-[#edda26]">{t('donatePage.paymentInfo')}</h2>
+                            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('donatePage.paymentInfo')}</h2>
                             {sectionHasErrors.payment && openSection !== 'payment' && <NotificationIcon />}
                         </div>
                         <ChevronIcon isOpen={openSection === 'payment'} />
@@ -256,7 +257,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
                     <button 
                         type="submit"
                         disabled={isProcessing}
-                        className="w-full max-w-xs bg-gradient-to-r from-[#ff8400] to-[#edda26] hover:opacity-90 text-white font-bold py-3 px-6 rounded-md transition-all duration-200 flex justify-center items-center h-12 disabled:opacity-50 disabled:cursor-wait"
+                        className="w-full max-w-xs bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] hover:opacity-90 text-white font-bold py-3 px-6 rounded-md transition-all duration-200 flex justify-center items-center h-12 disabled:opacity-50 disabled:cursor-wait"
                     >
                         {isProcessing ? (
                             <div className="flex items-center space-x-2">
