@@ -150,7 +150,9 @@ function App() {
             initTokenTracker(hydratedProfile);
 
             // Navigation logic based on the hydrated profile state
-            const isStuckInVerification = hydratedProfile.classVerificationStatus === 'failed' && hydratedProfile.role !== 'Admin';
+            // Logic Update: Only trap in relief queue if FAILED and NO OTHER ELIGIBLE identities.
+            const hasEligibleIdentity = identities.some(id => id.eligibilityStatus === 'Eligible');
+            const isStuckInVerification = hydratedProfile.classVerificationStatus === 'failed' && !hasEligibleIdentity && hydratedProfile.role !== 'Admin';
 
             if (isStuckInVerification) {
                 setPage('reliefQueue');
@@ -182,6 +184,15 @@ function App() {
         // --- User is signed out ---
         setAuthState({ status: 'signedOut', user: null, profile: null, claims: {} });
         setCurrentUser(null);
+        
+        // Fix: Clear data states to prevent "Missing permissions" errors from lingering effects
+        // triggering data fetches after auth is gone.
+        setActiveIdentity(null);
+        setAllIdentities([]);
+        setApplications([]);
+        setProxyApplications([]);
+        setVerifyingFundCode(null);
+        
         setPage('login');
         resetTokenTracker();
       }
@@ -277,6 +288,10 @@ function App() {
     return currentUser.classVerificationStatus === 'passed' && currentUser.eligibilityStatus === 'Eligible';
   }, [currentUser]);
 
+  const hasEligibleIdentity = useMemo(() => {
+      return allIdentities.some(id => id.eligibilityStatus === 'Eligible');
+  }, [allIdentities]);
+
   const { twelveMonthRemaining, lifetimeRemaining } = useMemo(() => {
       const sortedUserApps = [...userApplications].sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
       const latestApp = sortedUserApps.length > 0 ? sortedUserApps[0] : null;
@@ -349,15 +364,24 @@ function App() {
         return;
     }
 
-    // 3. Relief Queue Trap
-    if (page === 'reliefQueue') {
-        if (targetPage === 'classVerification' || targetPage === 'home' || targetPage === 'profile') {
+    // 3. Strict Lockdown for Failed Verification with No Identity (Relief Queue Trap)
+    // If user failed verification AND has no other eligible identities, they must stay in queue.
+    const isStuckInReliefQueue = currentUser?.classVerificationStatus === 'failed' && !hasEligibleIdentity;
+    
+    if (isStuckInReliefQueue) {
+        // Only allow pages necessary for re-verification
+        const allowedQueuePages: GlobalPage[] = ['reliefQueue', 'classVerification'];
+        
+        if (allowedQueuePages.includes(targetPage)) {
              setPage(targetPage);
+        } else {
+             // Force redirect back to relief queue if trying to escape
+             setPage('reliefQueue');
         }
         return;
     }
 
-    // 4. General Ineligibility Guard
+    // 4. General Ineligibility Guard (For Pending users or those with mixed status)
     if (!isVerifiedAndEligible) {
         const allowedIneligiblePages: GlobalPage[] = [
             'home', 
@@ -379,7 +403,7 @@ function App() {
     }
 
     setPage(targetPage);
-  }, [isVerifiedAndEligible, page, currentUser]);
+  }, [isVerifiedAndEligible, hasEligibleIdentity, page, currentUser]);
 
   const handleStartAddIdentity = useCallback(async (fundCode: string) => {
     if (!currentUser) return;
