@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { User, IdTokenResult } from 'firebase/auth';
 // FIX: Import the centralized Page type and alias it to avoid naming conflicts. Also added forgotPassword page.
@@ -1007,6 +1008,7 @@ function App() {
             cvStatus={currentUser.classVerificationStatus}
             supportedLanguages={supportedLanguages}
             logoUrl={currentLogo}
+            onReverify={() => handleStartAddIdentity(currentUser.fundCode)}
           />
 
           <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -1017,6 +1019,7 @@ function App() {
                 cvStatus={currentUser.classVerificationStatus}
                 supportedLanguages={supportedLanguages}
                 logoUrl={currentLogo}
+                onReverify={() => handleStartAddIdentity(currentUser.fundCode)}
             />
             <main ref={mainRef} className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0 custom-scrollbar">
               <div className="hidden md:block">

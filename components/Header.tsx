@@ -14,9 +14,10 @@ interface HeaderProps {
   cvStatus: ClassVerificationStatus;
   supportedLanguages?: string[];
   logoUrl?: string;
+  onReverify?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl }) => {
+const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl, onReverify }) => {
   const { t, i18n } = useTranslation();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -147,7 +148,11 @@ const Header: React.FC<HeaderProps> = ({ userName, onLogout, eligibilityStatus, 
         </div>
       </header>
       {isEligibilityModalOpen && (
-        <EligibilityInfoModal message={eligibilityMessage} onClose={() => setIsEligibilityModalOpen(false)} />
+        <EligibilityInfoModal 
+            message={eligibilityMessage} 
+            onClose={() => setIsEligibilityModalOpen(false)} 
+            onRetry={!isEligible ? onReverify : undefined}
+        />
       )}
     </>
   );

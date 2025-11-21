@@ -19,6 +19,7 @@ interface SideNavBarProps {
   cvStatus: ClassVerificationStatus;
   supportedLanguages?: string[];
   logoUrl?: string;
+  onReverify?: () => void;
 }
 
 interface NavItemType {
@@ -42,7 +43,7 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => v
   </button>
 );
 
-const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl }) => {
+const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole, userName, onLogout, canApply, eligibilityStatus, cvStatus, supportedLanguages = ['en'], logoUrl = defaultTheme.logoUrl, onReverify }) => {
   const { t } = useTranslation();
   const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   
@@ -121,7 +122,11 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ navigate, currentPage, userRole
         
       </nav>
       {isEligibilityModalOpen && (
-        <EligibilityInfoModal message={eligibilityMessage} onClose={() => setIsEligibilityModalOpen(false)} />
+        <EligibilityInfoModal 
+            message={eligibilityMessage} 
+            onClose={() => setIsEligibilityModalOpen(false)} 
+            onRetry={!isEligible ? onReverify : undefined}
+        />
       )}
     </>
   );
