@@ -366,7 +366,16 @@ const AIApplyPage: React.FC<AIApplyPageProps> = ({ userProfile, applications, on
       try {
         const savedMessages = sessionStorage.getItem(sessionKey);
         if (savedMessages) {
-          setMessages(JSON.parse(savedMessages));
+          const parsed = JSON.parse(savedMessages);
+          // *** CRITICAL FIX ***: Filter history immediately on load to remove any 'error' messages
+          // that might have caused the previous crash loop.
+          const validMessages = parsed.filter((m: ChatMessage) => m.role === 'user' || m.role === 'model');
+          
+          if (validMessages.length > 0) {
+             setMessages(validMessages);
+          } else {
+             setMessages([{ role: MessageRole.MODEL, content: greetingMessage }]);
+          }
         } else {
           setMessages([{ role: MessageRole.MODEL, content: greetingMessage }]);
         }

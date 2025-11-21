@@ -429,9 +429,10 @@ ${applicationList}
   }
 
   // Map the application's ChatMessage format to the format required by the Gemini SDK.
-  // Filter out 'error' role messages as Gemini SDK only accepts 'user' and 'model'.
+  // CRITICAL FIX: Filter out 'error' role messages as Gemini SDK only accepts 'user' and 'model'.
+  const validRoles = ['user', 'model'];
   const mappedHistory: Content[] | undefined = history
-    ?.filter(m => m.role === 'user' || m.role === 'model')
+    ?.filter(m => validRoles.includes(m.role))
     .map(message => ({
       role: message.role,
       parts: [{ text: message.content }],

@@ -7,26 +7,43 @@ import './i18n/i18n'; // Import to initialize i18next
 // This is critical for fixing the "Double Call" / 429 Rate Limit issue.
 // Old Service Workers from previous deployments act as proxies, duplicating requests.
 const nukeServiceWorkers = async () => {
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      let wasControlling = false;
+  if (typeof window !== 'undefined') {
+    let reloadNeeded = false;
 
-      // 1. Unregister all found workers
-      for (const registration of registrations) {
-        console.warn('🚨 Killing Zombie Service Worker:', registration.scope);
-        await registration.unregister();
-        wasControlling = true;
+    // 1. Unregister all found workers
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          console.warn('🚨 Killing Zombie Service Worker:', registration.scope);
+          await registration.unregister();
+          reloadNeeded = true;
+        }
+      } catch (err) {
+        console.warn('SW Kill Switch encountered an error:', err);
       }
+    }
 
-      // 2. Check if the page is currently controlled by a SW
-      if (navigator.serviceWorker.controller || wasControlling) {
-        console.warn('🚨 Page was controlled by a Zombie Worker. Reloading to clear network hooks...');
-        // 3. Force a hard reload to ensure the next network request bypasses the dead worker
-        window.location.reload();
+    // 2. CLEAR ALL CACHES (The "Fresh Slate" protocol)
+    // Sometimes the SW is gone, but the assets (JS/CSS) are still stuck in the Cache Storage API.
+    if ('caches' in window) {
+      try {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          console.warn('🧹 Wiping Cache Storage:', key);
+          await caches.delete(key);
+          reloadNeeded = true;
+        }
+      } catch (err) {
+        console.warn('Cache wipe failed:', err);
       }
-    } catch (err) {
-      console.warn('SW Kill Switch encountered an error:', err);
+    }
+
+    // 3. Force a hard reload if we cleaned anything up
+    // This ensures the browser fetches the new index.html from the server.
+    if (reloadNeeded || navigator.serviceWorker?.controller) {
+      console.warn('🚨 Page was controlled by a Zombie Worker or had stale cache. Reloading...');
+      window.location.reload();
     }
   }
 };
