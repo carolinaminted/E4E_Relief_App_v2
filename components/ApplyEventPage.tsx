@@ -46,11 +46,9 @@ const ApplyEventPage: React.FC<ApplyEventPageProps> = ({ formData, updateFormDat
   // Fallback options in case fund config is missing eligibleStorms
   const stormOptions = activeFund?.eligibleStorms && activeFund.eligibleStorms.length > 0
       ? activeFund.eligibleStorms
-      : ["Hurricane Alpha", "Tropical Storm Beta", "Hurricane Gamma"];
+      : ["Hurricane Rayquaza", "Tropical Storm Lugia", "Cyclone Ho-Oh"];
 
   // Only show the event name field if the selected event IS a storm type.
-  // The existence of options (stormOptions.length > 0) is necessary for the dropdown to work,
-  // but shouldn't dictate visibility unless the event type matches.
   const showEventNameField = isStormEvent(formData.event);
 
   const validate = (): boolean => {
