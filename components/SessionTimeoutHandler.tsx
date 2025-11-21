@@ -114,12 +114,16 @@ const SessionTimeoutHandler: React.FC<SessionTimeoutHandlerProps> = ({ children,
               `}
             </style>
             <div 
-                className="bg-[#003a70] rounded-lg shadow-2xl p-8 w-full max-w-md border-2 border-[#ff8400] text-center relative overflow-hidden"
-                style={{ animation: 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                className="bg-[var(--theme-bg-primary)] rounded-lg shadow-2xl p-8 w-full max-w-md border-2 border-[var(--theme-accent)] text-center relative overflow-hidden"
+                style={{ 
+                    animation: 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                    backgroundColor: 'var(--theme-bg-primary)',
+                    borderColor: 'var(--theme-accent)'
+                }}
             >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ff8400] to-[#edda26]"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]"></div>
                 
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-[#ff8400] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-[var(--theme-accent)] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
 
@@ -128,7 +132,7 @@ const SessionTimeoutHandler: React.FC<SessionTimeoutHandlerProps> = ({ children,
                 </h2>
                 
                 <p className="text-gray-200 mb-6">
-                    {t('sessionTimeout.body')} <span className="font-mono font-bold text-[#edda26] text-lg block mt-2">{formatTime(timeLeft)}</span>
+                    {t('sessionTimeout.body')} <span className="font-mono font-bold text-[var(--theme-gradient-end)] text-lg block mt-2">{formatTime(timeLeft)}</span>
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -140,7 +144,7 @@ const SessionTimeoutHandler: React.FC<SessionTimeoutHandlerProps> = ({ children,
                     </button>
                     <button
                         onClick={handleExtendSession}
-                        className="w-full sm:w-auto px-6 py-3 rounded-md bg-[#ff8400] hover:bg-[#e67700] text-white font-bold shadow-lg transition-all hover:scale-105"
+                        className="w-full sm:w-auto px-6 py-3 rounded-md bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white font-bold shadow-lg transition-all hover:scale-105"
                     >
                         {t('sessionTimeout.extendButton')}
                     </button>

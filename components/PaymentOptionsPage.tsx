@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,7 +39,7 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
         
         <div className="flex flex-col items-center gap-8">
             {/* US Applicants Section */}
-            <div className="w-full bg-[var(--theme-bg-secondary)] p-8 rounded-lg shadow-2xl border border-[var(--theme-border)] flex flex-col text-center">
+            <div className="w-full bg-[var(--theme-bg-secondary)] p-8 rounded-lg shadow-2xl flex flex-col text-center">
                 <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] mb-4">
                     {t('paymentOptionsPage.usApplicantsTitle')}
                 </h2>
@@ -56,7 +57,7 @@ const PaymentOptionsPage: React.FC<PaymentOptionsPageProps> = ({ navigate }) => 
             </div>
             
             {/* International Applicants Section */}
-            <div className="w-full bg-[var(--theme-bg-secondary)] p-8 rounded-lg shadow-2xl border border-[var(--theme-border)] flex flex-col">
+            <div className="w-full bg-[var(--theme-bg-secondary)] p-8 rounded-lg shadow-2xl flex flex-col">
                 <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] mb-4 text-center">
                     {t('paymentOptionsPage.intlApplicantsTitle')}
                 </h2>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 
@@ -68,19 +69,21 @@ const FAQItem: React.FC<{ faq: FaqItem, isOpen: boolean, onClick: () => void }> 
     };
 
     return (
-        <div className="border-b border-[var(--theme-border)]">
+        <div className="mb-2">
             <button
                 onClick={onClick}
-                className="w-full flex justify-between items-center text-left py-4 px-2"
+                className={`w-full flex justify-between items-center text-left py-3 px-4 rounded-lg transition-all duration-200 ${isOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
                 aria-expanded={isOpen}
             >
-                <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{faq.question}</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <h3 className="text-base sm:text-lg font-medium text-[var(--theme-accent)]">
+                    {faq.question}
+                </h3>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="p-4 text-white bg-[var(--theme-bg-primary)]">
+                <div className="p-4 pl-6 text-gray-200 leading-relaxed">
                     <div>{renderAnswer()}</div>
                 </div>
             </div>
@@ -102,19 +105,19 @@ const FAQSection: React.FC<{ title: string; faqs: FaqItem[]; isOpen: boolean; on
     };
 
     return (
-        <div className="bg-[var(--theme-bg-secondary)] rounded-lg shadow-2xl border border-[var(--theme-border)] mb-6">
+        <div className="bg-[var(--theme-bg-secondary)]/90 backdrop-blur-md rounded-2xl shadow-xl mb-6 overflow-hidden">
             <button
                 onClick={onToggleSection}
-                className="w-full flex justify-between items-center text-left p-4 md:p-6"
+                className="w-full flex justify-between items-center text-left p-6"
                 aria-expanded={isOpen}
             >
-                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{title}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{title}</h2>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 text-[var(--theme-accent)] transition-transform duration-300 transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="p-4 md:p-6 pt-0">
+                <div className="p-4 pt-0 space-y-1">
                     {faqs.map((faq, index) => (
                         <FAQItem 
                             key={index} 

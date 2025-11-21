@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormInput } from './FormControls';
@@ -179,11 +180,11 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
             </h1>
         </div>
         
-        <form onSubmit={handleSubmit} noValidate className="bg-[var(--theme-bg-secondary)] p-6 md:p-8 rounded-lg border border-[var(--theme-border)] grid grid-cols-1 lg:grid-cols-2 lg:gap-x-12">
+        <form onSubmit={handleSubmit} noValidate className="bg-[var(--theme-bg-secondary)] p-6 md:p-8 rounded-lg grid grid-cols-1 lg:grid-cols-2 lg:gap-x-12">
             {/* Left Column */}
-            <div className="lg:border-r lg:border-[var(--theme-border)] lg:pr-8">
+            <div className="lg:pr-8">
                 {/* Static Amount Section */}
-                <div className="border-b border-[var(--theme-border)] lg:border-b-0 pb-4">
+                <div className="pb-4">
                     <div className="flex items-center gap-3 py-2">
                         <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('donatePage.chooseAmount')}</h2>
                     </div>
@@ -212,7 +213,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ navigate }) => {
             {/* Right Column */}
             <div className="space-y-4 pt-4 lg:pt-0">
                 {/* Donor Information Section */}
-                <fieldset className="border-b border-[var(--theme-border)] pb-4">
+                <fieldset className="pb-4">
                     <button type="button" onClick={() => toggleSection('donor')} className="w-full flex justify-between items-center text-left py-2" aria-expanded={openSection === 'donor'}>
                         <div className="flex items-center gap-3">
                             <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)]">{t('donatePage.donorInfo')}</h2>

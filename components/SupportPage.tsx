@@ -12,7 +12,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ navigate }) => {
   
   const SubActionCard: React.FC<{ title: string; description: string; onClick: () => void; }> = ({ title, description, onClick }) => (
     <div 
-      className="bg-[var(--theme-bg-secondary)] p-6 rounded-lg shadow-lg hover:opacity-90 transition-all duration-300 cursor-pointer flex flex-col items-center text-center border border-[var(--theme-border)]"
+      className="bg-[var(--theme-bg-secondary)] p-6 rounded-lg shadow-lg hover:opacity-90 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
       onClick={onClick}
     >
       <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-gradient-start)] to-[var(--theme-gradient-end)] mb-2">{title}</h2>
